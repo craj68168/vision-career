@@ -85,9 +85,12 @@ export default function AdminPage() {
         },
       });
 
-      if (res.ok && res.status === 200) {
-        setIsAllowed(true);
+      if (!res.ok && res.status === 401) {
+        localStorage.removeItem("admin_token");
+        router.replace(lang === "ja" ? "/admin-login" : "/en/admin-login");
+        return;
       }
+      setIsAllowed(true);
     } catch (error: any) {
       console.error(error);
       toast.error(
