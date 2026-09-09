@@ -27,6 +27,7 @@ import {
   Globe,
   Home,
   Phone,
+  Plus,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useRouter } from "next/navigation";
@@ -66,6 +67,7 @@ type Vacancy = {
   selection_process?: string;
   contact_person: string;
   contact_person_kana?: string;
+  uploadedBy: number;
   contact_email: string;
   created_at: string;
 };
@@ -117,14 +119,11 @@ export default function AllVacanciesList() {
   const [search, setSearch] = useState("");
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [adminId, setAdminId] = useState<number | null>(null);
-
-  // State for editing vacancy
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingVacancy, setEditingVacancy] = useState<{
     vacancyId: number;
     formData: VacancyFormData;
   } | null>(null);
-
-  // State for delete confirmation
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     vacancyId: number;
     title: string;
@@ -257,8 +256,20 @@ export default function AllVacanciesList() {
       contactPerson: vacancy.contact_person || "",
       contactPersonKana: vacancy.contact_person_kana || "",
       contactEmail: vacancy.contact_email || "",
-      uploadedBy: adminId || undefined,
+      uploadedBy: vacancy.uploadedBy,
     };
+  };
+
+  const handleCreateSuccess = (result?: any) => {
+    setShowCreateForm(false);
+    fetchVacancies();
+    toast.success(
+      lang === "ja" ? "求人が作成されました" : "Vacancy created successfully",
+    );
+  };
+
+  const handleCancelCreate = () => {
+    setShowCreateForm(false);
   };
 
   const handleEditVacancy = (vacancy: Vacancy) => {
@@ -282,10 +293,8 @@ export default function AllVacanciesList() {
   };
 
   const handleEditSuccess = (result?: any) => {
-    // Close the edit modal
     setEditingVacancy(null);
 
-    // Refresh the vacancies list to show updated data
     fetchVacancies();
 
     toast.success(
@@ -424,10 +433,18 @@ export default function AllVacanciesList() {
             <div className="flex items-center gap-3">
               <button
                 onClick={fetchVacancies}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                className="inline-flex items-center gap-2 rounded-xl cursor-pointer border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
               >
                 <RefreshCw className="h-4 w-4" />
                 {lang === "ja" ? "更新" : "Refresh"}
+              </button>
+
+              <button
+                onClick={() => setShowCreateForm(true)}
+                className="inline-flex items-center gap-2 rounded-xl cursor-pointer bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-700"
+              >
+                <Plus className="h-4 w-4" />
+                {lang === "ja" ? "求人を投稿" : "Post Vacancy"}
               </button>
             </div>
           </div>
@@ -549,7 +566,7 @@ export default function AllVacanciesList() {
 
                     <button
                       onClick={() => handleViewVacancy(vacancy)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                      className="inline-flex items-center gap-1.5 rounded-xl cursor-pointer border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                       title={lang === "ja" ? "詳細を見る" : "View Details"}
                     >
                       <Eye className="h-4 w-4" />
@@ -560,7 +577,7 @@ export default function AllVacanciesList() {
 
                     <button
                       onClick={() => handleEditVacancy(vacancy)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                      className="inline-flex items-center gap-1.5 rounded-xl cursor-pointer border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                       title={lang === "ja" ? "求人を編集" : "Edit Vacancy"}
                     >
                       <Pencil className="h-4 w-4" />
@@ -571,7 +588,7 @@ export default function AllVacanciesList() {
 
                     <button
                       onClick={() => handleDeleteClick(vacancy)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
+                      className="inline-flex items-center gap-1.5 rounded-xl cursor-pointer border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
                       title={lang === "ja" ? "求人を削除" : "Delete Vacancy"}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -608,14 +625,14 @@ export default function AllVacanciesList() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleEditVacancy(viewingVacancy)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                  className="inline-flex items-center gap-2 rounded-xl cursor-pointer border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 >
                   <Pencil className="h-4 w-4" />
                   {lang === "ja" ? "編集" : "Edit"}
                 </button>
                 <button
                   onClick={handleCloseView}
-                  className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                  className="rounded-full p-2 text-slate-500 transition cursor-pointer hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -814,6 +831,42 @@ export default function AllVacanciesList() {
         </div>
       )}
 
+      {showCreateForm && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm overflow-y-auto">
+          <div
+            className="absolute inset-0"
+            onClick={handleCancelCreate}
+            aria-hidden="true"
+          />
+          <div className="relative z-10 w-full max-w-7xl max-h-[95vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-800">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {lang === "ja" ? "新規求人投稿" : "Post New Vacancy"}
+                </p>
+                <h3 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
+                  {lang === "ja" ? "求人情報の作成" : "Create Vacancy"}
+                </h3>
+              </div>
+              <button
+                onClick={handleCancelCreate}
+                className="rounded-full p-2 text-slate-500 cursor-pointer transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div>
+              <VacancyForm
+                userId={adminId || 0}
+                mode="create"
+                onSuccess={handleCreateSuccess}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Edit Vacancy Modal */}
       {editingVacancy && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm overflow-y-auto">
@@ -835,13 +888,13 @@ export default function AllVacanciesList() {
               </div>
               <button
                 onClick={handleCancelEdit}
-                className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                className="rounded-full p-2 text-slate-500 transition cursor-pointer hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="px-6 py-6">
+            <div>
               <VacancyForm
                 userId={adminId || 0}
                 mode="edit"
@@ -899,14 +952,14 @@ export default function AllVacanciesList() {
                 <button
                   onClick={handleCancelDelete}
                   disabled={deleteConfirmation.isDeleting}
-                  className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                  className="rounded-xl border border-slate-200 cursor-pointer bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 >
                   {lang === "ja" ? "キャンセル" : "Cancel"}
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={deleteConfirmation.isDeleting}
-                  className="rounded-xl bg-red-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-700 dark:hover:bg-red-800"
+                  className="rounded-xl bg-red-600 px-6 py-3 cursor-pointer text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-700 dark:hover:bg-red-800"
                 >
                   {deleteConfirmation.isDeleting ? (
                     <>
