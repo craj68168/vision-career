@@ -78,7 +78,12 @@ type MissingField = {
 };
 
 type TabKey = "available" | "applied";
-
+type AuthUser = {
+  id?: string;
+  name?: string;
+  email?: string;
+  role: "seeker";
+};
 export default function JobSeekersPage() {
   const { lang } = useLanguage();
   const router = useRouter();
@@ -93,7 +98,8 @@ export default function JobSeekersPage() {
 
   const [selectedVacancy, setSelectedVacancy] = useState<Vacancy | null>(null);
   const [isApplyOpen, setIsApplyOpen] = useState(false);
-  const [user, setUser] = useState(null);
+
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [missingFields, setMissingFields] = useState<MissingField[]>([]);
@@ -104,157 +110,42 @@ export default function JobSeekersPage() {
   });
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem("seeker-token");
+    const token = localStorage.getItem("access_token");
+    const role = localStorage.getItem("user_role");
 
-        if (!token) {
-          router.replace("/job-seekers-auth");
-          return;
-        }
+    if (!token || role !== "seeker") {
+      router.replace(
+        lang === "ja" ? "/job-seekers-auth" : "/en/job-seekers-auth",
+      );
 
-        const res = await fetch("https://vision-career.co.jp/profile.php", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || data.status !== "success") {
-          localStorage.removeItem("token");
-          router.replace("/auth");
-          return;
-        }
-
-        setUser(data.user);
-      } catch (error) {
-        console.error("Error while checking auth:", error);
-        localStorage.removeItem("token");
-        router.replace("/job-seekers-auth");
-      } finally {
-        setCheckingAuth(false);
-      }
-    };
-
-    const checkProfile = async () => {
-      try {
-        const token = localStorage.getItem("seeker-token");
-
-        if (!token) {
-          router.replace("/job-seekers-auth");
-          return;
-        }
-        const res = await fetch(
-          "https://vision-career.co.jp/check-jobseeker-profile-complete.php",
-          {
-            method: "GET",
-            headers: {
-              Authorization: "Bearer " + token,
-            },
-          },
-        );
-
-        const data = await res.json();
-
-        if (!res.ok || data.status !== "success") {
-          localStorage.removeItem("token");
-          return;
-        }
-
-        setIsProfileComplete(data.is_complete);
-      } catch (error) {
-        console.error("Error while checking profile:", error);
-        localStorage.removeItem("token");
-        router.replace("/auth");
-      }
-    };
-
-    checkAuth();
-    checkProfile();
-  }, [router]);
-
-  useEffect(() => {
-    const token = localStorage.getItem("seeker-token");
-
-    if (!token) {
-      router.replace("/job-seekers-auth");
       return;
     }
 
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError("");
+    setUser({
+      role: "seeker",
+    });
 
-        const [vacanciesRes, applicationsRes] = await Promise.all([
-          fetch("https://vision-career.co.jp/get_vacancies.php", {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-          fetch("https://vision-career.co.jp/get_my_applications.php", {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }),
-        ]);
+    setCheckingAuth(false);
+  }, [router, lang]);
 
-        if (
-          vacanciesRes.status === 401 ||
-          vacanciesRes.status === 403 ||
-          applicationsRes.status === 401 ||
-          applicationsRes.status === 403
-        ) {
-          localStorage.removeItem("seeker-token");
-          router.replace("/job-seekers-auth");
-          return;
-        }
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    const role = localStorage.getItem("user_role");
 
-        const vacanciesData = await safeJson(vacanciesRes);
-        const applicationsData = await safeJson(applicationsRes);
+    if (!token || role !== "seeker") {
+      router.replace(
+        lang === "ja" ? "/job-seekers-auth" : "/en/job-seekers-auth",
+      );
 
-        if (!vacanciesRes.ok) {
-          throw new Error(
-            vacanciesData?.message ||
-              (lang === "ja"
-                ? "求人情報の取得に失敗しました"
-                : "Failed to fetch vacancies"),
-          );
-        }
+      return;
+    }
 
-        if (!applicationsRes.ok) {
-          throw new Error(
-            applicationsData?.message ||
-              (lang === "ja"
-                ? "応募情報の取得に失敗しました"
-                : "Failed to fetch applications"),
-          );
-        }
-
-        setVacancies(
-          Array.isArray(vacanciesData?.data) ? vacanciesData.data : [],
-        );
-        setApplications(
-          Array.isArray(applicationsData?.data) ? applicationsData.data : [],
-        );
-      } catch (err: any) {
-        console.error(err);
-        setError(
-          err?.message ||
-            (lang === "ja"
-              ? "ダッシュボードの読み込みに失敗しました"
-              : "Failed to load dashboard"),
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
+    // Temporary:
+    // We haven't migrated vacancies/applications
+    // from PHP to Node yet.
+    setVacancies([]);
+    setApplications([]);
+    setLoading(false);
   }, [router, lang]);
 
   const appliedVacancyMap = useMemo(() => {
@@ -346,10 +237,11 @@ export default function JobSeekersPage() {
       setSubmitting(true);
       setMissingFields([]);
 
-      const token = localStorage.getItem("seeker-token");
-      if (!token) {
+      const token = localStorage.getItem("access_token");
+      const role = localStorage.getItem("user_role");
+
+      if (!token || role !== "seeker") {
         router.replace("/job-seekers-auth");
-        return;
       }
 
       // Send as JSON since it's simpler for this payload

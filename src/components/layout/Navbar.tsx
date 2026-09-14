@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { LogOut } from "lucide-react";
 
@@ -21,7 +20,6 @@ const Navbar = () => {
   const router = useRouter();
   const path = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentTime, setCurrentTime] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const { lang } = useLanguage();
   const pathname = usePathname();
@@ -64,10 +62,9 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("seeker-token");
-    localStorage.removeItem("admin-token");
-    localStorage.removeItem("staff_token");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("user_role");
+
     if (path.includes("job-seekers")) {
       router.push(lang === "ja" ? "/job-seekers-auth" : "/en/job-seekers-auth");
     } else if (path.includes("staff")) {
