@@ -2,9 +2,8 @@
 
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-
+import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { useJobSeekerAuth } from "./hook";
 export default function JobSeekerAuth() {
   const router = useRouter();
@@ -372,23 +371,49 @@ function InputField({
   error,
   onChange,
 }: InputFieldProps) {
+  const [showPassword, setShowPassword] = React.useState(false);
+
+  const isPassword = type === "password";
+
+  const inputType = isPassword && showPassword ? "text" : type;
+
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-medium text-slate-300">
         {label}
       </span>
 
-      <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 focus-within:border-sky-400">
-        <Icon className="h-5 w-5 text-slate-400" />
+      <div
+        className={`flex items-center gap-3 rounded-2xl border bg-white/5 px-4 py-3 transition focus-within:border-sky-400 ${
+          error ? "border-red-400/70" : "border-white/10"
+        }`}
+      >
+        <Icon className="h-5 w-5 shrink-0 text-slate-400" />
 
         <input
           name={name}
-          type={type}
+          type={inputType}
           value={value}
           placeholder={placeholder}
           onChange={onChange}
+          autoComplete={isPassword ? "current-password" : undefined}
           className="w-full bg-transparent text-white placeholder:text-slate-500 outline-none"
         />
+
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword((previous) => !previous)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            className="shrink-0 cursor-pointer text-slate-400 transition hover:text-white"
+          >
+            {showPassword ? (
+              <EyeOff className="h-5 w-5" />
+            ) : (
+              <Eye className="h-5 w-5" />
+            )}
+          </button>
+        )}
       </div>
 
       {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
