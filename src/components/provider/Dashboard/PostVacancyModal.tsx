@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Loader2, X } from "lucide-react";
@@ -200,7 +200,7 @@ export default function PostVacancyModal({
   const [submitting, setSubmitting] = useState(false);
 
   const [loadingProfile, setLoadingProfile] = useState(false);
-
+  const isEditMode = mode === "edit" && Boolean(vacancy);
   // ====================================================
   // PREFILL COMPANY PROFILE
   // ====================================================
@@ -305,6 +305,11 @@ export default function PostVacancyModal({
   // ====================================================
 
   const resetForm = async () => {
+    if (isEditMode && vacancy) {
+      setForm(vacancyToForm(vacancy));
+      return;
+    }
+
     const empty = createEmptyForm();
 
     try {
@@ -393,48 +398,60 @@ export default function PostVacancyModal({
   // ====================================================
   // SUBMIT
   // ====================================================
-
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const validationError = validate();
 
     if (validationError) {
       toast.error(validationError);
-
       return;
     }
 
     try {
       setSubmitting(true);
 
-      const response = await createProviderVacancy(form);
+      let response;
+
+      if (isEditMode && vacancy) {
+        console.log("UPDATING VACANCY:", vacancy.vacancyId);
+
+        response = await updateProviderVacancy(vacancy.vacancyId, form);
+      } else {
+        console.log("CREATING VACANCY");
+
+        response = await createProviderVacancy(form);
+      }
 
       toast.success(
         response.message ||
-          (lang === "ja"
-            ? "求人を送信しました"
+          (isEditMode
+            ? "Vacancy updated successfully."
             : "Vacancy submitted successfully."),
       );
 
-      await resetForm();
-
       await onSuccess();
     } catch (error: unknown) {
-      console.error("Create vacancy error:", error);
+      console.error(
+        isEditMode ? "Update vacancy error:" : "Create vacancy error:",
+        error,
+      );
 
       if (axios.isAxiosError<ApiErrorResponse>(error)) {
+        console.error("Backend response:", error.response?.data);
+
         toast.error(
-          error.response?.data?.message || "Failed to create vacancy.",
+          error.response?.data?.message ||
+            (isEditMode
+              ? "Failed to update vacancy."
+              : "Failed to create vacancy."),
         );
 
         return;
       }
 
       toast.error(
-        lang === "ja"
-          ? "求人の登録に失敗しました"
-          : "Failed to create vacancy.",
+        isEditMode ? "Failed to update vacancy." : "Failed to create vacancy.",
       );
     } finally {
       setSubmitting(false);
@@ -459,7 +476,13 @@ export default function PostVacancyModal({
 
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4 sm:px-7">
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
-            {lang === "ja" ? "求人追加" : "Add Vacancy"}
+            {isEditMode
+              ? lang === "ja"
+                ? "求人編集"
+                : "Edit Vacancy"
+              : lang === "ja"
+                ? "求人追加"
+                : "Add Vacancy"}
           </p>
 
           <button
@@ -479,13 +502,23 @@ export default function PostVacancyModal({
           </span>
 
           <h2 className="mt-4 text-3xl font-bold text-slate-950">
-            {lang === "ja" ? "求人を登録" : "Register Job Vacancy"}
+            {isEditMode
+              ? lang === "ja"
+                ? "求人情報を編集"
+                : "Edit Job Vacancy"
+              : lang === "ja"
+                ? "求人を登録"
+                : "Register Job Vacancy"}
           </h2>
 
           <p className="mt-2 text-sm text-slate-600">
-            {lang === "ja"
-              ? "必要事項を入力してください。登録後、管理者による審査が行われます。"
-              : "Please fill out the form below. The vacancy will be sent for admin review after submission."}
+            {isEditMode
+              ? lang === "ja"
+                ? "求人情報を更新してください。保存後、管理者による再審査が行われます。"
+                : "Update the vacancy information below. Saving changes will send the vacancy for admin review again."
+              : lang === "ja"
+                ? "必要事項を入力してください。登録後、管理者による審査が行われます。"
+                : "Please fill out the form below. The vacancy will be sent for admin review after submission."}
           </p>
         </div>
 
@@ -883,11 +916,29 @@ export default function PostVacancyModal({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+                  className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  <Loader2
+                    className={`h-4 w-4 animate-spin ${
+                      submitting ? "block" : "hidden"
+                    }`}
+                  />
 
-                  {submitting ? "Posting..." : "Post Job Vacancy"}
+                  {submitting
+                    ? isEditMode
+                      ? lang === "ja"
+                        ? "保存中..."
+                        : "Saving..."
+                      : lang === "ja"
+                        ? "送信中..."
+                        : "Posting..."
+                    : isEditMode
+                      ? lang === "ja"
+                        ? "変更を保存"
+                        : "Save Changes"
+                      : lang === "ja"
+                        ? "求人を掲載"
+                        : "Post Job Vacancy"}
                 </button>
               </div>
             </div>

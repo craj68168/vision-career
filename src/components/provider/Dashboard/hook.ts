@@ -8,7 +8,11 @@ import { useRouter } from "next/navigation";
 
 import { useLanguage } from "@/context/LanguageContext";
 
-import { getProviderPlacementRequests, getProviderVacancies } from "./api";
+import {
+  closeProviderVacancy,
+  getProviderPlacementRequests,
+  getProviderVacancies,
+} from "./api";
 
 import type {
   ApiErrorResponse,
@@ -30,11 +34,8 @@ export const useProviderDashboard = () => {
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
 
   /*
-   * Provider applications backend API
-   * is not implemented yet.
-   *
-   * Keep the state because the UI/tab will
-   * be connected later.
+   * Provider applications API is not connected yet.
+   * Keep this empty until we build that endpoint.
    */
   const [applications] = useState<ProviderApplication[]>([]);
 
@@ -43,7 +44,7 @@ export const useProviderDashboard = () => {
   >([]);
 
   // ======================================================
-  // UI
+  // DASHBOARD UI
   // ======================================================
 
   const [activeTab, setActiveTab] = useState<ProviderDashboardTab>("vacancies");
@@ -56,9 +57,36 @@ export const useProviderDashboard = () => {
 
   const [error, setError] = useState("");
 
+  // ======================================================
+  // CREATE VACANCY MODAL
+  // ======================================================
+
   const [postVacancyOpen, setPostVacancyOpen] = useState(false);
 
+  // ======================================================
+  // PLACEMENT REQUEST MODAL
+  // ======================================================
+
   const [placementRequestOpen, setPlacementRequestOpen] = useState(false);
+
+  // ======================================================
+  // VIEW VACANCY
+  // ======================================================
+
+  const [viewVacancy, setViewVacancy] = useState<Vacancy | null>(null);
+
+  // ======================================================
+  // EDIT VACANCY
+  // ======================================================
+
+  const [editVacancy, setEditVacancy] = useState<Vacancy | null>(null);
+
+  // ======================================================
+  // DELETE VACANCY
+  // ======================================================
+
+  const [deleteVacancyTarget, setDeleteVacancyTarget] =
+    useState<Vacancy | null>(null);
 
   // ======================================================
   // AUTH
@@ -68,8 +96,6 @@ export const useProviderDashboard = () => {
     localStorage.removeItem("access_token");
 
     localStorage.removeItem("user_role");
-
-    localStorage.removeItem("provider_register_id");
 
     router.replace(lang === "ja" ? "/auth" : "/en/auth");
   }, [lang, router]);
@@ -89,7 +115,7 @@ export const useProviderDashboard = () => {
   }, [redirectToLogin]);
 
   // ======================================================
-  // API ERROR
+  // ERROR HANDLING
   // ======================================================
 
   const handleApiError = useCallback(
@@ -142,17 +168,9 @@ export const useProviderDashboard = () => {
           getProviderPlacementRequests(),
         ]);
 
-        // ----------------------------------------------
-        // Vacancies
-        // ----------------------------------------------
-
         setVacancies(
           Array.isArray(vacancyResponse.data) ? vacancyResponse.data : [],
         );
-
-        // ----------------------------------------------
-        // Placement / Recruit Requests
-        // ----------------------------------------------
 
         setPlacementRequests(
           Array.isArray(placementResponse.data) ? placementResponse.data : [],
@@ -201,7 +219,7 @@ export const useProviderDashboard = () => {
   }, [lang, loadDashboard]);
 
   // ======================================================
-  // MODAL ACTIONS
+  // CREATE VACANCY
   // ======================================================
 
   const openPostVacancy = () => {
@@ -212,18 +230,6 @@ export const useProviderDashboard = () => {
     setPostVacancyOpen(false);
   };
 
-  const openPlacementRequest = () => {
-    setPlacementRequestOpen(true);
-  };
-
-  const closePlacementRequest = () => {
-    setPlacementRequestOpen(false);
-  };
-
-  // ======================================================
-  // CREATED VACANCY
-  // ======================================================
-
   const handleVacancyCreated = async () => {
     setPostVacancyOpen(false);
 
@@ -233,8 +239,128 @@ export const useProviderDashboard = () => {
   };
 
   // ======================================================
-  // CREATED PLACEMENT REQUEST
+  // VIEW VACANCY
   // ======================================================
+
+  const openVacancyView = (vacancy: Vacancy) => {
+    setViewVacancy(vacancy);
+  };
+
+  const closeVacancyView = () => {
+    setViewVacancy(null);
+  };
+
+  // ======================================================
+  // EDIT VACANCY
+  // ======================================================
+
+  const openVacancyEdit = (vacancy: Vacancy) => {
+    setViewVacancy(null);
+
+    window.setTimeout(() => {
+      setEditVacancy(vacancy);
+    }, 0);
+  };
+
+  const closeVacancyEdit = () => {
+    setEditVacancy(null);
+  };
+
+  const handleVacancyUpdated = async () => {
+    setEditVacancy(null);
+
+    setActiveTab("vacancies");
+
+    await loadDashboard(false);
+  };
+
+  // ======================================================
+  // DELETE VACANCY
+  // ======================================================
+
+  const openVacancyDelete = (vacancy: Vacancy) => {
+    setDeleteVacancyTarget(vacancy);
+  };
+
+  const closeVacancyDelete = () => {
+    setDeleteVacancyTarget(null);
+  };
+
+  const handleVacancyDeleted = async () => {
+    setDeleteVacancyTarget(null);
+
+    setActiveTab("vacancies");
+
+    await loadDashboard(false);
+  };
+
+  // ======================================================
+  // CLOSE PUBLISHED VACANCY
+  // ======================================================
+
+  const handleCloseVacancy = async (vacancy: Vacancy) => {
+    /*
+     * Only published vacancies
+     * should be closed.
+     */
+    if (vacancy.status !== "published") {
+      toast.error(
+        lang === "ja"
+          ? "公開中の求人のみ終了できます"
+          : "Only published vacancies can be closed.",
+      );
+
+      return;
+    }
+
+    const confirmed = window.confirm(
+      lang === "ja"
+        ? `「${vacancy.title}」の掲載を終了しますか？`
+        : `Close "${vacancy.title}"? It will no longer appear to job seekers.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await closeProviderVacancy(vacancy.vacancyId);
+
+      toast.success(
+        lang === "ja"
+          ? "求人の掲載を終了しました"
+          : "Vacancy closed successfully.",
+      );
+
+      await loadDashboard(false);
+    } catch (error: unknown) {
+      console.error("Close vacancy error:", error);
+
+      if (axios.isAxiosError<ApiErrorResponse>(error)) {
+        toast.error(
+          error.response?.data?.message || "Failed to close vacancy.",
+        );
+
+        return;
+      }
+
+      toast.error(
+        lang === "ja" ? "求人の終了に失敗しました" : "Failed to close vacancy.",
+      );
+    }
+  };
+
+  // ======================================================
+  // PLACEMENT REQUEST
+  // ======================================================
+
+  const openPlacementRequest = () => {
+    setPlacementRequestOpen(true);
+  };
+
+  const closePlacementRequest = () => {
+    setPlacementRequestOpen(false);
+  };
 
   const handlePlacementCreated = async () => {
     setPlacementRequestOpen(false);
@@ -245,7 +371,7 @@ export const useProviderDashboard = () => {
   };
 
   // ======================================================
-  // VACANCY FILTER
+  // FILTER VACANCIES
   // ======================================================
 
   const filteredVacancies = useMemo(() => {
@@ -260,6 +386,8 @@ export const useProviderDashboard = () => {
         vacancy.vacancyId,
 
         vacancy.companyName,
+
+        vacancy.companyNameKana,
 
         vacancy.title,
 
@@ -282,7 +410,7 @@ export const useProviderDashboard = () => {
   }, [vacancies, search]);
 
   // ======================================================
-  // APPLICATION FILTER
+  // FILTER APPLICATIONS
   // ======================================================
 
   const filteredApplications = useMemo(() => {
@@ -295,8 +423,11 @@ export const useProviderDashboard = () => {
     return applications.filter((application) => {
       const haystack = [
         application.application_id,
+
         application.vacancy_id,
+
         application.status,
+
         application.vacancy?.title,
       ]
         .filter(Boolean)
@@ -308,7 +439,7 @@ export const useProviderDashboard = () => {
   }, [applications, search]);
 
   // ======================================================
-  // PLACEMENT FILTER
+  // FILTER PLACEMENT REQUESTS
   // ======================================================
 
   const filteredPlacementRequests = useMemo(() => {
@@ -364,10 +495,13 @@ export const useProviderDashboard = () => {
       ),
   ).length;
 
+  // ======================================================
+  // RETURN
+  // ======================================================
+
   return {
     lang,
 
-    // state
     loading,
     refreshing,
     error,
@@ -378,39 +512,62 @@ export const useProviderDashboard = () => {
     search,
     setSearch,
 
-    // data
     vacancies,
     applications,
     placementRequests,
 
-    // filtered
     filteredVacancies,
     filteredApplications,
     filteredPlacementRequests,
 
-    // counts
     totalVacancies,
     publishedCount,
     pendingVacancyCount,
     totalApplications,
     activePlacementCount,
 
-    // modal state
+    // CREATE
     postVacancyOpen,
-    placementRequestOpen,
 
-    // modal actions
     openPostVacancy,
     closePostVacancy,
+
+    handleVacancyCreated,
+
+    // VIEW
+    viewVacancy,
+
+    openVacancyView,
+    closeVacancyView,
+
+    // EDIT
+    editVacancy,
+
+    openVacancyEdit,
+    closeVacancyEdit,
+
+    handleVacancyUpdated,
+
+    // DELETE
+    deleteVacancyTarget,
+
+    openVacancyDelete,
+    closeVacancyDelete,
+
+    handleVacancyDeleted,
+
+    // CLOSE
+    handleCloseVacancy,
+
+    // PLACEMENT
+    placementRequestOpen,
 
     openPlacementRequest,
     closePlacementRequest,
 
-    // data actions
-    handleRefresh,
-
-    handleVacancyCreated,
-
     handlePlacementCreated,
+
+    // REFRESH
+    handleRefresh,
   };
 };

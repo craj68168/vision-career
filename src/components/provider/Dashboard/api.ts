@@ -50,28 +50,6 @@ export const getProviderVacancyById = async (
   return response.data;
 };
 
-export const updateProviderVacancy = async (
-  vacancyId: string,
-  payload: CreateVacancyPayload,
-): Promise<ItemResponse<Vacancy>> => {
-  const response = await axiosInstance.put<ItemResponse<Vacancy>>(
-    `${PROVIDER_ROUTES.vacancies}/${vacancyId}`,
-    payload,
-  );
-
-  return response.data;
-};
-
-export const deleteProviderVacancy = async (
-  vacancyId: string,
-): Promise<DeleteVacancyResponse> => {
-  const response = await axiosInstance.delete<DeleteVacancyResponse>(
-    `${PROVIDER_ROUTES.vacancies}/${vacancyId}`,
-  );
-
-  return response.data;
-};
-
 // ======================================================
 // PLACEMENT REQUESTS
 // ======================================================
@@ -112,4 +90,36 @@ export const createProviderPlacementRequest = async (
     message: "Placement request created successfully.",
     data: data as PlacementRequest,
   };
+};
+
+export const updateProviderVacancy = async (
+  vacancyId: string,
+  payload: CreateVacancyPayload,
+): Promise<ItemResponse<Vacancy>> => {
+  const response = await axiosInstance.put<ItemResponse<Vacancy>>(
+    `/providers/vacancies/${vacancyId}`,
+    payload,
+  );
+
+  return response.data;
+};
+
+export const deleteProviderVacancy = async (
+  vacancyId: string,
+): Promise<DeleteVacancyResponse> => {
+  const response = await axiosInstance.delete<DeleteVacancyResponse>(
+    `/providers/vacancies/${vacancyId}`,
+  );
+
+  return response.data;
+};
+
+export const closeProviderVacancy = async (
+  vacancyId: string,
+): Promise<ItemResponse<Vacancy>> => {
+  const response = await axiosInstance.put<ItemResponse<Vacancy>>(
+    `/providers/vacancies/close/${vacancyId}`,
+  );
+
+  return response.data;
 };

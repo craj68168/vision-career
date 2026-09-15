@@ -6,20 +6,45 @@ import {
   Briefcase,
   Building2,
   ClipboardList,
+  Eye,
   FileText,
   Inbox,
   MapPin,
+  Pencil,
   Plus,
   RefreshCw,
   Search,
+  Trash2,
   Users,
+  XCircle,
 } from "lucide-react";
 
 import { useProviderDashboard } from "./hook";
 
 import PostVacancyModal from "./PostVacancyModal";
-
 import PlacementRequestModal from "./PlacementRequestModal";
+import VacancyDetailsModal from "./VacancyDetailsModal";
+import DeleteVacancyModal from "./DeleteVacancyModal";
+
+import type { Vacancy } from "./types";
+
+// ======================================================
+// VACANCY ACTION RULES
+// ======================================================
+
+const canEditVacancy = (status: Vacancy["status"]) =>
+  ["draft", "pending_review", "approved", "rejected", "published"].includes(
+    status,
+  );
+
+const canDeleteVacancy = (status: Vacancy["status"]) =>
+  ["draft", "pending_review", "approved", "rejected"].includes(status);
+
+const canCloseVacancy = (status: Vacancy["status"]) => status === "published";
+
+// ======================================================
+// COMPONENT
+// ======================================================
 
 export default function ProviderDashboard() {
   const {
@@ -45,21 +70,49 @@ export default function ProviderDashboard() {
     totalApplications,
     activePlacementCount,
 
+    // CREATE VACANCY
     postVacancyOpen,
-
-    placementRequestOpen,
 
     openPostVacancy,
     closePostVacancy,
 
+    handleVacancyCreated,
+
+    // PLACEMENT REQUEST
+    placementRequestOpen,
+
     openPlacementRequest,
     closePlacementRequest,
 
-    handleRefresh,
-
-    handleVacancyCreated,
-
     handlePlacementCreated,
+
+    // VIEW VACANCY
+    viewVacancy,
+
+    openVacancyView,
+    closeVacancyView,
+
+    // EDIT VACANCY
+    editVacancy,
+
+    openVacancyEdit,
+    closeVacancyEdit,
+
+    handleVacancyUpdated,
+
+    // DELETE VACANCY
+    deleteVacancyTarget,
+
+    openVacancyDelete,
+    closeVacancyDelete,
+
+    handleVacancyDeleted,
+
+    // CLOSE VACANCY
+    handleCloseVacancy,
+
+    // REFRESH
+    handleRefresh,
   } = useProviderDashboard();
 
   // ======================================================
@@ -313,7 +366,9 @@ export default function ProviderDashboard() {
                       key={vacancy.vacancyId}
                       className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md"
                     >
+                      {/* ================================================= */}
                       {/* TOP */}
+                      {/* ================================================= */}
 
                       <div className="flex items-start justify-between gap-4">
                         <div>
@@ -335,13 +390,17 @@ export default function ProviderDashboard() {
                         <StatusBadge value={vacancy.status} />
                       </div>
 
+                      {/* ================================================= */}
                       {/* COMPANY */}
+                      {/* ================================================= */}
 
                       <p className="mt-4 text-sm font-medium text-slate-700">
                         {vacancy.companyName}
                       </p>
 
+                      {/* ================================================= */}
                       {/* INFO */}
+                      {/* ================================================= */}
 
                       <div className="mt-5 space-y-3 text-sm text-slate-600">
                         <div className="flex items-center gap-2">
@@ -366,30 +425,109 @@ export default function ProviderDashboard() {
                         </div>
                       </div>
 
+                      {/* ================================================= */}
                       {/* SALARY */}
+                      {/* ================================================= */}
 
-                      {(vacancy.salaryMin || vacancy.salaryMax) && (
+                      {(vacancy.salaryMin !== null ||
+                        vacancy.salaryMax !== null) && (
                         <div className="mt-5 rounded-xl bg-slate-50 p-3">
                           <p className="text-xs text-slate-500">
                             {lang === "ja" ? "給与" : "Annual Salary"}
                           </p>
 
                           <p className="mt-1 text-sm font-semibold">
-                            {vacancy.salaryMin ?? "-"}
+                            {formatSalary(vacancy.salaryMin)}
                             {" ~ "}
-                            {vacancy.salaryMax ?? "-"} 万円
+                            {formatSalary(vacancy.salaryMax)} 万円
                           </p>
                         </div>
                       )}
 
+                      {/* ================================================= */}
                       {/* REJECTION */}
+                      {/* ================================================= */}
 
                       {vacancy.status === "rejected" &&
                         vacancy.rejectionReason && (
-                          <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
-                            {vacancy.rejectionReason}
+                          <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-700">
+                            <p className="font-medium">
+                              {lang === "ja" ? "却下理由" : "Rejection reason"}
+                            </p>
+
+                            <p className="mt-1">{vacancy.rejectionReason}</p>
                           </div>
                         )}
+
+                      {/* ================================================= */}
+                      {/* ACTIONS */}
+                      {/* ================================================= */}
+
+                      <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5">
+                        {/* VIEW */}
+
+                        <button
+                          type="button"
+                          onClick={() => openVacancyView(vacancy)}
+                          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                        >
+                          <Eye className="h-4 w-4" />
+
+                          {lang === "ja" ? "詳細" : "View"}
+                        </button>
+
+                        {/* EDIT */}
+
+                        {canEditVacancy(vacancy.status) && (
+                          <button
+                            type="button"
+                            onClick={() => openVacancyEdit(vacancy)}
+                            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                          >
+                            <Pencil className="h-4 w-4" />
+
+                            {lang === "ja" ? "編集" : "Edit"}
+                          </button>
+                        )}
+
+                        {/* DELETE */}
+
+                        {canDeleteVacancy(vacancy.status) && (
+                          <button
+                            type="button"
+                            onClick={() => openVacancyDelete(vacancy)}
+                            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+
+                            {lang === "ja" ? "削除" : "Delete"}
+                          </button>
+                        )}
+
+                        {/* CLOSE */}
+
+                        {canCloseVacancy(vacancy.status) && (
+                          <button
+                            type="button"
+                            onClick={() => void handleCloseVacancy(vacancy)}
+                            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700"
+                          >
+                            <XCircle className="h-4 w-4" />
+
+                            {lang === "ja" ? "求人終了" : "Close"}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* PUBLISHED EDIT WARNING */}
+
+                      {vacancy.status === "published" && (
+                        <p className="mt-3 text-xs leading-5 text-slate-500">
+                          {lang === "ja"
+                            ? "公開中の求人を編集すると再審査となり、一時的に非公開になります。"
+                            : "Editing a published vacancy will send it back for review and temporarily remove it from the public job list."}
+                        </p>
+                      )}
                     </article>
                   ))}
                 </div>
@@ -541,15 +679,59 @@ export default function ProviderDashboard() {
       </div>
 
       {/* ================================================= */}
-      {/* MODALS */}
+      {/* CREATE VACANCY */}
       {/* ================================================= */}
 
       <PostVacancyModal
+        key="create-vacancy"
         open={postVacancyOpen}
+        mode="create"
         onClose={closePostVacancy}
         onSuccess={handleVacancyCreated}
         lang={lang}
       />
+
+      {/* ================================================= */}
+      {/* VIEW VACANCY */}
+      {/* ================================================= */}
+
+      <VacancyDetailsModal
+        open={Boolean(viewVacancy)}
+        vacancy={viewVacancy}
+        onClose={closeVacancyView}
+        onEdit={openVacancyEdit}
+        lang={lang}
+      />
+
+      {/* ================================================= */}
+      {/* EDIT VACANCY */}
+      {/* ================================================= */}
+
+      <PostVacancyModal
+        key={editVacancy ? `edit-${editVacancy.vacancyId}` : "edit-none"}
+        open={Boolean(editVacancy)}
+        mode="edit"
+        vacancy={editVacancy}
+        onClose={closeVacancyEdit}
+        onSuccess={handleVacancyUpdated}
+        lang={lang}
+      />
+
+      {/* ================================================= */}
+      {/* DELETE VACANCY */}
+      {/* ================================================= */}
+
+      <DeleteVacancyModal
+        open={Boolean(deleteVacancyTarget)}
+        vacancy={deleteVacancyTarget}
+        onClose={closeVacancyDelete}
+        onSuccess={handleVacancyDeleted}
+        lang={lang}
+      />
+
+      {/* ================================================= */}
+      {/* PLACEMENT REQUEST */}
+      {/* ================================================= */}
 
       <PlacementRequestModal
         open={placementRequestOpen}
@@ -559,6 +741,18 @@ export default function ProviderDashboard() {
       />
     </>
   );
+}
+
+// ======================================================
+// SALARY
+// ======================================================
+
+function formatSalary(value?: number | null) {
+  if (value === null || value === undefined) {
+    return "-";
+  }
+
+  return new Intl.NumberFormat("en-US").format(value);
 }
 
 // ======================================================
@@ -616,7 +810,7 @@ function TabButton({
 }
 
 // ======================================================
-// EMPTY
+// EMPTY STATE
 // ======================================================
 
 function EmptyState({
@@ -642,7 +836,7 @@ function EmptyState({
 }
 
 // ======================================================
-// INFO
+// INFO FIELD
 // ======================================================
 
 function InfoField({ label, value }: { label: string; value?: string | null }) {
@@ -656,7 +850,7 @@ function InfoField({ label, value }: { label: string; value?: string | null }) {
 }
 
 // ======================================================
-// STATUS
+// STATUS BADGE
 // ======================================================
 
 function StatusBadge({ value }: { value: string }) {
