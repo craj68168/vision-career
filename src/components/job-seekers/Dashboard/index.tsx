@@ -77,15 +77,51 @@ export default function JobSeekerDashboard() {
 
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-6 md:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-            {lang === "ja" ? "求人ダッシュボード" : "Job Dashboard"}
-          </h1>
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            {/* Left content */}
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+                {lang === "ja" ? "求人ダッシュボード" : "Job Dashboard"}
+              </h1>
 
-          <p className="mt-2 max-w-3xl text-sm text-slate-600 md:text-base">
-            {lang === "ja"
-              ? "新しい機会を探し、応募状況を管理します。"
-              : "Explore new opportunities, track every application, and manage your job search from one place."}
-          </p>
+              <p className="mt-2 max-w-3xl text-sm text-slate-600 md:text-base">
+                {lang === "ja"
+                  ? "新しい機会を探し、応募状況を管理します。"
+                  : "Explore new opportunities, track every application, and manage your job search from one place."}
+              </p>
+            </div>
+
+            {/* Right actions */}
+            <div className="flex flex-col gap-3 sm:flex-row md:shrink-0">
+              <Link
+                href={
+                  lang === "ja"
+                    ? "/job-seekers/profile/view"
+                    : "/en/job-seekers/profile/view"
+                }
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                {lang === "ja" ? "プロフィールを見る" : "View Profile"}
+              </Link>
+
+              {!isProfileComplete && (
+                <Link
+                  href={
+                    lang === "ja"
+                      ? "/job-seekers/profile"
+                      : "/en/job-seekers/profile"
+                  }
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-amber-700"
+                >
+                  {lang === "ja"
+                    ? "プロフィールを完成する"
+                    : "Complete Profile"}
+
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       </header>
 
