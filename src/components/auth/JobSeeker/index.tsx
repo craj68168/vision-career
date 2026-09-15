@@ -222,6 +222,24 @@ export default function JobSeekerAuth() {
                         onChange={handleLoginChange}
                       />
 
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.push(
+                              lang === "ja"
+                                ? "/job-seekers-auth/forgot-password"
+                                : "/en/job-seekers-auth/forgot-password",
+                            )
+                          }
+                          className="cursor-pointer text-sm font-medium text-sky-400 transition hover:text-sky-300 hover:underline"
+                        >
+                          {lang === "ja"
+                            ? "パスワードを忘れた方"
+                            : "Forgot password?"}
+                        </button>
+                      </div>
+
                       <SubmitButton
                         isSubmitting={isSubmitting}
                         lang={lang}
