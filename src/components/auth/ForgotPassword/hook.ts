@@ -51,7 +51,8 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
   // CONFIG
   // =====================================
 
-  const authBaseUrl = authType === "seeker" ? "/seekers/auth" : "/auth";
+  const authBaseUrl =
+    authType === "seeker" ? "/seekers/auth" : "/auth/providers";
 
   const loginPath =
     authType === "seeker"
