@@ -4,7 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 
+dayjs.extend(utc);
 import { useLanguage } from "@/context/LanguageContext";
 
 import {
@@ -24,6 +27,7 @@ import type {
   ProfileFormData,
   ProfileValidationErrors,
 } from "./types";
+import { formatDateForInput } from "@/lib/helpers";
 
 const initialFormData: ProfileFormData = {
   phone: "",
@@ -84,22 +88,48 @@ export const useJobSeekerProfile = () => {
         missingFields: data.missing_fields || [],
       });
 
-      setEducation(data.education || []);
+      setEducation(
+        (data.education || []).map((record) => ({
+          ...record,
 
-      setEmploymentHistory(data.employment_history || []);
+          enrollment_date: formatDateForInput(record.enrollment_date),
+
+          graduation_date: formatDateForInput(record.graduation_date),
+        })),
+      );
+
+      setEmploymentHistory(
+        (data.employment_history || []).map((record) => ({
+          ...record,
+
+          start_date: formatDateForInput(record.start_date),
+
+          end_date: formatDateForInput(record.end_date),
+        })),
+      );
 
       setFormData({
         phone: data.profile.phone || "",
         address: data.profile.address || "",
-        date_of_birth: data.profile.date_of_birth || "",
+
+        date_of_birth: formatDateForInput(data.profile.date_of_birth),
+
         gender: data.profile.gender || "",
+
         nationality: data.profile.nationality || "",
+
         visa_type: data.profile.visa_type || "",
-        visa_expiry_date: data.profile.visa_expiry_date || "",
+
+        visa_expiry_date: formatDateForInput(data.profile.visa_expiry_date),
+
         japanese_level: data.profile.japanese_level || "",
+
         desired_job: data.profile.desired_job || "",
+
         desired_location: data.profile.desired_location || "",
-        available_from: data.profile.available_from || "",
+
+        available_from: formatDateForInput(data.profile.available_from),
+
         notes: data.profile.notes || "",
       });
 
