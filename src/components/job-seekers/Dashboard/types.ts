@@ -3,92 +3,238 @@ export type MissingField = {
   label: string;
 };
 
+// ======================================================
+// PROFILE
+// ======================================================
+
 export type DashboardProfileResponse = {
   status: "success" | "error";
+
   message?: string;
 
   is_complete: boolean;
+
   completion_percentage: number;
+
   missing_fields: MissingField[];
 };
 
+// ======================================================
+// VACANCY
+// ======================================================
+
 export type Vacancy = {
-  vacancy_id: string;
+  vacancyId: string;
+
+  companyName: string;
+
+  companyNameKana?: string | null;
 
   title: string;
-  title_kana?: string;
 
-  employment_type: string;
-  number_of_people?: number;
+  titleKana?: string | null;
 
-  job_description: string;
-  responsibilities?: string;
+  employmentType: string;
 
-  required_skills?: string;
-  preferred_skills?: string;
+  numberOfPeople: number;
 
-  required_education?: string;
-  required_experience?: string;
+  jobDescription: string;
 
-  japanese_level?: string;
+  responsibilities?: string | null;
 
-  work_location?: string;
-  work_location_detail?: string;
+  requiredSkills?: string | null;
 
-  remote_work?: string;
+  preferredSkills?: string | null;
 
-  salary_min?: number;
-  salary_max?: number;
-  salary_note?: string;
+  requiredEducation?: string | null;
 
-  work_hours?: string;
-  break_time?: string;
-  overtime?: string;
+  requiredExperience?: string | null;
 
-  holidays?: string;
+  japaneseLevel?: string | null;
+
+  workLocation: string;
+
+  remoteWork?: string | null;
+
+  salaryMin?: number | null;
+
+  salaryMax?: number | null;
+
+  salaryNote?: string | null;
+
+  workHours?: string | null;
+
+  breakTime?: string | null;
+
+  overtime?: string | null;
+
+  holidays?: string | null;
 
   benefits?: string[];
+
   insurance?: string[];
 
-  trial_period?: string;
+  trialPeriod?: string | null;
 
-  application_deadline?: string;
-  start_date?: string;
+  applicationDeadline?: string | null;
 
-  selection_process?: string;
+  startDate?: string | null;
 
-  created_at?: string;
+  selectionProcess?: string | null;
+
+  status?: string;
+
+  createdAt?: string;
 };
+
+// ======================================================
+// VACANCY RESPONSES
+// ======================================================
+
+export type VacancyListResponse = {
+  success: boolean;
+
+  count: number;
+
+  data: Vacancy[];
+
+  message?: string;
+};
+
+export type VacancyItemResponse = {
+  success: boolean;
+
+  data: Vacancy;
+
+  message?: string;
+};
+
+// ======================================================
+// APPLICATION STATUS
+//
+// Must match backend applicationSchema.js
+// ======================================================
 
 export type ApplicationStatus =
   | "PENDING_ADMIN_APPROVAL"
-  | "ADMIN_APPROVED"
   | "ADMIN_REJECTED"
   | "SENT_TO_PROVIDER"
-  | "PROVIDER_REVIEWING"
-  | "SHORTLISTED"
+  | "UNDER_REVIEW"
   | "INTERVIEW"
   | "SELECTED"
-  | "REJECTED"
-  | "HIRED";
+  | "HIRED"
+  | "REJECTED";
+
+// ======================================================
+// STATUS TRACKING
+// ======================================================
+
+export type ApplicationTrackingStep = {
+  key: string;
+
+  label: string;
+
+  state: "pending" | "current" | "completed" | "rejected";
+};
+
+export type ApplicationStatusTracking = {
+  current_status: string;
+
+  current_label: string;
+
+  outcome: "in_progress" | "completed" | "rejected";
+
+  steps: ApplicationTrackingStep[];
+};
+
+// ======================================================
+// APPLICATION
+// ======================================================
 
 export type Application = {
   application_id: string;
-  vacancy_id: string;
 
-  status: ApplicationStatus;
+  vacancy_id: string;
 
   cover_letter?: string | null;
 
+  status: ApplicationStatus;
+
+  status_tracking?: ApplicationStatusTracking;
+
+  admin_rejection_reason?: string | null;
+
+  admin_reviewed_at?: string | null;
+
   applied_at: string;
 
-  vacancy?: Vacancy;
+  created_at?: string;
+
+  updated_at?: string;
+
+  vacancy?: Vacancy | null;
 };
+
+// ======================================================
+// APPLICATION LIST RESPONSE
+// ======================================================
+
+export type ApplicationListResponse = {
+  success: boolean;
+
+  count: number;
+
+  data: Application[];
+
+  message?: string;
+};
+
+// ======================================================
+// APPLY PAYLOAD
+// ======================================================
+
+export type ApplyVacancyPayload = {
+  vacancyId: string;
+
+  coverLetter?: string | null;
+};
+
+// ======================================================
+// APPLY RESPONSE
+// ======================================================
+
+export type ApplyVacancyResult = {
+  applicationId: string;
+
+  vacancyId: string;
+
+  status: ApplicationStatus;
+
+  appliedAt: string;
+};
+
+export type ApplyVacancyResponse = {
+  success: boolean;
+
+  message: string;
+
+  data: ApplyVacancyResult;
+};
+
+// ======================================================
+// DASHBOARD
+// ======================================================
 
 export type DashboardTab = "available" | "applied";
 
+// ======================================================
+// API ERROR
+// ======================================================
+
 export type ApiErrorResponse = {
   success?: boolean;
+
   status?: string;
+
   message?: string;
 };

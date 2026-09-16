@@ -2,13 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { useRouter } from "next/navigation";
-
 import axios from "axios";
+
+import { useRouter } from "next/navigation";
 
 import { useLanguage } from "@/context/LanguageContext";
 
-import { getDashboardProfileStatus } from "./api";
+import {
+  getAvailableVacancies,
+  getDashboardProfileStatus,
+  getMyApplications,
+} from "./api";
 
 import type {
   ApiErrorResponse,
@@ -23,9 +27,17 @@ export const useJobSeekerDashboard = () => {
 
   const { lang } = useLanguage();
 
+  // ==================================================
+  // DATA
+  // ==================================================
+
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
 
   const [applications, setApplications] = useState<Application[]>([]);
+
+  // ==================================================
+  // PROFILE
+  // ==================================================
 
   const [isProfileComplete, setIsProfileComplete] = useState(false);
 
@@ -34,7 +46,13 @@ export const useJobSeekerDashboard = () => {
 
   const [missingFields, setMissingFields] = useState<MissingField[]>([]);
 
+  // ==================================================
+  // DASHBOARD UI
+  // ==================================================
+
   const [loading, setLoading] = useState(true);
+
+  const [refreshing, setRefreshing] = useState(false);
 
   const [error, setError] = useState("");
 
@@ -42,9 +60,29 @@ export const useJobSeekerDashboard = () => {
 
   const [activeTab, setActiveTab] = useState<DashboardTab>("available");
 
-  // ============================================
-  // AUTH
-  // ============================================
+  // ==================================================
+  // APPLY MODAL
+  // ==================================================
+
+  const [applyVacancy, setApplyVacancy] = useState<Vacancy | null>(null);
+
+  // ==================================================
+  // AUTH REDIRECT
+  // ==================================================
+
+  const redirectToLogin = useCallback(() => {
+    localStorage.removeItem("access_token");
+
+    localStorage.removeItem("user_role");
+
+    router.replace(
+      lang === "ja" ? "/job-seekers-auth" : "/en/job-seekers-auth",
+    );
+  }, [lang, router]);
+
+  // ==================================================
+  // CHECK AUTH
+  // ==================================================
 
   const checkAuth = useCallback(() => {
     const token = localStorage.getItem("access_token");
@@ -52,56 +90,35 @@ export const useJobSeekerDashboard = () => {
     const role = localStorage.getItem("user_role");
 
     if (!token || role !== "seeker") {
-      router.replace(
-        lang === "ja" ? "/job-seekers-auth" : "/en/job-seekers-auth",
-      );
+      redirectToLogin();
 
       return false;
     }
 
     return true;
-  }, [router, lang]);
+  }, [redirectToLogin]);
 
-  // ============================================
-  // PROFILE STATUS
-  // ============================================
+  // ==================================================
+  // API ERROR
+  // ==================================================
 
-  const loadProfileStatus = useCallback(async () => {
-    const authenticated = checkAuth();
+  const handleApiError = useCallback(
+    (apiError: unknown) => {
+      console.error("Job seeker dashboard error:", apiError);
 
-    if (!authenticated) {
-      return;
-    }
-
-    try {
-      const data = await getDashboardProfileStatus();
-
-      if (data.status !== "success") {
-        throw new Error(data.message || "Failed to load profile.");
-      }
-
-      setIsProfileComplete(data.is_complete);
-
-      setProfileCompletionPercentage(data.completion_percentage);
-
-      setMissingFields(data.missing_fields || []);
-    } catch (error: unknown) {
-      console.error("Dashboard profile error:", error);
-
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        if (error.response?.status === 401 || error.response?.status === 403) {
-          localStorage.removeItem("access_token");
-
-          localStorage.removeItem("user_role");
-
-          router.replace(
-            lang === "ja" ? "/job-seekers-auth" : "/en/job-seekers-auth",
-          );
+      if (axios.isAxiosError<ApiErrorResponse>(apiError)) {
+        if (
+          apiError.response?.status === 401 ||
+          apiError.response?.status === 403
+        ) {
+          redirectToLogin();
 
           return;
         }
 
-        setError(error.response?.data?.message || "Failed to load dashboard.");
+        setError(
+          apiError.response?.data?.message || "Failed to load dashboard.",
+        );
 
         return;
       }
@@ -111,71 +128,182 @@ export const useJobSeekerDashboard = () => {
           ? "ダッシュボードの読み込みに失敗しました"
           : "Failed to load dashboard.",
       );
-    }
-  }, [checkAuth, lang, router]);
+    },
+    [lang, redirectToLogin],
+  );
 
-  // ============================================
-  // INITIAL LOAD
-  // ============================================
+  // ==================================================
+  // LOAD DASHBOARD
+  // ==================================================
 
-  useEffect(() => {
-    const loadDashboard = async () => {
+  const loadDashboard = useCallback(
+    async (showMainLoader = false) => {
+      if (!checkAuth()) {
+        return false;
+      }
+
       try {
-        setLoading(true);
+        if (showMainLoader) {
+          setLoading(true);
+        }
+
         setError("");
 
-        await loadProfileStatus();
+        const [profileResponse, vacancyResponse, applicationResponse] =
+          await Promise.all([
+            getDashboardProfileStatus(),
 
-        /*
-            Temporary.
+            getAvailableVacancies(),
 
-            Vacancies and applications
-            will be loaded here after
-            their GET APIs are created.
-          */
+            getMyApplications(),
+          ]);
 
-        setVacancies([]);
-        setApplications([]);
+        // ==========================================
+        // PROFILE
+        // ==========================================
+
+        if (profileResponse.status !== "success") {
+          throw new Error(profileResponse.message || "Failed to load profile.");
+        }
+
+        setIsProfileComplete(profileResponse.is_complete);
+
+        setProfileCompletionPercentage(profileResponse.completion_percentage);
+
+        setMissingFields(profileResponse.missing_fields || []);
+
+        // ==========================================
+        // AVAILABLE VACANCIES
+        // ==========================================
+
+        setVacancies(
+          Array.isArray(vacancyResponse.data) ? vacancyResponse.data : [],
+        );
+
+        // ==========================================
+        // APPLICATIONS
+        // ==========================================
+
+        setApplications(
+          Array.isArray(applicationResponse.data)
+            ? applicationResponse.data
+            : [],
+        );
+
+        return true;
+      } catch (apiError: unknown) {
+        handleApiError(apiError);
+
+        return false;
       } finally {
-        setLoading(false);
+        if (showMainLoader) {
+          setLoading(false);
+        }
       }
-    };
+    },
+    [checkAuth, handleApiError],
+  );
 
-    loadDashboard();
-  }, [loadProfileStatus]);
+  // ==================================================
+  // INITIAL LOAD
+  // ==================================================
 
-  // ============================================
-  // APPLIED VACANCY IDS
-  // ============================================
+  useEffect(() => {
+    void loadDashboard(true);
+  }, [loadDashboard]);
 
-  const appliedVacancyIds = useMemo(() => {
-    return new Set(applications.map((application) => application.vacancy_id));
-  }, [applications]);
+  // ==================================================
+  // REFRESH
+  // ==================================================
 
-  // ============================================
-  // FILTER AVAILABLE JOBS
-  // ============================================
+  const handleRefresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
+
+      await loadDashboard(false);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadDashboard]);
+
+  // ==================================================
+  // OPEN APPLY
+  // ==================================================
+
+  const openApplyVacancy = (vacancy: Vacancy) => {
+    if (!isProfileComplete) {
+      return;
+    }
+
+    setApplyVacancy(vacancy);
+  };
+
+  // ==================================================
+  // CLOSE APPLY
+  // ==================================================
+
+  const closeApplyVacancy = () => {
+    setApplyVacancy(null);
+  };
+
+  // ==================================================
+  // APPLICATION SUBMITTED
+  // ==================================================
+
+  const handleApplicationSubmitted = async () => {
+    setApplyVacancy(null);
+
+    /*
+     * Reload all data.
+     *
+     * The backend removes already-applied vacancies
+     * automatically from GET /seekers/vacancies.
+     */
+    await loadDashboard(false);
+
+    setActiveTab("applied");
+  };
+
+  // ==================================================
+  // FILTER AVAILABLE VACANCIES
+  // ==================================================
 
   const filteredVacancies = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
-    const available = vacancies.filter(
-      (vacancy) => !appliedVacancyIds.has(vacancy.vacancy_id),
-    );
-
     if (!keyword) {
-      return available;
+      return vacancies;
     }
 
-    return available.filter((vacancy) => {
+    return vacancies.filter((vacancy) => {
       const haystack = [
+        vacancy.vacancyId,
+
+        vacancy.companyName,
+
+        vacancy.companyNameKana,
+
         vacancy.title,
-        vacancy.employment_type,
-        vacancy.work_location,
-        vacancy.job_description,
-        vacancy.required_skills,
-        vacancy.preferred_skills,
-        vacancy.japanese_level,
+
+        vacancy.titleKana,
+
+        vacancy.employmentType,
+
+        vacancy.workLocation,
+
+        vacancy.jobDescription,
+
+        vacancy.requiredSkills,
+
+        vacancy.preferredSkills,
+
+        vacancy.requiredEducation,
+
+        vacancy.requiredExperience,
+
+        vacancy.japaneseLevel,
+
+        vacancy.remoteWork,
       ]
         .filter(Boolean)
         .join(" ")
@@ -183,11 +311,11 @@ export const useJobSeekerDashboard = () => {
 
       return haystack.includes(keyword);
     });
-  }, [vacancies, search, appliedVacancyIds]);
+  }, [vacancies, search]);
 
-  // ============================================
+  // ==================================================
   // FILTER APPLICATIONS
-  // ============================================
+  // ==================================================
 
   const filteredApplications = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -198,10 +326,19 @@ export const useJobSeekerDashboard = () => {
 
     return applications.filter((application) => {
       const haystack = [
-        application.vacancy?.title,
-        application.vacancy?.employment_type,
-        application.vacancy?.work_location,
+        application.application_id,
+
+        application.vacancy_id,
+
         application.status,
+
+        application.vacancy?.companyName,
+
+        application.vacancy?.title,
+
+        application.vacancy?.employmentType,
+
+        application.vacancy?.workLocation,
       ]
         .filter(Boolean)
         .join(" ")
@@ -211,29 +348,33 @@ export const useJobSeekerDashboard = () => {
     });
   }, [applications, search]);
 
-  // ============================================
+  // ==================================================
   // COUNTS
-  // ============================================
+  // ==================================================
 
-  const availableCount = filteredVacancies.length;
+  const availableCount = vacancies.length;
 
   const appliedCount = applications.length;
 
   const inProgressCount = applications.filter((application) =>
     [
       "PENDING_ADMIN_APPROVAL",
-      "ADMIN_APPROVED",
       "SENT_TO_PROVIDER",
-      "PROVIDER_REVIEWING",
-      "SHORTLISTED",
+      "UNDER_REVIEW",
       "INTERVIEW",
+      "SELECTED",
     ].includes(application.status),
   ).length;
+
+  // ==================================================
+  // RETURN
+  // ==================================================
 
   return {
     lang,
 
     loading,
+    refreshing,
     error,
 
     vacancies,
@@ -256,6 +397,14 @@ export const useJobSeekerDashboard = () => {
     appliedCount,
     inProgressCount,
 
-    refreshProfileStatus: loadProfileStatus,
+    applyVacancy,
+
+    openApplyVacancy,
+    closeApplyVacancy,
+
+    handleApplicationSubmitted,
+
+    loadDashboard,
+    handleRefresh,
   };
 };
