@@ -13,7 +13,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import type { VacancyLite } from "./applications";
+import type { VacancyLite } from ".";
 
 function InfoCard({
   label,

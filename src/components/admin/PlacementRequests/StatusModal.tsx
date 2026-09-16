@@ -1,4 +1,4 @@
-import { STATUS_CONFIG } from "./placement-requests";
+import { STATUS_CONFIG } from ".";
 import { PlacementRequestStatus } from "@/hooks/useAdminPlacementRequests";
 
 interface StatusModalProps {

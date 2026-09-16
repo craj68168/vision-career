@@ -8,7 +8,7 @@ import {
   PAYMENT_STATUS_CONFIG,
   formatCurrency,
   formatDate,
-} from "./placement-billings";
+} from ".";
 import toast from "react-hot-toast";
 
 interface BillingEditModalProps {

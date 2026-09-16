@@ -26,8 +26,6 @@ import ApplicationDetails, {
   statusBadge,
   formatDate,
 } from "./ApplicationDetails";
-import ApplicationEditModal from "./EditModal";
-import ApplicationDeleteModal from "./DeleteModal";
 
 type ApplicationStatus =
   | "pending"
@@ -846,32 +844,6 @@ export default function AdminApplicationsPage() {
           setSelectedApplication={setSelectedApplication}
           openEditModal={openEditModal}
           openDeleteModal={openDeleteModal}
-        />
-      )}
-
-      {/* Edit Modal */}
-      {editingApplication && (
-        <ApplicationEditModal
-          lang={lang}
-          isSaving={isSaving}
-          setEditingApplication={setEditingApplication}
-          editingApplication={editingApplication}
-          editError={editError}
-          editForm={editForm}
-          handleSaveEdit={handleSaveEdit}
-          handleEditChange={handleEditChange}
-        />
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {deletingApplication && (
-        <ApplicationDeleteModal
-          lang={lang}
-          deleteError={deleteError}
-          isDeleting={isDeleting}
-          setDeletingApplication={setDeletingApplication}
-          deletingApplication={deletingApplication}
-          handleDelete={handleDelete}
         />
       )}
     </>

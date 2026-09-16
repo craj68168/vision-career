@@ -1,5 +1,5 @@
 import { Loader2, Pencil, RefreshCw, Search, Users, X } from "lucide-react";
-import { CANDIDATE_STATUS_OPTIONS, formatDate } from "./placement-requests";
+import { CANDIDATE_STATUS_OPTIONS, formatDate } from ".";
 
 interface CandidatesModalProps {
   lang: "ja" | "en";

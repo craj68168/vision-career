@@ -8,7 +8,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { DetailItem, formatSalary, formatDate } from "./placement-requests";
+import { DetailItem, formatSalary, formatDate } from ".";
 
 interface DetailsModalProps {
   setShowDetailsModal: React.Dispatch<React.SetStateAction<boolean>>;

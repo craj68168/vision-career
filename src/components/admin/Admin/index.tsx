@@ -1,9 +1,11 @@
 "use client";
-
+import axios from "axios";
+import { getCurrentAdmin } from "@/components/auth/Admin/api";
+import type { AdminApiErrorResponse } from "@/components/auth/Admin/types";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import AdminApplicationsPage from "@/components/admin/applications/applications";
-import AllVacanciesList from "@/components/admin/vacancies/vacancies";
+import AdminApplicationsPage from "@/components/admin/Applications";
+import AllVacanciesList from "@/components/admin/Vacancies";
 import {
   Loader2,
   LogOut,
@@ -23,15 +25,15 @@ import {
   Shield,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import AdminProvidersList from "./job-providers/job-providers";
-import AdminJobSeekersList from "./job-seekers/job-seekers";
-import AdminPlacementRequestsPage from "./placement-requests/placement-requests";
+import AdminProvidersList from "../JobProviders";
+import AdminJobSeekersList from "../JobSeekers";
+import AdminPlacementRequestsPage from "../PlacementRequests";
 import toast from "react-hot-toast";
-import AdminPlacementBillingsPage from "./placement-billings/placement-billings";
-import AdminStaffList from "./staffs";
-import AdminTrainingCategories from "./training/training";
-import AdminDashboard from "./dashboard/body";
-import AdminUpdateCredentialsPage from "./security";
+import AdminPlacementBillingsPage from "../PlacementBillings";
+import AdminStaffList from "../Staffs";
+import AdminTrainingCategories from "../Training";
+import AdminDashboard from "../Dashboard";
+import AdminUpdateCredentialsPage from "../Security";
 
 interface TabConfig {
   id: string;
@@ -69,43 +71,55 @@ export default function AdminPage() {
     }
   };
 
-  const checkAuth = async () => {
-    try {
-      const token = localStorage.getItem("admin_token");
-
-      if (!token) {
-        router.replace(lang === "ja" ? "/admin-login" : "/en/admin-login");
-        return;
-      }
-
-      const res = await fetch("https://vision-career.co.jp/admin_profile.php", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok && res.status === 401) {
-        localStorage.removeItem("admin_token");
-        router.replace(lang === "ja" ? "/admin-login" : "/en/admin-login");
-        return;
-      }
-      setIsAllowed(true);
-    } catch (error: any) {
-      console.error(error);
-      toast.error(
-        error?.response?.data?.message || "Error while checking auth",
-      );
-      setIsAllowed(false);
-      router.replace(lang === "ja" ? "/admin-login" : "/en/admin-login");
-    } finally {
-      setIsCheckingAuth(false);
-    }
-  };
-
   useEffect(() => {
-    checkAuth();
-  }, []);
+    const checkAdminAuth = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+
+        const role = localStorage.getItem("user_role");
+
+        if (!token || role !== "admin") {
+          router.replace(lang === "ja" ? "/admin-login" : "/en/admin-login");
+
+          return;
+        }
+
+        await getCurrentAdmin();
+
+        setIsAllowed(true);
+      } catch (error: unknown) {
+        console.error("Admin auth error:", error);
+
+        setIsAllowed(false);
+
+        if (axios.isAxiosError<AdminApiErrorResponse>(error)) {
+          if (
+            error.response?.status === 401 ||
+            error.response?.status === 403
+          ) {
+            localStorage.removeItem("access_token");
+
+            localStorage.removeItem("user_role");
+
+            router.replace(lang === "ja" ? "/admin-login" : "/en/admin-login");
+
+            return;
+          }
+
+          toast.error(
+            error.response?.data?.message ||
+              "Error while checking authentication.",
+          );
+        } else {
+          toast.error("Error while checking authentication.");
+        }
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    void checkAdminAuth();
+  }, [lang, router]);
 
   const handleLangChange = (targetLang: "en" | "ja") => {
     if (lang === targetLang) return;
@@ -119,8 +133,15 @@ export default function AdminPage() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("access_token");
+
+    localStorage.removeItem("user_role");
+
+    // old PHP token cleanup
     localStorage.removeItem("admin_token");
+
     localStorage.removeItem("admin-theme");
+
     router.replace(lang === "ja" ? "/admin-login" : "/en/admin-login");
   };
 

@@ -32,7 +32,7 @@ import {
   PAYMENT_STATUS_CONFIG,
   formatCurrency,
   formatDate,
-} from "./placement-billings";
+} from ".";
 
 interface BillingDetailsModalProps {
   lang: string;
