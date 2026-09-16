@@ -357,13 +357,9 @@ export const useJobSeekerDashboard = () => {
   const appliedCount = applications.length;
 
   const inProgressCount = applications.filter((application) =>
-    [
-      "PENDING_ADMIN_APPROVAL",
-      "SENT_TO_PROVIDER",
-      "UNDER_REVIEW",
-      "INTERVIEW",
-      "SELECTED",
-    ].includes(application.status),
+    ["SENT_TO_PROVIDER", "UNDER_REVIEW", "INTERVIEW", "SELECTED"].includes(
+      application.status,
+    ),
   ).length;
 
   // ==================================================
