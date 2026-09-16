@@ -3,13 +3,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import axios from "axios";
+
 import toast from "react-hot-toast";
+
 import { useRouter } from "next/navigation";
 
 import { useLanguage } from "@/context/LanguageContext";
 
 import {
   closeProviderVacancy,
+  getProviderApplications,
   getProviderPlacementRequests,
   getProviderVacancies,
 } from "./api";
@@ -22,6 +25,10 @@ import type {
   Vacancy,
 } from "./types";
 
+// ======================================================
+// PROVIDER DASHBOARD HOOK
+// ======================================================
+
 export const useProviderDashboard = () => {
   const router = useRouter();
 
@@ -33,11 +40,7 @@ export const useProviderDashboard = () => {
 
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
 
-  /*
-   * Provider applications API is not connected yet.
-   * Keep this empty until we build that endpoint.
-   */
-  const [applications] = useState<ProviderApplication[]>([]);
+  const [applications, setApplications] = useState<ProviderApplication[]>([]);
 
   const [placementRequests, setPlacementRequests] = useState<
     PlacementRequest[]
@@ -123,14 +126,19 @@ export const useProviderDashboard = () => {
       console.error("Provider dashboard error:", error);
 
       if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        if (error.response?.status === 401 || error.response?.status === 403) {
+        const status = error.response?.status;
+
+        if (status === 401 || status === 403) {
           redirectToLogin();
 
           return;
         }
 
         setError(
-          error.response?.data?.message || "Failed to load provider dashboard.",
+          error.response?.data?.message ||
+            (lang === "ja"
+              ? "ダッシュボードの読み込みに失敗しました"
+              : "Failed to load provider dashboard."),
         );
 
         return;
@@ -162,15 +170,46 @@ export const useProviderDashboard = () => {
 
         setError("");
 
-        const [vacancyResponse, placementResponse] = await Promise.all([
-          getProviderVacancies(),
+        // ==================================================
+        // FETCH PROVIDER DASHBOARD DATA
+        // ==================================================
+        //
+        // 1. Vacancies
+        // 2. Applications approved by Admin
+        // 3. Placement requests
+        //
+        // ==================================================
 
-          getProviderPlacementRequests(),
-        ]);
+        const [vacancyResponse, applicationResponse, placementResponse] =
+          await Promise.all([
+            getProviderVacancies(),
+
+            getProviderApplications(),
+
+            getProviderPlacementRequests(),
+          ]);
+
+        // ==================================================
+        // VACANCIES
+        // ==================================================
 
         setVacancies(
           Array.isArray(vacancyResponse.data) ? vacancyResponse.data : [],
         );
+
+        // ==================================================
+        // APPLICATIONS
+        // ==================================================
+
+        setApplications(
+          Array.isArray(applicationResponse.data)
+            ? applicationResponse.data
+            : [],
+        );
+
+        // ==================================================
+        // PLACEMENT REQUESTS
+        // ==================================================
 
         setPlacementRequests(
           Array.isArray(placementResponse.data) ? placementResponse.data : [],
@@ -199,7 +238,7 @@ export const useProviderDashboard = () => {
   }, [loadDashboard]);
 
   // ======================================================
-  // REFRESH
+  // REFRESH DASHBOARD
   // ======================================================
 
   const handleRefresh = useCallback(async () => {
@@ -255,6 +294,14 @@ export const useProviderDashboard = () => {
   // ======================================================
 
   const openVacancyEdit = (vacancy: Vacancy) => {
+    /*
+     * Close details modal first.
+     *
+     * setTimeout avoids the React / DOM issue we
+     * previously had when one modal was removed
+     * while another modal was inserted immediately.
+     */
+
     setViewVacancy(null);
 
     window.setTimeout(() => {
@@ -299,10 +346,6 @@ export const useProviderDashboard = () => {
   // ======================================================
 
   const handleCloseVacancy = async (vacancy: Vacancy) => {
-    /*
-     * Only published vacancies
-     * should be closed.
-     */
     if (vacancy.status !== "published") {
       toast.error(
         lang === "ja"
@@ -338,7 +381,10 @@ export const useProviderDashboard = () => {
 
       if (axios.isAxiosError<ApiErrorResponse>(error)) {
         toast.error(
-          error.response?.data?.message || "Failed to close vacancy.",
+          error.response?.data?.message ||
+            (lang === "ja"
+              ? "求人の終了に失敗しました"
+              : "Failed to close vacancy."),
         );
 
         return;
@@ -421,14 +467,56 @@ export const useProviderDashboard = () => {
     }
 
     return applications.filter((application) => {
+      const applicant = application.applicant;
+
+      const vacancy = application.vacancy;
+
       const haystack = [
+        // ==========================================
+        // APPLICATION
+        // ==========================================
+
         application.application_id,
 
         application.vacancy_id,
 
         application.status,
 
-        application.vacancy?.title,
+        // ==========================================
+        // APPLICANT PROFESSIONAL DATA
+        // ==========================================
+
+        applicant?.name,
+
+        applicant?.nationality,
+
+        applicant?.visa_type,
+
+        applicant?.japanese_level,
+
+        applicant?.desired_job,
+
+        applicant?.desired_location,
+
+        ...(applicant?.skills || []),
+
+        // ==========================================
+        // VACANCY
+        // ==========================================
+
+        vacancy?.vacancyId,
+
+        vacancy?.title,
+
+        vacancy?.titleKana,
+
+        vacancy?.companyName,
+
+        vacancy?.employmentType,
+
+        vacancy?.workLocation,
+
+        vacancy?.japaneseLevel,
       ]
         .filter(Boolean)
         .join(" ")
@@ -472,7 +560,7 @@ export const useProviderDashboard = () => {
   }, [placementRequests, search]);
 
   // ======================================================
-  // COUNTS
+  // VACANCY COUNTS
   // ======================================================
 
   const totalVacancies = vacancies.length;
@@ -486,12 +574,57 @@ export const useProviderDashboard = () => {
       vacancy.status === "pending_review" || vacancy.status === "draft",
   ).length;
 
+  // ======================================================
+  // APPLICATION COUNT
+  // ======================================================
+  //
+  // This is now REAL backend data.
+  //
+  // Because the provider API only returns
+  // Admin-approved applications, this count
+  // automatically represents applications that
+  // the provider is allowed to see.
+  //
+  // ======================================================
+
   const totalApplications = applications.length;
+
+  // ======================================================
+  // APPLICATION STATUS COUNTS
+  // ======================================================
+
+  const sentToProviderCount = applications.filter(
+    (application) => application.status === "SENT_TO_PROVIDER",
+  ).length;
+
+  const underReviewCount = applications.filter(
+    (application) => application.status === "UNDER_REVIEW",
+  ).length;
+
+  const interviewCount = applications.filter(
+    (application) => application.status === "INTERVIEW",
+  ).length;
+
+  const selectedCount = applications.filter(
+    (application) => application.status === "SELECTED",
+  ).length;
+
+  const hiredCount = applications.filter(
+    (application) => application.status === "HIRED",
+  ).length;
+
+  const rejectedApplicationCount = applications.filter(
+    (application) => application.status === "REJECTED",
+  ).length;
+
+  // ======================================================
+  // PLACEMENT REQUEST COUNT
+  // ======================================================
 
   const activePlacementCount = placementRequests.filter(
     (request) =>
       !["approved", "rejected", "closed", "cancelled"].includes(
-        request.status || "",
+        String(request.status || "").toLowerCase(),
       ),
   ).length;
 
@@ -500,74 +633,152 @@ export const useProviderDashboard = () => {
   // ======================================================
 
   return {
+    // ==================================================
+    // LANGUAGE
+    // ==================================================
+
     lang,
 
+    // ==================================================
+    // LOADING / ERROR
+    // ==================================================
+
     loading,
+
     refreshing,
+
     error,
 
+    // ==================================================
+    // TAB
+    // ==================================================
+
     activeTab,
+
     setActiveTab,
 
+    // ==================================================
+    // SEARCH
+    // ==================================================
+
     search,
+
     setSearch,
 
+    // ==================================================
+    // RAW DATA
+    // ==================================================
+
     vacancies,
+
     applications,
+
     placementRequests,
 
+    // ==================================================
+    // FILTERED DATA
+    // ==================================================
+
     filteredVacancies,
+
     filteredApplications,
+
     filteredPlacementRequests,
 
+    // ==================================================
+    // COUNTS
+    // ==================================================
+
     totalVacancies,
+
     publishedCount,
+
     pendingVacancyCount,
+
     totalApplications,
+
+    sentToProviderCount,
+
+    underReviewCount,
+
+    interviewCount,
+
+    selectedCount,
+
+    hiredCount,
+
+    rejectedApplicationCount,
+
     activePlacementCount,
 
-    // CREATE
+    // ==================================================
+    // CREATE VACANCY
+    // ==================================================
+
     postVacancyOpen,
 
     openPostVacancy,
+
     closePostVacancy,
 
     handleVacancyCreated,
 
-    // VIEW
+    // ==================================================
+    // VIEW VACANCY
+    // ==================================================
+
     viewVacancy,
 
     openVacancyView,
+
     closeVacancyView,
 
-    // EDIT
+    // ==================================================
+    // EDIT VACANCY
+    // ==================================================
+
     editVacancy,
 
     openVacancyEdit,
+
     closeVacancyEdit,
 
     handleVacancyUpdated,
 
-    // DELETE
+    // ==================================================
+    // DELETE VACANCY
+    // ==================================================
+
     deleteVacancyTarget,
 
     openVacancyDelete,
+
     closeVacancyDelete,
 
     handleVacancyDeleted,
 
-    // CLOSE
+    // ==================================================
+    // CLOSE VACANCY
+    // ==================================================
+
     handleCloseVacancy,
 
-    // PLACEMENT
+    // ==================================================
+    // PLACEMENT REQUEST
+    // ==================================================
+
     placementRequestOpen,
 
     openPlacementRequest,
+
     closePlacementRequest,
 
     handlePlacementCreated,
 
+    // ==================================================
     // REFRESH
+    // ==================================================
+
     handleRefresh,
   };
 };
