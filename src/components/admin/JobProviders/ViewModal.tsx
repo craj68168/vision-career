@@ -1,238 +1,163 @@
+"use client";
+
 import {
-  Briefcase,
+  BriefcaseBusiness,
   Building2,
-  Globe,
+  FileText,
   Mail,
   MapPin,
   Phone,
-  StickyNote,
-  User,
+  UserRound,
+  X,
 } from "lucide-react";
 
-function InfoRow({
-  icon,
+import type { AdminProvider } from "./types";
+
+type Props = {
+  provider: AdminProvider;
+
+  onClose: () => void;
+};
+
+function Field({
   label,
   value,
-  multiLine = false,
 }: {
-  icon: React.ReactNode;
   label: string;
-  value: string;
-  multiLine?: boolean;
+  value?: string | number | null;
 }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="mt-0.5 text-slate-400 dark:text-slate-500">{icon}</div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-          {label}
-        </p>
-        <p
-          className={`text-sm text-slate-900 dark:text-white ${multiLine ? "whitespace-pre-wrap break-words" : "truncate"}`}
-        >
-          {value}
-        </p>
-      </div>
-    </div>
-  );
-}
+    <div>
+      <p className="text-xs font-semibold uppercase text-slate-400">{label}</p>
 
-function StatItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-slate-50 p-3 text-center dark:bg-slate-700/50">
-      <p className="text-2xl font-bold text-slate-900 dark:text-white">
-        {value}
-      </p>
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-        {label}
+      <p className="mt-1 break-words text-sm font-medium text-slate-900">
+        {value ?? "-"}
       </p>
     </div>
   );
 }
 
-export default function ViewProviderDetailsModal({
-  lang,
-  closeViewModal,
-  viewingProvider,
-}: any) {
+export default function ViewModal({ provider, onClose }: Props) {
   return (
-    <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          closeViewModal();
-        }
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4"
-    >
-      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 shadow-xl dark:bg-slate-800">
-        <div className="flex items-start justify-between gap-4">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+      <button className="absolute inset-0 cursor-default" onClick={onClose} />
+
+      <div className="relative z-10 max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
+        <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
           <div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-              {lang === "ja" ? "企業詳細" : "Company Details"}
-            </h3>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              {lang === "ja"
-                ? "クライアント企業の詳細情報"
-                : "Client company details"}
-            </p>
+            <h2 className="text-xl font-bold">Company Details</h2>
+
+            <p className="text-sm text-slate-500">{provider.registerId}</p>
           </div>
 
           <button
-            type="button"
-            onClick={closeViewModal}
-            className="cursor-pointer rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+            onClick={onClose}
+            className="cursor-pointer rounded-full p-2 hover:bg-slate-100"
           >
-            ✕
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mt-6 space-y-6">
-          {/* Header with Status Badge */}
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-700/50">
+        <div className="space-y-6 p-6">
+          <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
             <div>
-              <h4 className="text-lg font-semibold text-slate-900 dark:text-white">
-                {viewingProvider.name || "-"}
-              </h4>
-              {viewingProvider.company_name && (
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {viewingProvider.company_name}
-                </p>
-              )}
+              <p className="font-bold">{provider.name}</p>
+
+              <p className="text-sm text-slate-500">{provider.companyName}</p>
             </div>
-            <span
-              className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                viewingProvider.status === "active"
-                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                  : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-              }`}
-            >
-              {viewingProvider.status === "active"
-                ? lang === "ja"
-                  ? "有効"
-                  : "Active"
-                : lang === "ja"
-                  ? "無効"
-                  : "Inactive"}
+
+            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold capitalize text-emerald-700">
+              {provider.status}
             </span>
           </div>
 
-          {/* Two Column Grid */}
           <div className="grid gap-4 md:grid-cols-2">
-            {/* Basic Information */}
-            <div className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-              <h5 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {lang === "ja" ? "基本情報" : "Basic Information"}
-              </h5>
+            <section className="rounded-2xl border border-slate-200 p-5">
+              <div className="mb-4 flex items-center gap-2 font-bold">
+                <UserRound className="h-4 w-4" />
+                Basic Information
+              </div>
 
-              <InfoRow
-                icon={<User className="h-4 w-4" />}
-                label={lang === "ja" ? "プロバイダー名" : "Provider Name"}
-                value={viewingProvider.name || "-"}
-              />
+              <div className="space-y-4">
+                <Field label="Provider Name" value={provider.name} />
 
-              <InfoRow
-                icon={<Building2 className="h-4 w-4" />}
-                label={lang === "ja" ? "会社名" : "Company Name"}
-                value={viewingProvider.company_name || "-"}
-              />
+                <Field label="Company" value={provider.companyName} />
 
-              <InfoRow
-                icon={<Mail className="h-4 w-4" />}
-                label={lang === "ja" ? "メール" : "Email"}
-                value={viewingProvider.email || "-"}
-              />
+                <Field label="Email" value={provider.email} />
 
-              <InfoRow
-                icon={<Phone className="h-4 w-4" />}
-                label={lang === "ja" ? "電話番号" : "Phone"}
-                value={viewingProvider.phone || "-"}
-              />
-            </div>
+                <Field label="Phone" value={provider.phone} />
+              </div>
+            </section>
 
-            {/* Contact Person */}
-            <div className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-              <h5 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {lang === "ja" ? "担当者情報" : "Contact Person"}
-              </h5>
+            <section className="rounded-2xl border border-slate-200 p-5">
+              <div className="mb-4 flex items-center gap-2 font-bold">
+                <Building2 className="h-4 w-4" />
+                Company Information
+              </div>
 
-              <InfoRow
-                icon={<User className="h-4 w-4" />}
-                label={lang === "ja" ? "担当者名" : "Contact Person"}
-                value={viewingProvider.contactPerson || "-"}
-              />
+              <div className="space-y-4">
+                <Field label="Industry" value={provider.industry} />
 
-              <InfoRow
-                icon={<Phone className="h-4 w-4" />}
-                label={lang === "ja" ? "電話番号" : "Phone"}
-                value={viewingProvider.contactPersonPhone || "-"}
-              />
+                <Field label="Address" value={provider.address} />
 
-              <InfoRow
-                icon={<Mail className="h-4 w-4" />}
-                label={lang === "ja" ? "メール" : "Email"}
-                value={viewingProvider.contactPersonEmail || "-"}
-              />
-            </div>
+                <Field label="Website" value={provider.website} />
+              </div>
+            </section>
 
-            {/* Location & Web */}
-            <div className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-              <h5 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {lang === "ja" ? "所在地・ウェブ" : "Location & Web"}
-              </h5>
+            <section className="rounded-2xl border border-slate-200 p-5">
+              <div className="mb-4 flex items-center gap-2 font-bold">
+                <Phone className="h-4 w-4" />
+                Contact Person
+              </div>
 
-              <InfoRow
-                icon={<MapPin className="h-4 w-4" />}
-                label={lang === "ja" ? "住所" : "Address"}
-                value={viewingProvider.address || "-"}
-              />
+              <div className="space-y-4">
+                <Field label="Name" value={provider.contactPerson} />
 
-              <InfoRow
-                icon={<Globe className="h-4 w-4" />}
-                label={lang === "ja" ? "ウェブサイト" : "Website"}
-                value={viewingProvider.website || "-"}
-              />
-            </div>
+                <Field label="Phone" value={provider.contactPersonPhone} />
 
-            {/* Hiring & Notes */}
-            <div className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-              <h5 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {lang === "ja" ? "採用・備考" : "Hiring & Notes"}
-              </h5>
+                <Field label="Email" value={provider.contactPersonEmail} />
+              </div>
+            </section>
 
-              <InfoRow
-                icon={<Briefcase className="h-4 w-4" />}
-                label={lang === "ja" ? "採用ニーズ" : "Hiring Needs"}
-                value={viewingProvider.hiringNeeds || "-"}
-                multiLine
-              />
+            <section className="rounded-2xl border border-slate-200 p-5">
+              <div className="mb-4 flex items-center gap-2 font-bold">
+                <BriefcaseBusiness className="h-4 w-4" />
+                Hiring Information
+              </div>
 
-              <InfoRow
-                icon={<StickyNote className="h-4 w-4" />}
-                label={lang === "ja" ? "備考" : "Notes"}
-                value={viewingProvider.notes || "-"}
-                multiLine
-              />
-            </div>
+              <div className="space-y-4">
+                <Field label="Hiring Needs" value={provider.hiringNeeds} />
+
+                <Field label="Notes" value={provider.notes} />
+              </div>
+            </section>
           </div>
 
-          {/* Statistics Section */}
-          <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-            <h5 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {lang === "ja" ? "統計情報" : "Statistics"}
-            </h5>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <StatItem
-                label={lang === "ja" ? "総求人数" : "Total Vacancies"}
-                value={String(viewingProvider.statistics?.total_vacancies ?? 0)}
-              />
-              <StatItem
-                label={lang === "ja" ? "総応募数" : "Total Applications"}
-                value={String(
-                  viewingProvider.statistics?.total_applications_received ?? 0,
-                )}
-              />
+          <section className="rounded-2xl border border-slate-200 p-5">
+            <h3 className="font-bold">Statistics</h3>
+
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <div className="rounded-xl bg-slate-50 p-4 text-center">
+                <FileText className="mx-auto h-5 w-5 text-indigo-500" />
+
+                <p className="mt-2 text-2xl font-bold">
+                  {provider.vacancyCount}
+                </p>
+
+                <p className="text-xs text-slate-500">Vacancies</p>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-4 text-center">
+                <Mail className="mx-auto h-5 w-5 text-indigo-500" />
+
+                <p className="mt-2 text-2xl font-bold">
+                  {provider.applicationCount}
+                </p>
+
+                <p className="text-xs text-slate-500">Applications</p>
+              </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </div>
