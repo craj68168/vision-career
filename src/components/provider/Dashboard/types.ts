@@ -193,7 +193,7 @@ export type VacancyResponse = {
 };
 
 // ======================================================
-// PROVIDER APPLICATION STATUS
+// PROVIDER APPLICATION
 // ======================================================
 
 export type ProviderApplicationStatus =
@@ -203,10 +203,6 @@ export type ProviderApplicationStatus =
   | "SELECTED"
   | "HIRED"
   | "REJECTED";
-
-// ======================================================
-// APPLICANT EDUCATION
-// ======================================================
 
 export type ProviderEducation = {
   enrollment_date?: string | null;
@@ -220,10 +216,6 @@ export type ProviderEducation = {
   major?: string | null;
 };
 
-// ======================================================
-// APPLICANT EMPLOYMENT HISTORY
-// ======================================================
-
 export type ProviderEmploymentHistory = {
   start_date?: string | null;
 
@@ -233,10 +225,6 @@ export type ProviderEmploymentHistory = {
 
   company_name?: string | null;
 };
-
-// ======================================================
-// SAFE PROVIDER APPLICANT
-// ======================================================
 
 export type ProviderApplicant = {
   name?: string | null;
@@ -259,10 +247,6 @@ export type ProviderApplicant = {
 
   employment_history: ProviderEmploymentHistory[];
 };
-
-// ======================================================
-// APPLICATION VACANCY
-// ======================================================
 
 export type ProviderApplicationVacancy = {
   vacancyId: string;
@@ -290,10 +274,6 @@ export type ProviderApplicationVacancy = {
   status: string;
 };
 
-// ======================================================
-// PROVIDER APPLICATION
-// ======================================================
-
 export type ProviderApplication = {
   application_id: string;
 
@@ -314,10 +294,6 @@ export type ProviderApplication = {
   vacancy?: ProviderApplicationVacancy | null;
 };
 
-// ======================================================
-// APPLICATION RESPONSES
-// ======================================================
-
 export type ProviderApplicationListResponse = {
   status: "success" | "error";
 
@@ -336,10 +312,6 @@ export type ProviderApplicationResponse = {
   message?: string;
 };
 
-// ======================================================
-// APPLICATION STATUS UPDATE
-// ======================================================
-
 export type ProviderApplicationDecisionStatus =
   | "UNDER_REVIEW"
   | "INTERVIEW"
@@ -352,7 +324,7 @@ export type UpdateProviderApplicationStatusPayload = {
 };
 
 // ======================================================
-// PLACEMENT REQUEST STATUS
+// PLACEMENT REQUEST
 // ======================================================
 
 export type PlacementRequestStatus =
@@ -360,21 +332,6 @@ export type PlacementRequestStatus =
   | "pending_review"
   | "approved"
   | "rejected";
-
-// ======================================================
-// PLACEMENT REQUEST
-// ======================================================
-//
-// IMPORTANT:
-//
-// These fields match the actual Recruit Mongoose schema.
-//
-// Do NOT add:
-//
-// [key: string]: unknown
-//
-// That was the source of several TypeScript errors.
-// ======================================================
 
 export type PlacementRequest = {
   _id?: string;
@@ -424,10 +381,6 @@ export type PlacementRequest = {
   updatedAt?: string;
 };
 
-// ======================================================
-// CREATE / UPDATE PLACEMENT REQUEST
-// ======================================================
-
 export type CreatePlacementRequestPayload = {
   job_title: string;
 
@@ -458,10 +411,6 @@ export type CreatePlacementRequestPayload = {
   start_date: string;
 };
 
-// ======================================================
-// PLACEMENT REQUEST RESPONSES
-// ======================================================
-
 export type PlacementRequestListResponse = {
   success: boolean;
 
@@ -478,6 +427,113 @@ export type PlacementRequestResponse = {
   message?: string;
 
   data: PlacementRequest;
+};
+
+// ======================================================
+// PROVIDER PLACEMENT CANDIDATES
+// ======================================================
+
+export type PlacementCandidateStatus =
+  | "MATCHED"
+  | "UNDER_REVIEW"
+  | "INTERVIEW"
+  | "SELECTED"
+  | "PLACED"
+  | "REJECTED";
+
+// ======================================================
+// SAFE CANDIDATE SNAPSHOT
+//
+// IMPORTANT:
+// Provider never receives:
+// seekerId
+// email
+// phone
+// address
+// private documents
+// ======================================================
+
+export type ProviderPlacementCandidateSnapshot = {
+  name: string;
+
+  nationality?: string | null;
+
+  current_location?: string | null;
+
+  visa_type?: string | null;
+
+  visa_expiry_date?: string | null;
+
+  japanese_level?: string | null;
+
+  skills: string[];
+
+  desired_job?: string | null;
+
+  desired_location?: string | null;
+
+  education: ProviderEducation[];
+
+  employment_history: ProviderEmploymentHistory[];
+};
+
+export type ProviderPlacementCandidate = {
+  placementCandidateId: string;
+
+  recruitId: string;
+
+  status: PlacementCandidateStatus;
+
+  candidate: ProviderPlacementCandidateSnapshot;
+
+  matchedAt?: string | null;
+
+  providerReviewedAt?: string | null;
+
+  interviewAt?: string | null;
+
+  selectedAt?: string | null;
+
+  placedAt?: string | null;
+
+  rejectedAt?: string | null;
+
+  rejectionReason?: string | null;
+
+  createdAt?: string;
+
+  updatedAt?: string;
+};
+
+export type ProviderPlacementCandidateListResponse = {
+  success: boolean;
+
+  count: number;
+
+  data: ProviderPlacementCandidate[];
+
+  message?: string;
+};
+
+export type ProviderPlacementCandidateResponse = {
+  success: boolean;
+
+  data: ProviderPlacementCandidate;
+
+  message?: string;
+};
+
+export type ProviderPlacementCandidateDecisionStatus =
+  | "UNDER_REVIEW"
+  | "INTERVIEW"
+  | "SELECTED"
+  | "PLACED"
+  | "REJECTED";
+
+export type UpdateProviderPlacementCandidateStatusPayload = {
+  status: ProviderPlacementCandidateDecisionStatus;
+
+  rejectionReason?: string;
 };
 
 // ======================================================

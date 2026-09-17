@@ -1,290 +1,601 @@
-import { Loader2, Pencil, RefreshCw, Search, Users, X } from "lucide-react";
-import { CANDIDATE_STATUS_OPTIONS, formatDate } from ".";
+"use client";
 
-interface CandidatesModalProps {
-  lang: "ja" | "en";
-  setShowCandidatesModal: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedPlacementRequest: any;
-  setPlacementCandidates: React.Dispatch<React.SetStateAction<any[]>>;
-  placementCandidatesSearch: string;
-  setPlacementCandidatesSearch: React.Dispatch<React.SetStateAction<string>>;
-  candidateStatusFilter: string;
-  setCandidateStatusFilter: React.Dispatch<React.SetStateAction<string>>;
-  placementCandidatesPagination: any;
-  setPlacementCandidatesPagination: React.Dispatch<React.SetStateAction<any>>;
-  placementCandidates: any;
-  loadingPlacementCandidates: boolean;
-  fetchPlacementCandidates: any;
-  placementCandidatesError: string;
-  handleStatusUpdateClick: any;
-  getCandidateStatusBadge: any;
-  getCandidateStatusLabel: any;
-}
+import { useMemo, useState } from "react";
+
+import {
+  BriefcaseBusiness,
+  Check,
+  Loader2,
+  MapPin,
+  RefreshCw,
+  Search,
+  UserRound,
+  Users,
+  X,
+} from "lucide-react";
+
+import type {
+  EligibleSeeker,
+  PlacementCandidate,
+  PlacementCandidateStatus,
+  PlacementRequest,
+} from "./types";
+
+// ======================================================
+// PROPS
+// ======================================================
+
+type Props = {
+  open: boolean;
+
+  request: PlacementRequest | null;
+
+  eligibleSeekers: EligibleSeeker[];
+
+  matchedCandidates: PlacementCandidate[];
+
+  loading: boolean;
+
+  fetching: boolean;
+
+  matchingSeekerId: string | null;
+
+  onClose: () => void;
+
+  onMatch: (seekerId: string) => void;
+
+  onRefresh: () => void | Promise<void>;
+};
+
+// ======================================================
+// COMPONENT
+// ======================================================
 
 export default function CandidatesModal({
-  lang,
-  setShowCandidatesModal,
-  selectedPlacementRequest,
-  setPlacementCandidates,
-  placementCandidatesSearch,
-  setPlacementCandidatesSearch,
-  candidateStatusFilter,
-  setCandidateStatusFilter,
-  placementCandidatesPagination,
-  setPlacementCandidatesPagination,
-  placementCandidates,
-  loadingPlacementCandidates,
-  fetchPlacementCandidates,
-  placementCandidatesError,
-  handleStatusUpdateClick,
-  getCandidateStatusBadge,
-  getCandidateStatusLabel,
-}: CandidatesModalProps) {
+  open,
+  request,
+  eligibleSeekers,
+  matchedCandidates,
+  loading,
+  fetching,
+  matchingSeekerId,
+  onClose,
+  onMatch,
+  onRefresh,
+}: Props) {
+  const [activeTab, setActiveTab] = useState<"eligible" | "matched">(
+    "eligible",
+  );
+
+  const [search, setSearch] = useState("");
+
+  // ====================================================
+  // FILTER ELIGIBLE
+  // ====================================================
+
+  const filteredEligible = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+
+    if (!keyword) {
+      return eligibleSeekers;
+    }
+
+    return eligibleSeekers.filter((seeker) => {
+      return [
+        seeker.name,
+        seeker.nationality,
+        seeker.currentLocation,
+        seeker.visaType,
+        seeker.japaneseLevel,
+        seeker.desiredJob,
+        seeker.desiredLocation,
+
+        ...seeker.skills,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(keyword);
+    });
+  }, [eligibleSeekers, search]);
+
+  // ====================================================
+  // FILTER MATCHED
+  // ====================================================
+
+  const filteredMatched = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+
+    if (!keyword) {
+      return matchedCandidates;
+    }
+
+    return matchedCandidates.filter((candidate) => {
+      return [
+        candidate.placementCandidateId,
+
+        candidate.status,
+
+        candidate.candidate.name,
+
+        candidate.candidate.nationality,
+
+        candidate.candidate.visa_type,
+
+        candidate.candidate.japanese_level,
+
+        candidate.candidate.desired_job,
+
+        ...candidate.candidate.skills,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(keyword);
+    });
+  }, [matchedCandidates, search]);
+
+  if (!open || !request) {
+    return null;
+  }
+
+  const positions = request.numberOfPositions;
+
+  const matchedCount = matchedCandidates.length;
+
+  // ====================================================
+  // UI
+  // ====================================================
+
   return (
-    <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          setShowCandidatesModal(false);
-        }
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 dark:bg-slate-950/70 px-4 backdrop-blur-sm"
-    >
-      <div className="w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-3xl bg-white shadow-xl dark:bg-slate-800 dark:shadow-2xl dark:shadow-slate-950/30">
-        {/* Modal Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-4 dark:border-slate-700">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:p-4">
+      {/* BACKDROP */}
+
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={onClose}
+        className="absolute inset-0"
+      />
+
+      {/* MODAL */}
+
+      <div className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-white sm:h-auto sm:max-h-[94vh] sm:max-w-6xl sm:rounded-3xl sm:shadow-2xl">
+        {/* ================================================= */}
+        {/* HEADER */}
+        {/* ================================================= */}
+
+        <header className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
           <div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-              {lang === "ja" ? "配置済み候補者一覧" : "Placed Candidates"}
-            </h3>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              {selectedPlacementRequest.company_name} -{" "}
-              {selectedPlacementRequest.job_title}
-            </p>
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-600">
+              <Users className="h-4 w-4" />
+              Candidate Matching
+            </div>
+
+            <h2 className="mt-2 text-2xl font-bold text-slate-950">
+              {request.jobTitle}
+            </h2>
+
+            <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-500">
+              <span>{request.recruitId}</span>
+
+              <span>{request.companyName}</span>
+
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+
+                {request.workLocation}
+              </span>
+            </div>
           </div>
+
           <button
-            onClick={() => {
-              setShowCandidatesModal(false);
-              setPlacementCandidates([]);
-            }}
-            className="rounded-full p-2 cursor-pointer text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-2 transition hover:bg-slate-100"
           >
             <X className="h-5 w-5" />
           </button>
+        </header>
+
+        {/* ================================================= */}
+        {/* SUMMARY */}
+        {/* ================================================= */}
+
+        <div className="grid gap-4 border-b border-slate-200 bg-slate-50/70 p-6 sm:grid-cols-3">
+          <SummaryCard label="Positions Required" value={positions} />
+
+          <SummaryCard label="Candidates Matched" value={matchedCount} />
+
+          <SummaryCard
+            label="Remaining"
+            value={Math.max(positions - matchedCount, 0)}
+          />
         </div>
 
-        {/* Search & Filters */}
-        <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-700">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+        {/* ================================================= */}
+        {/* CONTROLS */}
+        {/* ================================================= */}
+
+        <div className="flex flex-col gap-4 border-b border-slate-200 p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex rounded-xl bg-slate-100 p-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab("eligible")}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                activeTab === "eligible"
+                  ? "bg-white text-slate-950 shadow-sm"
+                  : "text-slate-500"
+              }`}
+            >
+              Eligible Seekers ({eligibleSeekers.length})
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("matched")}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                activeTab === "matched"
+                  ? "bg-white text-slate-950 shadow-sm"
+                  : "text-slate-500"
+              }`}
+            >
+              Matched Candidates ({matchedCandidates.length})
+            </button>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="relative min-w-0 flex-1 lg:w-80">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
               <input
-                value={placementCandidatesSearch}
-                onChange={(e) => {
-                  setPlacementCandidatesSearch(e.target.value);
-                }}
-                placeholder={
-                  lang === "ja"
-                    ? "候補者名、メール、企業名で検索..."
-                    : "Search by candidate name, email, company..."
-                }
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-slate-600 dark:focus:bg-slate-800"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search candidates..."
+                className="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none focus:border-indigo-400"
               />
             </div>
 
-            <select
-              value={candidateStatusFilter}
-              onChange={(e) => {
-                setCandidateStatusFilter(e.target.value);
-              }}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-slate-600"
-            >
-              <option value="">
-                {lang === "ja" ? "すべてのステータス" : "All Status"}
-              </option>
-              {CANDIDATE_STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label[lang]}
-                </option>
-              ))}
-            </select>
-
             <button
-              onClick={() => {
-                if (selectedPlacementRequest) {
-                  fetchPlacementCandidates(selectedPlacementRequest.id, 1);
-                }
-              }}
-              disabled={loadingPlacementCandidates}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-50 dark:bg-indigo-600 dark:hover:bg-indigo-700"
+              type="button"
+              disabled={fetching}
+              onClick={() => void onRefresh()}
+              className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-medium disabled:opacity-50"
             >
-              {loadingPlacementCandidates ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-              {lang === "ja" ? "更新" : "Refresh"}
+              <RefreshCw
+                className={`h-4 w-4 ${fetching ? "animate-spin" : ""}`}
+              />
+              Refresh
             </button>
           </div>
         </div>
 
-        {/* Candidates Table */}
-        <div className="max-h-[55vh] overflow-y-auto px-6 py-4">
-          {placementCandidatesError && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-              {placementCandidatesError}
-            </div>
-          )}
+        {/* ================================================= */}
+        {/* CONTENT */}
+        {/* ================================================= */}
 
-          {loadingPlacementCandidates ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-slate-400 dark:text-slate-500" />
-            </div>
-          ) : placementCandidates.length === 0 ? (
-            <div className="py-12 text-center">
-              <Users className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" />
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                {lang === "ja"
-                  ? "このリクエストに配置された候補者はいません"
-                  : "No candidates placed for this request"}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1000px] text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">#</th>
-                    <th className="px-4 py-3 font-semibold">
-                      {lang === "ja" ? "候補者" : "Candidate"}
-                    </th>
-                    <th className="px-4 py-3 font-semibold">
-                      {lang === "ja" ? "連絡先" : "Contact"}
-                    </th>
-                    <th className="px-4 py-3 font-semibold">
-                      {lang === "ja" ? "ステータス" : "Status"}
-                    </th>
-                    <th className="px-4 py-3 font-semibold">
-                      {lang === "ja" ? "追加日" : "Added"}
-                    </th>
-                    <th className="px-4 py-3 text-center font-semibold">
-                      {lang === "ja" ? "操作" : "Actions"}
-                    </th>
-                  </tr>
-                </thead>
+        <div className="flex-1 overflow-y-auto p-6">
+          {loading ? (
+            <div className="flex min-h-[360px] items-center justify-center">
+              <div className="text-center">
+                <Loader2 className="mx-auto h-8 w-8 animate-spin text-indigo-500" />
 
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                  {placementCandidates.map((candidate: any, index: number) => (
-                    <tr
-                      key={candidate.placement_request_candidate_id}
-                      className="transition hover:bg-slate-50 dark:hover:bg-slate-700/50"
-                    >
-                      <td className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400">
-                        {(placementCandidatesPagination.page - 1) *
-                          placementCandidatesPagination.limit +
-                          index +
-                          1}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div>
-                          <div className="font-medium text-slate-900 dark:text-white">
-                            {candidate.candidate_name || "-"}
-                          </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
-                            {candidate.nationality || "-"}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="text-sm">
-                          <div className="text-slate-700 dark:text-slate-300">
-                            {candidate.candidate_email || "-"}
-                          </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
-                            {candidate.candidate_phone || "-"}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getCandidateStatusBadge(candidate.candidate_status)}`}
-                        >
-                          {getCandidateStatusLabel(candidate.candidate_status)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
-                        {formatDate(lang, candidate.created_at)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-center">
-                          <button
-                            onClick={() => handleStatusUpdateClick(candidate)}
-                            className="inline-flex items-center cursor-pointer gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
-                          >
-                            <Pencil className="h-3 w-3" />
-                            {lang === "ja" ? "ステータス更新" : "Update Status"}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {placementCandidatesPagination.total > 0 && (
-            <div className="mt-4 flex items-center justify-between">
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                {lang === "ja"
-                  ? `全 ${placementCandidatesPagination.total} 件中 ${(placementCandidatesPagination.page - 1) * placementCandidatesPagination.limit + 1} - ${Math.min(placementCandidatesPagination.page * placementCandidatesPagination.limit, placementCandidatesPagination.total)} 件`
-                  : `Showing ${(placementCandidatesPagination.page - 1) * placementCandidatesPagination.limit + 1} - ${Math.min(placementCandidatesPagination.page * placementCandidatesPagination.limit, placementCandidatesPagination.total)} of ${placementCandidatesPagination.total}`}
-              </span>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    if (selectedPlacementRequest) {
-                      fetchPlacementCandidates(
-                        selectedPlacementRequest.id,
-                        placementCandidatesPagination.page - 1,
-                      );
-                    }
-                  }}
-                  disabled={
-                    placementCandidatesPagination.page === 1 ||
-                    loadingPlacementCandidates
-                  }
-                  className="rounded-xl border cursor-pointer border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                >
-                  {lang === "ja" ? "前へ" : "Prev"}
-                </button>
-                <span className="rounded-xl bg-slate-100 px-3 py-1.5 text-sm text-slate-700 dark:bg-slate-700 dark:text-slate-300">
-                  {placementCandidatesPagination.page} /{" "}
-                  {placementCandidatesPagination.total_pages}
-                </span>
-                <button
-                  onClick={() => {
-                    if (selectedPlacementRequest) {
-                      fetchPlacementCandidates(
-                        selectedPlacementRequest.id,
-                        placementCandidatesPagination.page + 1,
-                      );
-                    }
-                  }}
-                  disabled={
-                    placementCandidatesPagination.page ===
-                      placementCandidatesPagination.total_pages ||
-                    loadingPlacementCandidates
-                  }
-                  className="rounded-xl border cursor-pointer border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-                >
-                  {lang === "ja" ? "次へ" : "Next"}
-                </button>
+                <p className="mt-3 text-sm text-slate-500">
+                  Loading candidates...
+                </p>
               </div>
             </div>
+          ) : activeTab === "eligible" ? (
+            <EligibleCandidates
+              candidates={filteredEligible}
+              matchingSeekerId={matchingSeekerId}
+              onMatch={onMatch}
+            />
+          ) : (
+            <MatchedCandidates candidates={filteredMatched} />
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ======================================================
+// ELIGIBLE
+// ======================================================
+
+function EligibleCandidates({
+  candidates,
+  matchingSeekerId,
+  onMatch,
+}: {
+  candidates: EligibleSeeker[];
+
+  matchingSeekerId: string | null;
+
+  onMatch: (seekerId: string) => void;
+}) {
+  if (candidates.length === 0) {
+    return (
+      <EmptyState
+        title="No eligible seekers found"
+        description="There are currently no additional eligible Job Seekers available for this placement request."
+      />
+    );
+  }
+
+  return (
+    <div className="grid gap-4">
+      {candidates.map((seeker) => (
+        <article
+          key={seeker.seekerId}
+          className="rounded-2xl border border-slate-200 p-5"
+        >
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                  <UserRound className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-slate-950">
+                    {seeker.name}
+                  </h3>
+
+                  <p className="text-xs text-slate-400">{seeker.seekerId}</p>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Info label="Nationality" value={seeker.nationality} />
+
+                <Info label="Japanese" value={seeker.japaneseLevel} />
+
+                <Info label="Visa" value={seeker.visaType} />
+
+                <Info label="Current Location" value={seeker.currentLocation} />
+
+                <Info label="Desired Job" value={seeker.desiredJob} />
+
+                <Info label="Desired Location" value={seeker.desiredLocation} />
+
+                <Info label="Placement Status" value={seeker.placementStatus} />
+              </div>
+
+              {seeker.skills.length > 0 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Skills
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {seeker.skills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              disabled={Boolean(matchingSeekerId)}
+              onClick={() => onMatch(seeker.seekerId)}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {matchingSeekerId === seeker.seekerId ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              Match Candidate
+            </button>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+// ======================================================
+// MATCHED
+// ======================================================
+
+function MatchedCandidates({
+  candidates,
+}: {
+  candidates: PlacementCandidate[];
+}) {
+  if (candidates.length === 0) {
+    return (
+      <EmptyState
+        title="No candidates matched yet"
+        description="Choose an eligible Job Seeker and match them to this placement request."
+      />
+    );
+  }
+
+  return (
+    <div className="grid gap-4">
+      {candidates.map((item) => (
+        <article
+          key={item.placementCandidateId}
+          className="rounded-2xl border border-slate-200 p-5"
+        >
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex-1">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                  <UserRound className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-slate-950">
+                    {item.candidate.name}
+                  </h3>
+
+                  <p className="text-xs text-slate-400">
+                    {item.placementCandidateId}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Info label="Nationality" value={item.candidate.nationality} />
+
+                <Info label="Japanese" value={item.candidate.japanese_level} />
+
+                <Info label="Visa" value={item.candidate.visa_type} />
+
+                <Info label="Desired Job" value={item.candidate.desired_job} />
+              </div>
+
+              {item.candidate.skills.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {item.candidate.skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {item.rejectionReason && (
+                <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+                  <strong>Rejection:</strong> {item.rejectionReason}
+                </div>
+              )}
+            </div>
+
+            <CandidateStatusBadge status={item.status} />
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+// ======================================================
+// STATUS BADGE
+// ======================================================
+
+function CandidateStatusBadge({
+  status,
+}: {
+  status: PlacementCandidateStatus;
+}) {
+  let classes = "bg-slate-100 text-slate-700";
+
+  switch (status) {
+    case "MATCHED":
+      classes = "bg-indigo-50 text-indigo-700";
+      break;
+
+    case "UNDER_REVIEW":
+      classes = "bg-amber-50 text-amber-700";
+      break;
+
+    case "INTERVIEW":
+      classes = "bg-blue-50 text-blue-700";
+      break;
+
+    case "SELECTED":
+      classes = "bg-violet-50 text-violet-700";
+      break;
+
+    case "PLACED":
+      classes = "bg-emerald-50 text-emerald-700";
+      break;
+
+    case "REJECTED":
+      classes = "bg-red-50 text-red-700";
+      break;
+  }
+
+  return (
+    <span
+      className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${classes}`}
+    >
+      {status.replaceAll("_", " ")}
+    </span>
+  );
+}
+
+// ======================================================
+// INFO
+// ======================================================
+
+function Info({
+  label,
+  value,
+}: {
+  label: string;
+
+  value: string | number | null | undefined;
+}) {
+  return (
+    <div className="rounded-xl bg-slate-50 p-3">
+      <p className="text-xs text-slate-400">{label}</p>
+
+      <p className="mt-1 text-sm font-medium capitalize text-slate-900">
+        {value === null || value === undefined || value === ""
+          ? "-"
+          : String(value)}
+      </p>
+    </div>
+  );
+}
+
+// ======================================================
+// SUMMARY
+// ======================================================
+
+function SummaryCard({
+  label,
+  value,
+}: {
+  label: string;
+
+  value: number;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="text-xs text-slate-500">{label}</p>
+
+      <p className="mt-1 text-2xl font-bold text-slate-950">{value}</p>
+    </div>
+  );
+}
+
+// ======================================================
+// EMPTY
+// ======================================================
+
+function EmptyState({
+  title,
+  description,
+}: {
+  title: string;
+
+  description: string;
+}) {
+  return (
+    <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-dashed border-slate-300">
+      <div className="max-w-md text-center">
+        <BriefcaseBusiness className="mx-auto h-8 w-8 text-slate-300" />
+
+        <h3 className="mt-3 font-semibold text-slate-900">{title}</h3>
+
+        <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
       </div>
     </div>
   );

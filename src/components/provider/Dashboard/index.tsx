@@ -16,6 +16,7 @@ import {
   Search,
   Send,
   Trash2,
+  UserRound,
   Users,
   XCircle,
 } from "lucide-react";
@@ -26,16 +27,13 @@ import PostVacancyModal from "./PostVacancyModal";
 import PlacementRequestModal from "./PlacementRequestModal";
 import VacancyDetailsModal from "./VacancyDetailsModal";
 import DeleteVacancyModal from "./DeleteVacancyModal";
-
-import type { Vacancy } from "./types";
-
 import PlacementRequestDetailsModal from "./PlacementRequestDetailsModal";
-
 import EditPlacementRequestModal from "./EditPlacementRequestModal";
-
 import DeletePlacementRequestModal from "./DeletePlacementRequestModal";
-
 import SubmitPlacementRequestModal from "./SubmitPlacementRequestModal";
+import PlacementCandidatesModal from "./PlacementCandidatesModal";
+
+import type { PlacementRequestStatus, Vacancy } from "./types";
 
 // ======================================================
 // VACANCY ACTION RULES
@@ -51,13 +49,17 @@ const canDeleteVacancy = (status: Vacancy["status"]) =>
 
 const canCloseVacancy = (status: Vacancy["status"]) => status === "published";
 
-const canEditPlacementRequest = (status: string) =>
+// ======================================================
+// PLACEMENT REQUEST ACTION RULES
+// ======================================================
+
+const canEditPlacementRequest = (status: PlacementRequestStatus) =>
   ["draft", "rejected"].includes(status);
 
-const canDeletePlacementRequest = (status: string) =>
+const canDeletePlacementRequest = (status: PlacementRequestStatus) =>
   ["draft", "rejected"].includes(status);
 
-const canSubmitPlacementRequest = (status: string) =>
+const canSubmitPlacementRequest = (status: PlacementRequestStatus) =>
   ["draft", "rejected"].includes(status);
 
 // ======================================================
@@ -86,85 +88,91 @@ export default function ProviderDashboard() {
     publishedCount,
     pendingVacancyCount,
     totalApplications,
-    activePlacementCount,
     totalPlacementRequests,
-    // CREATE VACANCY
-    postVacancyOpen,
 
+    // CREATE VACANCY
+
+    postVacancyOpen,
     openPostVacancy,
     closePostVacancy,
-
     handleVacancyCreated,
 
-    // PLACEMENT REQUEST
-    placementRequestOpen,
+    // PLACEMENT REQUEST CREATE
 
+    placementRequestOpen,
     openPlacementRequest,
     closePlacementRequest,
-
     handlePlacementCreated,
+
     // VIEW PLACEMENT REQUEST
 
     viewPlacementRequest,
-
     openPlacementRequestView,
     closePlacementRequestView,
 
     // EDIT PLACEMENT REQUEST
 
     editPlacementRequest,
-
     openPlacementRequestEdit,
     closePlacementRequestEdit,
-
     handlePlacementRequestUpdate,
 
     // DELETE PLACEMENT REQUEST
 
     deletePlacementRequestTarget,
-
     openPlacementRequestDelete,
     closePlacementRequestDelete,
-
     handlePlacementRequestDelete,
 
     // SUBMIT PLACEMENT REQUEST
 
     submitPlacementRequestTarget,
-
     openPlacementRequestSubmit,
     closePlacementRequestSubmit,
-
     handlePlacementRequestSubmit,
 
     placementActionLoading,
 
-    // VIEW VACANCY
-    viewVacancy,
+    // PLACEMENT CANDIDATES
 
+    placementCandidateCounts,
+
+    candidateRequest,
+    candidateRequestCandidates,
+
+    openPlacementCandidates,
+    closePlacementCandidates,
+
+    candidateActionId,
+
+    handlePlacementCandidateStatus,
+
+    // VIEW VACANCY
+
+    viewVacancy,
     openVacancyView,
     closeVacancyView,
 
     // EDIT VACANCY
-    editVacancy,
 
+    editVacancy,
     openVacancyEdit,
     closeVacancyEdit,
-
     handleVacancyUpdated,
 
     // DELETE VACANCY
-    deleteVacancyTarget,
 
+    deleteVacancyTarget,
     openVacancyDelete,
     closeVacancyDelete,
-
     handleVacancyDeleted,
 
     // CLOSE VACANCY
+
     handleCloseVacancy,
 
     // REFRESH
+
     handleRefresh,
   } = useProviderDashboard();
 
@@ -198,8 +206,6 @@ export default function ProviderDashboard() {
         <header className="border-b border-slate-200 bg-white">
           <div className="mx-auto max-w-7xl px-4 py-6 md:px-8">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              {/* LEFT */}
-
               <div>
                 <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
                   {lang === "ja" ? "企業ダッシュボード" : "Provider Dashboard"}
@@ -212,11 +218,7 @@ export default function ProviderDashboard() {
                 </p>
               </div>
 
-              {/* RIGHT */}
-
               <div className="flex flex-col gap-3 sm:flex-row lg:shrink-0">
-                {/* PROFILE */}
-
                 <Link
                   href={
                     lang === "ja"
@@ -230,13 +232,11 @@ export default function ProviderDashboard() {
                   {lang === "ja" ? "会社プロフィール" : "Company Profile"}
                 </Link>
 
-                {/* REFRESH */}
-
                 <button
                   type="button"
                   disabled={refreshing}
                   onClick={() => void handleRefresh()}
-                  className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                 >
                   <RefreshCw
                     className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
@@ -251,12 +251,10 @@ export default function ProviderDashboard() {
                       : "Refresh"}
                 </button>
 
-                {/* POST VACANCY */}
-
                 <button
                   type="button"
                   onClick={openPostVacancy}
-                  className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
                 >
                   <Plus className="h-4 w-4" />
 
@@ -272,8 +270,6 @@ export default function ProviderDashboard() {
         {/* ================================================= */}
 
         <main className="mx-auto max-w-7xl px-4 py-8 md:px-8">
-          {/* ERROR */}
-
           {error && (
             <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
               {error}
@@ -317,13 +313,11 @@ export default function ProviderDashboard() {
           </section>
 
           {/* ================================================= */}
-          {/* TABS + SEARCH */}
+          {/* TABS */}
           {/* ================================================= */}
 
           <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              {/* TABS */}
-
               <div className="flex flex-wrap gap-1 rounded-2xl bg-slate-100 p-1">
                 <TabButton
                   active={activeTab === "vacancies"}
@@ -350,13 +344,11 @@ export default function ProviderDashboard() {
                   onClick={() => setActiveTab("placement-requests")}
                   label={
                     lang === "ja"
-                      ? `採用依頼 (${activePlacementCount})`
+                      ? `採用依頼 (${totalPlacementRequests})`
                       : `Placement Requests (${totalPlacementRequests})`
                   }
                 />
               </div>
-
-              {/* SEARCH */}
 
               <div className="relative w-full lg:max-w-md">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -419,10 +411,6 @@ export default function ProviderDashboard() {
                       key={vacancy.vacancyId}
                       className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md"
                     >
-                      {/* ================================================= */}
-                      {/* TOP */}
-                      {/* ================================================= */}
-
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <p className="text-xs font-medium text-slate-400">
@@ -443,17 +431,9 @@ export default function ProviderDashboard() {
                         <StatusBadge value={vacancy.status} />
                       </div>
 
-                      {/* ================================================= */}
-                      {/* COMPANY */}
-                      {/* ================================================= */}
-
                       <p className="mt-4 text-sm font-medium text-slate-700">
                         {vacancy.companyName}
                       </p>
-
-                      {/* ================================================= */}
-                      {/* INFO */}
-                      {/* ================================================= */}
 
                       <div className="mt-5 space-y-3 text-sm text-slate-600">
                         <div className="flex items-center gap-2">
@@ -478,10 +458,6 @@ export default function ProviderDashboard() {
                         </div>
                       </div>
 
-                      {/* ================================================= */}
-                      {/* SALARY */}
-                      {/* ================================================= */}
-
                       {(vacancy.salaryMin !== null ||
                         vacancy.salaryMax !== null) && (
                         <div className="mt-5 rounded-xl bg-slate-50 p-3">
@@ -497,10 +473,6 @@ export default function ProviderDashboard() {
                         </div>
                       )}
 
-                      {/* ================================================= */}
-                      {/* REJECTION */}
-                      {/* ================================================= */}
-
                       {vacancy.status === "rejected" &&
                         vacancy.rejectionReason && (
                           <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-700">
@@ -512,30 +484,22 @@ export default function ProviderDashboard() {
                           </div>
                         )}
 
-                      {/* ================================================= */}
-                      {/* ACTIONS */}
-                      {/* ================================================= */}
-
                       <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5">
-                        {/* VIEW */}
-
                         <button
                           type="button"
                           onClick={() => openVacancyView(vacancy)}
-                          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700"
                         >
                           <Eye className="h-4 w-4" />
 
                           {lang === "ja" ? "詳細" : "View"}
                         </button>
 
-                        {/* EDIT */}
-
                         {canEditVacancy(vacancy.status) && (
                           <button
                             type="button"
                             onClick={() => openVacancyEdit(vacancy)}
-                            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white"
                           >
                             <Pencil className="h-4 w-4" />
 
@@ -543,13 +507,11 @@ export default function ProviderDashboard() {
                           </button>
                         )}
 
-                        {/* DELETE */}
-
                         {canDeleteVacancy(vacancy.status) && (
                           <button
                             type="button"
                             onClick={() => openVacancyDelete(vacancy)}
-                            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white"
                           >
                             <Trash2 className="h-4 w-4" />
 
@@ -557,13 +519,11 @@ export default function ProviderDashboard() {
                           </button>
                         )}
 
-                        {/* CLOSE */}
-
                         {canCloseVacancy(vacancy.status) && (
                           <button
                             type="button"
                             onClick={() => void handleCloseVacancy(vacancy)}
-                            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white"
                           >
                             <XCircle className="h-4 w-4" />
 
@@ -571,8 +531,6 @@ export default function ProviderDashboard() {
                           </button>
                         )}
                       </div>
-
-                      {/* PUBLISHED EDIT WARNING */}
 
                       {vacancy.status === "published" && (
                         <p className="mt-3 text-xs leading-5 text-slate-500">
@@ -641,13 +599,11 @@ export default function ProviderDashboard() {
 
           {activeTab === "placement-requests" && (
             <section className="mt-8">
-              {/* ADD REQUEST */}
-
               <div className="mb-5 flex justify-end">
                 <button
                   type="button"
                   onClick={openPlacementRequest}
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white"
+                  className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white"
                 >
                   <Plus className="h-4 w-4" />
 
@@ -670,140 +626,173 @@ export default function ProviderDashboard() {
                 />
               ) : (
                 <div className="space-y-4">
-                  {filteredPlacementRequests.map((request, index) => (
-                    <article
-                      key={request.recruitId}
-                      className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-                    >
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <p className="text-xs text-slate-400">
-                            {request.recruitId}
-                          </p>
+                  {filteredPlacementRequests.map((request) => {
+                    const candidateCount =
+                      placementCandidateCounts[request.recruitId] ?? 0;
 
-                          <h3 className="mt-1 text-lg font-semibold text-slate-900">
-                            {request.job_title}
-                          </h3>
+                    return (
+                      <article
+                        key={request.recruitId}
+                        className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+                      >
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="text-xs text-slate-400">
+                              {request.recruitId}
+                            </p>
 
-                          {request.work_location && (
-                            <div className="mt-2 flex items-center gap-2 text-sm text-slate-500">
-                              <MapPin className="h-4 w-4" />
+                            <h3 className="mt-1 text-lg font-semibold text-slate-900">
+                              {request.job_title}
+                            </h3>
 
-                              {request.work_location}
-                            </div>
-                          )}
+                            {request.work_location && (
+                              <div className="mt-2 flex items-center gap-2 text-sm text-slate-500">
+                                <MapPin className="h-4 w-4" />
+
+                                {request.work_location}
+                              </div>
+                            )}
+                          </div>
+
+                          <StatusBadge value={request.status} />
                         </div>
 
-                        <StatusBadge value={request.status} />
-                      </div>
+                        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                          <InfoField
+                            label={lang === "ja" ? "雇用形態" : "Employment"}
+                            value={request.employment_type}
+                          />
 
-                      <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <InfoField
-                          label={lang === "ja" ? "雇用形態" : "Employment"}
-                          value={request.employment_type}
-                        />
+                          <InfoField
+                            label={lang === "ja" ? "募集人数" : "Positions"}
+                            value={String(request.number_of_positions)}
+                          />
 
-                        <InfoField
-                          label={lang === "ja" ? "募集人数" : "Positions"}
-                          value={String(request.number_of_positions)}
-                        />
+                          <InfoField
+                            label={lang === "ja" ? "日本語レベル" : "Japanese"}
+                            value={request.japanese_level_required}
+                          />
 
-                        <InfoField
-                          label={lang === "ja" ? "日本語レベル" : "Japanese"}
-                          value={request.japanese_level_required}
-                        />
+                          <InfoField
+                            label={lang === "ja" ? "ビザ" : "Visa"}
+                            value={request.visa_type_required}
+                          />
 
-                        <InfoField
-                          label={lang === "ja" ? "ビザ" : "Visa"}
-                          value={request.visa_type_required}
-                        />
-                      </div>
+                          <InfoField
+                            label={lang === "ja" ? "紹介候補者" : "Candidates"}
+                            value={String(candidateCount)}
+                          />
+                        </div>
 
-                      {/* REJECTION REASON */}
+                        {request.status === "rejected" &&
+                          request.rejection_reason && (
+                            <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4">
+                              <p className="text-sm font-semibold text-red-700">
+                                {lang === "ja"
+                                  ? "却下理由"
+                                  : "Rejection Reason"}
+                              </p>
 
-                      {request.status === "rejected" &&
-                        request.rejection_reason && (
-                          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4">
-                            <p className="text-sm font-semibold text-red-700">
-                              {lang === "ja" ? "却下理由" : "Rejection Reason"}
-                            </p>
+                              <p className="mt-1 text-sm text-red-700">
+                                {request.rejection_reason}
+                              </p>
+                            </div>
+                          )}
 
-                            <p className="mt-1 text-sm text-red-700">
-                              {request.rejection_reason}
-                            </p>
+                        {request.status === "pending_review" && (
+                          <div className="mt-5 rounded-xl bg-amber-50 p-3 text-sm text-amber-700">
+                            {lang === "ja"
+                              ? "管理者による審査を待っています。"
+                              : "Waiting for Admin review."}
                           </div>
                         )}
 
-                      {/* PENDING MESSAGE */}
+                        {request.status === "approved" && (
+                          <div className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
+                            {candidateCount > 0
+                              ? lang === "ja"
+                                ? `${candidateCount}名の候補者が紹介されています。`
+                                : `${candidateCount} candidate(s) have been matched by Admin.`
+                              : lang === "ja"
+                                ? "採用依頼は承認済みです。管理者からの候補者紹介を待っています。"
+                                : "Placement request approved. Waiting for Admin to match candidates."}
+                          </div>
+                        )}
 
-                      {request.status === "pending_review" && (
-                        <div className="mt-5 rounded-xl bg-amber-50 p-3 text-sm text-amber-700">
-                          {lang === "ja"
-                            ? "管理者による審査を待っています。"
-                            : "Waiting for Admin review."}
+                        <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5">
+                          <button
+                            type="button"
+                            onClick={() => openPlacementRequestView(request)}
+                            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold"
+                          >
+                            <Eye className="h-4 w-4" />
+
+                            {lang === "ja" ? "詳細" : "View"}
+                          </button>
+
+                          {request.status === "approved" && (
+                            <button
+                              type="button"
+                              onClick={() => openPlacementCandidates(request)}
+                              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white"
+                            >
+                              <UserRound className="h-4 w-4" />
+
+                              {lang === "ja"
+                                ? `候補者 (${candidateCount})`
+                                : `Candidates (${candidateCount})`}
+                            </button>
+                          )}
+
+                          {canEditPlacementRequest(request.status) && (
+                            <button
+                              type="button"
+                              onClick={() => openPlacementRequestEdit(request)}
+                              className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white"
+                            >
+                              <Pencil className="h-4 w-4" />
+
+                              {lang === "ja" ? "編集" : "Edit"}
+                            </button>
+                          )}
+
+                          {canDeletePlacementRequest(request.status) && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openPlacementRequestDelete(request)
+                              }
+                              className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+
+                              {lang === "ja" ? "削除" : "Delete"}
+                            </button>
+                          )}
+
+                          {canSubmitPlacementRequest(request.status) && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openPlacementRequestSubmit(request)
+                              }
+                              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white"
+                            >
+                              <Send className="h-4 w-4" />
+
+                              {request.status === "rejected"
+                                ? lang === "ja"
+                                  ? "再申請"
+                                  : "Resubmit"
+                                : lang === "ja"
+                                  ? "審査へ送信"
+                                  : "Submit for Review"}
+                            </button>
+                          )}
                         </div>
-                      )}
-
-                      {/* APPROVED MESSAGE */}
-
-                      {request.status === "approved" && (
-                        <div className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
-                          {lang === "ja"
-                            ? "この採用依頼は承認されました。"
-                            : "This placement request has been approved by Admin."}
-                        </div>
-                      )}
-
-                      {/* ACTIONS */}
-
-                      <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5">
-                        <button
-                          type="button"
-                          onClick={() => openPlacementRequestView(request)}
-                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold"
-                        >
-                          <Eye className="h-4 w-4" />
-                          View
-                        </button>
-
-                        {canEditPlacementRequest(request.status) && (
-                          <button
-                            type="button"
-                            onClick={() => openPlacementRequestEdit(request)}
-                            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white"
-                          >
-                            <Pencil className="h-4 w-4" />
-                            Edit
-                          </button>
-                        )}
-
-                        {canDeletePlacementRequest(request.status) && (
-                          <button
-                            type="button"
-                            onClick={() => openPlacementRequestDelete(request)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </button>
-                        )}
-
-                        {canSubmitPlacementRequest(request.status) && (
-                          <button
-                            type="button"
-                            onClick={() => openPlacementRequestSubmit(request)}
-                            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white"
-                          >
-                            <Send className="h-4 w-4" />
-
-                            {request.status === "rejected"
-                              ? "Resubmit"
-                              : "Submit for Review"}
-                          </button>
-                        )}
-                      </div>
-                    </article>
-                  ))}
+                      </article>
+                    );
+                  })}
                 </div>
               )}
             </section>
@@ -812,7 +801,7 @@ export default function ProviderDashboard() {
       </div>
 
       {/* ================================================= */}
-      {/* CREATE VACANCY */}
+      {/* VACANCY MODALS */}
       {/* ================================================= */}
 
       <PostVacancyModal
@@ -824,10 +813,6 @@ export default function ProviderDashboard() {
         lang={lang}
       />
 
-      {/* ================================================= */}
-      {/* VIEW VACANCY */}
-      {/* ================================================= */}
-
       <VacancyDetailsModal
         open={Boolean(viewVacancy)}
         vacancy={viewVacancy}
@@ -835,10 +820,6 @@ export default function ProviderDashboard() {
         onEdit={openVacancyEdit}
         lang={lang}
       />
-
-      {/* ================================================= */}
-      {/* EDIT VACANCY */}
-      {/* ================================================= */}
 
       <PostVacancyModal
         key={editVacancy ? `edit-${editVacancy.vacancyId}` : "edit-none"}
@@ -850,10 +831,6 @@ export default function ProviderDashboard() {
         lang={lang}
       />
 
-      {/* ================================================= */}
-      {/* DELETE VACANCY */}
-      {/* ================================================= */}
-
       <DeleteVacancyModal
         open={Boolean(deleteVacancyTarget)}
         vacancy={deleteVacancyTarget}
@@ -863,7 +840,7 @@ export default function ProviderDashboard() {
       />
 
       {/* ================================================= */}
-      {/* PLACEMENT REQUEST */}
+      {/* PLACEMENT REQUEST MODALS */}
       {/* ================================================= */}
 
       <PlacementRequestModal
@@ -873,20 +850,12 @@ export default function ProviderDashboard() {
         lang={lang}
       />
 
-      {/* ================================================= */}
-      {/* VIEW PLACEMENT REQUEST */}
-      {/* ================================================= */}
-
       <PlacementRequestDetailsModal
         open={Boolean(viewPlacementRequest)}
         request={viewPlacementRequest}
         onClose={closePlacementRequestView}
         lang={lang}
       />
-
-      {/* ================================================= */}
-      {/* EDIT PLACEMENT REQUEST */}
-      {/* ================================================= */}
 
       <EditPlacementRequestModal
         open={Boolean(editPlacementRequest)}
@@ -897,10 +866,6 @@ export default function ProviderDashboard() {
         lang={lang}
       />
 
-      {/* ================================================= */}
-      {/* DELETE PLACEMENT REQUEST */}
-      {/* ================================================= */}
-
       <DeletePlacementRequestModal
         open={Boolean(deletePlacementRequestTarget)}
         request={deletePlacementRequestTarget}
@@ -909,16 +874,27 @@ export default function ProviderDashboard() {
         onDelete={() => void handlePlacementRequestDelete()}
       />
 
-      {/* ================================================= */}
-      {/* SUBMIT PLACEMENT REQUEST */}
-      {/* ================================================= */}
-
       <SubmitPlacementRequestModal
         open={Boolean(submitPlacementRequestTarget)}
         request={submitPlacementRequestTarget}
         loading={placementActionLoading}
         onClose={closePlacementRequestSubmit}
         onSubmit={() => void handlePlacementRequestSubmit()}
+      />
+
+      {/* ================================================= */}
+      {/* PLACEMENT CANDIDATES */}
+      {/* ================================================= */}
+
+      <PlacementCandidatesModal
+        key={candidateRequest?.recruitId ?? "no-candidate-request"}
+        open={Boolean(candidateRequest)}
+        request={candidateRequest}
+        candidates={candidateRequestCandidates}
+        actionCandidateId={candidateActionId}
+        lang={lang}
+        onClose={closePlacementCandidates}
+        onStatusChange={handlePlacementCandidateStatus}
       />
     </>
   );
@@ -946,7 +922,9 @@ function StatCard({
   icon,
 }: {
   label: string;
+
   value: number;
+
   icon: React.ReactNode;
 }) {
   return (
@@ -972,14 +950,16 @@ function TabButton({
   label,
 }: {
   active: boolean;
+
   onClick: () => void;
+
   label: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`cursor-pointer rounded-xl px-4 py-2 text-sm transition ${
+      className={`rounded-xl px-4 py-2 text-sm transition ${
         active
           ? "bg-white font-semibold text-slate-900 shadow-sm"
           : "text-slate-600 hover:text-slate-900"
@@ -1000,7 +980,9 @@ function EmptyState({
   action,
 }: {
   title: string;
+
   description: string;
+
   action?: React.ReactNode;
 }) {
   return (
@@ -1020,7 +1002,14 @@ function EmptyState({
 // INFO FIELD
 // ======================================================
 
-function InfoField({ label, value }: { label: string; value?: string | null }) {
+function InfoField({
+  label,
+  value,
+}: {
+  label: string;
+
+  value?: string | null;
+}) {
   return (
     <div className="rounded-xl bg-slate-50 p-3">
       <p className="text-xs text-slate-500">{label}</p>

@@ -7,7 +7,10 @@ import type {
   PlacementRequestResponse,
   ProviderApplicationListResponse,
   ProviderApplicationResponse,
+  ProviderPlacementCandidateListResponse,
+  ProviderPlacementCandidateResponse,
   UpdateProviderApplicationStatusPayload,
+  UpdateProviderPlacementCandidateStatusPayload,
   VacancyListResponse,
   VacancyResponse,
 } from "./types";
@@ -116,10 +119,6 @@ export const getProviderApplicationResume = async (applicationId: string) => {
 // PLACEMENT REQUESTS
 // ======================================================
 
-// ======================================================
-// GET ALL
-// ======================================================
-
 export const getProviderPlacementRequests = async () => {
   const response = await axiosInstance.get<PlacementRequestListResponse>(
     "/providers/recruits",
@@ -128,10 +127,6 @@ export const getProviderPlacementRequests = async () => {
   return response.data;
 };
 
-// ======================================================
-// GET ONE
-// ======================================================
-
 export const getProviderPlacementRequestById = async (recruitId: string) => {
   const response = await axiosInstance.get<PlacementRequestResponse>(
     `/providers/recruits/${recruitId}`,
@@ -139,10 +134,6 @@ export const getProviderPlacementRequestById = async (recruitId: string) => {
 
   return response.data;
 };
-
-// ======================================================
-// CREATE
-// ======================================================
 
 export const createProviderPlacementRequest = async (
   payload: CreatePlacementRequestPayload,
@@ -154,10 +145,6 @@ export const createProviderPlacementRequest = async (
 
   return response.data;
 };
-
-// ======================================================
-// UPDATE
-// ======================================================
 
 export const updateProviderPlacementRequest = async (
   recruitId: string,
@@ -171,10 +158,6 @@ export const updateProviderPlacementRequest = async (
   return response.data;
 };
 
-// ======================================================
-// SUBMIT / RESUBMIT
-// ======================================================
-
 export const submitProviderPlacementRequest = async (recruitId: string) => {
   const response = await axiosInstance.patch<PlacementRequestResponse>(
     `/providers/recruits/${recruitId}/submit`,
@@ -183,14 +166,58 @@ export const submitProviderPlacementRequest = async (recruitId: string) => {
   return response.data;
 };
 
-// ======================================================
-// DELETE
-// ======================================================
-
 export const deleteProviderPlacementRequest = async (recruitId: string) => {
   const response = await axiosInstance.delete<PlacementRequestResponse>(
     `/providers/recruits/${recruitId}`,
   );
+
+  return response.data;
+};
+
+// ======================================================
+// PLACEMENT CANDIDATES
+// ======================================================
+
+// GET ALL PROVIDER MATCHED CANDIDATES
+//
+// GET /api/providers/placement-candidates
+//
+// Optional:
+// ?recruitId=R-XXXX
+// ======================================================
+
+export const getProviderPlacementCandidates = async (recruitId?: string) => {
+  const response =
+    await axiosInstance.get<ProviderPlacementCandidateListResponse>(
+      "/providers/placement-candidates",
+      {
+        params: recruitId
+          ? {
+              recruitId,
+            }
+          : undefined,
+      },
+    );
+
+  return response.data;
+};
+
+// ======================================================
+// UPDATE CANDIDATE STATUS
+//
+// PATCH
+// /api/providers/placement-candidates/:placementCandidateId/status
+// ======================================================
+
+export const updateProviderPlacementCandidateStatus = async (
+  placementCandidateId: string,
+  payload: UpdateProviderPlacementCandidateStatusPayload,
+) => {
+  const response =
+    await axiosInstance.patch<ProviderPlacementCandidateResponse>(
+      `/providers/placement-candidates/${placementCandidateId}/status`,
+      payload,
+    );
 
   return response.data;
 };

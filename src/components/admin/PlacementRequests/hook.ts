@@ -12,6 +12,9 @@ import {
   approveAdminPlacementRequest,
   getAdminPlacementRequest,
   getAdminPlacementRequests,
+  getEligiblePlacementSeekers,
+  getMatchedPlacementCandidates,
+  matchPlacementCandidate,
   rejectAdminPlacementRequest,
 } from "./api";
 
@@ -21,8 +24,16 @@ import type {
   PlacementRequestStatus,
 } from "./types";
 
+// ======================================================
+// HOOK
+// ======================================================
+
 export function useAdminPlacementRequests() {
   const queryClient = useQueryClient();
+
+  // ====================================================
+  // SEARCH / FILTER
+  // ====================================================
 
   const [search, setSearch] = useState("");
 
@@ -30,16 +41,39 @@ export function useAdminPlacementRequests() {
     "ALL" | PlacementRequestStatus
   >("ALL");
 
+  // ====================================================
+  // VIEW REQUEST
+  // ====================================================
+
   const [viewingId, setViewingId] = useState<string | null>(null);
+
+  // ====================================================
+  // REVIEW REQUEST
+  // ====================================================
 
   const [reviewingRequest, setReviewingRequest] =
     useState<PlacementRequest | null>(null);
+
+  // ====================================================
+  // CANDIDATE MANAGEMENT
+  // ====================================================
+
+  const [candidateRequest, setCandidateRequest] =
+    useState<PlacementRequest | null>(null);
+
+  // ====================================================
+  // LIST
+  // ====================================================
 
   const listQuery = useQuery({
     queryKey: ["admin-placement-requests"],
 
     queryFn: getAdminPlacementRequests,
   });
+
+  // ====================================================
+  // DETAILS
+  // ====================================================
 
   const detailQuery = useQuery({
     queryKey: ["admin-placement-request", viewingId],
@@ -49,17 +83,48 @@ export function useAdminPlacementRequests() {
     enabled: Boolean(viewingId),
   });
 
-  const filteredRequests = useMemo(() => {
-    const data = listQuery.data?.data || [];
+  // ====================================================
+  // ELIGIBLE SEEKERS
+  // ====================================================
 
-    const normalized = search.trim().toLowerCase();
+  const eligibleQuery = useQuery({
+    queryKey: ["admin-placement-eligible-seekers", candidateRequest?.recruitId],
+
+    queryFn: () => getEligiblePlacementSeekers(candidateRequest!.recruitId),
+
+    enabled: Boolean(candidateRequest?.recruitId),
+  });
+
+  // ====================================================
+  // MATCHED CANDIDATES
+  // ====================================================
+
+  const candidatesQuery = useQuery({
+    queryKey: [
+      "admin-placement-matched-candidates",
+      candidateRequest?.recruitId,
+    ],
+
+    queryFn: () => getMatchedPlacementCandidates(candidateRequest!.recruitId),
+
+    enabled: Boolean(candidateRequest?.recruitId),
+  });
+
+  // ====================================================
+  // FILTER
+  // ====================================================
+
+  const filteredRequests = useMemo(() => {
+    const data = listQuery.data?.data ?? [];
+
+    const keyword = search.trim().toLowerCase();
 
     return data.filter((request) => {
       if (statusFilter !== "ALL" && request.status !== statusFilter) {
         return false;
       }
 
-      if (!normalized) {
+      if (!keyword) {
         return true;
       }
 
@@ -69,12 +134,18 @@ export function useAdminPlacementRequests() {
         request.providerName,
         request.jobTitle,
         request.workLocation,
+        request.status,
       ]
+        .filter(Boolean)
         .join(" ")
         .toLowerCase()
-        .includes(normalized);
+        .includes(keyword);
     });
   }, [listQuery.data, search, statusFilter]);
+
+  // ====================================================
+  // ERROR HELPER
+  // ====================================================
 
   const getErrorMessage = (error: unknown) => {
     if (axios.isAxiosError<ApiError>(error)) {
@@ -84,7 +155,11 @@ export function useAdminPlacementRequests() {
     return "Something went wrong.";
   };
 
-  const refresh = async () => {
+  // ====================================================
+  // INVALIDATE PLACEMENT REQUESTS
+  // ====================================================
+
+  const refreshRequests = async () => {
     await Promise.all([
       queryClient.invalidateQueries({
         queryKey: ["admin-placement-requests"],
@@ -100,6 +175,10 @@ export function useAdminPlacementRequests() {
     ]);
   };
 
+  // ====================================================
+  // APPROVE
+  // ====================================================
+
   const approveMutation = useMutation({
     mutationFn: approveAdminPlacementRequest,
 
@@ -108,13 +187,17 @@ export function useAdminPlacementRequests() {
 
       setReviewingRequest(null);
 
-      await refresh();
+      await refreshRequests();
     },
 
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error));
     },
   });
+
+  // ====================================================
+  // REJECT
+  // ====================================================
 
   const rejectMutation = useMutation({
     mutationFn: ({
@@ -130,7 +213,7 @@ export function useAdminPlacementRequests() {
 
       setReviewingRequest(null);
 
-      await refresh();
+      await refreshRequests();
     },
 
     onError: (error: unknown) => {
@@ -138,10 +221,94 @@ export function useAdminPlacementRequests() {
     },
   });
 
+  // ====================================================
+  // MATCH CANDIDATE
+  // ====================================================
+
+  const matchCandidateMutation = useMutation({
+    mutationFn: ({
+      recruitId,
+      seekerId,
+    }: {
+      recruitId: string;
+      seekerId: string;
+    }) => matchPlacementCandidate(recruitId, seekerId),
+
+    onSuccess: async (response) => {
+      toast.success(response.message || "Candidate matched successfully.");
+
+      if (!candidateRequest) {
+        return;
+      }
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            "admin-placement-eligible-seekers",
+            candidateRequest.recruitId,
+          ],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: [
+            "admin-placement-matched-candidates",
+            candidateRequest.recruitId,
+          ],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ["provider-placement-candidates"],
+        }),
+      ]);
+    },
+
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+
+  // ====================================================
+  // CANDIDATE MODAL
+  // ====================================================
+
+  const openCandidates = (request: PlacementRequest) => {
+    if (request.status !== "approved") {
+      toast.error("Only approved placement requests can manage candidates.");
+
+      return;
+    }
+
+    setCandidateRequest(request);
+  };
+
+  const closeCandidates = () => {
+    setCandidateRequest(null);
+  };
+
+  const handleMatchCandidate = (seekerId: string) => {
+    if (!candidateRequest) {
+      return;
+    }
+
+    matchCandidateMutation.mutate({
+      recruitId: candidateRequest.recruitId,
+
+      seekerId,
+    });
+  };
+
+  // ====================================================
+  // RETURN
+  // ====================================================
+
   return {
+    // REQUESTS
+
     requests: filteredRequests,
 
     summary: listQuery.data?.summary,
+
+    // SEARCH
 
     search,
     setSearch,
@@ -149,13 +316,48 @@ export function useAdminPlacementRequests() {
     statusFilter,
     setStatusFilter,
 
+    // VIEW
+
     viewingRequest: detailQuery.data?.data,
 
     viewingId,
     setViewingId,
 
+    // REVIEW
+
     reviewingRequest,
     setReviewingRequest,
+
+    // CANDIDATES
+
+    candidateRequest,
+
+    openCandidates,
+    closeCandidates,
+
+    eligibleSeekers: eligibleQuery.data?.data ?? [],
+
+    matchedCandidates: candidatesQuery.data?.data ?? [],
+
+    candidateRecruit: eligibleQuery.data?.recruit,
+
+    candidatesLoading: eligibleQuery.isLoading || candidatesQuery.isLoading,
+
+    candidatesFetching: eligibleQuery.isFetching || candidatesQuery.isFetching,
+
+    candidateError: eligibleQuery.error || candidatesQuery.error,
+
+    matchingSeekerId: matchCandidateMutation.variables?.seekerId ?? null,
+
+    isMatchingCandidate: matchCandidateMutation.isPending,
+
+    handleMatchCandidate,
+
+    refreshCandidates: async () => {
+      await Promise.all([eligibleQuery.refetch(), candidatesQuery.refetch()]);
+    },
+
+    // PAGE STATE
 
     isLoading: listQuery.isLoading,
 
@@ -163,13 +365,18 @@ export function useAdminPlacementRequests() {
 
     isReviewing: approveMutation.isPending || rejectMutation.isPending,
 
-    approve: (recruitId: string) => approveMutation.mutate(recruitId),
+    // ACTIONS
 
-    reject: (recruitId: string, reason: string) =>
+    approve: (recruitId: string) => {
+      approveMutation.mutate(recruitId);
+    },
+
+    reject: (recruitId: string, reason: string) => {
       rejectMutation.mutate({
         recruitId,
         reason,
-      }),
+      });
+    },
 
     refresh: listQuery.refetch,
   };

@@ -14,9 +14,11 @@ import {
   closeProviderVacancy,
   deleteProviderPlacementRequest,
   getProviderApplications,
+  getProviderPlacementCandidates,
   getProviderPlacementRequests,
   getProviderVacancies,
   submitProviderPlacementRequest,
+  updateProviderPlacementCandidateStatus,
   updateProviderPlacementRequest,
 } from "./api";
 
@@ -26,6 +28,8 @@ import type {
   PlacementRequest,
   ProviderApplication,
   ProviderDashboardTab,
+  ProviderPlacementCandidate,
+  UpdateProviderPlacementCandidateStatusPayload,
   Vacancy,
 } from "./types";
 
@@ -48,6 +52,10 @@ export const useProviderDashboard = () => {
 
   const [placementRequests, setPlacementRequests] = useState<
     PlacementRequest[]
+  >([]);
+
+  const [placementCandidates, setPlacementCandidates] = useState<
+    ProviderPlacementCandidate[]
   >([]);
 
   // ======================================================
@@ -107,6 +115,17 @@ export const useProviderDashboard = () => {
   const [placementActionLoading, setPlacementActionLoading] = useState(false);
 
   // ======================================================
+  // PLACEMENT CANDIDATES
+  // ======================================================
+
+  const [candidateRequest, setCandidateRequest] =
+    useState<PlacementRequest | null>(null);
+
+  const [candidateActionId, setCandidateActionId] = useState<string | null>(
+    null,
+  );
+
+  // ======================================================
   // VIEW VACANCY
   // ======================================================
 
@@ -131,7 +150,6 @@ export const useProviderDashboard = () => {
 
   const redirectToLogin = useCallback(() => {
     localStorage.removeItem("access_token");
-
     localStorage.removeItem("user_role");
 
     router.replace(lang === "ja" ? "/auth" : "/en/auth");
@@ -139,7 +157,6 @@ export const useProviderDashboard = () => {
 
   const checkAuth = useCallback(() => {
     const token = localStorage.getItem("access_token");
-
     const role = localStorage.getItem("user_role");
 
     if (!token || role !== "provider") {
@@ -222,14 +239,17 @@ export const useProviderDashboard = () => {
 
         setError("");
 
-        const [vacancyResponse, applicationResponse, placementResponse] =
-          await Promise.all([
-            getProviderVacancies(),
-
-            getProviderApplications(),
-
-            getProviderPlacementRequests(),
-          ]);
+        const [
+          vacancyResponse,
+          applicationResponse,
+          placementResponse,
+          candidateResponse,
+        ] = await Promise.all([
+          getProviderVacancies(),
+          getProviderApplications(),
+          getProviderPlacementRequests(),
+          getProviderPlacementCandidates(),
+        ]);
 
         setVacancies(
           Array.isArray(vacancyResponse.data) ? vacancyResponse.data : [],
@@ -243,6 +263,10 @@ export const useProviderDashboard = () => {
 
         setPlacementRequests(
           Array.isArray(placementResponse.data) ? placementResponse.data : [],
+        );
+
+        setPlacementCandidates(
+          Array.isArray(candidateResponse.data) ? candidateResponse.data : [],
         );
 
         return true;
@@ -624,6 +648,99 @@ export const useProviderDashboard = () => {
   };
 
   // ======================================================
+  // PROVIDER PLACEMENT CANDIDATES
+  // ======================================================
+
+  const placementCandidateCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+
+    for (const candidate of placementCandidates) {
+      counts[candidate.recruitId] = (counts[candidate.recruitId] ?? 0) + 1;
+    }
+
+    return counts;
+  }, [placementCandidates]);
+
+  const candidateRequestCandidates = useMemo(() => {
+    if (!candidateRequest) {
+      return [];
+    }
+
+    return placementCandidates.filter(
+      (candidate) => candidate.recruitId === candidateRequest.recruitId,
+    );
+  }, [candidateRequest, placementCandidates]);
+
+  const openPlacementCandidates = (request: PlacementRequest) => {
+    if (request.status !== "approved") {
+      toast.error(
+        lang === "ja"
+          ? "承認済みの採用依頼のみ候補者を確認できます。"
+          : "Candidates are available only for approved placement requests.",
+      );
+
+      return;
+    }
+
+    setCandidateRequest(request);
+  };
+
+  const closePlacementCandidates = () => {
+    setCandidateRequest(null);
+  };
+
+  const refreshPlacementCandidates = async () => {
+    try {
+      const response = await getProviderPlacementCandidates();
+
+      setPlacementCandidates(Array.isArray(response.data) ? response.data : []);
+    } catch (apiError: unknown) {
+      toast.error(
+        getActionErrorMessage(
+          apiError,
+          lang === "ja"
+            ? "候補者情報の更新に失敗しました。"
+            : "Failed to refresh matched candidates.",
+        ),
+      );
+    }
+  };
+
+  const handlePlacementCandidateStatus = async (
+    placementCandidateId: string,
+    payload: UpdateProviderPlacementCandidateStatusPayload,
+  ) => {
+    try {
+      setCandidateActionId(placementCandidateId);
+
+      const response = await updateProviderPlacementCandidateStatus(
+        placementCandidateId,
+        payload,
+      );
+
+      toast.success(
+        response.message ||
+          (lang === "ja"
+            ? "候補者のステータスを更新しました。"
+            : "Candidate status updated."),
+      );
+
+      await refreshPlacementCandidates();
+    } catch (apiError: unknown) {
+      toast.error(
+        getActionErrorMessage(
+          apiError,
+          lang === "ja"
+            ? "候補者ステータスの更新に失敗しました。"
+            : "Failed to update candidate status.",
+        ),
+      );
+    } finally {
+      setCandidateActionId(null);
+    }
+  };
+
+  // ======================================================
   // FILTER VACANCIES
   // ======================================================
 
@@ -667,7 +784,6 @@ export const useProviderDashboard = () => {
 
     return applications.filter((application) => {
       const applicant = application.applicant;
-
       const vacancy = application.vacancy;
 
       const haystack = [
@@ -714,15 +830,10 @@ export const useProviderDashboard = () => {
     return placementRequests.filter((request) => {
       const haystack = [
         request.recruitId,
-
         request.job_title,
-
         request.job_category,
-
         request.employment_type,
-
         request.work_location,
-
         request.status,
       ]
         .filter(Boolean)
@@ -774,15 +885,7 @@ export const useProviderDashboard = () => {
     (application) => application.status === "REJECTED",
   ).length;
 
-  // ======================================================
-  // PLACEMENT COUNTS
-  // ======================================================
-
   const totalPlacementRequests = placementRequests.length;
-
-  const activePlacementCount = placementRequests.filter(
-    (request) => !["approved", "rejected"].includes(request.status),
-  ).length;
 
   // ======================================================
   // RETURN
@@ -804,6 +907,7 @@ export const useProviderDashboard = () => {
     vacancies,
     applications,
     placementRequests,
+    placementCandidates,
 
     filteredVacancies,
     filteredApplications,
@@ -823,7 +927,6 @@ export const useProviderDashboard = () => {
     rejectedApplicationCount,
 
     totalPlacementRequests,
-    activePlacementCount,
 
     // VACANCY CREATE
 
@@ -889,6 +992,23 @@ export const useProviderDashboard = () => {
     handlePlacementRequestSubmit,
 
     placementActionLoading,
+
+    // PLACEMENT CANDIDATES
+
+    placementCandidateCounts,
+
+    candidateRequest,
+    candidateRequestCandidates,
+
+    openPlacementCandidates,
+    closePlacementCandidates,
+
+    candidateActionId,
+
+    handlePlacementCandidateStatus,
+    refreshPlacementCandidates,
+
+    // REFRESH
 
     handleRefresh,
   };
