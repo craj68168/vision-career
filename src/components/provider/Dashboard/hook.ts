@@ -12,13 +12,17 @@ import { useLanguage } from "@/context/LanguageContext";
 
 import {
   closeProviderVacancy,
+  deleteProviderPlacementRequest,
   getProviderApplications,
   getProviderPlacementRequests,
   getProviderVacancies,
+  submitProviderPlacementRequest,
+  updateProviderPlacementRequest,
 } from "./api";
 
 import type {
   ApiErrorResponse,
+  CreatePlacementRequestPayload,
   PlacementRequest,
   ProviderApplication,
   ProviderDashboardTab,
@@ -47,7 +51,7 @@ export const useProviderDashboard = () => {
   >([]);
 
   // ======================================================
-  // DASHBOARD UI
+  // DASHBOARD
   // ======================================================
 
   const [activeTab, setActiveTab] = useState<ProviderDashboardTab>("vacancies");
@@ -61,16 +65,46 @@ export const useProviderDashboard = () => {
   const [error, setError] = useState("");
 
   // ======================================================
-  // CREATE VACANCY MODAL
+  // CREATE VACANCY
   // ======================================================
 
   const [postVacancyOpen, setPostVacancyOpen] = useState(false);
 
   // ======================================================
-  // PLACEMENT REQUEST MODAL
+  // CREATE PLACEMENT REQUEST
   // ======================================================
 
   const [placementRequestOpen, setPlacementRequestOpen] = useState(false);
+
+  // ======================================================
+  // PLACEMENT REQUEST VIEW
+  // ======================================================
+
+  const [viewPlacementRequest, setViewPlacementRequest] =
+    useState<PlacementRequest | null>(null);
+
+  // ======================================================
+  // PLACEMENT REQUEST EDIT
+  // ======================================================
+
+  const [editPlacementRequest, setEditPlacementRequest] =
+    useState<PlacementRequest | null>(null);
+
+  // ======================================================
+  // PLACEMENT REQUEST DELETE
+  // ======================================================
+
+  const [deletePlacementRequestTarget, setDeletePlacementRequestTarget] =
+    useState<PlacementRequest | null>(null);
+
+  // ======================================================
+  // PLACEMENT REQUEST SUBMIT
+  // ======================================================
+
+  const [submitPlacementRequestTarget, setSubmitPlacementRequestTarget] =
+    useState<PlacementRequest | null>(null);
+
+  const [placementActionLoading, setPlacementActionLoading] = useState(false);
 
   // ======================================================
   // VIEW VACANCY
@@ -122,11 +156,11 @@ export const useProviderDashboard = () => {
   // ======================================================
 
   const handleApiError = useCallback(
-    (error: unknown) => {
-      console.error("Provider dashboard error:", error);
+    (apiError: unknown) => {
+      console.error("Provider dashboard error:", apiError);
 
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        const status = error.response?.status;
+      if (axios.isAxiosError<ApiErrorResponse>(apiError)) {
+        const status = apiError.response?.status;
 
         if (status === 401 || status === 403) {
           redirectToLogin();
@@ -135,7 +169,7 @@ export const useProviderDashboard = () => {
         }
 
         setError(
-          error.response?.data?.message ||
+          apiError.response?.data?.message ||
             (lang === "ja"
               ? "ダッシュボードの読み込みに失敗しました"
               : "Failed to load provider dashboard."),
@@ -151,6 +185,24 @@ export const useProviderDashboard = () => {
       );
     },
     [lang, redirectToLogin],
+  );
+
+  const getActionErrorMessage = useCallback(
+    (apiError: unknown, fallback: string) => {
+      if (axios.isAxiosError<ApiErrorResponse>(apiError)) {
+        if (
+          apiError.response?.status === 401 ||
+          apiError.response?.status === 403
+        ) {
+          redirectToLogin();
+        }
+
+        return apiError.response?.data?.message || fallback;
+      }
+
+      return fallback;
+    },
+    [redirectToLogin],
   );
 
   // ======================================================
@@ -170,16 +222,6 @@ export const useProviderDashboard = () => {
 
         setError("");
 
-        // ==================================================
-        // FETCH PROVIDER DASHBOARD DATA
-        // ==================================================
-        //
-        // 1. Vacancies
-        // 2. Applications approved by Admin
-        // 3. Placement requests
-        //
-        // ==================================================
-
         const [vacancyResponse, applicationResponse, placementResponse] =
           await Promise.all([
             getProviderVacancies(),
@@ -189,17 +231,9 @@ export const useProviderDashboard = () => {
             getProviderPlacementRequests(),
           ]);
 
-        // ==================================================
-        // VACANCIES
-        // ==================================================
-
         setVacancies(
           Array.isArray(vacancyResponse.data) ? vacancyResponse.data : [],
         );
-
-        // ==================================================
-        // APPLICATIONS
-        // ==================================================
 
         setApplications(
           Array.isArray(applicationResponse.data)
@@ -207,17 +241,13 @@ export const useProviderDashboard = () => {
             : [],
         );
 
-        // ==================================================
-        // PLACEMENT REQUESTS
-        // ==================================================
-
         setPlacementRequests(
           Array.isArray(placementResponse.data) ? placementResponse.data : [],
         );
 
         return true;
-      } catch (error: unknown) {
-        handleApiError(error);
+      } catch (apiError: unknown) {
+        handleApiError(apiError);
 
         return false;
       } finally {
@@ -238,7 +268,7 @@ export const useProviderDashboard = () => {
   }, [loadDashboard]);
 
   // ======================================================
-  // REFRESH DASHBOARD
+  // REFRESH
   // ======================================================
 
   const handleRefresh = useCallback(async () => {
@@ -294,14 +324,6 @@ export const useProviderDashboard = () => {
   // ======================================================
 
   const openVacancyEdit = (vacancy: Vacancy) => {
-    /*
-     * Close details modal first.
-     *
-     * setTimeout avoids the React / DOM issue we
-     * previously had when one modal was removed
-     * while another modal was inserted immediately.
-     */
-
     setViewVacancy(null);
 
     window.setTimeout(() => {
@@ -342,7 +364,7 @@ export const useProviderDashboard = () => {
   };
 
   // ======================================================
-  // CLOSE PUBLISHED VACANCY
+  // CLOSE VACANCY
   // ======================================================
 
   const handleCloseVacancy = async (vacancy: Vacancy) => {
@@ -376,28 +398,20 @@ export const useProviderDashboard = () => {
       );
 
       await loadDashboard(false);
-    } catch (error: unknown) {
-      console.error("Close vacancy error:", error);
-
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        toast.error(
-          error.response?.data?.message ||
-            (lang === "ja"
-              ? "求人の終了に失敗しました"
-              : "Failed to close vacancy."),
-        );
-
-        return;
-      }
-
+    } catch (apiError: unknown) {
       toast.error(
-        lang === "ja" ? "求人の終了に失敗しました" : "Failed to close vacancy.",
+        getActionErrorMessage(
+          apiError,
+          lang === "ja"
+            ? "求人の終了に失敗しました"
+            : "Failed to close vacancy.",
+        ),
       );
     }
   };
 
   // ======================================================
-  // PLACEMENT REQUEST
+  // CREATE PLACEMENT REQUEST
   // ======================================================
 
   const openPlacementRequest = () => {
@@ -417,6 +431,199 @@ export const useProviderDashboard = () => {
   };
 
   // ======================================================
+  // VIEW PLACEMENT REQUEST
+  // ======================================================
+
+  const openPlacementRequestView = (request: PlacementRequest) => {
+    setViewPlacementRequest(request);
+  };
+
+  const closePlacementRequestView = () => {
+    setViewPlacementRequest(null);
+  };
+
+  // ======================================================
+  // EDIT PLACEMENT REQUEST
+  // ======================================================
+
+  const openPlacementRequestEdit = (request: PlacementRequest) => {
+    if (!["draft", "rejected"].includes(request.status)) {
+      toast.error(
+        lang === "ja"
+          ? "この採用依頼は編集できません。"
+          : "This placement request cannot be edited.",
+      );
+
+      return;
+    }
+
+    setViewPlacementRequest(null);
+
+    window.setTimeout(() => {
+      setEditPlacementRequest(request);
+    }, 0);
+  };
+
+  const closePlacementRequestEdit = () => {
+    setEditPlacementRequest(null);
+  };
+
+  const handlePlacementRequestUpdate = async (
+    payload: CreatePlacementRequestPayload,
+  ) => {
+    if (!editPlacementRequest) {
+      return;
+    }
+
+    try {
+      setPlacementActionLoading(true);
+
+      const response = await updateProviderPlacementRequest(
+        editPlacementRequest.recruitId,
+        payload,
+      );
+
+      toast.success(
+        response.message ||
+          (lang === "ja"
+            ? "採用依頼を更新しました。"
+            : "Placement request updated."),
+      );
+
+      setEditPlacementRequest(null);
+
+      await loadDashboard(false);
+    } catch (apiError: unknown) {
+      toast.error(
+        getActionErrorMessage(
+          apiError,
+          lang === "ja"
+            ? "採用依頼の更新に失敗しました。"
+            : "Failed to update placement request.",
+        ),
+      );
+    } finally {
+      setPlacementActionLoading(false);
+    }
+  };
+
+  // ======================================================
+  // DELETE PLACEMENT REQUEST
+  // ======================================================
+
+  const openPlacementRequestDelete = (request: PlacementRequest) => {
+    if (!["draft", "rejected"].includes(request.status)) {
+      toast.error(
+        lang === "ja"
+          ? "この採用依頼は削除できません。"
+          : "This placement request cannot be deleted.",
+      );
+
+      return;
+    }
+
+    setDeletePlacementRequestTarget(request);
+  };
+
+  const closePlacementRequestDelete = () => {
+    setDeletePlacementRequestTarget(null);
+  };
+
+  const handlePlacementRequestDelete = async () => {
+    if (!deletePlacementRequestTarget) {
+      return;
+    }
+
+    try {
+      setPlacementActionLoading(true);
+
+      const response = await deleteProviderPlacementRequest(
+        deletePlacementRequestTarget.recruitId,
+      );
+
+      toast.success(
+        response.message ||
+          (lang === "ja"
+            ? "採用依頼を削除しました。"
+            : "Placement request deleted."),
+      );
+
+      setDeletePlacementRequestTarget(null);
+
+      await loadDashboard(false);
+    } catch (apiError: unknown) {
+      toast.error(
+        getActionErrorMessage(
+          apiError,
+          lang === "ja"
+            ? "採用依頼の削除に失敗しました。"
+            : "Failed to delete placement request.",
+        ),
+      );
+    } finally {
+      setPlacementActionLoading(false);
+    }
+  };
+
+  // ======================================================
+  // SUBMIT PLACEMENT REQUEST
+  // ======================================================
+
+  const openPlacementRequestSubmit = (request: PlacementRequest) => {
+    if (!["draft", "rejected"].includes(request.status)) {
+      toast.error(
+        lang === "ja"
+          ? "この採用依頼は送信できません。"
+          : "This placement request cannot be submitted.",
+      );
+
+      return;
+    }
+
+    setSubmitPlacementRequestTarget(request);
+  };
+
+  const closePlacementRequestSubmit = () => {
+    setSubmitPlacementRequestTarget(null);
+  };
+
+  const handlePlacementRequestSubmit = async () => {
+    if (!submitPlacementRequestTarget) {
+      return;
+    }
+
+    try {
+      setPlacementActionLoading(true);
+
+      const response = await submitProviderPlacementRequest(
+        submitPlacementRequestTarget.recruitId,
+      );
+
+      toast.success(
+        response.message ||
+          (lang === "ja"
+            ? "管理者審査へ送信しました。"
+            : "Placement request submitted for Admin review."),
+      );
+
+      setSubmitPlacementRequestTarget(null);
+
+      await loadDashboard(false);
+    } catch (apiError: unknown) {
+      toast.error(
+        getActionErrorMessage(
+          apiError,
+          lang === "ja"
+            ? "採用依頼の送信に失敗しました。"
+            : "Failed to submit placement request.",
+        ),
+      );
+    } finally {
+      setPlacementActionLoading(false);
+    }
+  };
+
+  // ======================================================
   // FILTER VACANCIES
   // ======================================================
 
@@ -430,21 +637,13 @@ export const useProviderDashboard = () => {
     return vacancies.filter((vacancy) => {
       const haystack = [
         vacancy.vacancyId,
-
         vacancy.companyName,
-
         vacancy.companyNameKana,
-
         vacancy.title,
-
         vacancy.titleKana,
-
         vacancy.employmentType,
-
         vacancy.workLocation,
-
         vacancy.japaneseLevel,
-
         vacancy.status,
       ]
         .filter(Boolean)
@@ -472,50 +671,25 @@ export const useProviderDashboard = () => {
       const vacancy = application.vacancy;
 
       const haystack = [
-        // ==========================================
-        // APPLICATION
-        // ==========================================
-
         application.application_id,
-
         application.vacancy_id,
-
         application.status,
 
-        // ==========================================
-        // APPLICANT PROFESSIONAL DATA
-        // ==========================================
-
         applicant?.name,
-
         applicant?.nationality,
-
         applicant?.visa_type,
-
         applicant?.japanese_level,
-
         applicant?.desired_job,
-
         applicant?.desired_location,
 
         ...(applicant?.skills || []),
 
-        // ==========================================
-        // VACANCY
-        // ==========================================
-
         vacancy?.vacancyId,
-
         vacancy?.title,
-
         vacancy?.titleKana,
-
         vacancy?.companyName,
-
         vacancy?.employmentType,
-
         vacancy?.workLocation,
-
         vacancy?.japaneseLevel,
       ]
         .filter(Boolean)
@@ -560,7 +734,7 @@ export const useProviderDashboard = () => {
   }, [placementRequests, search]);
 
   // ======================================================
-  // VACANCY COUNTS
+  // COUNTS
   // ======================================================
 
   const totalVacancies = vacancies.length;
@@ -574,24 +748,7 @@ export const useProviderDashboard = () => {
       vacancy.status === "pending_review" || vacancy.status === "draft",
   ).length;
 
-  // ======================================================
-  // APPLICATION COUNT
-  // ======================================================
-  //
-  // This is now REAL backend data.
-  //
-  // Because the provider API only returns
-  // Admin-approved applications, this count
-  // automatically represents applications that
-  // the provider is allowed to see.
-  //
-  // ======================================================
-
   const totalApplications = applications.length;
-
-  // ======================================================
-  // APPLICATION STATUS COUNTS
-  // ======================================================
 
   const sentToProviderCount = applications.filter(
     (application) => application.status === "SENT_TO_PROVIDER",
@@ -618,14 +775,13 @@ export const useProviderDashboard = () => {
   ).length;
 
   // ======================================================
-  // PLACEMENT REQUEST COUNT
+  // PLACEMENT COUNTS
   // ======================================================
 
+  const totalPlacementRequests = placementRequests.length;
+
   const activePlacementCount = placementRequests.filter(
-    (request) =>
-      !["approved", "rejected", "closed", "cancelled"].includes(
-        String(request.status || "").toLowerCase(),
-      ),
+    (request) => !["approved", "rejected"].includes(request.status),
   ).length;
 
   // ======================================================
@@ -633,151 +789,106 @@ export const useProviderDashboard = () => {
   // ======================================================
 
   return {
-    // ==================================================
-    // LANGUAGE
-    // ==================================================
-
     lang,
 
-    // ==================================================
-    // LOADING / ERROR
-    // ==================================================
-
     loading,
-
     refreshing,
-
     error,
 
-    // ==================================================
-    // TAB
-    // ==================================================
-
     activeTab,
-
     setActiveTab,
 
-    // ==================================================
-    // SEARCH
-    // ==================================================
-
     search,
-
     setSearch,
 
-    // ==================================================
-    // RAW DATA
-    // ==================================================
-
     vacancies,
-
     applications,
-
     placementRequests,
 
-    // ==================================================
-    // FILTERED DATA
-    // ==================================================
-
     filteredVacancies,
-
     filteredApplications,
-
     filteredPlacementRequests,
 
-    // ==================================================
-    // COUNTS
-    // ==================================================
-
     totalVacancies,
-
     publishedCount,
-
     pendingVacancyCount,
 
     totalApplications,
 
     sentToProviderCount,
-
     underReviewCount,
-
     interviewCount,
-
     selectedCount,
-
     hiredCount,
-
     rejectedApplicationCount,
 
+    totalPlacementRequests,
     activePlacementCount,
 
-    // ==================================================
-    // CREATE VACANCY
-    // ==================================================
+    // VACANCY CREATE
 
     postVacancyOpen,
-
     openPostVacancy,
-
     closePostVacancy,
-
     handleVacancyCreated,
 
-    // ==================================================
-    // VIEW VACANCY
-    // ==================================================
+    // VACANCY VIEW
 
     viewVacancy,
-
     openVacancyView,
-
     closeVacancyView,
 
-    // ==================================================
-    // EDIT VACANCY
-    // ==================================================
+    // VACANCY EDIT
 
     editVacancy,
-
     openVacancyEdit,
-
     closeVacancyEdit,
-
     handleVacancyUpdated,
 
-    // ==================================================
-    // DELETE VACANCY
-    // ==================================================
+    // VACANCY DELETE
 
     deleteVacancyTarget,
-
     openVacancyDelete,
-
     closeVacancyDelete,
-
     handleVacancyDeleted,
-
-    // ==================================================
-    // CLOSE VACANCY
-    // ==================================================
 
     handleCloseVacancy,
 
-    // ==================================================
-    // PLACEMENT REQUEST
-    // ==================================================
+    // PLACEMENT CREATE
 
     placementRequestOpen,
-
     openPlacementRequest,
-
     closePlacementRequest,
-
     handlePlacementCreated,
 
-    // ==================================================
-    // REFRESH
-    // ==================================================
+    // PLACEMENT VIEW
+
+    viewPlacementRequest,
+    openPlacementRequestView,
+    closePlacementRequestView,
+
+    // PLACEMENT EDIT
+
+    editPlacementRequest,
+    openPlacementRequestEdit,
+    closePlacementRequestEdit,
+    handlePlacementRequestUpdate,
+
+    // PLACEMENT DELETE
+
+    deletePlacementRequestTarget,
+    openPlacementRequestDelete,
+    closePlacementRequestDelete,
+    handlePlacementRequestDelete,
+
+    // PLACEMENT SUBMIT
+
+    submitPlacementRequestTarget,
+    openPlacementRequestSubmit,
+    closePlacementRequestSubmit,
+    handlePlacementRequestSubmit,
+
+    placementActionLoading,
 
     handleRefresh,
   };

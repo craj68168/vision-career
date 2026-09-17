@@ -22,9 +22,11 @@ export type Vacancy = {
   registerId?: string;
 
   companyName: string;
+
   companyNameKana?: string | null;
 
   title: string;
+
   titleKana?: string | null;
 
   employmentType: string;
@@ -36,24 +38,29 @@ export type Vacancy = {
   responsibilities?: string | null;
 
   requiredSkills?: string | null;
+
   preferredSkills?: string | null;
 
   requiredEducation?: string | null;
+
   requiredExperience?: string | null;
 
   japaneseLevel?: string | null;
 
   workLocation: string;
+
   workLocationDetail?: string | null;
 
   remoteWork?: string | null;
 
   salaryMin?: number | null;
+
   salaryMax?: number | null;
 
   salaryNote?: string | null;
 
   workHours?: string | null;
+
   breakTime?: string | null;
 
   overtime?: string | null;
@@ -92,7 +99,7 @@ export type Vacancy = {
 };
 
 // ======================================================
-// CREATE / UPDATE VACANCY PAYLOAD
+// CREATE / UPDATE VACANCY
 // ======================================================
 
 export type CreateVacancyPayload = {
@@ -188,15 +195,6 @@ export type VacancyResponse = {
 // ======================================================
 // PROVIDER APPLICATION STATUS
 // ======================================================
-//
-// Provider only receives applications after Admin approval.
-//
-// PENDING_ADMIN_APPROVAL
-// ADMIN_REJECTED
-//
-// are intentionally NOT part of the provider-visible statuses.
-//
-// ======================================================
 
 export type ProviderApplicationStatus =
   | "SENT_TO_PROVIDER"
@@ -237,20 +235,7 @@ export type ProviderEmploymentHistory = {
 };
 
 // ======================================================
-// SAFE APPLICANT PROFILE
-// ======================================================
-//
-// IMPORTANT:
-//
-// Provider does NOT receive:
-//
-// - seeker_id
-// - email
-// - phone
-// - address
-// - private documents
-// - generated resume file path
-//
+// SAFE PROVIDER APPLICANT
 // ======================================================
 
 export type ProviderApplicant = {
@@ -276,7 +261,7 @@ export type ProviderApplicant = {
 };
 
 // ======================================================
-// APPLICATION VACANCY SUMMARY
+// APPLICATION VACANCY
 // ======================================================
 
 export type ProviderApplicationVacancy = {
@@ -352,7 +337,7 @@ export type ProviderApplicationResponse = {
 };
 
 // ======================================================
-// UPDATE APPLICATION STATUS
+// APPLICATION STATUS UPDATE
 // ======================================================
 
 export type ProviderApplicationDecisionStatus =
@@ -367,105 +352,110 @@ export type UpdateProviderApplicationStatusPayload = {
 };
 
 // ======================================================
+// PLACEMENT REQUEST STATUS
+// ======================================================
+
+export type PlacementRequestStatus =
+  | "draft"
+  | "pending_review"
+  | "approved"
+  | "rejected";
+
+// ======================================================
 // PLACEMENT REQUEST
+// ======================================================
+//
+// IMPORTANT:
+//
+// These fields match the actual Recruit Mongoose schema.
+//
+// Do NOT add:
+//
+// [key: string]: unknown
+//
+// That was the source of several TypeScript errors.
 // ======================================================
 
 export type PlacementRequest = {
   _id?: string;
 
-  recruitId?: string;
+  recruitId: string;
 
-  registerId?: string;
+  company_id: string;
 
-  company_name?: string | null;
+  job_title: string;
 
-  job_title?: string | null;
+  job_category: string;
 
-  job_category?: string | null;
+  employment_type: string;
 
-  employment_type?: string | null;
+  number_of_positions: number;
 
-  number_of_positions?: number | null;
+  work_location: string;
 
-  work_location?: string | null;
+  job_description: string;
 
-  job_description?: string | null;
+  requirements: string;
 
-  requirements?: string | null;
+  japanese_level_required: string;
 
-  japanese_level_required?: string | null;
+  visa_type_required: string;
 
-  visa_type_required?: string | null;
+  salary_type: string;
 
-  salary_type?: string | null;
+  salary_amount: number;
 
-  salary_amount?: number | null;
+  working_hours: string;
 
-  salary_min?: number | null;
+  days_off: string;
 
-  salary_max?: number | null;
+  start_date: string;
 
-  working_hours?: string | null;
+  status: PlacementRequestStatus;
 
-  days_off?: string | null;
+  submitted_at?: string | null;
 
-  start_date?: string | null;
+  reviewed_at?: string | null;
 
-  notes?: string | null;
-
-  status?: string | null;
+  rejection_reason?: string | null;
 
   createdAt?: string;
 
   updatedAt?: string;
-
-  created_at?: string;
-
-  updated_at?: string;
-
-  [key: string]: unknown;
 };
 
 // ======================================================
-// CREATE PLACEMENT REQUEST
+// CREATE / UPDATE PLACEMENT REQUEST
 // ======================================================
 
 export type CreatePlacementRequestPayload = {
   job_title: string;
 
-  job_category?: string;
+  job_category: string;
 
-  employment_type?: string;
+  employment_type: string;
 
-  number_of_positions?: number;
+  number_of_positions: number;
 
-  work_location?: string;
+  work_location: string;
 
-  job_description?: string;
+  job_description: string;
 
-  requirements?: string;
+  requirements: string;
 
-  japanese_level_required?: string;
+  japanese_level_required: string;
 
-  visa_type_required?: string;
+  visa_type_required: string;
 
-  salary_type?: string;
+  salary_type: string;
 
-  salary_amount?: number | null;
+  salary_amount: number;
 
-  salary_min?: number | null;
+  working_hours: string;
 
-  salary_max?: number | null;
+  days_off: string;
 
-  working_hours?: string;
-
-  days_off?: string;
-
-  start_date?: string;
-
-  notes?: string;
-
-  [key: string]: string | number | boolean | null | undefined;
+  start_date: string;
 };
 
 // ======================================================
@@ -473,7 +463,7 @@ export type CreatePlacementRequestPayload = {
 // ======================================================
 
 export type PlacementRequestListResponse = {
-  status: "success" | "error";
+  success: boolean;
 
   count: number;
 
@@ -483,11 +473,11 @@ export type PlacementRequestListResponse = {
 };
 
 export type PlacementRequestResponse = {
-  status: "success" | "error";
-
-  data: PlacementRequest;
+  success: boolean;
 
   message?: string;
+
+  data: PlacementRequest;
 };
 
 // ======================================================

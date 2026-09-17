@@ -1,141 +1,120 @@
-import { STATUS_CONFIG } from ".";
-import { PlacementRequestStatus } from "@/hooks/useAdminPlacementRequests";
+"use client";
 
-interface StatusModalProps {
-  lang: "ja" | "en";
-  setShowStatusModal: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedRequest: any;
-  handleStatusUpdateClick: any;
-  updating: boolean;
-  newStatus: string;
-  updateStatus: any;
-  setNewStatus: React.Dispatch<React.SetStateAction<string>>;
-  adminNote: string;
-  setAdminNote: React.Dispatch<React.SetStateAction<string>>;
-  rejectionReason: string;
-  setRejectionReason: React.Dispatch<React.SetStateAction<string>>;
-}
+import { CheckCircle2, Loader2, X, XCircle } from "lucide-react";
+
+import { useState } from "react";
+
+import type { PlacementRequest } from "./types";
+
+type Props = {
+  request: PlacementRequest;
+
+  isSaving: boolean;
+
+  onClose: () => void;
+
+  onApprove: () => void;
+
+  onReject: (reason: string) => void;
+};
 
 export default function StatusModal({
-  lang,
-  setShowStatusModal,
-  selectedRequest,
-  handleStatusUpdateClick,
-  updating,
-  newStatus,
-  updateStatus,
-  setNewStatus,
-  adminNote,
-  setAdminNote,
-  rejectionReason,
-  setRejectionReason,
-}: StatusModalProps) {
+  request,
+  isSaving,
+  onClose,
+  onApprove,
+  onReject,
+}: Props) {
+  const [mode, setMode] = useState<"approve" | "reject">("approve");
+
+  const [reason, setReason] = useState("");
+
   return (
-    <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          setShowStatusModal(false);
-        }
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4"
-    >
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
-        <div className="flex items-start justify-between gap-4">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/50 p-4">
+      <div className="w-full max-w-lg rounded-3xl bg-white p-6">
+        <div className="flex justify-between">
           <div>
-            <h3 className="text-xl font-bold text-slate-900">
-              {lang === "ja" ? "ステータスを更新" : "Update Status"}
-            </h3>
+            <h2 className="text-xl font-bold">Review Placement Request</h2>
+
             <p className="mt-1 text-sm text-slate-500">
-              {selectedRequest.job_title}
+              {request.recruitId} · {request.companyName}
             </p>
           </div>
-          <button
-            onClick={() => setShowStatusModal(false)}
-            disabled={updating}
-            className="rounded-full p-2 px-3 cursor-pointer text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
-          >
-            ✕
+
+          <button onClick={onClose} disabled={isSaving}>
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mt-6 space-y-4">
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              {lang === "ja" ? "ステータス" : "Status"}
-            </label>
-            <select
-              value={newStatus}
-              onChange={(e) =>
-                setNewStatus(e.target.value as PlacementRequestStatus)
-              }
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white"
-            >
-              {Object.entries(STATUS_CONFIG).map(([status, config]) => (
-                <option key={status} value={status}>
-                  {config.label[lang]}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setMode("approve")}
+            className={`rounded-xl border p-4 text-left ${
+              mode === "approve" ? "border-emerald-500 bg-emerald-50" : ""
+            }`}
+          >
+            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
 
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              {lang === "ja" ? "管理者ノート" : "Admin Note"}
-            </label>
+            <p className="mt-2 font-semibold">Approve</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMode("reject")}
+            className={`rounded-xl border p-4 text-left ${
+              mode === "reject" ? "border-red-500 bg-red-50" : ""
+            }`}
+          >
+            <XCircle className="h-5 w-5 text-red-600" />
+
+            <p className="mt-2 font-semibold">Reject</p>
+          </button>
+        </div>
+
+        {mode === "reject" && (
+          <div className="mt-5">
+            <label className="text-sm font-semibold">Rejection Reason *</label>
+
             <textarea
-              value={adminNote}
-              onChange={(e) => setAdminNote(e.target.value)}
-              rows={3}
-              placeholder={lang === "ja" ? "ノートを入力..." : "Enter note..."}
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
+              rows={4}
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              className="mt-2 w-full rounded-xl border p-3"
+              placeholder="Explain why this request is being rejected..."
             />
           </div>
+        )}
 
-          {newStatus === "rejected" && (
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                {lang === "ja" ? "却下理由" : "Rejection Reason"}
-                <span className="text-rose-500 ml-1">*</span>
-              </label>
-              <textarea
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                rows={2}
-                placeholder={
-                  lang === "ja"
-                    ? "却下理由を入力..."
-                    : "Enter rejection reason..."
-                }
-                className="w-full rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-rose-400 focus:bg-white"
-                required
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <div className="mt-6 flex justify-end gap-3">
           <button
-            onClick={() => setShowStatusModal(false)}
-            disabled={updating}
-            className="rounded-xl border cursor-pointer border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            type="button"
+            disabled={isSaving}
+            onClick={onClose}
+            className="rounded-xl border px-4 py-2"
           >
-            {lang === "ja" ? "キャンセル" : "Cancel"}
+            Cancel
           </button>
 
           <button
-            onClick={updateStatus}
-            disabled={
-              updating || (newStatus === "rejected" && !rejectionReason.trim())
-            }
-            className="rounded-xl bg-slate-900 cursor-pointer px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            type="button"
+            disabled={isSaving || (mode === "reject" && !reason.trim())}
+            onClick={() => {
+              if (mode === "approve") {
+                onApprove();
+
+                return;
+              }
+
+              onReject(reason.trim());
+            }}
+            className={`inline-flex items-center gap-2 rounded-xl px-5 py-2 font-semibold text-white disabled:opacity-50 ${
+              mode === "approve" ? "bg-emerald-600" : "bg-red-600"
+            }`}
           >
-            {updating
-              ? lang === "ja"
-                ? "更新中..."
-                : "Updating..."
-              : lang === "ja"
-                ? "更新"
-                : "Update"}
+            {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+
+            {mode === "approve" ? "Approve Request" : "Reject Request"}
           </button>
         </div>
       </div>

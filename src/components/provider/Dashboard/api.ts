@@ -16,12 +16,6 @@ import type {
 // VACANCIES
 // ======================================================
 
-// ======================================================
-// GET PROVIDER VACANCIES
-//
-// GET /api/providers/vacancies
-// ======================================================
-
 export const getProviderVacancies = async () => {
   const response = await axiosInstance.get<VacancyListResponse>(
     "/providers/vacancies",
@@ -29,12 +23,6 @@ export const getProviderVacancies = async () => {
 
   return response.data;
 };
-
-// ======================================================
-// GET ONE PROVIDER VACANCY
-//
-// GET /api/providers/vacancies/:vacancyId
-// ======================================================
 
 export const getProviderVacancyById = async (vacancyId: string) => {
   const response = await axiosInstance.get<VacancyResponse>(
@@ -44,12 +32,6 @@ export const getProviderVacancyById = async (vacancyId: string) => {
   return response.data;
 };
 
-// ======================================================
-// CREATE VACANCY
-//
-// POST /api/providers/vacancies
-// ======================================================
-
 export const createProviderVacancy = async (payload: CreateVacancyPayload) => {
   const response = await axiosInstance.post<VacancyResponse>(
     "/providers/vacancies",
@@ -58,12 +40,6 @@ export const createProviderVacancy = async (payload: CreateVacancyPayload) => {
 
   return response.data;
 };
-
-// ======================================================
-// UPDATE VACANCY
-//
-// PUT /api/providers/vacancies/:vacancyId
-// ======================================================
 
 export const updateProviderVacancy = async (
   vacancyId: string,
@@ -77,12 +53,6 @@ export const updateProviderVacancy = async (
   return response.data;
 };
 
-// ======================================================
-// DELETE VACANCY
-//
-// DELETE /api/providers/vacancies/:vacancyId
-// ======================================================
-
 export const deleteProviderVacancy = async (vacancyId: string) => {
   const response = await axiosInstance.delete<VacancyResponse>(
     `/providers/vacancies/${vacancyId}`,
@@ -90,12 +60,6 @@ export const deleteProviderVacancy = async (vacancyId: string) => {
 
   return response.data;
 };
-
-// ======================================================
-// CLOSE PUBLISHED VACANCY
-//
-// PUT /api/providers/vacancies/close/:vacancyId
-// ======================================================
 
 export const closeProviderVacancy = async (vacancyId: string) => {
   const response = await axiosInstance.put<VacancyResponse>(
@@ -109,20 +73,6 @@ export const closeProviderVacancy = async (vacancyId: string) => {
 // PROVIDER APPLICATIONS
 // ======================================================
 
-// ======================================================
-// GET PROVIDER APPLICATIONS
-//
-// GET /api/providers/applications
-//
-// Backend automatically:
-//
-// - identifies provider from JWT
-// - only returns applications belonging to provider
-// - hides pending Admin applications
-// - hides seeker private information
-//
-// ======================================================
-
 export const getProviderApplications = async () => {
   const response = await axiosInstance.get<ProviderApplicationListResponse>(
     "/providers/applications",
@@ -131,12 +81,6 @@ export const getProviderApplications = async () => {
   return response.data;
 };
 
-// ======================================================
-// GET ONE PROVIDER APPLICATION
-//
-// GET /api/providers/applications/:applicationId
-// ======================================================
-
 export const getProviderApplicationById = async (applicationId: string) => {
   const response = await axiosInstance.get<ProviderApplicationResponse>(
     `/providers/applications/${applicationId}`,
@@ -144,12 +88,6 @@ export const getProviderApplicationById = async (applicationId: string) => {
 
   return response.data;
 };
-
-// ======================================================
-// UPDATE APPLICATION STATUS
-//
-// PATCH /api/providers/applications/:applicationId/status
-// ======================================================
 
 export const updateProviderApplicationStatus = async (
   applicationId: string,
@@ -162,16 +100,6 @@ export const updateProviderApplicationStatus = async (
 
   return response.data;
 };
-
-// ======================================================
-// GET APPLICATION RESUME
-//
-// GET /api/providers/applications/:applicationId/resume
-//
-// Returns PDF Blob.
-//
-// We will use this in the Applicant Details modal next.
-// ======================================================
 
 export const getProviderApplicationResume = async (applicationId: string) => {
   const response = await axiosInstance.get<Blob>(
@@ -189,9 +117,7 @@ export const getProviderApplicationResume = async (applicationId: string) => {
 // ======================================================
 
 // ======================================================
-// GET PROVIDER PLACEMENT REQUESTS
-//
-// GET /api/providers/recruits
+// GET ALL
 // ======================================================
 
 export const getProviderPlacementRequests = async () => {
@@ -203,9 +129,19 @@ export const getProviderPlacementRequests = async () => {
 };
 
 // ======================================================
-// CREATE PROVIDER PLACEMENT REQUEST
-//
-// POST /api/providers/recruits
+// GET ONE
+// ======================================================
+
+export const getProviderPlacementRequestById = async (recruitId: string) => {
+  const response = await axiosInstance.get<PlacementRequestResponse>(
+    `/providers/recruits/${recruitId}`,
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// CREATE
 // ======================================================
 
 export const createProviderPlacementRequest = async (
@@ -214,6 +150,46 @@ export const createProviderPlacementRequest = async (
   const response = await axiosInstance.post<PlacementRequestResponse>(
     "/providers/recruits",
     payload,
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// UPDATE
+// ======================================================
+
+export const updateProviderPlacementRequest = async (
+  recruitId: string,
+  payload: CreatePlacementRequestPayload,
+) => {
+  const response = await axiosInstance.put<PlacementRequestResponse>(
+    `/providers/recruits/${recruitId}`,
+    payload,
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// SUBMIT / RESUBMIT
+// ======================================================
+
+export const submitProviderPlacementRequest = async (recruitId: string) => {
+  const response = await axiosInstance.patch<PlacementRequestResponse>(
+    `/providers/recruits/${recruitId}/submit`,
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// DELETE
+// ======================================================
+
+export const deleteProviderPlacementRequest = async (recruitId: string) => {
+  const response = await axiosInstance.delete<PlacementRequestResponse>(
+    `/providers/recruits/${recruitId}`,
   );
 
   return response.data;

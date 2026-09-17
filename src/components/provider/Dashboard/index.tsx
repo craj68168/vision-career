@@ -14,6 +14,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Send,
   Trash2,
   Users,
   XCircle,
@@ -28,6 +29,14 @@ import DeleteVacancyModal from "./DeleteVacancyModal";
 
 import type { Vacancy } from "./types";
 
+import PlacementRequestDetailsModal from "./PlacementRequestDetailsModal";
+
+import EditPlacementRequestModal from "./EditPlacementRequestModal";
+
+import DeletePlacementRequestModal from "./DeletePlacementRequestModal";
+
+import SubmitPlacementRequestModal from "./SubmitPlacementRequestModal";
+
 // ======================================================
 // VACANCY ACTION RULES
 // ======================================================
@@ -41,6 +50,15 @@ const canDeleteVacancy = (status: Vacancy["status"]) =>
   ["draft", "pending_review", "approved", "rejected"].includes(status);
 
 const canCloseVacancy = (status: Vacancy["status"]) => status === "published";
+
+const canEditPlacementRequest = (status: string) =>
+  ["draft", "rejected"].includes(status);
+
+const canDeletePlacementRequest = (status: string) =>
+  ["draft", "rejected"].includes(status);
+
+const canSubmitPlacementRequest = (status: string) =>
+  ["draft", "rejected"].includes(status);
 
 // ======================================================
 // COMPONENT
@@ -69,7 +87,7 @@ export default function ProviderDashboard() {
     pendingVacancyCount,
     totalApplications,
     activePlacementCount,
-
+    totalPlacementRequests,
     // CREATE VACANCY
     postVacancyOpen,
 
@@ -85,6 +103,41 @@ export default function ProviderDashboard() {
     closePlacementRequest,
 
     handlePlacementCreated,
+    // VIEW PLACEMENT REQUEST
+
+    viewPlacementRequest,
+
+    openPlacementRequestView,
+    closePlacementRequestView,
+
+    // EDIT PLACEMENT REQUEST
+
+    editPlacementRequest,
+
+    openPlacementRequestEdit,
+    closePlacementRequestEdit,
+
+    handlePlacementRequestUpdate,
+
+    // DELETE PLACEMENT REQUEST
+
+    deletePlacementRequestTarget,
+
+    openPlacementRequestDelete,
+    closePlacementRequestDelete,
+
+    handlePlacementRequestDelete,
+
+    // SUBMIT PLACEMENT REQUEST
+
+    submitPlacementRequestTarget,
+
+    openPlacementRequestSubmit,
+    closePlacementRequestSubmit,
+
+    handlePlacementRequestSubmit,
+
+    placementActionLoading,
 
     // VIEW VACANCY
     viewVacancy,
@@ -258,7 +311,7 @@ export default function ProviderDashboard() {
 
             <StatCard
               label={lang === "ja" ? "採用依頼" : "Placement Requests"}
-              value={activePlacementCount}
+              value={totalPlacementRequests}
               icon={<ClipboardList className="h-5 w-5" />}
             />
           </section>
@@ -298,7 +351,7 @@ export default function ProviderDashboard() {
                   label={
                     lang === "ja"
                       ? `採用依頼 (${activePlacementCount})`
-                      : `Placement Requests (${activePlacementCount})`
+                      : `Placement Requests (${totalPlacementRequests})`
                   }
                 />
               </div>
@@ -619,17 +672,17 @@ export default function ProviderDashboard() {
                 <div className="space-y-4">
                   {filteredPlacementRequests.map((request, index) => (
                     <article
-                      key={request.recruitId || request._id || index}
+                      key={request.recruitId}
                       className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
                     >
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <p className="text-xs text-slate-400">
-                            {request.recruitId || "-"}
+                            {request.recruitId}
                           </p>
 
                           <h3 className="mt-1 text-lg font-semibold text-slate-900">
-                            {request.job_title || "Placement Request"}
+                            {request.job_title}
                           </h3>
 
                           {request.work_location && (
@@ -641,7 +694,7 @@ export default function ProviderDashboard() {
                           )}
                         </div>
 
-                        <StatusBadge value={request.status || "draft"} />
+                        <StatusBadge value={request.status} />
                       </div>
 
                       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -652,11 +705,7 @@ export default function ProviderDashboard() {
 
                         <InfoField
                           label={lang === "ja" ? "募集人数" : "Positions"}
-                          value={
-                            request.number_of_positions
-                              ? String(request.number_of_positions)
-                              : "-"
-                          }
+                          value={String(request.number_of_positions)}
                         />
 
                         <InfoField
@@ -668,6 +717,90 @@ export default function ProviderDashboard() {
                           label={lang === "ja" ? "ビザ" : "Visa"}
                           value={request.visa_type_required}
                         />
+                      </div>
+
+                      {/* REJECTION REASON */}
+
+                      {request.status === "rejected" &&
+                        request.rejection_reason && (
+                          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4">
+                            <p className="text-sm font-semibold text-red-700">
+                              {lang === "ja" ? "却下理由" : "Rejection Reason"}
+                            </p>
+
+                            <p className="mt-1 text-sm text-red-700">
+                              {request.rejection_reason}
+                            </p>
+                          </div>
+                        )}
+
+                      {/* PENDING MESSAGE */}
+
+                      {request.status === "pending_review" && (
+                        <div className="mt-5 rounded-xl bg-amber-50 p-3 text-sm text-amber-700">
+                          {lang === "ja"
+                            ? "管理者による審査を待っています。"
+                            : "Waiting for Admin review."}
+                        </div>
+                      )}
+
+                      {/* APPROVED MESSAGE */}
+
+                      {request.status === "approved" && (
+                        <div className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
+                          {lang === "ja"
+                            ? "この採用依頼は承認されました。"
+                            : "This placement request has been approved by Admin."}
+                        </div>
+                      )}
+
+                      {/* ACTIONS */}
+
+                      <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5">
+                        <button
+                          type="button"
+                          onClick={() => openPlacementRequestView(request)}
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View
+                        </button>
+
+                        {canEditPlacementRequest(request.status) && (
+                          <button
+                            type="button"
+                            onClick={() => openPlacementRequestEdit(request)}
+                            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Edit
+                          </button>
+                        )}
+
+                        {canDeletePlacementRequest(request.status) && (
+                          <button
+                            type="button"
+                            onClick={() => openPlacementRequestDelete(request)}
+                            className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </button>
+                        )}
+
+                        {canSubmitPlacementRequest(request.status) && (
+                          <button
+                            type="button"
+                            onClick={() => openPlacementRequestSubmit(request)}
+                            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white"
+                          >
+                            <Send className="h-4 w-4" />
+
+                            {request.status === "rejected"
+                              ? "Resubmit"
+                              : "Submit for Review"}
+                          </button>
+                        )}
                       </div>
                     </article>
                   ))}
@@ -738,6 +871,54 @@ export default function ProviderDashboard() {
         onClose={closePlacementRequest}
         onSuccess={handlePlacementCreated}
         lang={lang}
+      />
+
+      {/* ================================================= */}
+      {/* VIEW PLACEMENT REQUEST */}
+      {/* ================================================= */}
+
+      <PlacementRequestDetailsModal
+        open={Boolean(viewPlacementRequest)}
+        request={viewPlacementRequest}
+        onClose={closePlacementRequestView}
+        lang={lang}
+      />
+
+      {/* ================================================= */}
+      {/* EDIT PLACEMENT REQUEST */}
+      {/* ================================================= */}
+
+      <EditPlacementRequestModal
+        open={Boolean(editPlacementRequest)}
+        request={editPlacementRequest}
+        loading={placementActionLoading}
+        onClose={closePlacementRequestEdit}
+        onSubmit={handlePlacementRequestUpdate}
+        lang={lang}
+      />
+
+      {/* ================================================= */}
+      {/* DELETE PLACEMENT REQUEST */}
+      {/* ================================================= */}
+
+      <DeletePlacementRequestModal
+        open={Boolean(deletePlacementRequestTarget)}
+        request={deletePlacementRequestTarget}
+        loading={placementActionLoading}
+        onClose={closePlacementRequestDelete}
+        onDelete={() => void handlePlacementRequestDelete()}
+      />
+
+      {/* ================================================= */}
+      {/* SUBMIT PLACEMENT REQUEST */}
+      {/* ================================================= */}
+
+      <SubmitPlacementRequestModal
+        open={Boolean(submitPlacementRequestTarget)}
+        request={submitPlacementRequestTarget}
+        loading={placementActionLoading}
+        onClose={closePlacementRequestSubmit}
+        onSubmit={() => void handlePlacementRequestSubmit()}
       />
     </>
   );

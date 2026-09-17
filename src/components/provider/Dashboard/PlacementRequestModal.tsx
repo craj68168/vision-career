@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 
 import axios from "axios";
 import toast from "react-hot-toast";
 
-import { Loader2, X } from "lucide-react";
+import { BriefcaseBusiness, Loader2, X } from "lucide-react";
 
-import { createProviderVacancy } from "./api";
+import { createProviderPlacementRequest } from "./api";
 
 import { getProviderProfile } from "../Profile/api";
 
-import type { ApiErrorResponse, CreateVacancyPayload } from "./types";
+import type { ApiErrorResponse, CreatePlacementRequestPayload } from "./types";
 
 // ======================================================
 // OPTIONS
@@ -28,103 +28,66 @@ const EMPLOYMENT_TYPES = [
 
 const JAPANESE_LEVELS = [
   "Native",
-  "N1 (Business level)",
-  "N2 (Daily conversation level)",
-  "N3 (Basic conversation level)",
-  "N4 or below (Not required)",
+  "N1",
+  "N2",
+  "N3",
+  "N4",
+  "N5",
+  "Not Required",
 ];
 
-const REMOTE_WORK_OPTIONS = [
-  "Fully remote",
-  "2-3 days in office per week",
-  "Primarily in-office (remote possible depending on situation)",
-  "No remote work",
+const VISA_TYPES = [
+  "Engineer / Specialist in Humanities / International Services",
+  "Specified Skilled Worker",
+  "Permanent Resident",
+  "Spouse of Japanese National",
+  "Long-Term Resident",
+  "Student",
+  "Dependent",
+  "Any Visa",
 ];
 
-const BENEFITS = [
-  "Full social insurance",
-  "Commuting allowance",
-  "Housing allowance",
-  "Family allowance",
-  "Certification support",
-  "Employee cafeteria",
-  "On-site daycare",
-  "Refresh vacation",
-];
-
-const INSURANCE = [
-  "Health insurance",
-  "Employees' pension insurance",
-  "Employment insurance",
-  "Workers' compensation insurance",
-];
+const SALARY_TYPES = ["Hourly", "Daily", "Monthly", "Annual"];
 
 // ======================================================
 // INITIAL FORM
 // ======================================================
 
-const createInitialForm = (): CreateVacancyPayload => ({
-  companyName: "",
-  companyNameKana: "",
+const createInitialForm = (): CreatePlacementRequestPayload => ({
+  job_title: "",
 
-  title: "",
-  titleKana: "",
+  job_category: "",
 
-  employmentType: "",
-  numberOfPeople: 1,
+  employment_type: "",
 
-  jobDescription: "",
-  responsibilities: "",
+  number_of_positions: 1,
 
-  requiredSkills: "",
-  preferredSkills: "",
+  work_location: "",
 
-  requiredEducation: "",
-  requiredExperience: "",
+  job_description: "",
 
-  japaneseLevel: "",
+  requirements: "",
 
-  workLocation: "",
-  workLocationDetail: "",
+  japanese_level_required: "",
 
-  remoteWork: "",
+  visa_type_required: "",
 
-  salaryMin: null,
-  salaryMax: null,
+  salary_type: "Monthly",
 
-  salaryNote: "",
+  salary_amount: 0,
 
-  workHours: "9:00 - 18:00",
-  breakTime: "12:00 - 13:00",
+  working_hours: "",
 
-  overtime: "",
+  days_off: "",
 
-  holidays:
-    "Weekends and public holidays, summer vacation, and year-end/New Year holidays",
-
-  benefits: [],
-  insurance: [],
-
-  trialPeriod: "",
-
-  applicationDeadline: "",
-
-  startDate: "",
-
-  selectionProcess:
-    "Document screening → First interview → Final interview → Job offer",
-
-  contactPerson: "",
-  contactPersonKana: "",
-
-  contactEmail: "",
+  start_date: "",
 });
 
 // ======================================================
 // PROPS
 // ======================================================
 
-type PostVacancyModalProps = {
+type PlacementRequestModalProps = {
   open: boolean;
 
   onClose: () => void;
@@ -138,13 +101,16 @@ type PostVacancyModalProps = {
 // COMPONENT
 // ======================================================
 
-export default function PostVacancyModal({
+export default function PlacementRequestModal({
   open,
   onClose,
   onSuccess,
   lang,
-}: PostVacancyModalProps) {
-  const [form, setForm] = useState<CreateVacancyPayload>(createInitialForm());
+}: PlacementRequestModalProps) {
+  const [form, setForm] =
+    useState<CreatePlacementRequestPayload>(createInitialForm());
+
+  const [companyName, setCompanyName] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -165,25 +131,9 @@ export default function PostVacancyModal({
 
         const response = await getProviderProfile();
 
-        if (response.status !== "success") {
-          return;
-        }
-
-        setForm((previous) => ({
-          ...previous,
-
-          companyName: response.profile.companyName || "",
-
-          contactPerson:
-            response.profile.contact_person || response.profile.name || "",
-
-          contactEmail:
-            response.profile.contact_person_email ||
-            response.profile.email ||
-            "",
-        }));
+        setCompanyName(response.profile.companyName || "");
       } catch (error: unknown) {
-        console.error("Provider profile prefill error:", error);
+        console.error("Placement request provider profile error:", error);
       } finally {
         setLoadingProfile(false);
       }
@@ -192,68 +142,41 @@ export default function PostVacancyModal({
     void loadProviderProfile();
   }, [open]);
 
-  if (!open) {
-    return null;
-  }
-
   // ======================================================
-  // FIELD UPDATE
+  // UPDATE FIELD
   // ======================================================
 
-  const updateField = <K extends keyof CreateVacancyPayload>(
+  const updateField = <K extends keyof CreatePlacementRequestPayload>(
     field: K,
-    value: CreateVacancyPayload[K],
+    value: CreatePlacementRequestPayload[K],
   ) => {
     setForm((previous) => ({
       ...previous,
+
       [field]: value,
     }));
-  };
-
-  // ======================================================
-  // CHECKBOX UPDATE
-  // ======================================================
-
-  const toggleArrayValue = (field: "benefits" | "insurance", value: string) => {
-    setForm((previous) => {
-      const currentValues = previous[field];
-
-      const exists = currentValues.includes(value);
-
-      return {
-        ...previous,
-
-        [field]: exists
-          ? currentValues.filter((item) => item !== value)
-          : [...currentValues, value],
-      };
-    });
   };
 
   // ======================================================
   // RESET
   // ======================================================
 
-  const handleReset = async () => {
-    const emptyForm = createInitialForm();
+  const resetForm = () => {
+    setForm(createInitialForm());
+  };
 
-    try {
-      const response = await getProviderProfile();
+  // ======================================================
+  // CLOSE
+  // ======================================================
 
-      setForm({
-        ...emptyForm,
-
-        companyName: response.profile.companyName || "",
-
-        contactPerson:
-          response.profile.contact_person || response.profile.name || "",
-
-        contactEmail:
-          response.profile.contact_person_email || response.profile.email || "",
-      });
-    } catch {
-      setForm(emptyForm);
+  const handleClose = () => {
+    if (submitting) {
+      return;
     }
+
+    resetForm();
+
+    onClose();
   };
 
   // ======================================================
@@ -261,64 +184,40 @@ export default function PostVacancyModal({
   // ======================================================
 
   const validateForm = () => {
-    if (!form.title.trim()) {
+    if (!form.job_title.trim()) {
       return lang === "ja"
-        ? "求人タイトルを入力してください"
+        ? "職種を入力してください。"
         : "Job title is required.";
     }
 
-    if (!form.employmentType) {
+    if (!form.employment_type) {
       return lang === "ja"
-        ? "雇用形態を選択してください"
+        ? "雇用形態を選択してください。"
         : "Employment type is required.";
     }
 
-    if (form.numberOfPeople < 1) {
+    if (form.number_of_positions < 1) {
       return lang === "ja"
-        ? "募集人数は1名以上必要です"
-        : "Number of openings must be at least 1.";
+        ? "募集人数は1名以上必要です。"
+        : "Number of positions must be at least 1.";
     }
 
-    if (!form.jobDescription.trim()) {
+    if (!form.work_location.trim()) {
       return lang === "ja"
-        ? "仕事内容を入力してください"
-        : "Job description is required.";
-    }
-
-    if (!form.workLocation.trim()) {
-      return lang === "ja"
-        ? "勤務地を入力してください"
+        ? "勤務地を入力してください。"
         : "Work location is required.";
     }
 
-    if (!form.contactPerson.trim()) {
+    if (!form.job_description.trim()) {
       return lang === "ja"
-        ? "担当者名を入力してください"
-        : "Contact person is required.";
+        ? "仕事内容を入力してください。"
+        : "Job description is required.";
     }
 
-    if (!form.contactEmail.trim()) {
+    if (form.salary_amount < 0) {
       return lang === "ja"
-        ? "担当者メールを入力してください"
-        : "Contact email is required.";
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(form.contactEmail)) {
-      return lang === "ja"
-        ? "有効なメールアドレスを入力してください"
-        : "Please enter a valid contact email.";
-    }
-
-    if (
-      form.salaryMin !== null &&
-      form.salaryMax !== null &&
-      form.salaryMin > form.salaryMax
-    ) {
-      return lang === "ja"
-        ? "最低給与は最高給与以下にしてください"
-        : "Minimum salary cannot be greater than maximum salary.";
+        ? "給与額を確認してください。"
+        : "Salary amount cannot be negative.";
     }
 
     return null;
@@ -328,7 +227,7 @@ export default function PostVacancyModal({
   // SUBMIT
   // ======================================================
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const validationError = validateForm();
@@ -342,24 +241,29 @@ export default function PostVacancyModal({
     try {
       setSubmitting(true);
 
-      const response = await createProviderVacancy(form);
+      const response = await createProviderPlacementRequest(form);
 
       toast.success(
         response.message ||
           (lang === "ja"
-            ? "求人を送信しました"
-            : "Vacancy submitted successfully."),
+            ? "採用依頼を作成しました。"
+            : "Placement request created successfully."),
       );
 
-      await handleReset();
+      resetForm();
 
       await onSuccess();
+
+      onClose();
     } catch (error: unknown) {
-      console.error("Create vacancy error:", error);
+      console.error("Create placement request error:", error);
 
       if (axios.isAxiosError<ApiErrorResponse>(error)) {
         toast.error(
-          error.response?.data?.message || "Failed to create vacancy.",
+          error.response?.data?.message ||
+            (lang === "ja"
+              ? "採用依頼の作成に失敗しました。"
+              : "Failed to create placement request."),
         );
 
         return;
@@ -367,8 +271,8 @@ export default function PostVacancyModal({
 
       toast.error(
         lang === "ja"
-          ? "求人の登録に失敗しました"
-          : "Failed to create vacancy.",
+          ? "採用依頼の作成に失敗しました。"
+          : "Failed to create placement request.",
       );
     } finally {
       setSubmitting(false);
@@ -376,63 +280,92 @@ export default function PostVacancyModal({
   };
 
   // ======================================================
+  // DO NOT RENDER WHEN CLOSED
+  // ======================================================
+
+  if (!open) {
+    return null;
+  }
+
+  // ======================================================
   // UI
   // ======================================================
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:p-4">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:p-4">
+      {/* ================================================= */}
       {/* BACKDROP */}
+      {/* ================================================= */}
 
       <button
         type="button"
-        aria-label="Close modal"
-        onClick={onClose}
+        aria-label="Close placement request modal"
+        onClick={handleClose}
         className="absolute inset-0"
       />
 
+      {/* ================================================= */}
       {/* MODAL */}
+      {/* ================================================= */}
 
-      <div className="relative z-10 h-full w-full overflow-y-auto bg-white sm:max-h-[96vh] sm:max-w-6xl sm:rounded-3xl sm:shadow-2xl">
+      <div className="relative z-10 h-full w-full overflow-y-auto bg-white sm:max-h-[95vh] sm:max-w-5xl sm:rounded-3xl sm:shadow-2xl">
+        {/* ================================================= */}
         {/* HEADER */}
+        {/* ================================================= */}
 
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4 sm:px-7">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
-              {lang === "ja" ? "求人追加" : "Add Vacancy"}
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-indigo-50 p-2 text-indigo-600">
+              <BriefcaseBusiness className="h-5 w-5" />
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                {lang === "ja" ? "採用依頼" : "Placement Request"}
+              </p>
+
+              {companyName && (
+                <p className="mt-1 text-xs text-slate-400">{companyName}</p>
+              )}
+            </div>
           </div>
 
           <button
             type="button"
-            onClick={onClose}
-            className="cursor-pointer rounded-full p-2 transition hover:bg-slate-100"
+            disabled={submitting}
+            onClick={handleClose}
+            className="cursor-pointer rounded-full p-2 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
         </header>
 
+        {/* ================================================= */}
         {/* INTRO */}
+        {/* ================================================= */}
 
         <div className="border-b border-slate-200 px-5 py-7 sm:px-8">
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
-            Vacancy Form
+          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-indigo-600">
+            Recruitment Request Form
           </span>
 
           <h2 className="mt-4 text-3xl font-bold text-slate-950">
-            {lang === "ja" ? "求人を登録" : "Register Job Vacancy"}
+            {lang === "ja" ? "新しい採用依頼" : "New Placement Request"}
           </h2>
 
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
             {lang === "ja"
-              ? "求人情報を入力してください。送信後、管理者による審査が行われます。"
-              : "Please fill out the form below. After submission, the vacancy will be reviewed by Admin."}
+              ? "希望する人材の条件を入力してください。管理者が内容を確認し、候補者の紹介を行います。"
+              : "Tell Admin what kind of candidate your company needs. This request is used for candidate sourcing and placement support."}
           </p>
         </div>
 
+        {/* ================================================= */}
         {/* PROFILE LOADING */}
+        {/* ================================================= */}
 
         {loadingProfile ? (
-          <div className="flex min-h-[500px] items-center justify-center">
+          <div className="flex min-h-[450px] items-center justify-center">
             <div className="text-center">
               <Loader2 className="mx-auto h-8 w-8 animate-spin text-slate-400" />
 
@@ -451,27 +384,21 @@ export default function PostVacancyModal({
 
             <FormSection
               title={lang === "ja" ? "会社情報" : "Company Information"}
-              description="e.g. Sample Co., Ltd."
             >
-              <div className="grid gap-5 md:grid-cols-2">
-                <InputField
-                  label={lang === "ja" ? "会社名" : "Company Name"}
-                  required
-                  value={form.companyName}
-                  disabled
-                  placeholder="e.g. Sample Co., Ltd."
-                  onChange={(value) => updateField("companyName", value)}
-                />
+              <InputField
+                label={lang === "ja" ? "会社名" : "Company Name"}
+                value={companyName}
+                disabled
+                onChange={() => {
+                  // Company comes from authenticated Provider.
+                }}
+              />
 
-                <InputField
-                  label={
-                    lang === "ja" ? "会社名（カナ）" : "Company Name (Kana)"
-                  }
-                  value={form.companyNameKana}
-                  placeholder="e.g. Kabushiki Gaisha Sample"
-                  onChange={(value) => updateField("companyNameKana", value)}
-                />
-              </div>
+              <p className="mt-2 text-xs text-slate-500">
+                {lang === "ja"
+                  ? "会社はログイン中のプロバイダーから自動的に設定されます。"
+                  : "The company is automatically determined from the logged-in Provider account."}
+              </p>
             </FormSection>
 
             {/* ================================================= */}
@@ -479,41 +406,46 @@ export default function PostVacancyModal({
             {/* ================================================= */}
 
             <FormSection
-              title={lang === "ja" ? "募集職種" : "Position Details"}
-              description="e.g. Software Engineer"
+              title={lang === "ja" ? "募集内容" : "Position"}
+              description={
+                lang === "ja"
+                  ? "必要な職種と募集人数を入力してください。"
+                  : "Describe the position and number of candidates required."
+              }
             >
               <div className="grid gap-5 md:grid-cols-2">
                 <InputField
                   label={lang === "ja" ? "職種" : "Job Title"}
                   required
-                  value={form.title}
+                  value={form.job_title}
                   placeholder="e.g. Software Engineer"
-                  onChange={(value) => updateField("title", value)}
+                  onChange={(value) => updateField("job_title", value)}
                 />
 
                 <InputField
-                  label={lang === "ja" ? "職種（カナ）" : "Job Title (Kana)"}
-                  value={form.titleKana}
-                  placeholder="e.g. Software Enjinia"
-                  onChange={(value) => updateField("titleKana", value)}
+                  label={lang === "ja" ? "職種カテゴリー" : "Job Category"}
+                  value={form.job_category}
+                  placeholder="e.g. IT / Engineering"
+                  onChange={(value) => updateField("job_category", value)}
                 />
 
                 <SelectField
                   label={lang === "ja" ? "雇用形態" : "Employment Type"}
                   required
-                  value={form.employmentType}
+                  value={form.employment_type}
                   options={EMPLOYMENT_TYPES}
-                  onChange={(value) => updateField("employmentType", value)}
+                  onChange={(value) => updateField("employment_type", value)}
                 />
 
                 <InputField
-                  label={lang === "ja" ? "募集人数" : "Number of Openings"}
+                  label={lang === "ja" ? "募集人数" : "Number of Positions"}
+                  required
                   type="number"
                   min={1}
-                  value={String(form.numberOfPeople)}
+                  value={String(form.number_of_positions)}
                   onChange={(value) =>
                     updateField(
-                      "numberOfPeople",
+                      "number_of_positions",
                       Math.max(1, Number(value) || 1),
                     )
                   }
@@ -522,319 +454,159 @@ export default function PostVacancyModal({
             </FormSection>
 
             {/* ================================================= */}
-            {/* JOB DESCRIPTION */}
-            {/* ================================================= */}
-
-            <FormSection
-              title={lang === "ja" ? "仕事内容" : "Job Description"}
-              description="Please describe the specific job responsibilities"
-            >
-              <div className="space-y-5">
-                <TextareaField
-                  label={lang === "ja" ? "仕事内容" : "Job Description"}
-                  required
-                  value={form.jobDescription}
-                  placeholder="Please describe the specific job responsibilities"
-                  onChange={(value) => updateField("jobDescription", value)}
-                />
-
-                <TextareaField
-                  label={
-                    lang === "ja" ? "詳細業務" : "Detailed Responsibilities"
-                  }
-                  value={form.responsibilities}
-                  placeholder="Please describe day-to-day tasks in detail"
-                  onChange={(value) => updateField("responsibilities", value)}
-                />
-              </div>
-            </FormSection>
-
-            {/* ================================================= */}
-            {/* REQUIREMENTS */}
-            {/* ================================================= */}
-
-            <FormSection
-              title={lang === "ja" ? "応募条件" : "Requirements"}
-              description="Required skills, experience and language level"
-            >
-              <div className="space-y-5">
-                <TextareaField
-                  label={
-                    lang === "ja"
-                      ? "必須スキル・経験"
-                      : "Required Skills & Experience"
-                  }
-                  value={form.requiredSkills}
-                  placeholder="e.g. 3+ years of JavaScript/TypeScript experience"
-                  onChange={(value) => updateField("requiredSkills", value)}
-                />
-
-                <TextareaField
-                  label={lang === "ja" ? "歓迎スキル" : "Preferred Skills"}
-                  value={form.preferredSkills}
-                  placeholder="e.g. React or Next.js experience"
-                  onChange={(value) => updateField("preferredSkills", value)}
-                />
-
-                <div className="grid gap-5 md:grid-cols-2">
-                  <InputField
-                    label={lang === "ja" ? "学歴" : "Education Requirements"}
-                    value={form.requiredEducation}
-                    placeholder="e.g. University degree or above"
-                    onChange={(value) =>
-                      updateField("requiredEducation", value)
-                    }
-                  />
-
-                  <InputField
-                    label={lang === "ja" ? "経験年数" : "Years of Experience"}
-                    value={form.requiredExperience}
-                    placeholder="e.g. 3+ years / Entry level welcome"
-                    onChange={(value) =>
-                      updateField("requiredExperience", value)
-                    }
-                  />
-
-                  <SelectField
-                    label={lang === "ja" ? "日本語レベル" : "Japanese Level"}
-                    value={form.japaneseLevel}
-                    options={JAPANESE_LEVELS}
-                    onChange={(value) => updateField("japaneseLevel", value)}
-                  />
-                </div>
-              </div>
-            </FormSection>
-
-            {/* ================================================= */}
-            {/* LOCATION + SALARY */}
+            {/* JOB INFORMATION */}
             {/* ================================================= */}
 
             <FormSection
               title={
-                lang === "ja"
-                  ? "勤務地・労働条件"
-                  : "Location & Work Conditions"
+                lang === "ja" ? "仕事内容・勤務地" : "Job Details & Location"
               }
-              description="e.g. Chiyoda-ku, Tokyo"
             >
-              <div className="grid gap-5 md:grid-cols-2">
-                <InputField
-                  label={lang === "ja" ? "勤務地" : "Work Location"}
+              <InputField
+                label={lang === "ja" ? "勤務地" : "Work Location"}
+                required
+                value={form.work_location}
+                placeholder="e.g. Tokyo"
+                onChange={(value) => updateField("work_location", value)}
+              />
+
+              <div className="mt-5">
+                <TextareaField
+                  label={lang === "ja" ? "仕事内容" : "Job Description"}
                   required
-                  value={form.workLocation}
-                  placeholder="e.g. Chiyoda-ku, Tokyo"
-                  onChange={(value) => updateField("workLocation", value)}
-                />
-
-                <InputField
-                  label={lang === "ja" ? "詳細勤務地" : "Detailed Location"}
-                  value={form.workLocationDetail}
-                  placeholder="e.g. 5-minute walk from Tokyo Station"
-                  onChange={(value) => updateField("workLocationDetail", value)}
-                />
-
-                <SelectField
-                  label={lang === "ja" ? "リモート勤務" : "Remote Work Policy"}
-                  value={form.remoteWork}
-                  options={REMOTE_WORK_OPTIONS}
-                  onChange={(value) => updateField("remoteWork", value)}
-                />
-
-                <InputField
-                  label={lang === "ja" ? "給与備考" : "Salary Notes"}
-                  value={form.salaryNote}
-                  placeholder="e.g. Bonus twice a year"
-                  onChange={(value) => updateField("salaryNote", value)}
+                  value={form.job_description}
+                  placeholder="Describe the role, responsibilities and expected work..."
+                  onChange={(value) => updateField("job_description", value)}
                 />
               </div>
 
               <div className="mt-5">
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  {lang === "ja"
-                    ? "年収（最低）/ 年収（最高）"
-                    : "Annual Salary (Min) / Annual Salary (Max)"}
-                </label>
-
-                <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.salaryMin ?? ""}
-                    onChange={(event) =>
-                      updateField(
-                        "salaryMin",
-                        event.target.value ? Number(event.target.value) : null,
-                      )
-                    }
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400"
-                  />
-
-                  <span className="text-slate-400">~</span>
-
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.salaryMax ?? ""}
-                    onChange={(event) =>
-                      updateField(
-                        "salaryMax",
-                        event.target.value ? Number(event.target.value) : null,
-                      )
-                    }
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400"
-                  />
-
-                  <span className="shrink-0 text-sm text-slate-500">万円</span>
-                </div>
+                <TextareaField
+                  label={lang === "ja" ? "応募条件・必要経験" : "Requirements"}
+                  value={form.requirements}
+                  placeholder="Experience, education, certifications, technical skills..."
+                  onChange={(value) => updateField("requirements", value)}
+                />
               </div>
             </FormSection>
 
             {/* ================================================= */}
-            {/* SCHEDULE */}
+            {/* CANDIDATE REQUIREMENTS */}
             {/* ================================================= */}
 
             <FormSection
-              title={
-                lang === "ja" ? "勤務時間・休日" : "Work Schedule & Holidays"
+              title={lang === "ja" ? "候補者条件" : "Candidate Requirements"}
+              description={
+                lang === "ja"
+                  ? "紹介する候補者に必要な条件です。"
+                  : "Requirements Admin should use when sourcing candidates."
               }
-              description="e.g. 9:00 AM - 6:00 PM"
             >
+              <div className="grid gap-5 md:grid-cols-2">
+                <SelectField
+                  label={
+                    lang === "ja"
+                      ? "必要な日本語レベル"
+                      : "Japanese Level Required"
+                  }
+                  value={form.japanese_level_required}
+                  options={JAPANESE_LEVELS}
+                  onChange={(value) =>
+                    updateField("japanese_level_required", value)
+                  }
+                />
+
+                <SelectField
+                  label={
+                    lang === "ja" ? "必要な在留資格" : "Visa Type Required"
+                  }
+                  value={form.visa_type_required}
+                  options={VISA_TYPES}
+                  onChange={(value) => updateField("visa_type_required", value)}
+                />
+              </div>
+            </FormSection>
+
+            {/* ================================================= */}
+            {/* SALARY */}
+            {/* ================================================= */}
+
+            <FormSection title={lang === "ja" ? "給与" : "Salary"}>
+              <div className="grid gap-5 md:grid-cols-2">
+                <SelectField
+                  label={lang === "ja" ? "給与形態" : "Salary Type"}
+                  value={form.salary_type}
+                  options={SALARY_TYPES}
+                  onChange={(value) => updateField("salary_type", value)}
+                />
+
+                <InputField
+                  label={lang === "ja" ? "給与額" : "Salary Amount"}
+                  type="number"
+                  min={0}
+                  value={
+                    form.salary_amount === 0 ? "" : String(form.salary_amount)
+                  }
+                  placeholder="e.g. 300000"
+                  onChange={(value) =>
+                    updateField("salary_amount", Number(value) || 0)
+                  }
+                />
+              </div>
+
+              <p className="mt-3 text-xs text-slate-500">
+                {lang === "ja"
+                  ? "例：月給 300,000 円の場合、Monthly と 300000 を入力します。"
+                  : "Example: for ¥300,000 per month, choose Monthly and enter 300000."}
+              </p>
+            </FormSection>
+
+            {/* ================================================= */}
+            {/* WORK CONDITIONS */}
+            {/* ================================================= */}
+
+            <FormSection title={lang === "ja" ? "勤務条件" : "Work Conditions"}>
               <div className="grid gap-5 md:grid-cols-2">
                 <InputField
                   label={lang === "ja" ? "勤務時間" : "Working Hours"}
-                  value={form.workHours}
-                  onChange={(value) => updateField("workHours", value)}
+                  value={form.working_hours}
+                  placeholder="e.g. 9:00 - 18:00"
+                  onChange={(value) => updateField("working_hours", value)}
                 />
 
                 <InputField
-                  label={lang === "ja" ? "休憩時間" : "Break Time"}
-                  value={form.breakTime}
-                  onChange={(value) => updateField("breakTime", value)}
-                />
-
-                <InputField
-                  label={lang === "ja" ? "残業" : "Overtime"}
-                  value={form.overtime}
-                  placeholder="About 20 hours per month on average"
-                  onChange={(value) => updateField("overtime", value)}
-                />
-
-                <InputField
-                  label={lang === "ja" ? "休日・休暇" : "Holidays & Leave"}
-                  value={form.holidays}
-                  onChange={(value) => updateField("holidays", value)}
-                />
-              </div>
-            </FormSection>
-
-            {/* ================================================= */}
-            {/* BENEFITS */}
-            {/* ================================================= */}
-
-            <FormSection
-              title={lang === "ja" ? "福利厚生" : "Benefits & Welfare"}
-            >
-              <CheckboxGroup
-                label={lang === "ja" ? "福利厚生" : "Benefits"}
-                options={BENEFITS}
-                selected={form.benefits}
-                onToggle={(value) => toggleArrayValue("benefits", value)}
-              />
-
-              <div className="mt-6">
-                <CheckboxGroup
-                  label={lang === "ja" ? "社会保険" : "Social Insurance"}
-                  options={INSURANCE}
-                  selected={form.insurance}
-                  onToggle={(value) => toggleArrayValue("insurance", value)}
-                />
-              </div>
-
-              <div className="mt-6 max-w-md">
-                <InputField
-                  label={lang === "ja" ? "試用期間" : "Trial Period"}
-                  value={form.trialPeriod}
-                  placeholder="e.g. Three months"
-                  onChange={(value) => updateField("trialPeriod", value)}
-                />
-              </div>
-            </FormSection>
-
-            {/* ================================================= */}
-            {/* APPLICATION */}
-            {/* ================================================= */}
-
-            <FormSection
-              title={lang === "ja" ? "応募情報" : "Application Information"}
-              description="Document screening → First interview → Final interview → Offer"
-            >
-              <div className="grid gap-5 md:grid-cols-2">
-                <InputField
-                  label={lang === "ja" ? "応募締切" : "Application Deadline"}
-                  type="date"
-                  value={form.applicationDeadline}
-                  onChange={(value) =>
-                    updateField("applicationDeadline", value)
-                  }
+                  label={lang === "ja" ? "休日" : "Days Off"}
+                  value={form.days_off}
+                  placeholder="e.g. Saturday, Sunday and public holidays"
+                  onChange={(value) => updateField("days_off", value)}
                 />
 
                 <InputField
                   label={lang === "ja" ? "勤務開始日" : "Start Date"}
-                  value={form.startDate}
-                  placeholder="e.g. Immediately / April 2027"
-                  onChange={(value) => updateField("startDate", value)}
-                />
-              </div>
-
-              <div className="mt-5">
-                <InputField
-                  label={lang === "ja" ? "選考プロセス" : "Selection Process"}
-                  value={form.selectionProcess}
-                  onChange={(value) => updateField("selectionProcess", value)}
+                  type="date"
+                  value={form.start_date}
+                  onChange={(value) => updateField("start_date", value)}
                 />
               </div>
             </FormSection>
 
             {/* ================================================= */}
-            {/* CONTACT */}
+            {/* IMPORTANT INFORMATION */}
             {/* ================================================= */}
 
-            <FormSection
-              title={lang === "ja" ? "担当者" : "Contact Person"}
-              description="Job-related contact information"
-            >
-              <div className="grid gap-5 md:grid-cols-2">
-                <InputField
-                  label={lang === "ja" ? "担当者名" : "Contact Person Name"}
-                  required
-                  value={form.contactPerson}
-                  placeholder="e.g. Taro Yamada"
-                  onChange={(value) => updateField("contactPerson", value)}
-                />
+            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
+              <p className="font-semibold text-blue-900">
+                {lang === "ja"
+                  ? "求人掲載との違い"
+                  : "Placement Request vs Vacancy"}
+              </p>
 
-                <InputField
-                  label={
-                    lang === "ja"
-                      ? "担当者名（カナ）"
-                      : "Contact Person Name (Kana)"
-                  }
-                  value={form.contactPersonKana}
-                  placeholder="e.g. Yamada Taro"
-                  onChange={(value) => updateField("contactPersonKana", value)}
-                />
-
-                <div className="md:col-span-2">
-                  <InputField
-                    label={lang === "ja" ? "メールアドレス" : "Email Address"}
-                    type="email"
-                    required
-                    value={form.contactEmail}
-                    placeholder="example@company.com"
-                    onChange={(value) => updateField("contactEmail", value)}
-                  />
-                </div>
-              </div>
-            </FormSection>
+              <p className="mt-2 text-sm leading-6 text-blue-800">
+                {lang === "ja"
+                  ? "これは公開求人ではありません。会社が管理者に対して、条件に合う候補者の紹介を依頼するための採用依頼です。"
+                  : "This is not a public job vacancy. It is a request for Admin to source and recommend suitable candidates directly to your company."}
+              </p>
+            </div>
 
             {/* ================================================= */}
             {/* FOOTER */}
@@ -843,16 +615,16 @@ export default function PostVacancyModal({
             <div className="flex flex-col gap-4 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
               <p className="max-w-xl text-xs leading-5 text-slate-500">
                 {lang === "ja"
-                  ? "送信された情報は、求人掲載および採用支援の目的で使用されます。"
-                  : "The information you submit will only be used for job posting and recruitment support purposes."}
+                  ? "最初は下書きとして保存されます。次に管理者審査へ送信します。"
+                  : "The request will first be created as a draft. You can then submit it for Admin review."}
               </p>
 
               <div className="flex gap-3">
                 <button
                   type="button"
                   disabled={submitting}
-                  onClick={() => void handleReset()}
-                  className="cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 disabled:opacity-50"
+                  onClick={resetForm}
+                  className="cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                 >
                   {lang === "ja" ? "リセット" : "Reset"}
                 </button>
@@ -866,11 +638,11 @@ export default function PostVacancyModal({
 
                   {submitting
                     ? lang === "ja"
-                      ? "送信中..."
-                      : "Posting..."
+                      ? "作成中..."
+                      : "Creating..."
                     : lang === "ja"
-                      ? "求人を掲載"
-                      : "Post Job Vacancy"}
+                      ? "採用依頼を作成"
+                      : "Create Placement Request"}
                 </button>
               </div>
             </div>
@@ -882,7 +654,7 @@ export default function PostVacancyModal({
 }
 
 // ======================================================
-// SECTION
+// FORM SECTION
 // ======================================================
 
 function FormSection({
@@ -912,7 +684,7 @@ function FormSection({
 }
 
 // ======================================================
-// INPUT
+// INPUT FIELD
 // ======================================================
 
 type InputFieldProps = {
@@ -959,6 +731,7 @@ function InputField({
         type={type}
         value={value}
         min={min}
+        required={required}
         disabled={disabled}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
@@ -969,7 +742,7 @@ function InputField({
 }
 
 // ======================================================
-// TEXTAREA
+// TEXTAREA FIELD
 // ======================================================
 
 function TextareaField({
@@ -1003,6 +776,7 @@ function TextareaField({
 
       <textarea
         rows={4}
+        required={required}
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
@@ -1013,7 +787,7 @@ function TextareaField({
 }
 
 // ======================================================
-// SELECT
+// SELECT FIELD
 // ======================================================
 
 function SelectField({
@@ -1046,11 +820,12 @@ function SelectField({
       </span>
 
       <select
+        required={required}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
       >
-        <option value="">{required ? "Please select" : "Please select"}</option>
+        <option value="">Please select</option>
 
         {options.map((option) => (
           <option key={option} value={option}>
@@ -1059,48 +834,5 @@ function SelectField({
         ))}
       </select>
     </label>
-  );
-}
-
-// ======================================================
-// CHECKBOX
-// ======================================================
-
-function CheckboxGroup({
-  label,
-  options,
-  selected,
-  onToggle,
-}: {
-  label: string;
-
-  options: string[];
-
-  selected: string[];
-
-  onToggle: (value: string) => void;
-}) {
-  return (
-    <div>
-      <p className="mb-3 text-sm font-medium text-slate-700">{label}</p>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {options.map((option) => (
-          <label
-            key={option}
-            className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition hover:bg-slate-50"
-          >
-            <input
-              type="checkbox"
-              checked={selected.includes(option)}
-              onChange={() => onToggle(option)}
-              className="h-4 w-4"
-            />
-
-            <span>{option}</span>
-          </label>
-        ))}
-      </div>
-    </div>
   );
 }
