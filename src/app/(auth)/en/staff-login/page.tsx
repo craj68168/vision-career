@@ -1,5 +1,5 @@
-import AuthPage from "@/components/auth/staff-auth";
+import StaffLogin from "@/components/auth/Staff";
 
 export default function Page() {
-  return <AuthPage />;
+  return <StaffLogin />;
 }
