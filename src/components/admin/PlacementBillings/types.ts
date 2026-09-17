@@ -2,8 +2,9 @@ export type PlacementBillingStatus =
   | "draft"
   | "issued"
   | "paid"
-  | "cancelled"
-  | "refunded";
+  | "partially_refunded"
+  | "refunded"
+  | "cancelled";
 
 export type BillingAuditEntry = {
   _id?: string;
@@ -14,7 +15,7 @@ export type BillingAuditEntry = {
     | "ISSUED"
     | "MARKED_PAID"
     | "CANCELLED"
-    | "REFUNDED";
+    | "REFUND_PROCESSED";
 
   actor_type: "system" | "admin" | "staff";
 
@@ -25,6 +26,22 @@ export type BillingAuditEntry = {
   details?: Record<string, unknown> | null;
 
   created_at: string;
+};
+
+export type BillingRefund = {
+  _id?: string;
+
+  refundId: string;
+
+  amount: number;
+
+  reason: string;
+
+  actor_type: "admin" | "staff";
+
+  actor_id: string;
+
+  refunded_at: string;
 };
 
 export type PlacementBilling = {
@@ -56,6 +73,12 @@ export type PlacementBilling = {
 
   dueDate?: string | null;
 
+  paidAmount: number;
+
+  refundedAmount: number;
+
+  netPaidAmount: number;
+
   status: PlacementBillingStatus;
 
   issuedAt?: string | null;
@@ -64,11 +87,13 @@ export type PlacementBilling = {
 
   cancelledAt?: string | null;
 
-  refundedAt?: string | null;
+  fullyRefundedAt?: string | null;
 
   cancellationReason?: string | null;
 
   notes?: string | null;
+
+  refundHistory: BillingRefund[];
 
   auditHistory: BillingAuditEntry[];
 
@@ -86,11 +111,17 @@ export type PlacementBillingSummary = {
 
   paid: number;
 
+  partiallyRefunded: number;
+
+  refunded: number;
+
   cancelled: number;
 
   billedTotal: number;
 
   paidTotal: number;
+
+  refundedTotal: number;
 
   outstandingTotal: number;
 };
@@ -123,6 +154,12 @@ export type UpdatePlacementBillingPayload = {
   dueDate: string;
 
   notes: string;
+};
+
+export type RefundPlacementBillingPayload = {
+  amount: number;
+
+  reason: string;
 };
 
 export type ApiErrorResponse = {

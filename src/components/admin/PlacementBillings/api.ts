@@ -3,6 +3,7 @@ import axiosInstance from "@/services/axiosInstance";
 import type {
   PlacementBillingListResponse,
   PlacementBillingResponse,
+  RefundPlacementBillingPayload,
   UpdatePlacementBillingPayload,
 } from "./types";
 
@@ -51,6 +52,18 @@ export const cancelPlacementBilling = async (
     {
       reason,
     },
+  );
+
+  return response.data;
+};
+
+export const refundPlacementBilling = async (
+  billingId: string,
+  payload: RefundPlacementBillingPayload,
+) => {
+  const response = await axiosInstance.patch<PlacementBillingResponse>(
+    `/admin/placement-billings/${billingId}/refund`,
+    payload,
   );
 
   return response.data;
