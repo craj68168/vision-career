@@ -80,8 +80,8 @@ export default function CandidatesModal({
       return eligibleSeekers;
     }
 
-    return eligibleSeekers.filter((seeker) => {
-      return [
+    return eligibleSeekers.filter((seeker) =>
+      [
         seeker.name,
         seeker.nationality,
         seeker.currentLocation,
@@ -89,14 +89,13 @@ export default function CandidatesModal({
         seeker.japaneseLevel,
         seeker.desiredJob,
         seeker.desiredLocation,
-
         ...seeker.skills,
       ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
-        .includes(keyword);
-    });
+        .includes(keyword),
+    );
   }, [eligibleSeekers, search]);
 
   // ====================================================
@@ -110,46 +109,80 @@ export default function CandidatesModal({
       return matchedCandidates;
     }
 
-    return matchedCandidates.filter((candidate) => {
-      return [
-        candidate.placementCandidateId,
-
-        candidate.status,
-
-        candidate.candidate.name,
-
-        candidate.candidate.nationality,
-
-        candidate.candidate.visa_type,
-
-        candidate.candidate.japanese_level,
-
-        candidate.candidate.desired_job,
-
-        ...candidate.candidate.skills,
+    return matchedCandidates.filter((item) =>
+      [
+        item.placementCandidateId,
+        item.status,
+        item.candidate.name,
+        item.candidate.nationality,
+        item.candidate.visa_type,
+        item.candidate.japanese_level,
+        item.candidate.desired_job,
+        ...item.candidate.skills,
       ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
-        .includes(keyword);
-    });
+        .includes(keyword),
+    );
   }, [matchedCandidates, search]);
 
   if (!open || !request) {
     return null;
   }
 
+  // ====================================================
+  // HEADCOUNT
+  // ====================================================
+
   const positions = request.numberOfPositions;
 
-  const matchedCount = matchedCandidates.length;
+  // Every candidate ever sent to this request.
+  //
+  // This includes rejected candidates because they are
+  // still part of the historical recruitment record.
+
+  const sentCount = matchedCandidates.length;
+
+  // Only candidates still active in this placement flow.
+  //
+  // REJECTED candidates DO NOT fill a position.
+
+  const activeCount = matchedCandidates.filter(
+    (candidate) => candidate.status !== "REJECTED",
+  ).length;
+
+  const placedCount = matchedCandidates.filter(
+    (candidate) => candidate.status === "PLACED",
+  ).length;
+
+  const rejectedCount = matchedCandidates.filter(
+    (candidate) => candidate.status === "REJECTED",
+  ).length;
 
   // ====================================================
-  // UI
+  // IMPORTANT
+  //
+  // Rejected candidates do not reduce the remaining
+  // number of required candidates.
+  //
+  // Example:
+  //
+  // positions = 46
+  // sent = 1
+  // rejected = 1
+  // active = 0
+  //
+  // remaining = 46
   // ====================================================
+
+  const remaining = Math.max(positions - activeCount, 0);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:p-4">
+      {/* ================================================= */}
       {/* BACKDROP */}
+      {/* ================================================= */}
 
       <button
         type="button"
@@ -158,7 +191,9 @@ export default function CandidatesModal({
         className="absolute inset-0"
       />
 
+      {/* ================================================= */}
       {/* MODAL */}
+      {/* ================================================= */}
 
       <div className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-white sm:h-auto sm:max-h-[94vh] sm:max-w-6xl sm:rounded-3xl sm:shadow-2xl">
         {/* ================================================= */}
@@ -199,19 +234,33 @@ export default function CandidatesModal({
         </header>
 
         {/* ================================================= */}
-        {/* SUMMARY */}
+        {/* HEADCOUNT SUMMARY */}
         {/* ================================================= */}
 
-        <div className="grid gap-4 border-b border-slate-200 bg-slate-50/70 p-6 sm:grid-cols-3">
+        <div className="grid gap-3 border-b border-slate-200 bg-slate-50/70 p-6 sm:grid-cols-2 lg:grid-cols-5">
           <SummaryCard label="Positions Required" value={positions} />
 
-          <SummaryCard label="Candidates Matched" value={matchedCount} />
+          <SummaryCard label="Candidates Sent" value={sentCount} />
 
-          <SummaryCard
-            label="Remaining"
-            value={Math.max(positions - matchedCount, 0)}
-          />
+          <SummaryCard label="Active Candidates" value={activeCount} />
+
+          <SummaryCard label="Placed" value={placedCount} />
+
+          <SummaryCard label="Remaining" value={remaining} />
         </div>
+
+        {/* ================================================= */}
+        {/* SMALL REJECTION SUMMARY */}
+        {/* ================================================= */}
+
+        {rejectedCount > 0 && (
+          <div className="border-b border-slate-200 bg-red-50 px-6 py-3 text-sm text-red-700">
+            {rejectedCount}{" "}
+            {rejectedCount === 1 ? "candidate has" : "candidates have"} been
+            rejected and {rejectedCount === 1 ? "does" : "do"} not reduce the
+            remaining placement requirement.
+          </div>
+        )}
 
         {/* ================================================= */}
         {/* CONTROLS */}
@@ -240,7 +289,7 @@ export default function CandidatesModal({
                   : "text-slate-500"
               }`}
             >
-              Matched Candidates ({matchedCandidates.length})
+              Candidate History ({matchedCandidates.length})
             </button>
           </div>
 
@@ -301,7 +350,7 @@ export default function CandidatesModal({
 }
 
 // ======================================================
-// ELIGIBLE
+// ELIGIBLE CANDIDATES
 // ======================================================
 
 function EligibleCandidates({
@@ -404,7 +453,7 @@ function EligibleCandidates({
 }
 
 // ======================================================
-// MATCHED
+// CANDIDATE HISTORY
 // ======================================================
 
 function MatchedCandidates({
@@ -556,7 +605,7 @@ function Info({
 }
 
 // ======================================================
-// SUMMARY
+// SUMMARY CARD
 // ======================================================
 
 function SummaryCard({
@@ -577,7 +626,7 @@ function SummaryCard({
 }
 
 // ======================================================
-// EMPTY
+// EMPTY STATE
 // ======================================================
 
 function EmptyState({
