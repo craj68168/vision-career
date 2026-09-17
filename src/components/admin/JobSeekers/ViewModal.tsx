@@ -1,354 +1,312 @@
+"use client";
+
 import {
-  BadgeCheck,
   Briefcase,
-  Calendar,
+  CalendarDays,
+  Download,
   FileText,
-  Flag,
-  Globe,
+  GraduationCap,
   Mail,
   MapPin,
-  MapPinned,
   Phone,
-  StickyNote,
-  UserIcon,
+  ShieldCheck,
+  UserRound,
+  X,
 } from "lucide-react";
 
-function InfoRow({
-  icon,
-  label,
-  value,
-  multiLine = false,
-  isLink = false,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-  multiLine?: boolean;
-  isLink?: boolean;
-}) {
+import type { AdminSeeker } from "./types";
+
+type Props = {
+  lang: string;
+
+  seeker: AdminSeeker;
+
+  isDownloading: boolean;
+
+  onClose: () => void;
+
+  onDownloadResume: () => void;
+
+  onReview: () => void;
+};
+
+const text = (value: string | number | null | undefined) => {
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+
+  return String(value);
+};
+
+const dateText = (value?: string | null) => {
+  if (!value) return "-";
+
+  return new Date(value).toLocaleDateString();
+};
+
+export default function ViewModal({
+  seeker,
+  isDownloading,
+  onClose,
+  onDownloadResume,
+  onReview,
+}: Props) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="mt-0.5 text-slate-400 dark:text-slate-500">{icon}</div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-          {label}
-        </p>
-        {typeof value === "string" ? (
-          <p
-            className={`text-sm text-slate-900 dark:text-white ${multiLine ? "whitespace-pre-wrap break-words" : "truncate"}`}
-          >
-            {value}
-          </p>
-        ) : (
-          <div className="text-sm">{value}</div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function StatItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-slate-50 p-3 text-center dark:bg-slate-700/50">
-      <p className="text-2xl font-bold text-slate-900 dark:text-white">
-        {value}
-      </p>
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-        {label}
-      </p>
-    </div>
-  );
-}
-
-export default function ViewSeekerModal({
-  closeViewModal,
-  lang,
-  viewingSeeker,
-}: any) {
-  const getPlacementStatusLabel = (
-    status: string | null,
-    language: string,
-  ): string => {
-    if (!status) return "-";
-
-    const statusMap: Record<string, { ja: string; en: string }> = {
-      in_process: { ja: "選考中", en: "In Process" },
-      placed: { ja: "内定", en: "Placed" },
-      rejected: { ja: "不採用", en: "Rejected" },
-      withdrawn: { ja: "辞退", en: "Withdrawn" },
-    };
-
-    const mapped = statusMap[status];
-    if (!mapped) return status;
-
-    return language === "ja" ? mapped.ja : mapped.en;
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString(lang === "ja" ? "ja-JP" : "en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch {
-      return dateString;
-    }
-  };
-
-  const formatDateTime = (dateString: string | null) => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleString(lang === "ja" ? "ja-JP" : "en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch {
-      return dateString;
-    }
-  };
-  return (
-    <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) closeViewModal();
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4"
-    >
-      <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 shadow-xl dark:bg-slate-800">
-        <div className="flex items-start justify-between gap-4">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 p-4">
+      <div className="w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
           <div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-              {lang === "ja" ? "求職者詳細" : "Job Seeker Details"}
-            </h3>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              {lang === "ja" ? "求職者の詳細情報" : "Job seeker details"}
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Job Seeker Details
             </p>
+
+            <h2 className="mt-1 text-2xl font-bold">{seeker.name}</h2>
+
+            <p className="text-sm text-slate-500">{seeker.seeker_id}</p>
           </div>
 
           <button
             type="button"
-            onClick={closeViewModal}
-            className="cursor-pointer rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+            onClick={onClose}
+            className="rounded-full p-2 hover:bg-slate-100"
           >
-            ✕
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mt-6 space-y-6">
-          {/* Header with Status Badge */}
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-slate-50 p-4 dark:bg-slate-700/50">
-            <div>
-              <h4 className="text-lg font-semibold text-slate-900 dark:text-white">
-                {viewingSeeker.full_name || viewingSeeker.name || "-"}
-              </h4>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                {viewingSeeker.email || "-"}
-              </p>
+        <div className="max-h-[82vh] overflow-y-auto p-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Info icon={Mail} label="Email" value={seeker.email} />
+
+            <Info icon={Phone} label="Phone" value={text(seeker.phone)} />
+
+            <Info
+              icon={MapPin}
+              label="Current Location"
+              value={text(seeker.current_location)}
+            />
+
+            <Info
+              icon={UserRound}
+              label="Nationality"
+              value={text(seeker.nationality)}
+            />
+
+            <Info
+              icon={CalendarDays}
+              label="Date of Birth"
+              value={dateText(seeker.date_of_birth)}
+            />
+
+            <Info
+              icon={ShieldCheck}
+              label="Visa Type"
+              value={text(seeker.visa_type)}
+            />
+
+            <Info
+              icon={CalendarDays}
+              label="Visa Expiry"
+              value={dateText(seeker.visa_expiry_date)}
+            />
+
+            <Info
+              icon={UserRound}
+              label="Japanese Level"
+              value={text(seeker.japanese_level)}
+            />
+
+            <Info
+              icon={Briefcase}
+              label="Desired Job"
+              value={text(seeker.desired_job)}
+            />
+
+            <Info
+              icon={MapPin}
+              label="Desired Location"
+              value={text(seeker.desired_location)}
+            />
+
+            <Info
+              icon={CalendarDays}
+              label="Available From"
+              value={dateText(seeker.available_from)}
+            />
+
+            <Info
+              icon={FileText}
+              label="Applications"
+              value={seeker.applications_count}
+            />
+          </div>
+
+          <div className="mt-6 grid gap-5 lg:grid-cols-2">
+            <Section title="Education" icon={GraduationCap}>
+              {seeker.education.length === 0 ? (
+                <Empty />
+              ) : (
+                seeker.education.map((education, index) => (
+                  <div
+                    key={education._id || index}
+                    className="border-b border-slate-100 py-3 last:border-0"
+                  >
+                    <p className="font-semibold">{education.school}</p>
+
+                    <p className="text-sm text-slate-500">
+                      {text(education.major)}
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-400">
+                      {dateText(education.enrollment_date)}
+                      {" — "}
+                      {dateText(education.graduation_date)}
+                    </p>
+                  </div>
+                ))
+              )}
+            </Section>
+
+            <Section title="Employment History" icon={Briefcase}>
+              {seeker.employment_history.length === 0 ? (
+                <Empty />
+              ) : (
+                seeker.employment_history.map((employment, index) => (
+                  <div
+                    key={employment._id || index}
+                    className="border-b border-slate-100 py-3 last:border-0"
+                  >
+                    <p className="font-semibold">{employment.company_name}</p>
+
+                    <p className="text-sm text-slate-500">
+                      {text(employment.employment_type)}
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-400">
+                      {dateText(employment.start_date)}
+                      {" — "}
+                      {dateText(employment.end_date)}
+                    </p>
+                  </div>
+                ))
+              )}
+            </Section>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-slate-200 p-5">
+            <h3 className="font-semibold">Skills</h3>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              {seeker.skills.length > 0 ? (
+                seeker.skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="rounded-full bg-slate-100 px-3 py-1 text-sm"
+                  >
+                    {skill}
+                  </span>
+                ))
+              ) : (
+                <Empty />
+              )}
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                  viewingSeeker.status === "active"
-                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                }`}
+          </div>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-3">
+            <StatusBox title="Approval" value={seeker.approval_status} />
+
+            <StatusBox title="Account" value={seeker.account_status} />
+
+            <StatusBox title="Placement" value={seeker.placement_status} />
+          </div>
+
+          <div className="mt-6 flex flex-wrap justify-end gap-3">
+            {seeker.approval_status === "pending" && (
+              <button
+                type="button"
+                onClick={onReview}
+                className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white"
               >
-                {viewingSeeker.status === "active"
-                  ? lang === "ja"
-                    ? "有効"
-                    : "Active"
-                  : lang === "ja"
-                    ? "無効"
-                    : "Inactive"}
-              </span>
+                Review Registration
+              </button>
+            )}
 
-              {viewingSeeker.placementStatus && (
-                <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                  {getPlacementStatusLabel(viewingSeeker.placementStatus, lang)}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Two Column Grid */}
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Personal Information */}
-            <div className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-              <h5 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {lang === "ja" ? "個人情報" : "Personal Information"}
-              </h5>
-
-              <InfoRow
-                icon={<UserIcon className="h-4 w-4" />}
-                label={lang === "ja" ? "氏名" : "Full Name"}
-                value={viewingSeeker.full_name || viewingSeeker.name || "-"}
-              />
-
-              <InfoRow
-                icon={<Mail className="h-4 w-4" />}
-                label={lang === "ja" ? "メール" : "Email"}
-                value={viewingSeeker.email || "-"}
-              />
-
-              <InfoRow
-                icon={<Phone className="h-4 w-4" />}
-                label={lang === "ja" ? "電話番号" : "Phone"}
-                value={viewingSeeker.phone || "-"}
-              />
-
-              <InfoRow
-                icon={<MapPin className="h-4 w-4" />}
-                label={lang === "ja" ? "住所" : "Address"}
-                value={viewingSeeker.address || "-"}
-              />
-            </div>
-
-            {/* Personal Details */}
-            <div className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-              <h5 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {lang === "ja" ? "詳細情報" : "Personal Details"}
-              </h5>
-
-              <InfoRow
-                icon={<Calendar className="h-4 w-4" />}
-                label={lang === "ja" ? "生年月日" : "Date of Birth"}
-                value={formatDate(viewingSeeker.dateOfBirth)}
-              />
-
-              <InfoRow
-                icon={<UserIcon className="h-4 w-4" />}
-                label={lang === "ja" ? "性別" : "Gender"}
-                value={viewingSeeker.gender || "-"}
-              />
-
-              <InfoRow
-                icon={<Flag className="h-4 w-4" />}
-                label={lang === "ja" ? "国籍" : "Nationality"}
-                value={viewingSeeker.nationality || "-"}
-              />
-            </div>
-
-            {/* Visa Information */}
-            <div className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-              <h5 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {lang === "ja" ? "ビザ情報" : "Visa Information"}
-              </h5>
-
-              <InfoRow
-                icon={<BadgeCheck className="h-4 w-4" />}
-                label={lang === "ja" ? "ビザ種類" : "Visa Type"}
-                value={viewingSeeker.visaType || "-"}
-              />
-
-              <InfoRow
-                icon={<Calendar className="h-4 w-4" />}
-                label={lang === "ja" ? "ビザ有効期限" : "Visa Expiry Date"}
-                value={formatDate(viewingSeeker.visaExpiryDate)}
-              />
-            </div>
-
-            {/* Language & Skills */}
-            <div className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-              <h5 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {lang === "ja" ? "言語・スキル" : "Language & Skills"}
-              </h5>
-
-              <InfoRow
-                icon={<Globe className="h-4 w-4" />}
-                label={lang === "ja" ? "日本語レベル" : "Japanese Level"}
-                value={viewingSeeker.japaneseLevel || "-"}
-              />
-            </div>
-
-            {/* Job Preferences */}
-            <div className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700 md:col-span-2">
-              <h5 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {lang === "ja" ? "希望条件" : "Job Preferences"}
-              </h5>
-
-              <div className="grid gap-3 md:grid-cols-2">
-                <InfoRow
-                  icon={<Briefcase className="h-4 w-4" />}
-                  label={lang === "ja" ? "希望職種" : "Desired Job"}
-                  value={viewingSeeker.desiredJob || "-"}
-                />
-
-                <InfoRow
-                  icon={<MapPinned className="h-4 w-4" />}
-                  label={lang === "ja" ? "希望勤務地" : "Desired Location"}
-                  value={viewingSeeker.desiredLocation || "-"}
-                />
-              </div>
-
-              <InfoRow
-                icon={<Calendar className="h-4 w-4" />}
-                label={lang === "ja" ? "就業可能日" : "Available From"}
-                value={formatDate(viewingSeeker.availableFrom)}
-              />
-            </div>
-
-            {/* Resume & Notes */}
-            <div className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700 md:col-span-2">
-              <h5 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {lang === "ja" ? "その他" : "Other Information"}
-              </h5>
-
-              {viewingSeeker.resumeFile && (
-                <InfoRow
-                  icon={<FileText className="h-4 w-4" />}
-                  label={lang === "ja" ? "履歴書" : "Resume"}
-                  value={
-                    <a
-                      href={`https://vision-career.co.jp/admin_view_resume.php?token=${localStorage.getItem("admin_token")}&resume=${viewingSeeker.resumeFile}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline dark:text-blue-400"
-                    >
-                      {lang === "ja"
-                        ? "履歴書をダウンロード"
-                        : "Download Resume"}
-                    </a>
-                  }
-                  isLink
-                />
-              )}
-
-              <InfoRow
-                icon={<StickyNote className="h-4 w-4" />}
-                label={lang === "ja" ? "備考" : "Notes"}
-                value={viewingSeeker.notes || "-"}
-                multiLine
-              />
-            </div>
-          </div>
-
-          {/* Statistics & Timestamps */}
-          <div className="grid gap-4 md:grid-cols-4">
-            <StatItem
-              label={lang === "ja" ? "総応募数" : "Total Applications"}
-              value={String(viewingSeeker.statistics?.total_applications ?? 0)}
-            />
-            <StatItem
-              label={lang === "ja" ? "応募済み" : "Submitted"}
-              value={String(
-                viewingSeeker.statistics?.total_applications_submitted ?? 0,
-              )}
-            />
-            <StatItem
-              label={lang === "ja" ? "登録日" : "Created At"}
-              value={formatDateTime(viewingSeeker.created_at)}
-            />
-            <StatItem
-              label={lang === "ja" ? "更新日" : "Updated At"}
-              value={formatDateTime(viewingSeeker.updated_at)}
-            />
+            {(seeker.resume_file || seeker.generated_resume_file) && (
+              <button
+                type="button"
+                disabled={isDownloading}
+                onClick={onDownloadResume}
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                <Download className="h-4 w-4" />
+                Download Resume
+              </button>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
+}
+
+function Info({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Mail;
+  label: string;
+  value: string | number;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 p-4">
+      <div className="flex gap-3">
+        <Icon className="mt-0.5 h-4 w-4 text-slate-400" />
+
+        <div>
+          <p className="text-xs font-semibold uppercase text-slate-400">
+            {label}
+          </p>
+
+          <p className="mt-1 text-sm font-medium text-slate-900">{value}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  icon: typeof Briefcase;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 p-5">
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4 text-slate-500" />
+
+        <h3 className="font-semibold">{title}</h3>
+      </div>
+
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
+function StatusBox({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <p className="text-xs font-semibold uppercase text-slate-400">{title}</p>
+
+      <p className="mt-1 font-semibold capitalize">{value}</p>
+    </div>
+  );
+}
+
+function Empty() {
+  return <p className="text-sm text-slate-400">No information available.</p>;
 }

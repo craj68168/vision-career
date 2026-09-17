@@ -1,61 +1,100 @@
-import { Trash2 } from "lucide-react";
+"use client";
 
-export default function DeleteSeekerModal({
-  lang,
-  deletingSeeker,
-  closeDeleteModal,
-  deleting,
-  deleteJobSeeker,
-}: any) {
+import { AlertTriangle, Loader2, Trash2, X } from "lucide-react";
+
+import type { AdminSeeker } from "./types";
+
+type Props = {
+  lang: string;
+
+  seeker: AdminSeeker;
+
+  isDeleting: boolean;
+
+  error: string | null;
+
+  onClose: () => void;
+
+  onDelete: () => void;
+};
+
+export default function DeleteModal({
+  seeker,
+  isDeleting,
+  error,
+  onClose,
+  onDelete,
+}: Props) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl dark:bg-slate-800">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-          <Trash2 className="h-6 w-6" />
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/50 p-4">
+      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+        <div className="flex justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase text-red-500">
+              Delete Job Seeker
+            </p>
+
+            <h2 className="mt-1 text-xl font-bold">Confirm Deletion</h2>
+          </div>
+
+          <button type="button" disabled={isDeleting} onClick={onClose}>
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
-        <h3 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">
-          {lang === "ja" ? "求職者を削除" : "Delete Job Seeker"}
-        </h3>
+        {error && (
+          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
-        <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-          {lang === "ja"
-            ? "この求職者を削除してもよろしいですか？この操作は元に戻せません。"
-            : "Are you sure you want to delete this job seeker? This action cannot be undone."}
-        </p>
+        <div className="mt-6 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+            <AlertTriangle className="h-7 w-7 text-red-600" />
+          </div>
 
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-700/50">
-          <p className="font-semibold text-slate-900 dark:text-white">
-            {deletingSeeker.full_name || deletingSeeker.name || "-"}
+          <p className="mt-4 text-sm text-slate-600">
+            Are you sure you want to permanently delete this job seeker?
           </p>
-          <p className="mt-1 break-all text-sm text-slate-500 dark:text-slate-400">
-            {deletingSeeker.email || "-"}
-          </p>
+
+          <div className="mt-4 rounded-xl bg-slate-50 p-4">
+            <p className="font-semibold">{seeker.name}</p>
+
+            <p className="text-sm text-slate-500">{seeker.email}</p>
+
+            <p className="mt-1 text-xs text-slate-400">{seeker.seeker_id}</p>
+          </div>
+
+          {seeker.applications_count > 0 && (
+            <p className="mt-4 text-sm font-medium text-amber-700">
+              This seeker has {seeker.applications_count} application(s). The
+              backend will prevent permanent deletion.
+            </p>
+          )}
         </div>
 
-        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
-            onClick={closeDeleteModal}
-            disabled={deleting}
-            className="cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            disabled={isDeleting}
+            onClick={onClose}
+            className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
           >
-            {lang === "ja" ? "キャンセル" : "Cancel"}
+            Cancel
           </button>
 
           <button
             type="button"
-            onClick={deleteJobSeeker}
-            disabled={deleting}
-            className="cursor-pointer rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-500 dark:hover:bg-red-600"
+            disabled={isDeleting}
+            onClick={onDelete}
+            className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
-            {deleting
-              ? lang === "ja"
-                ? "削除中..."
-                : "Deleting..."
-              : lang === "ja"
-                ? "削除"
-                : "Delete"}
+            {isDeleting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+            Delete
           </button>
         </div>
       </div>
