@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Edit3,
   Eye,
-  FileText,
   Plus,
   RefreshCw,
   Search,
@@ -27,7 +26,16 @@ import EditModal from "./EditModal";
 import ApprovalModal from "./ApprovalModal";
 import DeleteModal from "./DeleteModal";
 
-import type { AccountStatus, ApprovalStatus, PlacementStatus } from "./types";
+import type {
+  AccountStatus,
+  ApprovalStatus,
+  PlacementStatus,
+  SeekerScreeningStatus,
+} from "./types";
+
+// ======================================================
+// ACCOUNT BADGE
+// ======================================================
 
 const accountBadge = (status: AccountStatus) => {
   switch (status) {
@@ -42,6 +50,10 @@ const accountBadge = (status: AccountStatus) => {
   }
 };
 
+// ======================================================
+// APPROVAL BADGE
+// ======================================================
+
 const approvalBadge = (status: ApprovalStatus) => {
   switch (status) {
     case "approved":
@@ -54,6 +66,10 @@ const approvalBadge = (status: ApprovalStatus) => {
       return "bg-amber-50 text-amber-700 border-amber-100";
   }
 };
+
+// ======================================================
+// PLACEMENT LABEL
+// ======================================================
 
 const placementLabel = (status: PlacementStatus) => {
   switch (status) {
@@ -73,6 +89,57 @@ const placementLabel = (status: PlacementStatus) => {
       return "Unplaced";
   }
 };
+
+// ======================================================
+// STAFF SCREENING BADGE
+// ======================================================
+
+const screeningBadge = (status: SeekerScreeningStatus) => {
+  switch (status) {
+    case "SCREENED":
+      return "bg-emerald-50 text-emerald-700 border-emerald-100";
+
+    case "NEEDS_ATTENTION":
+      return "bg-red-50 text-red-700 border-red-100";
+
+    default:
+      return "bg-slate-100 text-slate-600 border-slate-200";
+  }
+};
+
+// ======================================================
+// STAFF SCREENING LABEL
+// ======================================================
+
+const screeningLabel = (status: SeekerScreeningStatus, lang: string) => {
+  if (lang === "ja") {
+    switch (status) {
+      case "SCREENED":
+        return "確認済み";
+
+      case "NEEDS_ATTENTION":
+        return "要確認";
+
+      default:
+        return "未確認";
+    }
+  }
+
+  switch (status) {
+    case "SCREENED":
+      return "Screened";
+
+    case "NEEDS_ATTENTION":
+      return "Needs Attention";
+
+    default:
+      return "Not Screened";
+  }
+};
+
+// ======================================================
+// MAIN COMPONENT
+// ======================================================
 
 export default function JobSeekers() {
   const { lang } = useLanguage();
@@ -146,12 +213,12 @@ export default function JobSeekers() {
 
           <p className="mt-1 text-sm text-slate-500">
             {lang === "ja"
-              ? "登録された求職者、承認、アカウント状況、応募状況を管理します。"
-              : "Manage registered job seekers, approvals, account status and recruitment progress."}
+              ? "登録された求職者、スタッフ確認、承認、アカウント状況、応募状況を管理します。"
+              : "Manage registered Job Seekers, Staff screening, approvals, account status and recruitment progress."}
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             type="button"
             onClick={() => void handleRefresh()}
@@ -219,6 +286,8 @@ export default function JobSeekers() {
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="grid gap-3 xl:grid-cols-[1fr_180px_180px_180px]">
+          {/* SEARCH */}
+
           <div className="relative">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
@@ -234,6 +303,8 @@ export default function JobSeekers() {
             />
           </div>
 
+          {/* APPROVAL */}
+
           <select
             value={approvalStatus}
             onChange={(event) =>
@@ -241,14 +312,24 @@ export default function JobSeekers() {
             }
             className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none"
           >
-            <option value="">All approvals</option>
+            <option value="">
+              {lang === "ja" ? "すべての承認状態" : "All approvals"}
+            </option>
 
-            <option value="pending">Pending approval</option>
+            <option value="pending">
+              {lang === "ja" ? "承認待ち" : "Pending approval"}
+            </option>
 
-            <option value="approved">Approved</option>
+            <option value="approved">
+              {lang === "ja" ? "承認済み" : "Approved"}
+            </option>
 
-            <option value="rejected">Rejected</option>
+            <option value="rejected">
+              {lang === "ja" ? "却下" : "Rejected"}
+            </option>
           </select>
+
+          {/* ACCOUNT */}
 
           <select
             value={accountStatus}
@@ -257,14 +338,24 @@ export default function JobSeekers() {
             }
             className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none"
           >
-            <option value="">All account statuses</option>
+            <option value="">
+              {lang === "ja"
+                ? "すべてのアカウント状態"
+                : "All account statuses"}
+            </option>
 
-            <option value="active">Active</option>
+            <option value="active">{lang === "ja" ? "有効" : "Active"}</option>
 
-            <option value="inactive">Inactive</option>
+            <option value="inactive">
+              {lang === "ja" ? "無効" : "Inactive"}
+            </option>
 
-            <option value="suspended">Suspended</option>
+            <option value="suspended">
+              {lang === "ja" ? "停止中" : "Suspended"}
+            </option>
           </select>
+
+          {/* PLACEMENT */}
 
           <select
             value={placementStatus}
@@ -273,17 +364,29 @@ export default function JobSeekers() {
             }
             className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none"
           >
-            <option value="">All placement statuses</option>
+            <option value="">
+              {lang === "ja" ? "すべての配置状態" : "All placement statuses"}
+            </option>
 
-            <option value="unplaced">Unplaced</option>
+            <option value="unplaced">
+              {lang === "ja" ? "未配置" : "Unplaced"}
+            </option>
 
-            <option value="matching">Matching</option>
+            <option value="matching">
+              {lang === "ja" ? "マッチング中" : "Matching"}
+            </option>
 
-            <option value="interview">Interview</option>
+            <option value="interview">
+              {lang === "ja" ? "面接" : "Interview"}
+            </option>
 
-            <option value="selected">Selected</option>
+            <option value="selected">
+              {lang === "ja" ? "選考済み" : "Selected"}
+            </option>
 
-            <option value="placed">Placed</option>
+            <option value="placed">
+              {lang === "ja" ? "配置済み" : "Placed"}
+            </option>
           </select>
         </div>
       </div>
@@ -304,44 +407,66 @@ export default function JobSeekers() {
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-[1100px] w-full">
+          <table className="w-full min-w-[1280px]">
             <thead className="bg-slate-50">
               <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <th className="px-5 py-4">ID</th>
 
-                <th className="px-5 py-4">Name</th>
+                <th className="px-5 py-4">{lang === "ja" ? "氏名" : "Name"}</th>
 
                 <th className="px-5 py-4">Email</th>
 
-                <th className="px-5 py-4">Approval</th>
+                <th className="px-5 py-4">
+                  {lang === "ja" ? "承認" : "Approval"}
+                </th>
 
-                <th className="px-5 py-4">Account</th>
+                <th className="px-5 py-4">
+                  {lang === "ja" ? "アカウント" : "Account"}
+                </th>
 
-                <th className="px-5 py-4">Placement</th>
+                <th className="px-5 py-4">
+                  {lang === "ja" ? "配置" : "Placement"}
+                </th>
 
-                <th className="px-5 py-4 text-center">Applications</th>
+                <th className="px-5 py-4">
+                  {lang === "ja" ? "スタッフ確認" : "Screening"}
+                </th>
 
-                <th className="px-5 py-4 text-right">Actions</th>
+                <th className="px-5 py-4 text-center">
+                  {lang === "ja" ? "応募数" : "Applications"}
+                </th>
+
+                <th className="px-5 py-4 text-right">
+                  {lang === "ja" ? "操作" : "Actions"}
+                </th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-100">
+              {/* LOADING */}
+
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-6 py-16 text-center text-sm text-slate-500"
                   >
-                    Loading job seekers...
+                    {lang === "ja"
+                      ? "求職者を読み込み中..."
+                      : "Loading job seekers..."}
                   </td>
                 </tr>
               ) : seekers.length === 0 ? (
+                /* EMPTY */
+
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-6 py-16 text-center text-sm text-slate-500"
                   >
-                    No job seekers found.
+                    {lang === "ja"
+                      ? "求職者が見つかりません。"
+                      : "No job seekers found."}
                   </td>
                 </tr>
               ) : (
@@ -350,9 +475,13 @@ export default function JobSeekers() {
                     key={seeker.seeker_id}
                     className="transition hover:bg-slate-50/70"
                   >
+                    {/* ID */}
+
                     <td className="px-5 py-4 text-sm font-medium text-slate-500">
                       {seeker.seeker_id}
                     </td>
+
+                    {/* NAME */}
 
                     <td className="px-5 py-4">
                       <div className="font-semibold text-slate-900">
@@ -366,9 +495,13 @@ export default function JobSeekers() {
                       )}
                     </td>
 
+                    {/* EMAIL */}
+
                     <td className="px-5 py-4 text-sm text-slate-700">
                       {seeker.email}
                     </td>
+
+                    {/* APPROVAL */}
 
                     <td className="px-5 py-4">
                       <span
@@ -380,6 +513,8 @@ export default function JobSeekers() {
                       </span>
                     </td>
 
+                    {/* ACCOUNT */}
+
                     <td className="px-5 py-4">
                       <span
                         className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${accountBadge(
@@ -390,29 +525,61 @@ export default function JobSeekers() {
                       </span>
                     </td>
 
+                    {/* PLACEMENT */}
+
                     <td className="px-5 py-4 text-sm font-medium text-slate-700">
                       {placementLabel(seeker.placement_status)}
                     </td>
+
+                    {/* STAFF SCREENING */}
+
+                    <td className="px-5 py-4">
+                      <span
+                        className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${screeningBadge(
+                          seeker.staffScreening.status,
+                        )}`}
+                      >
+                        {screeningLabel(seeker.staffScreening.status, lang)}
+                      </span>
+
+                      {seeker.staffScreening.status === "NEEDS_ATTENTION" &&
+                        seeker.staffScreening.note && (
+                          <p className="mt-1 max-w-[190px] truncate text-xs text-red-500">
+                            {seeker.staffScreening.note}
+                          </p>
+                        )}
+                    </td>
+
+                    {/* APPLICATIONS */}
 
                     <td className="px-5 py-4 text-center font-semibold text-slate-900">
                       {seeker.applications_count}
                     </td>
 
+                    {/* ACTIONS */}
+
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-2">
+                        {/* REVIEW */}
+
                         {seeker.approval_status === "pending" && (
                           <button
                             type="button"
                             onClick={() => {
                               setActionError(null);
-
                               setApprovalSeeker(seeker);
                             }}
-                            className="rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-50"
+                            className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                              seeker.staffScreening.status === "NEEDS_ATTENTION"
+                                ? "border-red-200 text-red-700 hover:bg-red-50"
+                                : "border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                            }`}
                           >
-                            Review
+                            {lang === "ja" ? "審査" : "Review"}
                           </button>
                         )}
+
+                        {/* VIEW */}
 
                         <button
                           type="button"
@@ -420,8 +587,11 @@ export default function JobSeekers() {
                           className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium transition hover:bg-slate-50"
                         >
                           <Eye className="h-3.5 w-3.5" />
-                          View
+
+                          {lang === "ja" ? "詳細" : "View"}
                         </button>
+
+                        {/* EDIT */}
 
                         <button
                           type="button"
@@ -429,20 +599,23 @@ export default function JobSeekers() {
                           className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium transition hover:bg-slate-50"
                         >
                           <Edit3 className="h-3.5 w-3.5" />
-                          Edit
+
+                          {lang === "ja" ? "編集" : "Edit"}
                         </button>
+
+                        {/* DELETE */}
 
                         <button
                           type="button"
                           onClick={() => {
                             setActionError(null);
-
                             setDeletingSeeker(seeker);
                           }}
                           className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
-                          Delete
+
+                          {lang === "ja" ? "削除" : "Delete"}
                         </button>
                       </div>
                     </td>
@@ -453,12 +626,14 @@ export default function JobSeekers() {
           </table>
         </div>
 
-        {/* ===============================================
+        {/* =================================================
             PAGINATION
-        =============================================== */}
+        ================================================= */}
 
         <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-slate-500">{totalRecords} record(s)</p>
+          <p className="text-sm text-slate-500">
+            {totalRecords} {lang === "ja" ? "件" : "record(s)"}
+          </p>
 
           <div className="flex items-center gap-2">
             <select
@@ -477,7 +652,7 @@ export default function JobSeekers() {
               type="button"
               disabled={page <= 1}
               onClick={() => setPage(page - 1)}
-              className="rounded-lg border border-slate-200 p-2 disabled:opacity-40"
+              className="rounded-lg border border-slate-200 p-2 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -490,7 +665,7 @@ export default function JobSeekers() {
               type="button"
               disabled={page >= totalPages}
               onClick={() => setPage(page + 1)}
-              className="rounded-lg border border-slate-200 p-2 disabled:opacity-40"
+              className="rounded-lg border border-slate-200 p-2 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -499,7 +674,7 @@ export default function JobSeekers() {
       </div>
 
       {/* =================================================
-          MODALS
+          CREATE MODAL
       ================================================= */}
 
       {createOpen && (
@@ -514,6 +689,10 @@ export default function JobSeekers() {
           onSubmit={handleCreate}
         />
       )}
+
+      {/* =================================================
+          VIEW MODAL
+      ================================================= */}
 
       {viewingSeeker && (
         <ViewModal
@@ -532,6 +711,10 @@ export default function JobSeekers() {
         />
       )}
 
+      {/* =================================================
+          EDIT MODAL
+      ================================================= */}
+
       {editingSeeker && (
         <EditModal
           lang={lang}
@@ -546,6 +729,10 @@ export default function JobSeekers() {
         />
       )}
 
+      {/* =================================================
+          APPROVAL MODAL
+      ================================================= */}
+
       {approvalSeeker && (
         <ApprovalModal
           lang={lang}
@@ -559,6 +746,10 @@ export default function JobSeekers() {
           onSubmit={handleApproval}
         />
       )}
+
+      {/* =================================================
+          DELETE MODAL
+      ================================================= */}
 
       {deletingSeeker && (
         <DeleteModal
@@ -577,13 +768,19 @@ export default function JobSeekers() {
   );
 }
 
+// ======================================================
+// SUMMARY CARD
+// ======================================================
+
 function SummaryCard({
   label,
   value,
   icon: Icon,
 }: {
   label: string;
+
   value: number;
+
   icon: typeof UserRound;
 }) {
   return (
