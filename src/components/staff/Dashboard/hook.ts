@@ -4,13 +4,13 @@ import { useEffect } from "react";
 
 import { usePathname, useRouter } from "next/navigation";
 
-import { useQuery } from "@tanstack/react-query";
-
 import { getCurrentStaff, getStaffDashboard } from "./api";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useStaffDashboard = () => {
   const router = useRouter();
-
+  const queryClient = useQueryClient();
   const pathname = usePathname();
 
   const isEnglish = pathname.startsWith("/en/");
@@ -56,10 +56,22 @@ export const useStaffDashboard = () => {
   // LOGOUT
   // ====================================================
 
-  const logout = () => {
+  const logout = async () => {
     localStorage.removeItem("access_token");
 
     localStorage.removeItem("user_role");
+
+    queryClient.removeQueries({
+      queryKey: ["current-staff"],
+    });
+
+    queryClient.removeQueries({
+      queryKey: ["staff-dashboard"],
+    });
+
+    queryClient.removeQueries({
+      queryKey: ["staff-applications"],
+    });
 
     router.replace(isEnglish ? "/en/staff-login" : "/staff-login");
   };

@@ -1,3 +1,7 @@
+// ======================================================
+// APPLICATION STATUS
+// ======================================================
+
 export type ApplicationStatus =
   | "PENDING_ADMIN_APPROVAL"
   | "ADMIN_REJECTED"
@@ -7,6 +11,49 @@ export type ApplicationStatus =
   | "SELECTED"
   | "HIRED"
   | "REJECTED";
+
+// ======================================================
+// STAFF SCREENING STATUS
+// ======================================================
+
+export type StaffScreeningStatus =
+  | "NOT_SCREENED"
+  | "SCREENED"
+  | "NEEDS_ATTENTION";
+
+// ======================================================
+// EDUCATION
+// ======================================================
+
+export type EducationSnapshot = {
+  enrollment_date?: string | null;
+
+  graduation_date?: string | null;
+
+  school_type?: string | null;
+
+  school?: string | null;
+
+  major?: string | null;
+};
+
+// ======================================================
+// EMPLOYMENT HISTORY
+// ======================================================
+
+export type EmploymentSnapshot = {
+  start_date?: string | null;
+
+  end_date?: string | null;
+
+  employment_type?: string | null;
+
+  company_name?: string | null;
+};
+
+// ======================================================
+// CANDIDATE
+// ======================================================
 
 export type AdminApplicationCandidate = {
   name: string;
@@ -42,27 +89,9 @@ export type AdminApplicationCandidate = {
   employmentHistory?: EmploymentSnapshot[];
 };
 
-export type EducationSnapshot = {
-  enrollment_date?: string | null;
-
-  graduation_date?: string | null;
-
-  school_type?: string | null;
-
-  school?: string | null;
-
-  major?: string | null;
-};
-
-export type EmploymentSnapshot = {
-  start_date?: string | null;
-
-  end_date?: string | null;
-
-  employment_type?: string | null;
-
-  company_name?: string | null;
-};
+// ======================================================
+// VACANCY
+// ======================================================
 
 export type AdminApplicationVacancy = {
   vacancyId?: string;
@@ -98,6 +127,10 @@ export type AdminApplicationVacancy = {
   salaryNote?: string | null;
 };
 
+// ======================================================
+// PROVIDER
+// ======================================================
+
 export type AdminApplicationProvider = {
   registerId?: string;
 
@@ -108,6 +141,32 @@ export type AdminApplicationProvider = {
   email?: string | null;
 };
 
+// ======================================================
+// STAFF SCREENING
+// ======================================================
+//
+// Staff only screens the application.
+//
+// Staff DOES NOT approve/reject the application.
+//
+// Final decision remains with Admin.
+//
+// ======================================================
+
+export type AdminApplicationStaffScreening = {
+  status: StaffScreeningStatus;
+
+  note?: string | null;
+
+  screenedByStaffId?: string | null;
+
+  screenedAt?: string | null;
+};
+
+// ======================================================
+// ADMIN REVIEW
+// ======================================================
+
 export type AdminApplicationReview = {
   reviewedAt?: string | null;
 
@@ -115,6 +174,10 @@ export type AdminApplicationReview = {
 
   rejectionReason?: string | null;
 };
+
+// ======================================================
+// APPLICATION
+// ======================================================
 
 export type AdminApplication = {
   applicationId: string;
@@ -137,12 +200,22 @@ export type AdminApplication = {
 
   provider: AdminApplicationProvider;
 
+  staffScreening: AdminApplicationStaffScreening;
+
   adminReview: AdminApplicationReview;
 };
+
+// ======================================================
+// DETAILS
+// ======================================================
 
 export type AdminApplicationDetails = AdminApplication & {
   resumeAvailable: boolean;
 };
+
+// ======================================================
+// SUMMARY
+// ======================================================
 
 export type AdminApplicationSummary = {
   total: number;
@@ -164,6 +237,10 @@ export type AdminApplicationSummary = {
   rejected: number;
 };
 
+// ======================================================
+// LIST RESPONSE
+// ======================================================
+
 export type AdminApplicationsResponse = {
   success: boolean;
 
@@ -176,6 +253,10 @@ export type AdminApplicationsResponse = {
   message?: string;
 };
 
+// ======================================================
+// DETAILS RESPONSE
+// ======================================================
+
 export type AdminApplicationDetailsResponse = {
   success: boolean;
 
@@ -183,6 +264,10 @@ export type AdminApplicationDetailsResponse = {
 
   message?: string;
 };
+
+// ======================================================
+// ACTION RESPONSE
+// ======================================================
 
 export type AdminApplicationActionResponse = {
   success: boolean;
@@ -202,9 +287,17 @@ export type AdminApplicationActionResponse = {
   };
 };
 
+// ======================================================
+// REJECT PAYLOAD
+// ======================================================
+
 export type RejectApplicationPayload = {
   reason: string;
 };
+
+// ======================================================
+// API ERROR
+// ======================================================
 
 export type ApiErrorResponse = {
   success?: boolean;

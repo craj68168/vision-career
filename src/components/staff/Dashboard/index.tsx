@@ -1,5 +1,10 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import type { ComponentType } from "react";
+
 import {
   BriefcaseBusiness,
   Building2,
@@ -18,7 +23,7 @@ import { useStaffDashboard } from "./hook";
 import type { StaffPermission } from "@/components/auth/Staff/types";
 
 // ======================================================
-// MENU
+// MENU TYPE
 // ======================================================
 
 type MenuItem = {
@@ -26,68 +31,119 @@ type MenuItem = {
 
   permission: StaffPermission;
 
-  icon: React.ComponentType<{
+  href: string;
+
+  icon: ComponentType<{
     className?: string;
   }>;
 };
+
+// ======================================================
+// STAFF MENU
+// ======================================================
+//
+// Menu visibility is controlled by Staff permissions.
+//
+// IMPORTANT:
+//
+// Frontend permission checking only controls what is shown.
+//
+// Backend middleware remains responsible for actual
+// authorization.
+//
+// ======================================================
 
 const menuItems: MenuItem[] = [
   {
     label: "Dashboard",
     permission: "dashboard:view",
+    href: "/staff",
     icon: LayoutDashboard,
   },
 
   {
     label: "Vacancies",
     permission: "vacancies:view",
+    href: "/staff/vacancies",
     icon: BriefcaseBusiness,
   },
 
   {
     label: "Applications",
     permission: "applications:view",
+    href: "/staff/applications",
     icon: FileText,
   },
 
   {
     label: "Clients",
     permission: "providers:view",
+    href: "/staff/clients",
     icon: Building2,
   },
 
   {
     label: "Job Seekers",
     permission: "seekers:view",
+    href: "/staff/job-seekers",
     icon: Users,
   },
 
   {
     label: "Placement Requests",
     permission: "placement_requests:view",
+    href: "/staff/placement-requests",
     icon: ClipboardCheck,
   },
 
   {
     label: "Placement Billings",
     permission: "billing:view",
+    href: "/staff/placement-billings",
     icon: CreditCard,
   },
 
   {
     label: "Staff Training",
     permission: "training:view",
+    href: "/staff/training",
     icon: GraduationCap,
   },
 ];
 
 // ======================================================
-// DASHBOARD
+// STAFF DASHBOARD
 // ======================================================
 
 export default function StaffDashboard() {
-  const { staff, summary, isLoading, hasDashboardPermission, logout } =
-    useStaffDashboard();
+  const pathname = usePathname();
+
+  const {
+    staff,
+
+    summary,
+
+    isLoading,
+
+    hasDashboardPermission,
+
+    logout,
+  } = useStaffDashboard();
+
+  // ====================================================
+  // LANGUAGE PREFIX
+  // ====================================================
+  //
+  // /staff
+  // /en/staff
+  //
+  // ====================================================
+
+  const prefix = pathname.startsWith("/en/") ? "/en" : "";
+
+  // ====================================================
+  // LOADING
+  // ====================================================
 
   if (isLoading) {
     return (
@@ -97,13 +153,36 @@ export default function StaffDashboard() {
     );
   }
 
+  // ====================================================
+  // NO STAFF
+  // ====================================================
+
   if (!staff) {
     return null;
   }
 
+  // ====================================================
+  // PERMISSION-CONTROLLED MENU
+  // ====================================================
+
   const visibleMenu = menuItems.filter((item) =>
     staff.permissions.includes(item.permission),
   );
+
+  // ====================================================
+  // ACTIVE ROUTE CHECK
+  // ====================================================
+
+  const isMenuActive = (href: string) => {
+    const fullHref = `${prefix}${href}`;
+
+    // Dashboard should only be active for exact /staff
+    if (href === "/staff") {
+      return pathname === fullHref || pathname === `${fullHref}/`;
+    }
+
+    return pathname.startsWith(fullHref);
+  };
 
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
@@ -112,11 +191,13 @@ export default function StaffDashboard() {
       {/* ================================================= */}
 
       <header className="border-b border-slate-200 bg-white">
+        {/* TOP BAR */}
+
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div>
-            <p className="text-xl font-bold text-slate-950">Staff Panel</p>
+            <h1 className="text-xl font-bold text-slate-950">Staff Panel</h1>
 
-            <p className="text-xs text-slate-500">
+            <p className="mt-1 text-xs text-slate-500">
               {staff.name} • {staff.staffId}
             </p>
           </div>
@@ -124,44 +205,66 @@ export default function StaffDashboard() {
           <button
             type="button"
             onClick={logout}
-            className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white"
+            className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
           >
             <LogOut className="h-4 w-4" />
             Logout
           </button>
         </div>
 
+        {/* ================================================= */}
         {/* NAVIGATION */}
+        {/* ================================================= */}
 
         <div className="border-t border-slate-100">
-          <div className="mx-auto flex max-w-7xl flex-wrap gap-1 px-6 py-2">
-            {visibleMenu.map(({ label, icon: Icon }) => (
-              <button
-                key={label}
-                type="button"
-                className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"
-              >
-                <Icon className="h-4 w-4" />
+          <nav className="mx-auto flex max-w-7xl flex-wrap items-center gap-1 px-6 py-2">
+            {visibleMenu.map((item) => {
+              const Icon = item.icon;
 
-                {label}
-              </button>
-            ))}
-          </div>
+              const href = `${prefix}${item.href}`;
+
+              const active = isMenuActive(item.href);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={href}
+                  className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
+                    active
+                      ? "bg-indigo-50 font-semibold text-indigo-600"
+                      : "text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
       </header>
 
       {/* ================================================= */}
-      {/* CONTENT */}
+      {/* DASHBOARD CONTENT */}
       {/* ================================================= */}
 
       <main className="mx-auto max-w-7xl px-6 py-10">
+        {/* ================================================= */}
+        {/* PAGE HEADER */}
+        {/* ================================================= */}
+
         <div className="mb-7">
-          <h1 className="text-3xl font-bold text-slate-950">Dashboard</h1>
+          <h2 className="text-3xl font-bold text-slate-950">Dashboard</h2>
 
           <p className="mt-1 text-sm text-slate-500">
             Welcome back, {staff.name}.
           </p>
         </div>
+
+        {/* ================================================= */}
+        {/* NO DASHBOARD PERMISSION */}
+        {/* ================================================= */}
 
         {!hasDashboardPermission ? (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
@@ -170,17 +273,26 @@ export default function StaffDashboard() {
             </p>
 
             <p className="mt-1 text-sm text-amber-700">
-              Use the modules assigned to you by an administrator.
+              You can continue using the modules assigned to you by an
+              Administrator.
             </p>
           </div>
         ) : (
           <>
+            {/* ================================================= */}
+            {/* SUMMARY CARDS */}
+            {/* ================================================= */}
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {/* JOB SEEKERS */}
+
               <SummaryCard
                 title="Job Seekers"
                 value={summary?.jobSeekers.total ?? 0}
                 icon={Users}
               />
+
+              {/* JOB PROVIDERS */}
 
               <SummaryCard
                 title="Job Providers"
@@ -188,12 +300,16 @@ export default function StaffDashboard() {
                 icon={Building2}
               />
 
+              {/* VACANCIES */}
+
               <SummaryCard
                 title="Vacancies"
                 value={summary?.vacancies.total ?? 0}
                 note={`Published: ${summary?.vacancies.published ?? 0}`}
                 icon={BriefcaseBusiness}
               />
+
+              {/* APPLICATIONS */}
 
               <SummaryCard
                 title="Applications"
@@ -204,11 +320,15 @@ export default function StaffDashboard() {
                 icon={FileText}
               />
 
+              {/* PENDING VACANCIES */}
+
               <SummaryCard
                 title="Pending Vacancy Reviews"
                 value={summary?.vacancies.pendingReview ?? 0}
                 icon={ClipboardCheck}
               />
+
+              {/* PENDING APPLICATIONS */}
 
               <SummaryCard
                 title="Pending Applications"
@@ -216,11 +336,15 @@ export default function StaffDashboard() {
                 icon={Users}
               />
 
+              {/* PROVIDER PROCESS */}
+
               <SummaryCard
                 title="Provider Process"
                 value={summary?.applications.providerProcess ?? 0}
                 icon={Send}
               />
+
+              {/* PLACEMENT REQUESTS */}
 
               <SummaryCard
                 title="Placement Requests"
@@ -239,25 +363,24 @@ export default function StaffDashboard() {
 // SUMMARY CARD
 // ======================================================
 
-function SummaryCard({
-  title,
-  value,
-  note,
-  icon: Icon,
-}: {
+type SummaryCardProps = {
   title: string;
 
   value: number;
 
   note?: string;
 
-  icon: React.ComponentType<{
+  icon: ComponentType<{
     className?: string;
   }>;
-}) {
+};
+
+function SummaryCard({ title, value, note, icon: Icon }: SummaryCardProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
+        {/* CONTENT */}
+
         <div>
           <p className="text-sm text-slate-500">{title}</p>
 
@@ -265,6 +388,8 @@ function SummaryCard({
 
           {note && <p className="mt-1 text-xs text-slate-500">{note}</p>}
         </div>
+
+        {/* ICON */}
 
         <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600">
           <Icon className="h-5 w-5" />

@@ -1,14 +1,10 @@
 "use client";
 
 import {
-  Briefcase,
-  Building2,
+  AlertTriangle,
+  CheckCircle2,
   Download,
   Loader2,
-  Mail,
-  MapPin,
-  Phone,
-  User,
   X,
 } from "lucide-react";
 
@@ -21,7 +17,11 @@ import {
   getApplicationStatusLabel,
 } from "./helper";
 
-import type { AdminApplicationDetails } from "./types";
+import type { AdminApplicationDetails, StaffScreeningStatus } from "./types";
+
+// ======================================================
+// PROPS
+// ======================================================
 
 type Props = {
   application: AdminApplicationDetails;
@@ -37,11 +37,16 @@ type Props = {
   onResume: (applicationId: string) => void;
 };
 
+// ======================================================
+// DETAIL ITEM
+// ======================================================
+
 function DetailItem({
   label,
   value,
 }: {
   label: string;
+
   value: string | number | null | undefined;
 }) {
   return (
@@ -57,6 +62,57 @@ function DetailItem({
   );
 }
 
+// ======================================================
+// STAFF SCREENING LABEL
+// ======================================================
+
+function getStaffScreeningLabel(status: StaffScreeningStatus, lang: string) {
+  if (lang === "ja") {
+    switch (status) {
+      case "SCREENED":
+        return "確認済み";
+
+      case "NEEDS_ATTENTION":
+        return "要確認";
+
+      default:
+        return "未確認";
+    }
+  }
+
+  switch (status) {
+    case "SCREENED":
+      return "Screened";
+
+    case "NEEDS_ATTENTION":
+      return "Needs Attention";
+
+    default:
+      return "Not Screened";
+  }
+}
+
+// ======================================================
+// STAFF SCREENING CLASS
+// ======================================================
+
+function getStaffScreeningClass(status: StaffScreeningStatus) {
+  switch (status) {
+    case "SCREENED":
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+
+    case "NEEDS_ATTENTION":
+      return "border-red-200 bg-red-50 text-red-700";
+
+    default:
+      return "border-amber-200 bg-amber-50 text-amber-700";
+  }
+}
+
+// ======================================================
+// APPLICATION DETAILS
+// ======================================================
+
 export default function ApplicationDetails({
   application,
   isApproving,
@@ -69,8 +125,12 @@ export default function ApplicationDetails({
 
   const pending = application.status === "PENDING_ADMIN_APPROVAL";
 
+  const staffScreening = application.staffScreening;
+
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+      {/* BACKDROP */}
+
       <button
         type="button"
         aria-label="Close"
@@ -78,7 +138,13 @@ export default function ApplicationDetails({
         onClick={onClose}
       />
 
+      {/* MODAL */}
+
       <div className="relative z-10 flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+        {/* ================================================= */}
+        {/* HEADER */}
+        {/* ================================================= */}
+
         <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
@@ -113,9 +179,15 @@ export default function ApplicationDetails({
           </div>
         </div>
 
+        {/* ================================================= */}
+        {/* BODY */}
+        {/* ================================================= */}
+
         <div className="overflow-y-auto p-6">
           <div className="space-y-8">
+            {/* ================================================= */}
             {/* APPLICANT */}
+            {/* ================================================= */}
 
             <section>
               <h3 className="mb-4 text-lg font-bold text-slate-950">
@@ -170,7 +242,9 @@ export default function ApplicationDetails({
               </div>
             </section>
 
+            {/* ================================================= */}
             {/* SKILLS */}
+            {/* ================================================= */}
 
             <section>
               <h3 className="mb-3 text-lg font-bold text-slate-950">
@@ -193,7 +267,9 @@ export default function ApplicationDetails({
               </div>
             </section>
 
+            {/* ================================================= */}
             {/* EDUCATION */}
+            {/* ================================================= */}
 
             <section>
               <h3 className="mb-3 text-lg font-bold text-slate-950">
@@ -214,6 +290,12 @@ export default function ApplicationDetails({
                       <p className="mt-1 text-sm text-slate-500">
                         {education.major || "-"}
                       </p>
+
+                      <p className="mt-2 text-xs text-slate-400">
+                        {formatApplicationDate(education.enrollment_date, lang)}
+                        {" - "}
+                        {formatApplicationDate(education.graduation_date, lang)}
+                      </p>
                     </div>
                   ))
                 ) : (
@@ -222,7 +304,9 @@ export default function ApplicationDetails({
               </div>
             </section>
 
+            {/* ================================================= */}
             {/* EMPLOYMENT */}
+            {/* ================================================= */}
 
             <section>
               <h3 className="mb-3 text-lg font-bold text-slate-950">
@@ -244,6 +328,12 @@ export default function ApplicationDetails({
                         <p className="mt-1 text-sm text-slate-500">
                           {employment.employment_type || "-"}
                         </p>
+
+                        <p className="mt-2 text-xs text-slate-400">
+                          {formatApplicationDate(employment.start_date, lang)}
+                          {" - "}
+                          {formatApplicationDate(employment.end_date, lang)}
+                        </p>
                       </div>
                     ),
                   )
@@ -253,7 +343,9 @@ export default function ApplicationDetails({
               </div>
             </section>
 
+            {/* ================================================= */}
             {/* VACANCY */}
+            {/* ================================================= */}
 
             <section>
               <h3 className="mb-4 text-lg font-bold text-slate-950">
@@ -297,7 +389,9 @@ export default function ApplicationDetails({
               </div>
             </section>
 
+            {/* ================================================= */}
             {/* APPLICATION */}
+            {/* ================================================= */}
 
             <section>
               <h3 className="mb-4 text-lg font-bold text-slate-950">
@@ -333,7 +427,140 @@ export default function ApplicationDetails({
               </div>
             </section>
 
+            {/* ================================================= */}
+            {/* STAFF SCREENING */}
+            {/* ================================================= */}
+
+            <section>
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-lg font-bold text-slate-950">
+                  {lang === "ja" ? "スタッフ確認" : "Staff Screening"}
+                </h3>
+
+                <span
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStaffScreeningClass(
+                    staffScreening.status,
+                  )}`}
+                >
+                  {getStaffScreeningLabel(staffScreening.status, lang)}
+                </span>
+              </div>
+
+              {/* NOT SCREENED */}
+
+              {staffScreening.status === "NOT_SCREENED" && (
+                <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+
+                  <div>
+                    <p className="font-semibold text-amber-800">
+                      {lang === "ja"
+                        ? "この応募はまだスタッフによる確認が完了していません。"
+                        : "This application has not been screened by Staff yet."}
+                    </p>
+
+                    <p className="mt-1 text-sm text-amber-700">
+                      {lang === "ja"
+                        ? "管理者は最終判断を行うことができますが、必要に応じてスタッフ確認を待つことができます。"
+                        : "Admin can still make the final decision, but may wait for Staff screening if required."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* SCREENED */}
+
+              {staffScreening.status === "SCREENED" && (
+                <div className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+
+                  <div>
+                    <p className="font-semibold text-emerald-800">
+                      {lang === "ja"
+                        ? "スタッフ確認済み"
+                        : "Staff screening completed."}
+                    </p>
+
+                    <p className="mt-1 text-sm text-emerald-700">
+                      {lang === "ja"
+                        ? "この応募は管理者の最終判断の準備ができています。"
+                        : "This application is ready for the Admin's final decision."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* NEEDS ATTENTION */}
+
+              {staffScreening.status === "NEEDS_ATTENTION" && (
+                <div className="flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+
+                  <div>
+                    <p className="font-semibold text-red-800">
+                      {lang === "ja"
+                        ? "管理者による追加確認が必要です。"
+                        : "Staff marked this application as needing attention."}
+                    </p>
+
+                    <p className="mt-1 text-sm text-red-700">
+                      {lang === "ja"
+                        ? "以下のスタッフメモを確認してから最終判断を行ってください。"
+                        : "Review the Staff note below before making the final decision."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* SCREENING DETAILS */}
+
+              {staffScreening.status !== "NOT_SCREENED" && (
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <DetailItem
+                    label={lang === "ja" ? "確認担当スタッフ" : "Screened By"}
+                    value={staffScreening.screenedByStaffId}
+                  />
+
+                  <DetailItem
+                    label={lang === "ja" ? "確認日時" : "Screened At"}
+                    value={formatApplicationDate(
+                      staffScreening.screenedAt,
+                      lang,
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* STAFF NOTE */}
+
+              {staffScreening.note && (
+                <div
+                  className={`mt-3 rounded-2xl border p-4 ${
+                    staffScreening.status === "NEEDS_ATTENTION"
+                      ? "border-red-200 bg-red-50"
+                      : "border-slate-200 bg-slate-50"
+                  }`}
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {lang === "ja" ? "スタッフメモ" : "Staff Screening Note"}
+                  </p>
+
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+                    {staffScreening.note}
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
+                {lang === "ja"
+                  ? "スタッフ確認は参考情報です。最終的な承認・却下は管理者が行います。"
+                  : "Staff screening is advisory. Final approval or rejection remains with Admin."}
+              </div>
+            </section>
+
+            {/* ================================================= */}
             {/* RESUME */}
+            {/* ================================================= */}
 
             <section>
               <button
@@ -350,7 +577,9 @@ export default function ApplicationDetails({
               </button>
             </section>
 
-            {/* REVIEW */}
+            {/* ================================================= */}
+            {/* ADMIN REVIEW */}
+            {/* ================================================= */}
 
             {application.adminReview.reviewedAt && (
               <section>
@@ -382,29 +611,43 @@ export default function ApplicationDetails({
           </div>
         </div>
 
+        {/* ================================================= */}
+        {/* ADMIN DECISION */}
+        {/* ================================================= */}
+
         {pending && (
-          <div className="flex justify-end gap-3 border-t border-slate-200 bg-white px-6 py-4">
-            <button
-              type="button"
-              disabled={isApproving}
-              onClick={onReject}
-              className="cursor-pointer rounded-xl border border-red-200 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
-            >
-              {lang === "ja" ? "却下" : "Reject"}
-            </button>
+          <div className="border-t border-slate-200 bg-white">
+            {staffScreening.status === "NEEDS_ATTENTION" && (
+              <div className="border-b border-red-100 bg-red-50 px-6 py-3 text-sm text-red-700">
+                {lang === "ja"
+                  ? "スタッフがこの応募を「要確認」としています。最終判断前にスタッフメモを確認してください。"
+                  : "Staff marked this application as Needs Attention. Review the screening note before making the final decision."}
+              </div>
+            )}
 
-            <button
-              type="button"
-              disabled={isApproving}
-              onClick={() => onApprove(application.applicationId)}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {isApproving && <Loader2 className="h-4 w-4 animate-spin" />}
+            <div className="flex justify-end gap-3 px-6 py-4">
+              <button
+                type="button"
+                disabled={isApproving}
+                onClick={onReject}
+                className="cursor-pointer rounded-xl border border-red-200 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+              >
+                {lang === "ja" ? "却下" : "Reject"}
+              </button>
 
-              {lang === "ja"
-                ? "承認して企業へ送る"
-                : "Approve & Send to Provider"}
-            </button>
+              <button
+                type="button"
+                disabled={isApproving}
+                onClick={() => onApprove(application.applicationId)}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {isApproving && <Loader2 className="h-4 w-4 animate-spin" />}
+
+                {lang === "ja"
+                  ? "承認して企業へ送る"
+                  : "Approve & Send to Provider"}
+              </button>
+            </div>
           </div>
         )}
       </div>
