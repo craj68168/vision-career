@@ -8,6 +8,29 @@ export type PlacementRequestStatus =
   | "approved"
   | "rejected";
 
+// ======================================================
+// STAFF SCREENING
+// ======================================================
+
+export type PlacementRequestScreeningStatus =
+  | "NOT_SCREENED"
+  | "SCREENED"
+  | "NEEDS_ATTENTION";
+
+export type PlacementRequestStaffScreening = {
+  status: PlacementRequestScreeningStatus;
+
+  note?: string | null;
+
+  screenedByStaffId?: string | null;
+
+  screenedAt?: string | null;
+};
+
+// ======================================================
+// REQUEST
+// ======================================================
+
 export type PlacementRequest = {
   recruitId: string;
 
@@ -55,6 +78,12 @@ export type PlacementRequest = {
 
   reviewedAt?: string | null;
 
+  // ==================================================
+  // STAFF SCREENING
+  // ==================================================
+
+  staffScreening: PlacementRequestStaffScreening;
+
   createdAt?: string;
 
   updatedAt?: string;
@@ -72,6 +101,12 @@ export type PlacementRequestSummary = {
   approved: number;
 
   rejected: number;
+
+  notScreened: number;
+
+  screened: number;
+
+  needsAttention: number;
 };
 
 // ======================================================
@@ -130,11 +165,6 @@ export type CandidateEmployment = {
 
 // ======================================================
 // ELIGIBLE SEEKER
-// ======================================================
-//
-// Admin can see internal seekerId because Admin performs
-// the matching.
-//
 // ======================================================
 
 export type EligibleSeeker = {
