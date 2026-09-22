@@ -21,6 +21,7 @@ import type {
   AdminProvider,
   CreateProviderPayload,
   ProviderApiError,
+  ProviderReviewStatus,
   ProviderStatus,
   UpdateProviderPayload,
 } from "./types";
@@ -28,11 +29,23 @@ import type {
 export function useAdminProviders() {
   const queryClient = useQueryClient();
 
+  // ====================================================
+  // FILTERS
+  // ====================================================
+
   const [search, setSearch] = useState("");
 
   const [statusFilter, setStatusFilter] = useState<"ALL" | ProviderStatus>(
     "ALL",
   );
+
+  const [reviewFilter, setReviewFilter] = useState<
+    "ALL" | ProviderReviewStatus
+  >("ALL");
+
+  // ====================================================
+  // MODALS
+  // ====================================================
 
   const [creating, setCreating] = useState(false);
 
@@ -46,6 +59,10 @@ export function useAdminProviders() {
 
   const [deletingProvider, setDeletingProvider] =
     useState<AdminProvider | null>(null);
+
+  // ====================================================
+  // QUERIES
+  // ====================================================
 
   const providersQuery = useQuery({
     queryKey: ["admin-providers"],
@@ -69,6 +86,10 @@ export function useAdminProviders() {
     retry: 1,
   });
 
+  // ====================================================
+  // FILTER
+  // ====================================================
+
   const filteredProviders = useMemo(() => {
     const providers = providersQuery.data?.data || [];
 
@@ -76,6 +97,13 @@ export function useAdminProviders() {
 
     return providers.filter((provider) => {
       if (statusFilter !== "ALL" && provider.status !== statusFilter) {
+        return false;
+      }
+
+      if (
+        reviewFilter !== "ALL" &&
+        provider.staffReview.status !== reviewFilter
+      ) {
         return false;
       }
 
@@ -90,13 +118,20 @@ export function useAdminProviders() {
         provider.email,
         provider.phone,
         provider.industry,
+        provider.address,
+        provider.staffReview.status,
+        provider.staffReview.note,
       ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
         .includes(normalized);
     });
-  }, [providersQuery.data, search, statusFilter]);
+  }, [providersQuery.data, search, statusFilter, reviewFilter]);
+
+  // ====================================================
+  // ERROR
+  // ====================================================
 
   const handleError = (error: unknown, fallback: string) => {
     if (axios.isAxiosError<ProviderApiError>(error)) {
@@ -108,10 +143,18 @@ export function useAdminProviders() {
     toast.error(fallback);
   };
 
+  // ====================================================
+  // INVALIDATE
+  // ====================================================
+
   const invalidate = async () => {
     await Promise.all([
       queryClient.invalidateQueries({
         queryKey: ["admin-providers"],
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["admin-provider-details"],
       }),
 
       queryClient.invalidateQueries({
@@ -123,6 +166,10 @@ export function useAdminProviders() {
       }),
     ]);
   };
+
+  // ====================================================
+  // CREATE
+  // ====================================================
 
   const createMutation = useMutation({
     mutationFn: createAdminProvider,
@@ -138,6 +185,10 @@ export function useAdminProviders() {
     onError: (error: unknown) =>
       handleError(error, "Failed to create provider."),
   });
+
+  // ====================================================
+  // UPDATE
+  // ====================================================
 
   const updateMutation = useMutation({
     mutationFn: ({
@@ -161,6 +212,10 @@ export function useAdminProviders() {
       handleError(error, "Failed to update provider."),
   });
 
+  // ====================================================
+  // STATUS
+  // ====================================================
+
   const statusMutation = useMutation({
     mutationFn: ({
       registerId,
@@ -180,6 +235,10 @@ export function useAdminProviders() {
     onError: (error: unknown) =>
       handleError(error, "Failed to change provider status."),
   });
+
+  // ====================================================
+  // DELETE
+  // ====================================================
 
   const deleteMutation = useMutation({
     mutationFn: deleteAdminProvider,
@@ -206,6 +265,9 @@ export function useAdminProviders() {
 
     statusFilter,
     setStatusFilter,
+
+    reviewFilter,
+    setReviewFilter,
 
     creating,
     setCreating,

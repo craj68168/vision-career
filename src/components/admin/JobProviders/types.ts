@@ -1,5 +1,28 @@
 export type ProviderStatus = "active" | "inactive" | "suspended";
 
+// ======================================================
+// STAFF REVIEW
+// ======================================================
+
+export type ProviderReviewStatus =
+  | "NOT_REVIEWED"
+  | "REVIEWED"
+  | "NEEDS_ATTENTION";
+
+export type AdminProviderStaffReview = {
+  status: ProviderReviewStatus;
+
+  note?: string | null;
+
+  reviewedByStaffId?: string | null;
+
+  reviewedAt?: string | null;
+};
+
+// ======================================================
+// PROVIDER
+// ======================================================
+
 export type AdminProvider = {
   registerId: string;
 
@@ -35,10 +58,16 @@ export type AdminProvider = {
 
   applicationCount: number;
 
+  staffReview: AdminProviderStaffReview;
+
   createdAt: string;
 
   updatedAt: string;
 };
+
+// ======================================================
+// SUMMARY
+// ======================================================
 
 export type AdminProviderSummary = {
   total: number;
@@ -56,7 +85,17 @@ export type AdminProviderSummary = {
   totalVacancies: number;
 
   totalApplications: number;
+
+  notReviewed: number;
+
+  reviewed: number;
+
+  needsAttention: number;
 };
+
+// ======================================================
+// RESPONSES
+// ======================================================
 
 export type ProviderListResponse = {
   success: boolean;
@@ -85,6 +124,10 @@ export type ProviderMutationResponse = {
 
   data?: AdminProvider;
 };
+
+// ======================================================
+// FORM
+// ======================================================
 
 export type ProviderForm = {
   name: string;
