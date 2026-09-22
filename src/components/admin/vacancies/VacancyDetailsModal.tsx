@@ -1,6 +1,13 @@
 "use client";
 
-import { CheckCircle2, Loader2, Send, X, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  Send,
+  X,
+  XCircle,
+} from "lucide-react";
 
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -11,7 +18,7 @@ import {
   getVacancyStatusLabel,
 } from "./helper";
 
-import type { AdminVacancyDetails } from "./types";
+import type { AdminVacancyDetails, VacancyStaffScreeningStatus } from "./types";
 
 type Props = {
   vacancy: AdminVacancyDetails;
@@ -54,6 +61,60 @@ function DetailItem({
   );
 }
 
+// ======================================================
+// STAFF SCREENING LABEL
+// ======================================================
+
+function getStaffScreeningLabel(
+  status: VacancyStaffScreeningStatus,
+  lang: string,
+) {
+  if (lang === "ja") {
+    switch (status) {
+      case "SCREENED":
+        return "確認済み";
+
+      case "NEEDS_ATTENTION":
+        return "要確認";
+
+      default:
+        return "未確認";
+    }
+  }
+
+  switch (status) {
+    case "SCREENED":
+      return "Screened";
+
+    case "NEEDS_ATTENTION":
+      return "Needs Attention";
+
+    default:
+      return "Not Screened";
+  }
+}
+
+// ======================================================
+// STAFF SCREENING CLASS
+// ======================================================
+
+function getStaffScreeningClass(status: VacancyStaffScreeningStatus) {
+  switch (status) {
+    case "SCREENED":
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+
+    case "NEEDS_ATTENTION":
+      return "border-red-200 bg-red-50 text-red-700";
+
+    default:
+      return "border-amber-200 bg-amber-50 text-amber-700";
+  }
+}
+
+// ======================================================
+// VACANCY DETAILS
+// ======================================================
+
 export default function VacancyDetailsModal({
   vacancy,
   isApproving,
@@ -68,6 +129,8 @@ export default function VacancyDetailsModal({
   const { lang } = useLanguage();
 
   const isBusy = isApproving || isPublishing || isClosing;
+
+  const staffScreening = vacancy.staffScreening;
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
@@ -388,12 +451,142 @@ export default function VacancyDetailsModal({
               </div>
             </section>
 
-            {/* REVIEW */}
+            {/* ================================================= */}
+            {/* STAFF SCREENING */}
+            {/* ================================================= */}
+
+            <section>
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-lg font-bold text-slate-950">
+                  {lang === "ja" ? "スタッフ確認" : "Staff Screening"}
+                </h3>
+
+                <span
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStaffScreeningClass(
+                    staffScreening.status,
+                  )}`}
+                >
+                  {getStaffScreeningLabel(staffScreening.status, lang)}
+                </span>
+              </div>
+
+              {/* NOT SCREENED */}
+
+              {staffScreening.status === "NOT_SCREENED" && (
+                <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+
+                  <div>
+                    <p className="font-semibold text-amber-800">
+                      {lang === "ja"
+                        ? "この求人はまだスタッフによる確認が完了していません。"
+                        : "This vacancy has not been screened by Staff yet."}
+                    </p>
+
+                    <p className="mt-1 text-sm text-amber-700">
+                      {lang === "ja"
+                        ? "管理者は最終判断を行うことができます。"
+                        : "Admin still controls the final vacancy decision."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* SCREENED */}
+
+              {staffScreening.status === "SCREENED" && (
+                <div className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+
+                  <div>
+                    <p className="font-semibold text-emerald-800">
+                      {lang === "ja"
+                        ? "スタッフ確認済み"
+                        : "Staff screening completed."}
+                    </p>
+
+                    <p className="mt-1 text-sm text-emerald-700">
+                      {lang === "ja"
+                        ? "この求人は管理者の最終審査の準備ができています。"
+                        : "This vacancy is ready for the Admin's final review."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* NEEDS ATTENTION */}
+
+              {staffScreening.status === "NEEDS_ATTENTION" && (
+                <div className="flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+
+                  <div>
+                    <p className="font-semibold text-red-800">
+                      {lang === "ja"
+                        ? "スタッフがこの求人を要確認としています。"
+                        : "Staff marked this vacancy as needing attention."}
+                    </p>
+
+                    <p className="mt-1 text-sm text-red-700">
+                      {lang === "ja"
+                        ? "スタッフメモを確認してから最終判断を行ってください。"
+                        : "Review the Staff note before making the final decision."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* DETAILS */}
+
+              {staffScreening.status !== "NOT_SCREENED" && (
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <DetailItem
+                    label={lang === "ja" ? "確認担当スタッフ" : "Screened By"}
+                    value={staffScreening.screenedByStaffId}
+                  />
+
+                  <DetailItem
+                    label={lang === "ja" ? "確認日時" : "Screened At"}
+                    value={formatVacancyDate(staffScreening.screenedAt, lang)}
+                  />
+                </div>
+              )}
+
+              {/* NOTE */}
+
+              {staffScreening.note && (
+                <div
+                  className={`mt-3 rounded-2xl border p-4 ${
+                    staffScreening.status === "NEEDS_ATTENTION"
+                      ? "border-red-200 bg-red-50"
+                      : "border-slate-200 bg-slate-50"
+                  }`}
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {lang === "ja" ? "スタッフメモ" : "Staff Screening Note"}
+                  </p>
+
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+                    {staffScreening.note}
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
+                {lang === "ja"
+                  ? "スタッフ確認は参考情報です。求人の承認・却下・公開の最終判断は管理者が行います。"
+                  : "Staff screening is advisory. Final approval, rejection and publishing authority remains with Admin."}
+              </div>
+            </section>
+
+            {/* ================================================= */}
+            {/* ADMIN REVIEW */}
+            {/* ================================================= */}
 
             {(vacancy.reviewedAt || vacancy.rejectionReason) && (
               <section>
                 <h3 className="mb-4 text-lg font-bold text-slate-950">
-                  {lang === "ja" ? "審査情報" : "Review Information"}
+                  {lang === "ja" ? "審査情報" : "Admin Review Information"}
                 </h3>
 
                 <div className="grid gap-3 md:grid-cols-2">
@@ -414,66 +607,79 @@ export default function VacancyDetailsModal({
 
         {/* ACTIONS */}
 
-        <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 bg-white px-6 py-4">
-          {vacancy.status === "pending_review" && (
-            <>
+        <div className="border-t border-slate-200 bg-white">
+          {/* ATTENTION WARNING */}
+
+          {vacancy.status === "pending_review" &&
+            staffScreening.status === "NEEDS_ATTENTION" && (
+              <div className="border-b border-red-100 bg-red-50 px-6 py-3 text-sm text-red-700">
+                {lang === "ja"
+                  ? "スタッフがこの求人を「要確認」としています。最終判断前にスタッフメモを確認してください。"
+                  : "Staff marked this vacancy as Needs Attention. Review the screening note before making the final decision."}
+              </div>
+            )}
+
+          <div className="flex flex-wrap justify-end gap-3 px-6 py-4">
+            {vacancy.status === "pending_review" && (
+              <>
+                <button
+                  type="button"
+                  disabled={isBusy}
+                  onClick={onReject}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-red-200 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                >
+                  <XCircle className="h-4 w-4" />
+
+                  {lang === "ja" ? "却下" : "Reject"}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => onApprove(vacancy.vacancyId)}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {isApproving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4" />
+                  )}
+
+                  {lang === "ja" ? "承認" : "Approve"}
+                </button>
+              </>
+            )}
+
+            {vacancy.status === "approved" && (
               <button
                 type="button"
                 disabled={isBusy}
-                onClick={onReject}
-                className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-red-200 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                onClick={() => onPublish(vacancy.vacancyId)}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
               >
-                <XCircle className="h-4 w-4" />
-
-                {lang === "ja" ? "却下" : "Reject"}
-              </button>
-
-              <button
-                type="button"
-                disabled={isBusy}
-                onClick={() => onApprove(vacancy.vacancyId)}
-                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {isApproving ? (
+                {isPublishing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <CheckCircle2 className="h-4 w-4" />
+                  <Send className="h-4 w-4" />
                 )}
 
-                {lang === "ja" ? "承認" : "Approve"}
+                {lang === "ja" ? "公開" : "Publish"}
               </button>
-            </>
-          )}
+            )}
 
-          {vacancy.status === "approved" && (
-            <button
-              type="button"
-              disabled={isBusy}
-              onClick={() => onPublish(vacancy.vacancyId)}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-            >
-              {isPublishing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
+            {vacancy.status === "published" && (
+              <button
+                type="button"
+                disabled={isBusy}
+                onClick={() => onCloseVacancy(vacancy.vacancyId)}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+              >
+                {isClosing && <Loader2 className="h-4 w-4 animate-spin" />}
 
-              {lang === "ja" ? "公開" : "Publish"}
-            </button>
-          )}
-
-          {vacancy.status === "published" && (
-            <button
-              type="button"
-              disabled={isBusy}
-              onClick={() => onCloseVacancy(vacancy.vacancyId)}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
-            >
-              {isClosing && <Loader2 className="h-4 w-4 animate-spin" />}
-
-              {lang === "ja" ? "求人を終了" : "Close Vacancy"}
-            </button>
-          )}
+                {lang === "ja" ? "求人を終了" : "Close Vacancy"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

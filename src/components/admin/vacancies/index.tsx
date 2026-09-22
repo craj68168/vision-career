@@ -26,7 +26,11 @@ import VacancyDetailsModal from "./VacancyDetailsModal";
 
 import RejectVacancyModal from "./RejectVacancyModal";
 
-import type { VacancyStatus } from "./types";
+import type { VacancyStaffScreeningStatus, VacancyStatus } from "./types";
+
+// ======================================================
+// SUMMARY CARD
+// ======================================================
 
 function SummaryCard({
   label,
@@ -55,6 +59,57 @@ function SummaryCard({
     </div>
   );
 }
+
+// ======================================================
+// SCREENING LABEL
+// ======================================================
+
+function getScreeningLabel(status: VacancyStaffScreeningStatus, lang: string) {
+  if (lang === "ja") {
+    switch (status) {
+      case "SCREENED":
+        return "確認済み";
+
+      case "NEEDS_ATTENTION":
+        return "要確認";
+
+      default:
+        return "未確認";
+    }
+  }
+
+  switch (status) {
+    case "SCREENED":
+      return "Screened";
+
+    case "NEEDS_ATTENTION":
+      return "Needs Attention";
+
+    default:
+      return "Not Screened";
+  }
+}
+
+// ======================================================
+// SCREENING CLASS
+// ======================================================
+
+function getScreeningClass(status: VacancyStaffScreeningStatus) {
+  switch (status) {
+    case "SCREENED":
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+
+    case "NEEDS_ATTENTION":
+      return "border-red-200 bg-red-50 text-red-700";
+
+    default:
+      return "border-slate-200 bg-slate-100 text-slate-600";
+  }
+}
+
+// ======================================================
+// ADMIN VACANCIES
+// ======================================================
 
 export default function AdminVacancies() {
   const { lang } = useLanguage();
@@ -101,36 +156,43 @@ export default function AdminVacancies() {
   }> = [
     {
       value: "ALL",
+
       label: lang === "ja" ? "すべて" : "All",
     },
 
     {
       value: "pending_review",
+
       label: lang === "ja" ? "審査待ち" : "Pending Review",
     },
 
     {
       value: "approved",
+
       label: lang === "ja" ? "承認済み" : "Approved",
     },
 
     {
       value: "published",
+
       label: lang === "ja" ? "公開中" : "Published",
     },
 
     {
       value: "rejected",
+
       label: lang === "ja" ? "却下" : "Rejected",
     },
 
     {
       value: "draft",
+
       label: lang === "ja" ? "下書き" : "Draft",
     },
 
     {
       value: "closed",
+
       label: lang === "ja" ? "終了" : "Closed",
     },
   ];
@@ -156,7 +218,7 @@ export default function AdminVacancies() {
           <p className="mt-1 text-sm text-slate-500">
             {lang === "ja"
               ? "企業から提出された求人を審査・承認・公開します。"
-              : "Review, approve, publish and manage Provider vacancies."}
+              : "Review Staff screening, approve, publish and manage Provider vacancies."}
           </p>
         </div>
 
@@ -255,6 +317,8 @@ export default function AdminVacancies() {
               key={vacancy.vacancyId}
               className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
             >
+              {/* TOP */}
+
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-xs font-semibold text-indigo-500">
@@ -281,9 +345,47 @@ export default function AdminVacancies() {
                 </span>
               </div>
 
+              {/* COMPANY */}
+
               <p className="mt-4 font-medium text-slate-700">
                 {vacancy.companyName}
               </p>
+
+              {/* STAFF SCREENING */}
+
+              <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 p-3">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {lang === "ja" ? "スタッフ確認" : "Staff Screening"}
+                </span>
+
+                <span
+                  className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${getScreeningClass(
+                    vacancy.staffScreening.status,
+                  )}`}
+                >
+                  {getScreeningLabel(vacancy.staffScreening.status, lang)}
+                </span>
+              </div>
+
+              {/* ATTENTION NOTE */}
+
+              {vacancy.staffScreening.status === "NEEDS_ATTENTION" && (
+                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3">
+                  <p className="text-xs font-semibold text-red-700">
+                    {lang === "ja"
+                      ? "スタッフ確認が必要です"
+                      : "Staff Needs Attention"}
+                  </p>
+
+                  {vacancy.staffScreening.note && (
+                    <p className="mt-1 line-clamp-2 text-sm text-red-600">
+                      {vacancy.staffScreening.note}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* INFORMATION */}
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <CardField
@@ -316,6 +418,8 @@ export default function AdminVacancies() {
                 {formatVacancyDate(vacancy.createdAt, lang)}
               </p>
 
+              {/* ADMIN REJECTION */}
+
               {vacancy.rejectionReason && (
                 <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-3">
                   <p className="text-xs font-semibold text-red-700">
@@ -327,6 +431,8 @@ export default function AdminVacancies() {
                   </p>
                 </div>
               )}
+
+              {/* ACTIONS */}
 
               <div className="mt-auto flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-5">
                 <button
@@ -422,6 +528,10 @@ export default function AdminVacancies() {
     </div>
   );
 }
+
+// ======================================================
+// CARD FIELD
+// ======================================================
 
 function CardField({
   label,

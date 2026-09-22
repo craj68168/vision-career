@@ -1,3 +1,7 @@
+// ======================================================
+// VACANCY STATUS
+// ======================================================
+
 export type VacancyStatus =
   | "draft"
   | "pending_review"
@@ -5,6 +9,33 @@ export type VacancyStatus =
   | "rejected"
   | "published"
   | "closed";
+
+// ======================================================
+// STAFF SCREENING STATUS
+// ======================================================
+
+export type VacancyStaffScreeningStatus =
+  | "NOT_SCREENED"
+  | "SCREENED"
+  | "NEEDS_ATTENTION";
+
+// ======================================================
+// STAFF SCREENING
+// ======================================================
+
+export type AdminVacancyStaffScreening = {
+  status: VacancyStaffScreeningStatus;
+
+  note?: string | null;
+
+  screenedByStaffId?: string | null;
+
+  screenedAt?: string | null;
+};
+
+// ======================================================
+// PROVIDER
+// ======================================================
 
 export type AdminVacancyProvider = {
   registerId: string;
@@ -15,6 +46,10 @@ export type AdminVacancyProvider = {
 
   email?: string | null;
 };
+
+// ======================================================
+// VACANCY
+// ======================================================
 
 export type AdminVacancy = {
   vacancyId: string;
@@ -57,8 +92,14 @@ export type AdminVacancy = {
 
   updatedAt: string;
 
+  staffScreening: AdminVacancyStaffScreening;
+
   provider: AdminVacancyProvider;
 };
+
+// ======================================================
+// DETAILS
+// ======================================================
 
 export type AdminVacancyDetails = AdminVacancy & {
   jobDescription: string;
@@ -102,6 +143,10 @@ export type AdminVacancyDetails = AdminVacancy & {
   contactEmail: string;
 };
 
+// ======================================================
+// SUMMARY
+// ======================================================
+
 export type AdminVacancySummary = {
   total: number;
 
@@ -118,6 +163,10 @@ export type AdminVacancySummary = {
   closed: number;
 };
 
+// ======================================================
+// LIST RESPONSE
+// ======================================================
+
 export type AdminVacanciesResponse = {
   success: boolean;
 
@@ -130,6 +179,10 @@ export type AdminVacanciesResponse = {
   message?: string;
 };
 
+// ======================================================
+// DETAILS RESPONSE
+// ======================================================
+
 export type AdminVacancyDetailsResponse = {
   success: boolean;
 
@@ -137,6 +190,10 @@ export type AdminVacancyDetailsResponse = {
 
   message?: string;
 };
+
+// ======================================================
+// ACTION RESPONSE
+// ======================================================
 
 export type AdminVacancyActionResponse = {
   success: boolean;
@@ -156,9 +213,17 @@ export type AdminVacancyActionResponse = {
   };
 };
 
+// ======================================================
+// REJECT PAYLOAD
+// ======================================================
+
 export type RejectVacancyPayload = {
   reason: string;
 };
+
+// ======================================================
+// API ERROR
+// ======================================================
 
 export type AdminVacancyApiError = {
   success?: boolean;
