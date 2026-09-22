@@ -33,6 +33,8 @@ export type StaffUser = {
 
   lastLoginAt?: string | null;
 
+  passwordChangedAt?: string | null;
+
   createdAt?: string;
 
   updatedAt?: string;

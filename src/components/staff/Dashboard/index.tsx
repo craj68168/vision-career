@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   LogOut,
   Send,
+  ShieldCheck,
   UserRoundSearch,
   Users,
 } from "lucide-react";
@@ -31,7 +32,7 @@ import type { StaffPermission } from "@/components/auth/Staff/types";
 type MenuItem = {
   label: string;
 
-  permission: StaffPermission;
+  permission?: StaffPermission;
 
   href: string;
 
@@ -134,6 +135,22 @@ const menuItems: MenuItem[] = [
 
     icon: GraduationCap,
   },
+
+  // ====================================================
+  // SECURITY
+  //
+  // No permission required.
+  // Every authenticated Staff user can manage
+  // their own password.
+  // ====================================================
+
+  {
+    label: "Security",
+
+    href: "/staff/security",
+
+    icon: ShieldCheck,
+  },
 ];
 
 // ======================================================
@@ -183,11 +200,18 @@ export default function StaffDashboard() {
 
   // ====================================================
   // PERMISSION-CONTROLLED MENU
+  //
+  // Items without permission are always visible.
+  // Example: Security.
   // ====================================================
 
-  const visibleMenu = menuItems.filter((item) =>
-    staff.permissions.includes(item.permission),
-  );
+  const visibleMenu = menuItems.filter((item) => {
+    if (!item.permission) {
+      return true;
+    }
+
+    return staff.permissions.includes(item.permission);
+  });
 
   // ====================================================
   // ACTIVE ROUTE CHECK
@@ -202,6 +226,12 @@ export default function StaffDashboard() {
 
     return pathname.startsWith(fullHref);
   };
+
+  // ====================================================
+  // SECURITY URL
+  // ====================================================
+
+  const securityHref = `${prefix}/staff/security`;
 
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
@@ -218,7 +248,9 @@ export default function StaffDashboard() {
 
             <p className="mt-1 text-xs text-slate-500">
               {staff.name}
+
               {" • "}
+
               {staff.staffId}
             </p>
           </div>
@@ -272,7 +304,6 @@ export default function StaffDashboard() {
 
       <main className="mx-auto max-w-7xl px-6 py-10">
         {/* PAGE HEADER */}
-
         <div className="mb-7">
           <h2 className="text-3xl font-bold text-slate-950">Dashboard</h2>
 
@@ -280,11 +311,17 @@ export default function StaffDashboard() {
             Welcome back, {staff.name}.
           </p>
         </div>
-
+        <div className="mb-6">
+          <DashboardActionCard
+            title="Security"
+            description="Manage your account security and change your password."
+            href={securityHref}
+            icon={ShieldCheck}
+          />
+        </div>
         {/* ================================================= */}
         {/* NO DASHBOARD PERMISSION */}
         {/* ================================================= */}
-
         {!hasDashboardPermission ? (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
             <p className="font-semibold text-amber-800">
@@ -434,5 +471,49 @@ function SummaryCard({ title, value, note, icon: Icon }: SummaryCardProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ======================================================
+// DASHBOARD ACTION CARD
+// ======================================================
+
+type DashboardActionCardProps = {
+  title: string;
+
+  description: string;
+
+  href: string;
+
+  icon: ComponentType<{
+    className?: string;
+  }>;
+};
+
+function DashboardActionCard({
+  title,
+  description,
+  href,
+  icon: Icon,
+}: DashboardActionCardProps) {
+  return (
+    <Link
+      href={href}
+      className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/30"
+    >
+      <div className="flex items-center gap-4">
+        <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600 transition group-hover:bg-indigo-100">
+          <Icon className="h-5 w-5" />
+        </div>
+
+        <div>
+          <p className="font-semibold text-slate-950">{title}</p>
+
+          <p className="mt-1 text-sm text-slate-500">{description}</p>
+        </div>
+      </div>
+
+      <span className="text-sm font-semibold text-indigo-600">Open</span>
+    </Link>
   );
 }
