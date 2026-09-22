@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+
 import { Poppins } from "next/font/google";
-import "../globals.css";
 import { Toaster } from "react-hot-toast";
+
 import Navbar from "@/components/layout/Navbar";
 import { LanguageProvider } from "@/context/LanguageContext";
-import { QueryProvider } from "@/context/QueryProvider";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -17,22 +18,22 @@ export const metadata: Metadata = {
   description: "Vision Support",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+type MainLayoutProps = {
+  children: ReactNode;
+};
+
+export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <html lang="en" className={`${poppins.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-poppins">
-        <LanguageProvider>
-          <QueryProvider>
-            <Navbar />
-            <main className="font-poppins">{children}</main>
-          </QueryProvider>
-        </LanguageProvider>
+    <div
+      className={`${poppins.variable} min-h-screen w-full font-poppins antialiased`}
+    >
+      <LanguageProvider>
+        <Navbar />
+
+        <main className="w-full">{children}</main>
+
         <Toaster />
-      </body>
-    </html>
+      </LanguageProvider>
+    </div>
   );
 }

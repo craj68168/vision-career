@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+
 import { Poppins } from "next/font/google";
-import "../globals.css";
 import { Toaster } from "react-hot-toast";
+
 import { LanguageProvider } from "@/context/LanguageContext";
 
 const poppins = Poppins({
@@ -15,19 +17,20 @@ export const metadata: Metadata = {
   description: "Authentication page for Vision Support",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+type AuthLayoutProps = {
+  children: ReactNode;
+};
+
+export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <html lang="en" className={`${poppins.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <LanguageProvider>
-          <main className="font-poppins">{children}</main>
-        </LanguageProvider>
+    <div
+      className={`${poppins.variable} min-h-screen w-full font-poppins antialiased`}
+    >
+      <LanguageProvider>
+        <main className="min-h-screen w-full">{children}</main>
+
         <Toaster />
-      </body>
-    </html>
+      </LanguageProvider>
+    </div>
   );
 }

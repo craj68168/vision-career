@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
+
 import { Poppins } from "next/font/google";
-import "../globals.css";
 import { Toaster } from "react-hot-toast";
+
 import { LanguageProvider } from "@/context/LanguageContext";
 import { QueryProvider } from "@/context/QueryProvider";
 
@@ -16,21 +18,22 @@ export const metadata: Metadata = {
   description: "Authentication page for Vision Support",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+type AdminLayoutProps = {
+  children: ReactNode;
+};
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
-    <html lang="en" className={`${poppins.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <QueryProvider>
-          <LanguageProvider>
-            <main className="font-poppins w-full">{children}</main>
-          </LanguageProvider>
-        </QueryProvider>
-        <Toaster />
-      </body>
-    </html>
+    <div
+      className={`${poppins.variable} min-h-screen w-full font-poppins antialiased`}
+    >
+      <QueryProvider>
+        <LanguageProvider>
+          <main className="min-h-screen w-full">{children}</main>
+
+          <Toaster />
+        </LanguageProvider>
+      </QueryProvider>
+    </div>
   );
 }
