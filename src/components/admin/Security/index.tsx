@@ -13,7 +13,7 @@ import {
   User,
 } from "lucide-react";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -45,10 +45,22 @@ export default function AdminUpdateCredentialsPage() {
   } = useAdminSecurity();
 
   // ====================================================
-  // FORM STATE
+  // USERNAME
+  //
+  // null = use current username from Admin API
+  // string = locally edited username
+  //
+  // This avoids copying server/query state into local
+  // state through useEffect.
   // ====================================================
 
-  const [username, setUsername] = useState("");
+  const [usernameInput, setUsernameInput] = useState<string | null>(null);
+
+  const username = usernameInput ?? admin?.username ?? "";
+
+  // ====================================================
+  // PASSWORD STATE
+  // ====================================================
 
   const [currentPassword, setCurrentPassword] = useState("");
 
@@ -74,17 +86,6 @@ export default function AdminUpdateCredentialsPage() {
     useState<AdminSecurityValidationErrors>({});
 
   // ====================================================
-  // LOAD CURRENT USERNAME
-  // ====================================================
-
-  useEffect(() => {
-    if (!admin?.username) {
-      return;
-    }
-    setUsername(admin.username);
-  }, [admin?.username]);
-
-  // ====================================================
   // VALIDATE
   // ====================================================
 
@@ -92,6 +93,10 @@ export default function AdminUpdateCredentialsPage() {
     const errors: AdminSecurityValidationErrors = {};
 
     const normalizedUsername = username.trim();
+
+    // ==================================================
+    // USERNAME
+    // ==================================================
 
     if (!normalizedUsername) {
       errors.username =
@@ -103,12 +108,20 @@ export default function AdminUpdateCredentialsPage() {
           : "Username must be at least 3 characters.";
     }
 
+    // ==================================================
+    // CURRENT PASSWORD
+    // ==================================================
+
     if (!currentPassword) {
       errors.currentPassword =
         lang === "ja"
           ? "現在のパスワードは必須です"
           : "Current password is required.";
     }
+
+    // ==================================================
+    // NEW PASSWORD
+    // ==================================================
 
     if (!newPassword) {
       errors.newPassword =
@@ -121,6 +134,10 @@ export default function AdminUpdateCredentialsPage() {
           ? "新しいパスワードは8文字以上である必要があります"
           : "New password must be at least 8 characters.";
     }
+
+    // ==================================================
+    // CONFIRM PASSWORD
+    // ==================================================
 
     if (!confirmNewPassword) {
       errors.confirmNewPassword =
@@ -142,6 +159,10 @@ export default function AdminUpdateCredentialsPage() {
   // ====================================================
 
   const handleSave = async () => {
+    if (isSaving) {
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
@@ -159,6 +180,15 @@ export default function AdminUpdateCredentialsPage() {
     if (!success) {
       return;
     }
+
+    // ==================================================
+    // RETURN USERNAME TO API VALUE
+    //
+    // After the hook updates/refetches Admin data,
+    // username automatically reflects admin.username.
+    // ==================================================
+
+    setUsernameInput(null);
 
     // ==================================================
     // CLEAR PASSWORD FIELDS
@@ -184,7 +214,8 @@ export default function AdminUpdateCredentialsPage() {
   // ====================================================
 
   const handleReset = () => {
-    setUsername(admin?.username || "");
+    // Fall back to admin.username again.
+    setUsernameInput(null);
 
     setCurrentPassword("");
 
@@ -201,6 +232,22 @@ export default function AdminUpdateCredentialsPage() {
     setValidationErrors({});
 
     clearMessages();
+  };
+
+  // ====================================================
+  // CLEAR FIELD ERROR
+  // ====================================================
+
+  const clearValidationError = (field: keyof AdminSecurityValidationErrors) => {
+    if (!validationErrors[field]) {
+      return;
+    }
+
+    setValidationErrors((previous) => ({
+      ...previous,
+
+      [field]: undefined,
+    }));
   };
 
   // ====================================================
@@ -256,7 +303,9 @@ export default function AdminUpdateCredentialsPage() {
       ================================================== */}
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        {/* ERROR */}
+        {/* ==================================================
+            ERROR
+        ================================================== */}
 
         {errorMessage && (
           <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
@@ -268,7 +317,9 @@ export default function AdminUpdateCredentialsPage() {
           </div>
         )}
 
-        {/* SUCCESS */}
+        {/* ==================================================
+            SUCCESS
+        ================================================== */}
 
         {successMessage && (
           <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
@@ -303,17 +354,11 @@ export default function AdminUpdateCredentialsPage() {
                 disabled={isSaving}
                 autoComplete="username"
                 onChange={(event) => {
-                  setUsername(event.target.value);
+                  setUsernameInput(event.target.value);
 
                   clearMessages();
 
-                  if (validationErrors.username) {
-                    setValidationErrors((previous) => ({
-                      ...previous,
-
-                      username: undefined,
-                    }));
-                  }
+                  clearValidationError("username");
                 }}
                 placeholder={
                   lang === "ja"
@@ -369,13 +414,7 @@ export default function AdminUpdateCredentialsPage() {
 
                   clearMessages();
 
-                  if (validationErrors.currentPassword) {
-                    setValidationErrors((previous) => ({
-                      ...previous,
-
-                      currentPassword: undefined,
-                    }));
-                  }
+                  clearValidationError("currentPassword");
                 }}
                 placeholder={
                   lang === "ja"
@@ -393,7 +432,7 @@ export default function AdminUpdateCredentialsPage() {
                 type="button"
                 disabled={isSaving}
                 onClick={() => setShowCurrentPassword((previous) => !previous)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 disabled:opacity-50"
               >
                 {showCurrentPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -460,13 +499,7 @@ export default function AdminUpdateCredentialsPage() {
 
                   clearMessages();
 
-                  if (validationErrors.newPassword) {
-                    setValidationErrors((previous) => ({
-                      ...previous,
-
-                      newPassword: undefined,
-                    }));
-                  }
+                  clearValidationError("newPassword");
                 }}
                 placeholder={
                   lang === "ja"
@@ -484,7 +517,7 @@ export default function AdminUpdateCredentialsPage() {
                 type="button"
                 disabled={isSaving}
                 onClick={() => setShowNewPassword((previous) => !previous)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 disabled:opacity-50"
               >
                 {showNewPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -537,13 +570,7 @@ export default function AdminUpdateCredentialsPage() {
 
                   clearMessages();
 
-                  if (validationErrors.confirmNewPassword) {
-                    setValidationErrors((previous) => ({
-                      ...previous,
-
-                      confirmNewPassword: undefined,
-                    }));
-                  }
+                  clearValidationError("confirmNewPassword");
                 }}
                 placeholder={
                   lang === "ja"
@@ -563,7 +590,7 @@ export default function AdminUpdateCredentialsPage() {
                 onClick={() =>
                   setShowConfirmNewPassword((previous) => !previous)
                 }
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 disabled:opacity-50"
               >
                 {showConfirmNewPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -590,7 +617,7 @@ export default function AdminUpdateCredentialsPage() {
             type="button"
             disabled={isSaving}
             onClick={handleReset}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           >
             {lang === "ja" ? "キャンセル" : "Cancel"}
           </button>
@@ -599,7 +626,7 @@ export default function AdminUpdateCredentialsPage() {
             type="button"
             disabled={isSaving}
             onClick={() => void handleSave()}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50 dark:bg-indigo-600"
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-indigo-600"
           >
             {isSaving ? (
               <>
