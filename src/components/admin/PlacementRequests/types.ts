@@ -269,12 +269,31 @@ export type PlacementCandidateSnapshot = {
 };
 
 // ======================================================
+// PLACEMENT CANDIDATE STAFF REVIEW
+// ======================================================
+
+export type PlacementCandidateStaffReviewStatus =
+  | "NOT_REVIEWED"
+  | "REVIEWED"
+  | "NEEDS_ATTENTION";
+
+export type PlacementCandidateStaffReview = {
+  status: PlacementCandidateStaffReviewStatus;
+
+  note?: string | null;
+
+  reviewedByStaffId?: string | null;
+
+  reviewedAt?: string | null;
+};
+
+// ======================================================
 // MATCHED CANDIDATE
 // ======================================================
 
 export type PlacementCandidate = {
   placementCandidateId: string;
-
+  staffReview: PlacementCandidateStaffReview;
   recruitId: string;
 
   providerId: string;

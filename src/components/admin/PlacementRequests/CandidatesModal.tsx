@@ -3,8 +3,10 @@
 import { useMemo, useState } from "react";
 
 import {
+  AlertTriangle,
   BriefcaseBusiness,
   Check,
+  CheckCircle2,
   Loader2,
   MapPin,
   RefreshCw,
@@ -17,6 +19,7 @@ import {
 import type {
   EligibleSeeker,
   PlacementCandidate,
+  PlacementCandidateStaffReviewStatus,
   PlacementCandidateStatus,
   PlacementRequest,
 } from "./types";
@@ -45,6 +48,58 @@ type Props = {
   onMatch: (seekerId: string) => void;
 
   onRefresh: () => void | Promise<void>;
+};
+
+// ======================================================
+// DATE
+// ======================================================
+
+const formatDateTime = (value?: string | null) => {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleString();
+};
+
+// ======================================================
+// STAFF REVIEW LABEL
+// ======================================================
+
+const staffReviewLabel = (status: PlacementCandidateStaffReviewStatus) => {
+  switch (status) {
+    case "REVIEWED":
+      return "Reviewed";
+
+    case "NEEDS_ATTENTION":
+      return "Needs Attention";
+
+    default:
+      return "Not Reviewed";
+  }
+};
+
+// ======================================================
+// STAFF REVIEW CLASS
+// ======================================================
+
+const staffReviewClass = (status: PlacementCandidateStaffReviewStatus) => {
+  switch (status) {
+    case "REVIEWED":
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+
+    case "NEEDS_ATTENTION":
+      return "border-red-200 bg-red-50 text-red-700";
+
+    default:
+      return "border-slate-200 bg-slate-100 text-slate-600";
+  }
 };
 
 // ======================================================
@@ -112,13 +167,28 @@ export default function CandidatesModal({
     return matchedCandidates.filter((item) =>
       [
         item.placementCandidateId,
+
+        item.seekerId,
+
         item.status,
+
         item.candidate.name,
+
         item.candidate.nationality,
+
         item.candidate.visa_type,
+
         item.candidate.japanese_level,
+
         item.candidate.desired_job,
+
         ...item.candidate.skills,
+
+        item.staffReview?.status,
+
+        item.staffReview?.note,
+
+        item.staffReview?.reviewedByStaffId,
       ]
         .filter(Boolean)
         .join(" ")
@@ -137,17 +207,10 @@ export default function CandidatesModal({
 
   const positions = request.numberOfPositions;
 
-  // Every candidate ever sent to this request.
-  //
-  // This includes rejected candidates because they are
-  // still part of the historical recruitment record.
-
+  // Every candidate ever sent.
   const sentCount = matchedCandidates.length;
 
-  // Only candidates still active in this placement flow.
-  //
-  // REJECTED candidates DO NOT fill a position.
-
+  // Rejected candidates do not fill positions.
   const activeCount = matchedCandidates.filter(
     (candidate) => candidate.status !== "REJECTED",
   ).length;
@@ -160,29 +223,15 @@ export default function CandidatesModal({
     (candidate) => candidate.status === "REJECTED",
   ).length;
 
-  // ====================================================
-  // IMPORTANT
-  //
-  // Rejected candidates do not reduce the remaining
-  // number of required candidates.
-  //
-  // Example:
-  //
-  // positions = 46
-  // sent = 1
-  // rejected = 1
-  // active = 0
-  //
-  // remaining = 46
-  // ====================================================
+  const needsAttentionCount = matchedCandidates.filter(
+    (candidate) => candidate.staffReview?.status === "NEEDS_ATTENTION",
+  ).length;
 
   const remaining = Math.max(positions - activeCount, 0);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:p-4">
-      {/* ================================================= */}
       {/* BACKDROP */}
-      {/* ================================================= */}
 
       <button
         type="button"
@@ -191,9 +240,7 @@ export default function CandidatesModal({
         className="absolute inset-0"
       />
 
-      {/* ================================================= */}
       {/* MODAL */}
-      {/* ================================================= */}
 
       <div className="relative z-10 flex h-full w-full flex-col overflow-hidden bg-white sm:h-auto sm:max-h-[94vh] sm:max-w-6xl sm:rounded-3xl sm:shadow-2xl">
         {/* ================================================= */}
@@ -237,7 +284,7 @@ export default function CandidatesModal({
         {/* HEADCOUNT SUMMARY */}
         {/* ================================================= */}
 
-        <div className="grid gap-3 border-b border-slate-200 bg-slate-50/70 p-6 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-3 border-b border-slate-200 bg-slate-50/70 p-6 sm:grid-cols-2 lg:grid-cols-6">
           <SummaryCard label="Positions Required" value={positions} />
 
           <SummaryCard label="Candidates Sent" value={sentCount} />
@@ -246,11 +293,13 @@ export default function CandidatesModal({
 
           <SummaryCard label="Placed" value={placedCount} />
 
+          <SummaryCard label="Needs Attention" value={needsAttentionCount} />
+
           <SummaryCard label="Remaining" value={remaining} />
         </div>
 
         {/* ================================================= */}
-        {/* SMALL REJECTION SUMMARY */}
+        {/* REJECTION SUMMARY */}
         {/* ================================================= */}
 
         {rejectedCount > 0 && (
@@ -259,6 +308,26 @@ export default function CandidatesModal({
             {rejectedCount === 1 ? "candidate has" : "candidates have"} been
             rejected and {rejectedCount === 1 ? "does" : "do"} not reduce the
             remaining placement requirement.
+          </div>
+        )}
+
+        {/* ================================================= */}
+        {/* STAFF ATTENTION SUMMARY */}
+        {/* ================================================= */}
+
+        {needsAttentionCount > 0 && (
+          <div className="border-b border-red-200 bg-red-50 px-6 py-3 text-sm text-red-700">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+
+              <span>
+                {needsAttentionCount}{" "}
+                {needsAttentionCount === 1
+                  ? "candidate has"
+                  : "candidates have"}{" "}
+                been marked as Needs Attention by Staff.
+              </span>
+            </div>
           </div>
         )}
 
@@ -472,69 +541,207 @@ function MatchedCandidates({
 
   return (
     <div className="grid gap-4">
-      {candidates.map((item) => (
-        <article
-          key={item.placementCandidateId}
-          className="rounded-2xl border border-slate-200 p-5"
-        >
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex-1">
-              <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                  <UserRound className="h-5 w-5" />
+      {candidates.map((item) => {
+        const review = item.staffReview;
+
+        return (
+          <article
+            key={item.placementCandidateId}
+            className={`rounded-2xl border p-5 ${
+              review?.status === "NEEDS_ATTENTION"
+                ? "border-red-200 bg-red-50/30"
+                : "border-slate-200"
+            }`}
+          >
+            <div className="flex flex-col gap-5">
+              {/* TOP */}
+
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex-1">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                      <UserRound className="h-5 w-5" />
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-slate-950">
+                        {item.candidate.name}
+                      </h3>
+
+                      <p className="text-xs text-slate-400">
+                        {item.placementCandidateId}
+                      </p>
+
+                      <p className="mt-0.5 text-xs text-slate-400">
+                        Seeker: {item.seekerId}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <Info
+                      label="Nationality"
+                      value={item.candidate.nationality}
+                    />
+
+                    <Info
+                      label="Japanese"
+                      value={item.candidate.japanese_level}
+                    />
+
+                    <Info label="Visa" value={item.candidate.visa_type} />
+
+                    <Info
+                      label="Desired Job"
+                      value={item.candidate.desired_job}
+                    />
+                  </div>
+
+                  {item.candidate.skills.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {item.candidate.skills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {item.rejectionReason && (
+                    <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+                      <strong>Provider Rejection:</strong>{" "}
+                      {item.rejectionReason}
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <h3 className="font-semibold text-slate-950">
-                    {item.candidate.name}
-                  </h3>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <CandidateStatusBadge status={item.status} />
 
-                  <p className="text-xs text-slate-400">
-                    {item.placementCandidateId}
-                  </p>
+                  <StaffReviewBadge status={review?.status || "NOT_REVIEWED"} />
                 </div>
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <Info label="Nationality" value={item.candidate.nationality} />
+              {/* ================================================= */}
+              {/* STAFF REVIEW */}
+              {/* ================================================= */}
 
-                <Info label="Japanese" value={item.candidate.japanese_level} />
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Staff Review
+                    </p>
 
-                <Info label="Visa" value={item.candidate.visa_type} />
+                    <p className="mt-1 text-sm text-slate-600">
+                      Internal operational review. Provider pipeline remains
+                      separate.
+                    </p>
+                  </div>
 
-                <Info label="Desired Job" value={item.candidate.desired_job} />
+                  <StaffReviewBadge status={review?.status || "NOT_REVIEWED"} />
+                </div>
+
+                {review?.status === "NOT_REVIEWED" && (
+                  <div className="mt-4 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+
+                    <p className="text-sm text-amber-700">
+                      This candidate has not been reviewed by Staff yet.
+                    </p>
+                  </div>
+                )}
+
+                {review?.status === "REVIEWED" && (
+                  <div className="mt-4 flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+
+                    <p className="text-sm text-emerald-700">
+                      Staff candidate review completed.
+                    </p>
+                  </div>
+                )}
+
+                {review?.status === "NEEDS_ATTENTION" && (
+                  <div className="mt-4 flex gap-3 rounded-xl border border-red-200 bg-red-50 p-3">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+
+                    <p className="text-sm text-red-700">
+                      Staff marked this candidate as needing attention.
+                    </p>
+                  </div>
+                )}
+
+                {review && review.status !== "NOT_REVIEWED" && (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <Info
+                      label="Reviewed By"
+                      value={review.reviewedByStaffId}
+                    />
+
+                    <Info
+                      label="Reviewed At"
+                      value={formatDateTime(review.reviewedAt)}
+                    />
+                  </div>
+                )}
+
+                {review?.note && (
+                  <div
+                    className={`mt-3 rounded-xl border p-3 ${
+                      review.status === "NEEDS_ATTENTION"
+                        ? "border-red-200 bg-red-50"
+                        : "border-slate-200 bg-white"
+                    }`}
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Staff Note
+                    </p>
+
+                    <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+                      {review.note}
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {item.candidate.skills.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {item.candidate.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              )}
+              {/* ================================================= */}
+              {/* PIPELINE TIMELINE */}
+              {/* ================================================= */}
 
-              {item.rejectionReason && (
-                <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
-                  <strong>Rejection:</strong> {item.rejectionReason}
-                </div>
-              )}
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <Info label="Matched" value={formatDateTime(item.matchedAt)} />
+
+                <Info
+                  label="Provider Reviewed"
+                  value={formatDateTime(item.providerReviewedAt)}
+                />
+
+                <Info
+                  label="Interview"
+                  value={formatDateTime(item.interviewAt)}
+                />
+
+                <Info
+                  label="Selected"
+                  value={formatDateTime(item.selectedAt)}
+                />
+
+                <Info label="Placed" value={formatDateTime(item.placedAt)} />
+              </div>
             </div>
-
-            <CandidateStatusBadge status={item.status} />
-          </div>
-        </article>
-      ))}
+          </article>
+        );
+      })}
     </div>
   );
 }
 
 // ======================================================
-// STATUS BADGE
+// PIPELINE STATUS BADGE
 // ======================================================
 
 function CandidateStatusBadge({
@@ -580,6 +787,26 @@ function CandidateStatusBadge({
 }
 
 // ======================================================
+// STAFF REVIEW BADGE
+// ======================================================
+
+function StaffReviewBadge({
+  status,
+}: {
+  status: PlacementCandidateStaffReviewStatus;
+}) {
+  return (
+    <span
+      className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${staffReviewClass(
+        status,
+      )}`}
+    >
+      {staffReviewLabel(status)}
+    </span>
+  );
+}
+
+// ======================================================
 // INFO
 // ======================================================
 
@@ -595,7 +822,7 @@ function Info({
     <div className="rounded-xl bg-slate-50 p-3">
       <p className="text-xs text-slate-400">{label}</p>
 
-      <p className="mt-1 text-sm font-medium capitalize text-slate-900">
+      <p className="mt-1 break-words text-sm font-medium text-slate-900">
         {value === null || value === undefined || value === ""
           ? "-"
           : String(value)}

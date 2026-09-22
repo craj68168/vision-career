@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+
 import { usePathname } from "next/navigation";
 
 import type { ComponentType } from "react";
@@ -15,6 +16,7 @@ import {
   LayoutDashboard,
   LogOut,
   Send,
+  UserRoundSearch,
   Users,
 } from "lucide-react";
 
@@ -41,72 +43,95 @@ type MenuItem = {
 // ======================================================
 // STAFF MENU
 // ======================================================
-//
-// Menu visibility is controlled by Staff permissions.
-//
-// IMPORTANT:
-//
-// Frontend permission checking only controls what is shown.
-//
-// Backend middleware remains responsible for actual
-// authorization.
-//
-// ======================================================
 
 const menuItems: MenuItem[] = [
   {
     label: "Dashboard",
+
     permission: "dashboard:view",
+
     href: "/staff",
+
     icon: LayoutDashboard,
   },
 
   {
     label: "Vacancies",
+
     permission: "vacancies:view",
+
     href: "/staff/vacancies",
+
     icon: BriefcaseBusiness,
   },
 
   {
     label: "Applications",
+
     permission: "applications:view",
+
     href: "/staff/applications",
+
     icon: FileText,
   },
 
   {
     label: "Clients",
+
     permission: "providers:view",
+
     href: "/staff/clients",
+
     icon: Building2,
   },
 
   {
     label: "Job Seekers",
+
     permission: "seekers:view",
+
     href: "/staff/job-seekers",
+
     icon: Users,
   },
 
   {
     label: "Placement Requests",
+
     permission: "placement_requests:view",
+
     href: "/staff/placement-requests",
+
     icon: ClipboardCheck,
   },
 
   {
+    label: "Placement Candidates",
+
+    permission: "placement_requests:manage_candidates",
+
+    href: "/staff/placement-candidates",
+
+    icon: UserRoundSearch,
+  },
+
+  {
     label: "Placement Billings",
+
     permission: "billing:view",
+
     href: "/staff/placement-billings",
+
     icon: CreditCard,
   },
 
   {
     label: "Staff Training",
+
     permission: "training:view",
+
     href: "/staff/training",
+
     icon: GraduationCap,
   },
 ];
@@ -132,11 +157,6 @@ export default function StaffDashboard() {
 
   // ====================================================
   // LANGUAGE PREFIX
-  // ====================================================
-  //
-  // /staff
-  // /en/staff
-  //
   // ====================================================
 
   const prefix = pathname.startsWith("/en/") ? "/en" : "";
@@ -176,7 +196,6 @@ export default function StaffDashboard() {
   const isMenuActive = (href: string) => {
     const fullHref = `${prefix}${href}`;
 
-    // Dashboard should only be active for exact /staff
     if (href === "/staff") {
       return pathname === fullHref || pathname === `${fullHref}/`;
     }
@@ -198,7 +217,9 @@ export default function StaffDashboard() {
             <h1 className="text-xl font-bold text-slate-950">Staff Panel</h1>
 
             <p className="mt-1 text-xs text-slate-500">
-              {staff.name} • {staff.staffId}
+              {staff.name}
+              {" • "}
+              {staff.staffId}
             </p>
           </div>
 
@@ -246,13 +267,11 @@ export default function StaffDashboard() {
       </header>
 
       {/* ================================================= */}
-      {/* DASHBOARD CONTENT */}
+      {/* DASHBOARD */}
       {/* ================================================= */}
 
       <main className="mx-auto max-w-7xl px-6 py-10">
-        {/* ================================================= */}
         {/* PAGE HEADER */}
-        {/* ================================================= */}
 
         <div className="mb-7">
           <h2 className="text-3xl font-bold text-slate-950">Dashboard</h2>
@@ -278,81 +297,104 @@ export default function StaffDashboard() {
             </p>
           </div>
         ) : (
-          <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {/* ================================================= */}
-            {/* SUMMARY CARDS */}
+            {/* JOB SEEKERS */}
             {/* ================================================= */}
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {/* JOB SEEKERS */}
+            <SummaryCard
+              title="Job Seekers"
+              value={summary?.jobSeekers.total ?? 0}
+              icon={Users}
+            />
 
-              <SummaryCard
-                title="Job Seekers"
-                value={summary?.jobSeekers.total ?? 0}
-                icon={Users}
-              />
+            {/* ================================================= */}
+            {/* JOB PROVIDERS */}
+            {/* ================================================= */}
 
-              {/* JOB PROVIDERS */}
+            <SummaryCard
+              title="Job Providers"
+              value={summary?.providers.total ?? 0}
+              icon={Building2}
+            />
 
-              <SummaryCard
-                title="Job Providers"
-                value={summary?.providers.total ?? 0}
-                icon={Building2}
-              />
+            {/* ================================================= */}
+            {/* VACANCIES */}
+            {/* ================================================= */}
 
-              {/* VACANCIES */}
+            <SummaryCard
+              title="Vacancies"
+              value={summary?.vacancies.total ?? 0}
+              note={`Published: ${summary?.vacancies.published ?? 0}`}
+              icon={BriefcaseBusiness}
+            />
 
-              <SummaryCard
-                title="Vacancies"
-                value={summary?.vacancies.total ?? 0}
-                note={`Published: ${summary?.vacancies.published ?? 0}`}
-                icon={BriefcaseBusiness}
-              />
+            {/* ================================================= */}
+            {/* APPLICATIONS */}
+            {/* ================================================= */}
 
-              {/* APPLICATIONS */}
+            <SummaryCard
+              title="Applications"
+              value={summary?.applications.total ?? 0}
+              note={`Pending: ${
+                summary?.applications.pendingAdminApproval ?? 0
+              }`}
+              icon={FileText}
+            />
 
-              <SummaryCard
-                title="Applications"
-                value={summary?.applications.total ?? 0}
-                note={`Pending: ${
-                  summary?.applications.pendingAdminApproval ?? 0
-                }`}
-                icon={FileText}
-              />
+            {/* ================================================= */}
+            {/* PENDING VACANCIES */}
+            {/* ================================================= */}
 
-              {/* PENDING VACANCIES */}
+            <SummaryCard
+              title="Pending Vacancy Reviews"
+              value={summary?.vacancies.pendingReview ?? 0}
+              icon={ClipboardCheck}
+            />
 
-              <SummaryCard
-                title="Pending Vacancy Reviews"
-                value={summary?.vacancies.pendingReview ?? 0}
-                icon={ClipboardCheck}
-              />
+            {/* ================================================= */}
+            {/* PENDING APPLICATIONS */}
+            {/* ================================================= */}
 
-              {/* PENDING APPLICATIONS */}
+            <SummaryCard
+              title="Pending Applications"
+              value={summary?.applications.pendingAdminApproval ?? 0}
+              icon={Users}
+            />
 
-              <SummaryCard
-                title="Pending Applications"
-                value={summary?.applications.pendingAdminApproval ?? 0}
-                icon={Users}
-              />
+            {/* ================================================= */}
+            {/* PROVIDER PROCESS */}
+            {/* ================================================= */}
 
-              {/* PROVIDER PROCESS */}
+            <SummaryCard
+              title="Provider Process"
+              value={summary?.applications.providerProcess ?? 0}
+              icon={Send}
+            />
 
-              <SummaryCard
-                title="Provider Process"
-                value={summary?.applications.providerProcess ?? 0}
-                icon={Send}
-              />
+            {/* ================================================= */}
+            {/* PLACEMENT REQUESTS */}
+            {/* ================================================= */}
 
-              {/* PLACEMENT REQUESTS */}
+            <SummaryCard
+              title="Placement Requests"
+              value={summary?.placementRequests.total ?? 0}
+              icon={ClipboardCheck}
+            />
 
-              <SummaryCard
-                title="Placement Requests"
-                value={summary?.placementRequests.total ?? 0}
-                icon={ClipboardCheck}
-              />
-            </div>
-          </>
+            {/* ================================================= */}
+            {/* PLACEMENT CANDIDATES */}
+            {/* ================================================= */}
+
+            <SummaryCard
+              title="Placement Candidates"
+              value={summary?.placementCandidates?.total ?? 0}
+              note={`Needs Attention: ${
+                summary?.placementCandidates?.needsAttention ?? 0
+              }`}
+              icon={UserRoundSearch}
+            />
+          </div>
         )}
       </main>
     </div>
@@ -379,8 +421,6 @@ function SummaryCard({ title, value, note, icon: Icon }: SummaryCardProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
-        {/* CONTENT */}
-
         <div>
           <p className="text-sm text-slate-500">{title}</p>
 
@@ -388,8 +428,6 @@ function SummaryCard({ title, value, note, icon: Icon }: SummaryCardProps) {
 
           {note && <p className="mt-1 text-xs text-slate-500">{note}</p>}
         </div>
-
-        {/* ICON */}
 
         <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600">
           <Icon className="h-5 w-5" />

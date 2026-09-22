@@ -73,6 +73,34 @@ export const useStaffDashboard = () => {
       queryKey: ["staff-applications"],
     });
 
+    queryClient.removeQueries({
+      queryKey: ["staff-vacancies"],
+    });
+
+    queryClient.removeQueries({
+      queryKey: ["staff-seekers"],
+    });
+
+    queryClient.removeQueries({
+      queryKey: ["staff-providers"],
+    });
+
+    queryClient.removeQueries({
+      queryKey: ["staff-placement-requests"],
+    });
+
+    queryClient.removeQueries({
+      queryKey: ["staff-placement-candidates"],
+    });
+
+    queryClient.removeQueries({
+      queryKey: ["staff-placement-candidate"],
+    });
+
+    queryClient.removeQueries({
+      queryKey: ["staff-placement-billings"],
+    });
+
     router.replace(isEnglish ? "/en/staff-login" : "/staff-login");
   };
 
