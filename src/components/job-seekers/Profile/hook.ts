@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -12,7 +10,9 @@ import { useLanguage } from "@/context/LanguageContext";
 
 import {
   getJobSeekerProfile,
+  removeJobSeekerDocument,
   updateJobSeekerProfile,
+  uploadJobSeekerDocument,
   uploadJobSeekerProfilePhoto,
   uploadJobSeekerResume,
 } from "./api";
@@ -25,6 +25,7 @@ import type {
   EmploymentRecord,
   JobSeekerProfile,
   MissingField,
+  OtherDocument,
   ProfileFormData,
   ProfileValidationErrors,
 } from "./types";
@@ -78,6 +79,12 @@ export const useJobSeekerProfile = () => {
   const [uploadingResume, setUploadingResume] = useState(false);
 
   const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
+
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+
+  const [removingDocumentId, setRemovingDocumentId] = useState<string | null>(
+    null,
+  );
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -553,6 +560,180 @@ export const useJobSeekerProfile = () => {
     }
   };
 
+  const handleDocumentUpload = async ({
+    file,
+    name,
+    documentType,
+  }: {
+    file: File | null;
+    name: string;
+    documentType: string;
+  }): Promise<boolean> => {
+    if (!file) {
+      toast.error(
+        lang === "ja"
+          ? "アップロードするファイルを選択してください"
+          : "Please select a file to upload",
+      );
+
+      return false;
+    }
+
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      toast.error(
+        lang === "ja"
+          ? "書類名を入力してください"
+          : "Please enter a document name",
+      );
+
+      return false;
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+
+    const maxSize = 10 * 1024 * 1024;
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(
+        lang === "ja"
+          ? "JPG、PNG、GIF、WEBP、PDF、DOC、DOCXのみアップロード可能です"
+          : "Only JPG, PNG, GIF, WEBP, PDF, DOC and DOCX files are allowed",
+      );
+
+      return false;
+    }
+
+    if (file.size > maxSize) {
+      toast.error(
+        lang === "ja"
+          ? "ファイルサイズは10MB以下にしてください"
+          : "Document file size must be less than 10MB",
+      );
+
+      return false;
+    }
+
+    try {
+      setUploadingDocument(true);
+
+      const data = await uploadJobSeekerDocument({
+        file,
+        name: trimmedName,
+        documentType: documentType || "other",
+      });
+
+      if (data.status !== "success") {
+        throw new Error(data.message || "Failed to upload document");
+      }
+
+      populateProfile(data);
+
+      toast.success(
+        lang === "ja"
+          ? "書類をアップロードしました"
+          : "Document uploaded successfully",
+      );
+
+      return true;
+    } catch (error: unknown) {
+      console.error("Document upload error:", error);
+
+      if (axios.isAxiosError<ApiErrorResponse>(error)) {
+        toast.error(
+          error.response?.data?.message ||
+            (lang === "ja"
+              ? "書類のアップロードに失敗しました"
+              : "Failed to upload document"),
+        );
+
+        return false;
+      }
+
+      toast.error(
+        lang === "ja"
+          ? "書類のアップロードに失敗しました"
+          : "Failed to upload document",
+      );
+
+      return false;
+    } finally {
+      setUploadingDocument(false);
+    }
+  };
+
+  const handleRemoveDocument = async (
+    document: OtherDocument,
+  ): Promise<boolean> => {
+    if (!document._id) {
+      toast.error(
+        lang === "ja" ? "書類IDが見つかりません" : "Document ID is missing",
+      );
+
+      return false;
+    }
+
+    const confirmed = window.confirm(
+      lang === "ja"
+        ? `「${document.name}」を削除しますか？`
+        : `Remove "${document.name}"?`,
+    );
+
+    if (!confirmed) {
+      return false;
+    }
+
+    try {
+      setRemovingDocumentId(document._id);
+
+      const data = await removeJobSeekerDocument(document._id);
+
+      if (data.status !== "success") {
+        throw new Error(data.message || "Failed to remove document");
+      }
+
+      populateProfile(data);
+
+      toast.success(
+        lang === "ja" ? "書類を削除しました" : "Document removed successfully",
+      );
+
+      return true;
+    } catch (error: unknown) {
+      console.error("Document remove error:", error);
+
+      if (axios.isAxiosError<ApiErrorResponse>(error)) {
+        toast.error(
+          error.response?.data?.message ||
+            (lang === "ja"
+              ? "書類の削除に失敗しました"
+              : "Failed to remove document"),
+        );
+
+        return false;
+      }
+
+      toast.error(
+        lang === "ja"
+          ? "書類の削除に失敗しました"
+          : "Failed to remove document",
+      );
+
+      return false;
+    } finally {
+      setRemovingDocumentId(null);
+    }
+  };
+
   const cancelEdit = async () => {
     setErrors({});
     setTouched({});
@@ -590,6 +771,8 @@ export const useJobSeekerProfile = () => {
     saving,
     uploadingResume,
     uploadingProfilePhoto,
+    uploadingDocument,
+    removingDocumentId,
     isEditing,
 
     setIsEditing,
@@ -611,6 +794,8 @@ export const useJobSeekerProfile = () => {
 
     handleProfilePhotoUpload,
     handleResumeUpload,
+    handleDocumentUpload,
+    handleRemoveDocument,
 
     getFieldError,
     isFieldMissing,

@@ -47,8 +47,6 @@ export const uploadJobSeekerResume = async (
 ): Promise<ProfileResponse> => {
   const payload = new FormData();
 
-  // IMPORTANT:
-  // Backend expects "resume", not "resume_file"
   payload.append("resume", file);
 
   const response = await axiosInstance.patch<ProfileResponse>(
@@ -65,6 +63,54 @@ export const uploadJobSeekerProfilePhoto = async (
   const payload = new FormData();
 
   payload.append("profile_photo", file);
+
+  const response = await axiosInstance.patch<ProfileResponse>(
+    "/seekers/profile",
+    payload,
+  );
+
+  return response.data;
+};
+
+type UploadDocumentParams = {
+  file: File;
+  name: string;
+  documentType: string;
+};
+
+export const uploadJobSeekerDocument = async ({
+  file,
+  name,
+  documentType,
+}: UploadDocumentParams): Promise<ProfileResponse> => {
+  const payload = new FormData();
+
+  payload.append("other_documents", file);
+
+  payload.append(
+    "other_documents_meta",
+    JSON.stringify([
+      {
+        name,
+        document_type: documentType || "other",
+      },
+    ]),
+  );
+
+  const response = await axiosInstance.patch<ProfileResponse>(
+    "/seekers/profile",
+    payload,
+  );
+
+  return response.data;
+};
+
+export const removeJobSeekerDocument = async (
+  documentId: string,
+): Promise<ProfileResponse> => {
+  const payload = new FormData();
+
+  payload.append("remove_document_ids", JSON.stringify([documentId]));
 
   const response = await axiosInstance.patch<ProfileResponse>(
     "/seekers/profile",

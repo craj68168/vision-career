@@ -60,6 +60,10 @@ export type JobSeekerProfile = {
 
   resume_file: string | null;
 
+  generated_resume_file: string | null;
+
+  other_documents: OtherDocument[];
+
   notes: string | null;
 
   approval_status: "pending" | "approved" | "rejected";

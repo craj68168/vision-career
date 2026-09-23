@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -352,6 +352,13 @@ export default function JobSeekerProfilePage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
+
+  const [documentName, setDocumentName] = useState("");
+  const [documentType, setDocumentType] = useState("other");
+  const [selectedDocumentFile, setSelectedDocumentFile] = useState<File | null>(
+    null,
+  );
 
   const {
     lang,
@@ -368,6 +375,8 @@ export default function JobSeekerProfilePage() {
     saving,
     uploadingResume,
     uploadingProfilePhoto,
+    uploadingDocument,
+    removingDocumentId,
     isEditing,
 
     setIsEditing,
@@ -388,6 +397,8 @@ export default function JobSeekerProfilePage() {
 
     handleProfilePhotoUpload,
     handleResumeUpload,
+    handleDocumentUpload,
+    handleRemoveDocument,
 
     getFieldError,
     isFieldMissing,
@@ -403,6 +414,49 @@ export default function JobSeekerProfilePage() {
     }
 
     return `${backendBaseUrl}${value.startsWith("/") ? value : `/${value}`}`;
+  };
+
+  const getDisplayFileName = (value: string, fallback: string) => {
+    try {
+      const path = /^https?:\/\//i.test(value)
+        ? new URL(value).pathname
+        : value;
+
+      const lastPart = path.split("/").filter(Boolean).pop();
+
+      if (!lastPart) {
+        return fallback;
+      }
+
+      const decoded = decodeURIComponent(lastPart);
+
+      return decoded.replace(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/i,
+        "",
+      );
+    } catch {
+      return fallback;
+    }
+  };
+
+  const uploadSelectedDocument = async () => {
+    const uploaded = await handleDocumentUpload({
+      file: selectedDocumentFile,
+      name: documentName,
+      documentType,
+    });
+
+    if (!uploaded) {
+      return;
+    }
+
+    setDocumentName("");
+    setDocumentType("other");
+    setSelectedDocumentFile(null);
+
+    if (documentInputRef.current) {
+      documentInputRef.current.value = "";
+    }
   };
 
   const getMissingFieldLabel = (field: string, backendLabel: string) => {
@@ -1302,7 +1356,7 @@ export default function JobSeekerProfilePage() {
                     <FileText className="h-5 w-5 text-slate-500" />
 
                     <span className="text-sm text-slate-700">
-                      {profile.resume_file.split("/").pop()}
+                      {getDisplayFileName(profile.resume_file, "Resume/CV")}
                     </span>
                   </div>
 
@@ -1369,6 +1423,229 @@ export default function JobSeekerProfilePage() {
                       ? "対応形式: PDF, DOC, DOCX (最大5MB)"
                       : "Supported formats: PDF, DOC, DOCX (Max 5MB)"}
                   </p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Additional Documents */}
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <SectionHeader
+              title={lang === "ja" ? "追加書類" : "Additional Documents"}
+              icon={<FileText className="h-5 w-5" />}
+              description={
+                lang === "ja"
+                  ? "パスポート、在留カード、証明書などの書類を管理します"
+                  : "Manage passport, residence card, certificates and other supporting documents"
+              }
+            />
+
+            <div className="space-y-4">
+              {profile?.other_documents?.length ? (
+                profile.other_documents.map((document) => (
+                  <div
+                    key={document._id || document.file_url}
+                    className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-white p-2 text-slate-500">
+                          <FileText className="h-5 w-5" />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-900">
+                            {document.name}
+                          </p>
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            {document.document_type || "other"}
+                            {" · "}
+                            {getDisplayFileName(
+                              document.file_url,
+                              lang === "ja" ? "書類" : "Document",
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-2">
+                      <a
+                        href={getFileUrl(document.file_url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-slate-100"
+                      >
+                        {lang === "ja" ? "表示" : "View"}
+                      </a>
+
+                      {isEditing && document._id && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveDocument(document)}
+                          disabled={removingDocumentId === document._id}
+                          className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {removingDocumentId === document._id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+
+                          {lang === "ja" ? "削除" : "Remove"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center">
+                  <FileText className="mx-auto h-7 w-7 text-slate-300" />
+
+                  <p className="mt-2 text-sm text-slate-500">
+                    {lang === "ja"
+                      ? "追加書類はまだアップロードされていません"
+                      : "No additional documents uploaded yet"}
+                  </p>
+                </div>
+              )}
+
+              {isEditing && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {lang === "ja" ? "書類を追加" : "Add Document"}
+                  </h3>
+
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        {lang === "ja" ? "書類名" : "Document Name"}
+                      </label>
+
+                      <input
+                        type="text"
+                        value={documentName}
+                        onChange={(event) =>
+                          setDocumentName(event.target.value)
+                        }
+                        placeholder={
+                          lang === "ja" ? "例：パスポート" : "e.g., Passport"
+                        }
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        {lang === "ja" ? "書類種類" : "Document Type"}
+                      </label>
+
+                      <select
+                        value={documentType}
+                        onChange={(event) =>
+                          setDocumentType(event.target.value)
+                        }
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      >
+                        <option value="passport">
+                          {lang === "ja" ? "パスポート" : "Passport"}
+                        </option>
+                        <option value="residence_card">
+                          {lang === "ja" ? "在留カード" : "Residence Card"}
+                        </option>
+                        <option value="visa">
+                          {lang === "ja" ? "ビザ関連書類" : "Visa Document"}
+                        </option>
+                        <option value="certificate">
+                          {lang === "ja" ? "証明書" : "Certificate"}
+                        </option>
+                        <option value="jlpt">
+                          {lang === "ja"
+                            ? "日本語証明"
+                            : "JLPT / Japanese Certificate"}
+                        </option>
+                        <option value="education">
+                          {lang === "ja" ? "学歴書類" : "Education Document"}
+                        </option>
+                        <option value="other">
+                          {lang === "ja" ? "その他" : "Other"}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <input
+                      ref={documentInputRef}
+                      id="other-document-upload"
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx"
+                      disabled={uploadingDocument}
+                      className="hidden"
+                      onChange={(event) => {
+                        setSelectedDocumentFile(
+                          event.target.files?.[0] || null,
+                        );
+                      }}
+                    />
+
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                      <label
+                        htmlFor="other-document-upload"
+                        className={`inline-flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition ${
+                          uploadingDocument
+                            ? "cursor-not-allowed opacity-50"
+                            : "cursor-pointer hover:border-slate-400 hover:bg-slate-50"
+                        }`}
+                      >
+                        <Upload className="h-4 w-4" />
+
+                        {selectedDocumentFile
+                          ? lang === "ja"
+                            ? "別のファイルを選択"
+                            : "Choose Another File"
+                          : lang === "ja"
+                            ? "ファイルを選択"
+                            : "Choose File"}
+                      </label>
+
+                      {selectedDocumentFile && (
+                        <p className="min-w-0 truncate text-sm text-slate-600">
+                          {selectedDocumentFile.name}
+                        </p>
+                      )}
+                    </div>
+
+                    <p className="mt-2 text-xs text-slate-500">
+                      {lang === "ja"
+                        ? "対応形式: JPG, PNG, GIF, WEBP, PDF, DOC, DOCX (最大10MB)"
+                        : "Supported formats: JPG, PNG, GIF, WEBP, PDF, DOC, DOCX (Max 10MB)"}
+                    </p>
+                  </div>
+
+                  <div className="mt-5 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={uploadSelectedDocument}
+                      disabled={uploadingDocument}
+                      className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {uploadingDocument ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+
+                      {uploadingDocument
+                        ? lang === "ja"
+                          ? "アップロード中..."
+                          : "Uploading..."
+                        : lang === "ja"
+                          ? "書類をアップロード"
+                          : "Upload Document"}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
