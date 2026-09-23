@@ -28,44 +28,49 @@ export type MissingField = {
 };
 
 export type JobSeekerProfile = {
-  seeker_id?: number | string;
+  seeker_id: string;
 
   name: string;
+
   email: string;
 
-  profile_photo?: string | null;
+  profile_photo: string | null;
 
   phone: string | null;
+
   address: string | null;
-  current_location?: string | null;
 
   date_of_birth: string | null;
+
   gender: string | null;
+
   nationality: string | null;
 
   visa_type: string | null;
+
   visa_expiry_date: string | null;
 
   japanese_level: string | null;
 
-  skills?: string[];
-
   desired_job: string | null;
+
   desired_location: string | null;
+
   available_from: string | null;
 
   resume_file: string | null;
-  generated_resume_file?: string | null;
 
   notes: string | null;
 
-  status?: string;
-  placement_status?: string | null;
+  approval_status: "pending" | "approved" | "rejected";
 
-  other_documents?: OtherDocument[];
+  account_status: "inactive" | "active" | "suspended";
 
-  createdAt?: string;
-  updatedAt?: string;
+  placement_status: string | null;
+
+  created_at: string;
+
+  updated_at: string;
 };
 
 export type ProfileFormData = {

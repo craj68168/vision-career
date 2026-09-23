@@ -351,6 +351,7 @@ export default function JobSeekerProfilePage() {
   const router = useRouter();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null);
 
   const {
     lang,
@@ -366,6 +367,7 @@ export default function JobSeekerProfilePage() {
     loading,
     saving,
     uploadingResume,
+    uploadingProfilePhoto,
     isEditing,
 
     setIsEditing,
@@ -384,6 +386,7 @@ export default function JobSeekerProfilePage() {
     saveProfile,
     cancelEdit,
 
+    handleProfilePhotoUpload,
     handleResumeUpload,
 
     getFieldError,
@@ -393,6 +396,14 @@ export default function JobSeekerProfilePage() {
   const backendBaseUrl =
     process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
     "http://localhost:5000";
+
+  const getFileUrl = (value: string) => {
+    if (/^https?:\/\//i.test(value)) {
+      return value;
+    }
+
+    return `${backendBaseUrl}${value.startsWith("/") ? value : `/${value}`}`;
+  };
 
   const getMissingFieldLabel = (field: string, backendLabel: string) => {
     const labels = MISSING_FIELD_LABELS[field];
@@ -584,6 +595,87 @@ export default function JobSeekerProfilePage() {
                 lang === "ja" ? "あなたの基本情報" : "Your basic information"
               }
             />
+
+            <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-white">
+                  {profile?.profile_photo ? (
+                    <img
+                      src={getFileUrl(profile.profile_photo)}
+                      alt={profile.name || "Profile"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-12 w-12 text-slate-300" />
+                  )}
+                </div>
+
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {lang === "ja" ? "プロフィール写真" : "Profile Photo"}
+                  </h3>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    {lang === "ja"
+                      ? "JPG、PNG、WEBP形式。最大5MB。"
+                      : "JPG, PNG or WEBP. Maximum 5MB."}
+                  </p>
+
+                  {isEditing && (
+                    <div className="mt-4">
+                      <input
+                        ref={profilePhotoInputRef}
+                        id="profile-photo-upload"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        disabled={uploadingProfilePhoto}
+                        className="hidden"
+                        onChange={async (event) => {
+                          const file = event.target.files?.[0];
+
+                          if (!file) {
+                            return;
+                          }
+
+                          await handleProfilePhotoUpload(file);
+
+                          if (profilePhotoInputRef.current) {
+                            profilePhotoInputRef.current.value = "";
+                          }
+                        }}
+                      />
+
+                      <label
+                        htmlFor="profile-photo-upload"
+                        className={`inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition ${
+                          uploadingProfilePhoto
+                            ? "cursor-not-allowed opacity-50"
+                            : "cursor-pointer hover:border-slate-400 hover:bg-slate-50"
+                        }`}
+                      >
+                        {uploadingProfilePhoto ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+
+                        {uploadingProfilePhoto
+                          ? lang === "ja"
+                            ? "アップロード中..."
+                            : "Uploading..."
+                          : profile?.profile_photo
+                            ? lang === "ja"
+                              ? "写真を変更"
+                              : "Change Photo"
+                            : lang === "ja"
+                              ? "写真をアップロード"
+                              : "Upload Photo"}
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
 
             <div className="space-y-6">
               <div className="rounded-xl bg-slate-50 p-4">
@@ -1215,7 +1307,7 @@ export default function JobSeekerProfilePage() {
                   </div>
 
                   <a
-                    href={`${backendBaseUrl}${profile.resume_file}`}
+                    href={getFileUrl(profile.resume_file)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-blue-600 hover:text-blue-700 hover:underline"

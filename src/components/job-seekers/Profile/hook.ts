@@ -13,6 +13,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import {
   getJobSeekerProfile,
   updateJobSeekerProfile,
+  uploadJobSeekerProfilePhoto,
   uploadJobSeekerResume,
 } from "./api";
 
@@ -75,6 +76,8 @@ export const useJobSeekerProfile = () => {
   const [saving, setSaving] = useState(false);
 
   const [uploadingResume, setUploadingResume] = useState(false);
+
+  const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -416,6 +419,71 @@ export const useJobSeekerProfile = () => {
     }
   };
 
+  const handleProfilePhotoUpload = async (file: File) => {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    const maxSize = 5 * 1024 * 1024;
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(
+        lang === "ja"
+          ? "JPG、PNG、WEBP画像のみアップロード可能です"
+          : "Only JPG, PNG and WEBP images are allowed",
+      );
+
+      return;
+    }
+
+    if (file.size > maxSize) {
+      toast.error(
+        lang === "ja"
+          ? "画像サイズは5MB以下にしてください"
+          : "Profile image must be less than 5MB",
+      );
+
+      return;
+    }
+
+    try {
+      setUploadingProfilePhoto(true);
+
+      const data = await uploadJobSeekerProfilePhoto(file);
+
+      if (data.status !== "success") {
+        throw new Error(data.message || "Failed to upload profile photo");
+      }
+
+      populateProfile(data);
+
+      toast.success(
+        lang === "ja"
+          ? "プロフィール写真をアップロードしました"
+          : "Profile photo uploaded successfully",
+      );
+    } catch (error: unknown) {
+      console.error("Profile photo upload error:", error);
+
+      if (axios.isAxiosError<ApiErrorResponse>(error)) {
+        toast.error(
+          error.response?.data?.message ||
+            (lang === "ja"
+              ? "プロフィール写真のアップロードに失敗しました"
+              : "Failed to upload profile photo"),
+        );
+
+        return;
+      }
+
+      toast.error(
+        lang === "ja"
+          ? "プロフィール写真のアップロードに失敗しました"
+          : "Failed to upload profile photo",
+      );
+    } finally {
+      setUploadingProfilePhoto(false);
+    }
+  };
+
   const handleResumeUpload = async (file: File) => {
     const allowedTypes = [
       "application/pdf",
@@ -521,6 +589,7 @@ export const useJobSeekerProfile = () => {
     loading,
     saving,
     uploadingResume,
+    uploadingProfilePhoto,
     isEditing,
 
     setIsEditing,
@@ -540,6 +609,7 @@ export const useJobSeekerProfile = () => {
     fetchProfile,
     cancelEdit,
 
+    handleProfilePhotoUpload,
     handleResumeUpload,
 
     getFieldError,
