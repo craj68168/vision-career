@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import Link from "next/link";
 
 import {
@@ -32,6 +34,7 @@ import EditPlacementRequestModal from "./EditPlacementRequestModal";
 import DeletePlacementRequestModal from "./DeletePlacementRequestModal";
 import SubmitPlacementRequestModal from "./SubmitPlacementRequestModal";
 import PlacementCandidatesModal from "./PlacementCandidatesModal";
+import ProviderApplicationCard from "./ProviderApplicationCard";
 
 import type { PlacementRequestStatus, Vacancy } from "./types";
 
@@ -90,41 +93,29 @@ export default function ProviderDashboard() {
     totalApplications,
     totalPlacementRequests,
 
-    // CREATE VACANCY
-
     postVacancyOpen,
     openPostVacancy,
     closePostVacancy,
     handleVacancyCreated,
-
-    // PLACEMENT REQUEST CREATE
 
     placementRequestOpen,
     openPlacementRequest,
     closePlacementRequest,
     handlePlacementCreated,
 
-    // VIEW PLACEMENT REQUEST
-
     viewPlacementRequest,
     openPlacementRequestView,
     closePlacementRequestView,
-
-    // EDIT PLACEMENT REQUEST
 
     editPlacementRequest,
     openPlacementRequestEdit,
     closePlacementRequestEdit,
     handlePlacementRequestUpdate,
 
-    // DELETE PLACEMENT REQUEST
-
     deletePlacementRequestTarget,
     openPlacementRequestDelete,
     closePlacementRequestDelete,
     handlePlacementRequestDelete,
-
-    // SUBMIT PLACEMENT REQUEST
 
     submitPlacementRequestTarget,
     openPlacementRequestSubmit,
@@ -132,8 +123,6 @@ export default function ProviderDashboard() {
     handlePlacementRequestSubmit,
 
     placementActionLoading,
-
-    // PLACEMENT CANDIDATES
 
     placementCandidateCounts,
 
@@ -147,38 +136,28 @@ export default function ProviderDashboard() {
 
     handlePlacementCandidateStatus,
 
-    // VIEW VACANCY
-
     viewVacancy,
     openVacancyView,
     closeVacancyView,
-
-    // EDIT VACANCY
 
     editVacancy,
     openVacancyEdit,
     closeVacancyEdit,
     handleVacancyUpdated,
 
-    // DELETE VACANCY
-
     deleteVacancyTarget,
     openVacancyDelete,
     closeVacancyDelete,
     handleVacancyDeleted,
 
-    // CLOSE VACANCY
-
     handleCloseVacancy,
-
-    // REFRESH
 
     handleRefresh,
   } = useProviderDashboard();
 
-  // ======================================================
+  // ====================================================
   // LOADING
-  // ======================================================
+  // ====================================================
 
   if (loading) {
     return (
@@ -568,25 +547,11 @@ export default function ProviderDashboard() {
               ) : (
                 <div className="space-y-4">
                   {filteredApplications.map((application) => (
-                    <article
+                    <ProviderApplicationCard
                       key={application.application_id}
-                      className="rounded-3xl border border-slate-200 bg-white p-6"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-xs text-slate-400">
-                            {application.application_id}
-                          </p>
-
-                          <h3 className="mt-1 text-lg font-semibold">
-                            {application.vacancy?.title ||
-                              application.vacancy_id}
-                          </h3>
-                        </div>
-
-                        <StatusBadge value={application.status} />
-                      </div>
-                    </article>
+                      application={application}
+                      lang={lang}
+                    />
                   ))}
                 </div>
               )}
@@ -922,10 +887,8 @@ function StatCard({
   icon,
 }: {
   label: string;
-
   value: number;
-
-  icon: React.ReactNode;
+  icon: ReactNode;
 }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -950,9 +913,7 @@ function TabButton({
   label,
 }: {
   active: boolean;
-
   onClick: () => void;
-
   label: string;
 }) {
   return (
@@ -980,10 +941,8 @@ function EmptyState({
   action,
 }: {
   title: string;
-
   description: string;
-
-  action?: React.ReactNode;
+  action?: ReactNode;
 }) {
   return (
     <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
@@ -1002,14 +961,7 @@ function EmptyState({
 // INFO FIELD
 // ======================================================
 
-function InfoField({
-  label,
-  value,
-}: {
-  label: string;
-
-  value?: string | null;
-}) {
+function InfoField({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="rounded-xl bg-slate-50 p-3">
       <p className="text-xs text-slate-500">{label}</p>
