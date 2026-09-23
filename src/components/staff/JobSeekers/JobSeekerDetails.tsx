@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Download,
+  ExternalLink,
   FileText,
   GraduationCap,
   Mail,
@@ -25,7 +26,11 @@ import {
   getScreeningLabel,
 } from "./helper";
 
-import type { StaffSeeker } from "./types";
+import type { SeekerDocument, StaffSeeker } from "./types";
+
+// ======================================================
+// PROPS
+// ======================================================
 
 type Props = {
   seeker: StaffSeeker | null;
@@ -41,6 +46,23 @@ type Props = {
   onDownloadResume: (seeker: StaffSeeker) => void;
 };
 
+// ======================================================
+// BACKEND BASE URL
+//
+// Used only for old /uploads/... records.
+//
+// New Supabase files already arrive as complete signed
+// HTTPS URLs.
+// ======================================================
+
+const backendBaseUrl =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
+  "http://localhost:5000";
+
+// ======================================================
+// TEXT
+// ======================================================
+
 const text = (value: string | number | null | undefined) => {
   if (value === null || value === undefined || value === "") {
     return "-";
@@ -48,6 +70,88 @@ const text = (value: string | number | null | undefined) => {
 
   return String(value);
 };
+
+// ======================================================
+// FILE URL
+//
+// Supports:
+//
+// NEW:
+// https://...supabase.co/...
+//
+// LEGACY:
+// /uploads/file.pdf
+// /private_uploads/file.pdf
+// ======================================================
+
+const getFileUrl = (value?: string | null) => {
+  if (!value) {
+    return null;
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return `${backendBaseUrl}${value.startsWith("/") ? value : `/${value}`}`;
+};
+
+// ======================================================
+// CLEAN FILE NAME
+// ======================================================
+
+const getFileName = (value?: string | null) => {
+  if (!value) {
+    return "File";
+  }
+
+  try {
+    const url = /^https?:\/\//i.test(value) ? new URL(value) : null;
+
+    const pathname = url?.pathname || value;
+
+    const rawName = pathname.split("/").filter(Boolean).pop();
+
+    if (!rawName) {
+      return "File";
+    }
+
+    const decoded = decodeURIComponent(rawName);
+
+    // Remove UUID prefix:
+    //
+    // 9c3b7193-21f1-4a50-a664-e4ef7b8b05d1-file.pdf
+    //
+    // becomes:
+    //
+    // file.pdf
+
+    return decoded.replace(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/i,
+      "",
+    );
+  } catch {
+    return "File";
+  }
+};
+
+// ======================================================
+// DOCUMENT TYPE LABEL
+// ======================================================
+
+const getDocumentTypeLabel = (value?: string | null) => {
+  if (!value) {
+    return "Other";
+  }
+
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+};
+
+// ======================================================
+// JOB SEEKER DETAILS
+// ======================================================
 
 export default function JobSeekerDetails({
   seeker,
@@ -63,38 +167,83 @@ export default function JobSeekerDetails({
 
   const canScreen = canManage && seeker.approval_status === "pending";
 
+  const profilePhotoUrl = getFileUrl(seeker.profile_photo);
+
+  const resumeUrl = getFileUrl(
+    seeker.resume_file || seeker.generated_resume_file,
+  );
+
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/50 p-4">
-      <button type="button" className="absolute inset-0" onClick={onClose} />
+      {/* BACKDROP */}
+
+      <button
+        type="button"
+        className="absolute inset-0"
+        onClick={onClose}
+        aria-label="Close Job Seeker details"
+      />
+
+      {/* MODAL */}
 
       <div className="relative z-10 flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
-        {/* HEADER */}
+        {/* ==================================================
+            HEADER
+        ================================================== */}
 
         <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
-              {seeker.seeker_id}
-            </p>
+          <div className="flex items-center gap-4">
+            {/* PROFILE PHOTO */}
 
-            <h2 className="mt-1 text-2xl font-bold">{seeker.name}</h2>
+            {profilePhotoUrl ? (
+              <div
+                className="h-16 w-16 shrink-0 rounded-2xl border border-slate-200 bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: `url("${profilePhotoUrl}")`,
+                }}
+                role="img"
+                aria-label={`${seeker.name} profile`}
+              />
+            ) : (
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50">
+                <UserRound className="h-7 w-7 text-slate-400" />
+              </div>
+            )}
 
-            <p className="mt-1 text-sm text-slate-500">
-              {seeker.desired_job || "Job Seeker"}
-            </p>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
+                {seeker.seeker_id}
+              </p>
+
+              <h2 className="mt-1 text-2xl font-bold text-slate-950">
+                {seeker.name}
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                {seeker.desired_job || "Job Seeker"}
+              </p>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 hover:bg-slate-100"
+            className="rounded-full p-2 transition hover:bg-slate-100"
+            aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
+        {/* ==================================================
+            BODY
+        ================================================== */}
+
         <div className="overflow-y-auto p-6">
           <div className="space-y-7">
-            {/* CONTACT */}
+            {/* ==================================================
+                PROFILE INFORMATION
+            ================================================== */}
 
             <section>
               <h3 className="mb-4 text-lg font-bold">Profile Information</h3>
@@ -166,7 +315,9 @@ export default function JobSeekerDetails({
               </div>
             </section>
 
-            {/* EDUCATION / EMPLOYMENT */}
+            {/* ==================================================
+                EDUCATION / EMPLOYMENT
+            ================================================== */}
 
             <div className="grid gap-5 lg:grid-cols-2">
               <Section title="Education" icon={GraduationCap}>
@@ -186,7 +337,9 @@ export default function JobSeekerDetails({
 
                       <p className="mt-1 text-xs text-slate-400">
                         {formatDate(education.enrollment_date)}
+
                         {" — "}
+
                         {formatDate(education.graduation_date)}
                       </p>
                     </div>
@@ -211,7 +364,9 @@ export default function JobSeekerDetails({
 
                       <p className="mt-1 text-xs text-slate-400">
                         {formatDate(employment.start_date)}
+
                         {" — "}
+
                         {formatDate(employment.end_date)}
                       </p>
                     </div>
@@ -220,7 +375,106 @@ export default function JobSeekerDetails({
               </Section>
             </div>
 
-            {/* SKILLS */}
+            {/* ==================================================
+                RESUME
+            ================================================== */}
+
+            <section className="rounded-2xl border border-slate-200 p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-slate-500" />
+
+                    <h3 className="font-semibold">Resume / CV</h3>
+                  </div>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    Job Seeker resume or generated resume
+                  </p>
+                </div>
+              </div>
+
+              {resumeUrl ? (
+                <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-800">
+                      {getFileName(
+                        seeker.resume_file || seeker.generated_resume_file,
+                      )}
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-500">
+                      {seeker.resume_file
+                        ? "Uploaded Resume"
+                        : "Generated Resume"}
+                    </p>
+                  </div>
+
+                  <div className="flex shrink-0 gap-2">
+                    <a
+                      href={resumeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      View
+                    </a>
+
+                    <button
+                      type="button"
+                      disabled={isDownloading}
+                      onClick={() => onDownloadResume(seeker)}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Download className="h-4 w-4" />
+
+                      {isDownloading ? "Downloading..." : "Download"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <Empty message="No resume uploaded." />
+                </div>
+              )}
+            </section>
+
+            {/* ==================================================
+                ADDITIONAL DOCUMENTS
+            ================================================== */}
+
+            <section className="rounded-2xl border border-slate-200 p-5">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-slate-500" />
+
+                <h3 className="font-semibold">Additional Documents</h3>
+              </div>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Passport, residence card, certificates and other supporting
+                documents.
+              </p>
+
+              {seeker.other_documents.length === 0 ? (
+                <div className="mt-4">
+                  <Empty message="No additional documents uploaded." />
+                </div>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {seeker.other_documents.map((document, index) => (
+                    <DocumentRow
+                      key={document._id || `${document.name}-${index}`}
+                      document={document}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* ==================================================
+                SKILLS
+            ================================================== */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
               <h3 className="font-semibold">Skills</h3>
@@ -241,7 +495,9 @@ export default function JobSeekerDetails({
               </div>
             </section>
 
-            {/* STATUSES */}
+            {/* ==================================================
+                CURRENT STATUS
+            ================================================== */}
 
             <section>
               <h3 className="mb-4 text-lg font-bold">Current Status</h3>
@@ -267,7 +523,9 @@ export default function JobSeekerDetails({
               </div>
             </section>
 
-            {/* STAFF SCREENING */}
+            {/* ==================================================
+                STAFF SCREENING
+            ================================================== */}
 
             <section>
               <div className="mb-4 flex items-center justify-between gap-3">
@@ -349,7 +607,9 @@ export default function JobSeekerDetails({
           </div>
         </div>
 
-        {/* FOOTER */}
+        {/* ==================================================
+            FOOTER
+        ================================================== */}
 
         <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 px-6 py-4">
           {(seeker.resume_file || seeker.generated_resume_file) && (
@@ -357,7 +617,7 @@ export default function JobSeekerDetails({
               type="button"
               disabled={isDownloading}
               onClick={() => onDownloadResume(seeker)}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
 
@@ -382,6 +642,56 @@ export default function JobSeekerDetails({
   );
 }
 
+// ======================================================
+// DOCUMENT ROW
+// ======================================================
+
+function DocumentRow({ document }: { document: SeekerDocument }) {
+  const url = getFileUrl(document.file_url);
+
+  const fileName = getFileName(document.file_url);
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500">
+          <FileText className="h-5 w-5" />
+        </div>
+
+        <div className="min-w-0">
+          <p className="font-semibold text-slate-800">
+            {document.name || fileName}
+          </p>
+
+          <p className="mt-1 text-xs text-slate-500">
+            {getDocumentTypeLabel(document.document_type)}
+
+            {" · "}
+
+            <span className="break-all">{fileName}</span>
+          </p>
+        </div>
+      </div>
+
+      {url && (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+        >
+          <ExternalLink className="h-4 w-4" />
+          View
+        </a>
+      )}
+    </div>
+  );
+}
+
+// ======================================================
+// INFO
+// ======================================================
+
 function Info({
   icon: Icon,
   label,
@@ -398,7 +708,7 @@ function Info({
       <div className="flex gap-3">
         <Icon className="mt-0.5 h-4 w-4 text-slate-400" />
 
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase text-slate-400">
             {label}
           </p>
@@ -409,6 +719,10 @@ function Info({
     </div>
   );
 }
+
+// ======================================================
+// SECTION
+// ======================================================
 
 function Section({
   title,
@@ -434,6 +748,10 @@ function Section({
   );
 }
 
+// ======================================================
+// STATUS
+// ======================================================
+
 function Status({
   label,
   value,
@@ -454,6 +772,10 @@ function Status({
   );
 }
 
+// ======================================================
+// DETAIL
+// ======================================================
+
 function Detail({
   label,
   value,
@@ -471,6 +793,14 @@ function Detail({
   );
 }
 
-function Empty() {
-  return <p className="text-sm text-slate-400">No information available.</p>;
+// ======================================================
+// EMPTY
+// ======================================================
+
+function Empty({
+  message = "No information available.",
+}: {
+  message?: string;
+}) {
+  return <p className="text-sm text-slate-400">{message}</p>;
 }

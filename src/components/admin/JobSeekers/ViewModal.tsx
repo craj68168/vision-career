@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Download,
+  ExternalLink,
   FileText,
   GraduationCap,
   Mail,
@@ -17,6 +18,10 @@ import {
 } from "lucide-react";
 
 import type { AdminSeeker, SeekerScreeningStatus } from "./types";
+
+// ======================================================
+// PROPS
+// ======================================================
 
 type Props = {
   lang: string;
@@ -33,7 +38,20 @@ type Props = {
 };
 
 // ======================================================
-// HELPERS
+// BACKEND BASE URL
+//
+// Used only for old /uploads/... records.
+//
+// New Supabase files already arrive as complete signed
+// HTTPS URLs.
+// ======================================================
+
+const backendBaseUrl =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
+  "http://localhost:5000";
+
+// ======================================================
+// TEXT
 // ======================================================
 
 const text = (value: string | number | null | undefined) => {
@@ -43,6 +61,10 @@ const text = (value: string | number | null | undefined) => {
 
   return String(value);
 };
+
+// ======================================================
+// DATE
+// ======================================================
 
 const dateText = (value?: string | null) => {
   if (!value) {
@@ -59,10 +81,82 @@ const dateText = (value?: string | null) => {
 };
 
 // ======================================================
+// FILE URL
+//
+// NEW:
+// https://...supabase.co/...
+//
+// LEGACY:
+// /uploads/file.pdf
+// /private_uploads/file.pdf
+// ======================================================
+
+const getFileUrl = (value?: string | null) => {
+  if (!value) {
+    return null;
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return `${backendBaseUrl}${value.startsWith("/") ? value : `/${value}`}`;
+};
+
+// ======================================================
+// CLEAN FILE NAME
+// ======================================================
+
+const getFileName = (value?: string | null) => {
+  if (!value) {
+    return "File";
+  }
+
+  try {
+    const url = /^https?:\/\//i.test(value) ? new URL(value) : null;
+
+    const pathname = url?.pathname || value;
+
+    const rawName = pathname.split("/").filter(Boolean).pop();
+
+    if (!rawName) {
+      return "File";
+    }
+
+    const decoded = decodeURIComponent(rawName);
+
+    return decoded.replace(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/i,
+      "",
+    );
+  } catch {
+    return "File";
+  }
+};
+
+// ======================================================
+// DOCUMENT TYPE LABEL
+// ======================================================
+
+const getDocumentTypeLabel = (value?: string | null) => {
+  if (!value) {
+    return "Other";
+  }
+
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+};
+
+// ======================================================
 // SCREENING LABEL
 // ======================================================
 
-const screeningLabel = (status: SeekerScreeningStatus, lang: string) => {
+const screeningLabel = (
+  status: SeekerScreeningStatus,
+
+  lang: string,
+) => {
   if (lang === "ja") {
     switch (status) {
       case "SCREENED":
@@ -111,16 +205,33 @@ const screeningClass = (status: SeekerScreeningStatus) => {
 
 export default function ViewModal({
   lang,
+
   seeker,
+
   isDownloading,
+
   onClose,
+
   onDownloadResume,
+
   onReview,
 }: Props) {
   const screening = seeker.staffScreening;
 
+  const profilePhotoUrl = getFileUrl(seeker.profile_photo);
+
+  const resumeSource = seeker.resume_file || seeker.generated_resume_file;
+
+  const resumeUrl = getFileUrl(resumeSource);
+
+  const documents = seeker.other_documents || [];
+
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 p-4">
+      {/* =================================================
+          BACKDROP
+      ================================================= */}
+
       <button
         type="button"
         aria-label="Close"
@@ -128,26 +239,52 @@ export default function ViewModal({
         onClick={onClose}
       />
 
+      {/* =================================================
+          MODAL
+      ================================================= */}
+
       <div className="relative z-10 flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
         {/* =================================================
             HEADER
         ================================================= */}
 
         <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              {lang === "ja" ? "求職者詳細" : "Job Seeker Details"}
-            </p>
+          <div className="flex items-center gap-4">
+            {/* PROFILE PHOTO */}
 
-            <h2 className="mt-1 text-2xl font-bold">{seeker.name}</h2>
+            {profilePhotoUrl ? (
+              <div
+                className="h-16 w-16 shrink-0 rounded-2xl border border-slate-200 bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: `url("${profilePhotoUrl}")`,
+                }}
+                role="img"
+                aria-label={`${seeker.name} profile`}
+              />
+            ) : (
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50">
+                <UserRound className="h-7 w-7 text-slate-400" />
+              </div>
+            )}
 
-            <p className="text-sm text-slate-500">{seeker.seeker_id}</p>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {lang === "ja" ? "求職者詳細" : "Job Seeker Details"}
+              </p>
+
+              <h2 className="mt-1 text-2xl font-bold text-slate-950">
+                {seeker.name}
+              </h2>
+
+              <p className="text-sm text-slate-500">{seeker.seeker_id}</p>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 hover:bg-slate-100"
+            className="rounded-full p-2 transition hover:bg-slate-100"
+            aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
@@ -158,7 +295,9 @@ export default function ViewModal({
         ================================================= */}
 
         <div className="overflow-y-auto p-6">
-          {/* PROFILE */}
+          {/* =================================================
+              PROFILE
+          ================================================= */}
 
           <div className="grid gap-4 md:grid-cols-3">
             <Info icon={Mail} label="Email" value={seeker.email} />
@@ -230,15 +369,17 @@ export default function ViewModal({
             />
           </div>
 
-          {/* EDUCATION + EMPLOYMENT */}
+          {/* =================================================
+              EDUCATION + EMPLOYMENT
+          ================================================= */}
 
           <div className="mt-6 grid gap-5 lg:grid-cols-2">
             <Section
               title={lang === "ja" ? "学歴" : "Education"}
               icon={GraduationCap}
             >
-              {seeker.education.length === 0 ? (
-                <Empty />
+              {(seeker.education || []).length === 0 ? (
+                <Empty lang={lang} />
               ) : (
                 seeker.education.map((education, index) => (
                   <div
@@ -267,8 +408,8 @@ export default function ViewModal({
               title={lang === "ja" ? "職歴" : "Employment History"}
               icon={Briefcase}
             >
-              {seeker.employment_history.length === 0 ? (
-                <Empty />
+              {(seeker.employment_history || []).length === 0 ? (
+                <Empty lang={lang} />
               ) : (
                 seeker.employment_history.map((employment, index) => (
                   <div
@@ -294,7 +435,171 @@ export default function ViewModal({
             </Section>
           </div>
 
-          {/* SKILLS */}
+          {/* =================================================
+              RESUME / CV
+          ================================================= */}
+
+          <section className="mt-5 rounded-2xl border border-slate-200 p-5">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-slate-500" />
+
+              <h3 className="font-semibold">
+                {lang === "ja" ? "履歴書 / CV" : "Resume / CV"}
+              </h3>
+            </div>
+
+            <p className="mt-1 text-sm text-slate-500">
+              {lang === "ja"
+                ? "求職者がアップロードした履歴書、または生成された履歴書"
+                : "Uploaded or generated Job Seeker resume."}
+            </p>
+
+            {resumeUrl ? (
+              <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-800">
+                    {getFileName(resumeSource)}
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    {seeker.resume_file
+                      ? lang === "ja"
+                        ? "アップロード済み履歴書"
+                        : "Uploaded Resume"
+                      : lang === "ja"
+                        ? "生成履歴書"
+                        : "Generated Resume"}
+                  </p>
+                </div>
+
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <a
+                    href={resumeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+
+                    {lang === "ja" ? "表示" : "View"}
+                  </a>
+
+                  <button
+                    type="button"
+                    disabled={isDownloading}
+                    onClick={onDownloadResume}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Download className="h-4 w-4" />
+
+                    {isDownloading
+                      ? lang === "ja"
+                        ? "ダウンロード中..."
+                        : "Downloading..."
+                      : lang === "ja"
+                        ? "ダウンロード"
+                        : "Download"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4">
+                <Empty
+                  lang={lang}
+                  message={
+                    lang === "ja"
+                      ? "履歴書はアップロードされていません。"
+                      : "No resume uploaded."
+                  }
+                />
+              </div>
+            )}
+          </section>
+
+          {/* =================================================
+              ADDITIONAL DOCUMENTS
+          ================================================= */}
+
+          <section className="mt-5 rounded-2xl border border-slate-200 p-5">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-slate-500" />
+
+              <h3 className="font-semibold">
+                {lang === "ja" ? "追加書類" : "Additional Documents"}
+              </h3>
+            </div>
+
+            <p className="mt-1 text-sm text-slate-500">
+              {lang === "ja"
+                ? "パスポート、在留カード、証明書、その他の関連書類"
+                : "Passport, residence card, certificates and other supporting documents."}
+            </p>
+
+            {documents.length === 0 ? (
+              <div className="mt-4">
+                <Empty
+                  lang={lang}
+                  message={
+                    lang === "ja"
+                      ? "追加書類はありません。"
+                      : "No additional documents uploaded."
+                  }
+                />
+              </div>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {documents.map((document, index) => {
+                  const url = getFileUrl(document.file_url);
+
+                  const fileName = getFileName(document.file_url);
+
+                  return (
+                    <div
+                      key={document._id || `${document.name}-${index}`}
+                      className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="flex min-w-0 items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500">
+                          <FileText className="h-5 w-5" />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="font-semibold text-slate-800">
+                            {document.name || fileName}
+                          </p>
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            {getDocumentTypeLabel(document.document_type)}
+
+                            {" · "}
+
+                            <span className="break-all">{fileName}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {url && (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+
+                          {lang === "ja" ? "表示" : "View"}
+                        </a>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* =================================================
+              SKILLS
+          ================================================= */}
 
           <div className="mt-5 rounded-2xl border border-slate-200 p-5">
             <h3 className="font-semibold">
@@ -302,7 +607,7 @@ export default function ViewModal({
             </h3>
 
             <div className="mt-3 flex flex-wrap gap-2">
-              {seeker.skills.length > 0 ? (
+              {(seeker.skills || []).length > 0 ? (
                 seeker.skills.map((skill) => (
                   <span
                     key={skill}
@@ -312,7 +617,7 @@ export default function ViewModal({
                   </span>
                 ))
               ) : (
-                <Empty />
+                <Empty lang={lang} />
               )}
             </div>
           </div>
@@ -466,7 +771,9 @@ export default function ViewModal({
             />
           </div>
 
-          {/* ADMIN REJECTION */}
+          {/* =================================================
+              ADMIN REJECTION
+          ================================================= */}
 
           {seeker.rejection_reason && (
             <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4">
@@ -515,7 +822,9 @@ export default function ViewModal({
                   <Download className="h-4 w-4" />
 
                   {isDownloading
-                    ? "Downloading..."
+                    ? lang === "ja"
+                      ? "ダウンロード中..."
+                      : "Downloading..."
                     : lang === "ja"
                       ? "履歴書をダウンロード"
                       : "Download Resume"}
@@ -535,7 +844,9 @@ export default function ViewModal({
 
 function Info({
   icon: Icon,
+
   label,
+
   value,
 }: {
   icon: typeof Mail;
@@ -549,7 +860,7 @@ function Info({
       <div className="flex gap-3">
         <Icon className="mt-0.5 h-4 w-4 text-slate-400" />
 
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase text-slate-400">
             {label}
           </p>
@@ -569,7 +880,9 @@ function Info({
 
 function Section({
   title,
+
   icon: Icon,
+
   children,
 }: {
   title: string;
@@ -597,6 +910,7 @@ function Section({
 
 function StatusBox({
   title,
+
   value,
 }: {
   title: string;
@@ -618,6 +932,7 @@ function StatusBox({
 
 function ScreeningDetail({
   label,
+
   value,
 }: {
   label: string;
@@ -641,6 +956,19 @@ function ScreeningDetail({
 // EMPTY
 // ======================================================
 
-function Empty() {
-  return <p className="text-sm text-slate-400">No information available.</p>;
+function Empty({
+  lang,
+
+  message,
+}: {
+  lang: string;
+
+  message?: string;
+}) {
+  return (
+    <p className="text-sm text-slate-400">
+      {message ||
+        (lang === "ja" ? "情報がありません。" : "No information available.")}
+    </p>
+  );
 }
