@@ -31,6 +31,32 @@ export const getStaffApplicationById = async (applicationId: string) => {
 };
 
 // ======================================================
+// GET FROZEN APPLICATION RESUME
+// ======================================================
+//
+// GET
+// /api/staff/applications/:applicationId/resume
+//
+// Backend permission:
+// applications:view
+//
+// Returns PDF as Blob.
+// ======================================================
+
+export const getStaffApplicationResume = async (
+  applicationId: string,
+): Promise<Blob> => {
+  const response = await axiosInstance.get<Blob>(
+    `/staff/applications/${applicationId}/resume`,
+    {
+      responseType: "blob",
+    },
+  );
+
+  return response.data;
+};
+
+// ======================================================
 // SCREEN APPLICATION
 // ======================================================
 
