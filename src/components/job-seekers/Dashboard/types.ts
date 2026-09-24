@@ -1,5 +1,10 @@
+// ======================================================
+// MISSING PROFILE FIELD
+// ======================================================
+
 export type MissingField = {
   field: string;
+
   label: string;
 };
 
@@ -111,8 +116,6 @@ export type VacancyItemResponse = {
 
 // ======================================================
 // APPLICATION STATUS
-//
-// Must match backend applicationSchema.js
 // ======================================================
 
 export type ApplicationStatus =
@@ -222,10 +225,209 @@ export type ApplyVacancyResponse = {
 };
 
 // ======================================================
+// INTERVIEW
+// ======================================================
+
+export type SeekerInterviewMethod =
+  | "ZOOM"
+  | "GOOGLE_MEET"
+  | "PHONE"
+  | "FACE_TO_FACE"
+  | "OTHER";
+
+export type SeekerInterviewStatus = "CONFIRMED" | "COMPLETED" | "CANCELLED";
+
+export type SeekerInterviewVacancy = {
+  vacancyId: string;
+
+  companyName?: string | null;
+
+  companyNameKana?: string | null;
+
+  title?: string | null;
+
+  titleKana?: string | null;
+
+  employmentType?: string | null;
+
+  workLocation?: string | null;
+
+  remoteWork?: string | null;
+};
+
+export type SeekerInterview = {
+  interviewId: string;
+
+  applicationId: string;
+
+  vacancyId: string;
+
+  applicationStatus?: ApplicationStatus | null;
+
+  interviewDate: string;
+
+  interviewTime: string;
+
+  timezone: string;
+
+  interviewMethod: SeekerInterviewMethod;
+
+  meetingLink?: string | null;
+
+  notes?: string | null;
+
+  status: SeekerInterviewStatus;
+
+  confirmedAt?: string | null;
+
+  completedAt?: string | null;
+
+  cancelledAt?: string | null;
+
+  cancellationReason?: string | null;
+
+  createdAt?: string;
+
+  updatedAt?: string;
+
+  vacancy?: SeekerInterviewVacancy | null;
+};
+
+export type SeekerInterviewSummary = {
+  confirmed: number;
+
+  completed: number;
+
+  cancelled: number;
+};
+
+export type SeekerInterviewListResponse = {
+  success: boolean;
+
+  count: number;
+
+  summary: SeekerInterviewSummary;
+
+  data: SeekerInterview[];
+
+  message?: string;
+};
+
+export type SeekerInterviewResponse = {
+  success: boolean;
+
+  data: SeekerInterview;
+
+  message?: string;
+};
+
+// ======================================================
+// NOTIFICATION
+// ======================================================
+
+export type SeekerNotificationType =
+  | "INTERVIEW_SCHEDULED"
+  | "INTERVIEW_CONFIRMED"
+  | "INTERVIEW_UPDATED"
+  | "INTERVIEW_CANCELLED";
+
+export type SeekerNotificationInterview = {
+  interviewId?: string | null;
+
+  applicationId?: string | null;
+
+  vacancyId?: string | null;
+
+  companyName?: string | null;
+
+  jobTitle?: string | null;
+
+  interviewDate?: string | null;
+
+  interviewTime?: string | null;
+
+  timezone?: string | null;
+
+  interviewMethod?: SeekerInterviewMethod | null;
+
+  meetingLink?: string | null;
+
+  notes?: string | null;
+};
+
+export type SeekerNotification = {
+  notificationId: string;
+
+  type: SeekerNotificationType;
+
+  title: string;
+
+  message: string;
+
+  interview?: SeekerNotificationInterview | null;
+
+  isRead: boolean;
+
+  readAt?: string | null;
+
+  createdAt: string;
+
+  updatedAt?: string;
+};
+
+export type NotificationPagination = {
+  page: number;
+
+  limit: number;
+
+  total: number;
+
+  totalPages: number;
+
+  hasNextPage: boolean;
+
+  hasPreviousPage: boolean;
+};
+
+export type SeekerNotificationListResponse = {
+  success: boolean;
+
+  count: number;
+
+  unreadCount: number;
+
+  pagination: NotificationPagination;
+
+  data: SeekerNotification[];
+
+  message?: string;
+};
+
+export type SeekerNotificationResponse = {
+  success: boolean;
+
+  message?: string;
+
+  data: SeekerNotification;
+};
+
+export type MarkAllNotificationsReadResponse = {
+  success: boolean;
+
+  message?: string;
+
+  data: {
+    modifiedCount: number;
+
+    unreadCount: number;
+  };
+};
+
+// ======================================================
 // DASHBOARD
 // ======================================================
 
-export type DashboardTab = "available" | "applied";
+export type DashboardTab = "available" | "applied" | "interviews";
 
 // ======================================================
 // API ERROR

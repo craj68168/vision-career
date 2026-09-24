@@ -7,9 +7,13 @@ import type {
   PlacementRequestResponse,
   ProviderApplicationListResponse,
   ProviderApplicationResponse,
+  ProviderInterviewListResponse,
+  ProviderInterviewResponse,
   ProviderPlacementCandidateListResponse,
   ProviderPlacementCandidateResponse,
+  ScheduleProviderInterviewPayload,
   UpdateProviderApplicationStatusPayload,
+  UpdateProviderInterviewPayload,
   UpdateProviderPlacementCandidateStatusPayload,
   VacancyListResponse,
   VacancyResponse,
@@ -116,6 +120,56 @@ export const getProviderApplicationResume = async (applicationId: string) => {
 };
 
 // ======================================================
+// PROVIDER INTERVIEWS
+// ======================================================
+
+export const getProviderInterviews = async (status?: string) => {
+  const response = await axiosInstance.get<ProviderInterviewListResponse>(
+    "/providers/interviews",
+    {
+      params: status
+        ? {
+            status,
+          }
+        : undefined,
+    },
+  );
+
+  return response.data;
+};
+
+export const getProviderInterviewById = async (interviewId: string) => {
+  const response = await axiosInstance.get<ProviderInterviewResponse>(
+    `/providers/interviews/${interviewId}`,
+  );
+
+  return response.data;
+};
+
+export const scheduleProviderInterview = async (
+  payload: ScheduleProviderInterviewPayload,
+) => {
+  const response = await axiosInstance.post<ProviderInterviewResponse>(
+    "/providers/interviews",
+    payload,
+  );
+
+  return response.data;
+};
+
+export const updateProviderInterview = async (
+  interviewId: string,
+  payload: UpdateProviderInterviewPayload,
+) => {
+  const response = await axiosInstance.patch<ProviderInterviewResponse>(
+    `/providers/interviews/${interviewId}`,
+    payload,
+  );
+
+  return response.data;
+};
+
+// ======================================================
 // PLACEMENT REQUESTS
 // ======================================================
 
@@ -178,14 +232,6 @@ export const deleteProviderPlacementRequest = async (recruitId: string) => {
 // PLACEMENT CANDIDATES
 // ======================================================
 
-// GET ALL PROVIDER MATCHED CANDIDATES
-//
-// GET /api/providers/placement-candidates
-//
-// Optional:
-// ?recruitId=R-XXXX
-// ======================================================
-
 export const getProviderPlacementCandidates = async (recruitId?: string) => {
   const response =
     await axiosInstance.get<ProviderPlacementCandidateListResponse>(
@@ -201,13 +247,6 @@ export const getProviderPlacementCandidates = async (recruitId?: string) => {
 
   return response.data;
 };
-
-// ======================================================
-// UPDATE CANDIDATE STATUS
-//
-// PATCH
-// /api/providers/placement-candidates/:placementCandidateId/status
-// ======================================================
 
 export const updateProviderPlacementCandidateStatus = async (
   placementCandidateId: string,

@@ -324,6 +324,137 @@ export type UpdateProviderApplicationStatusPayload = {
 };
 
 // ======================================================
+// PROVIDER INTERVIEW
+// ======================================================
+
+export type ProviderInterviewMethod =
+  | "ZOOM"
+  | "GOOGLE_MEET"
+  | "PHONE"
+  | "FACE_TO_FACE"
+  | "OTHER";
+
+export type ProviderInterviewStatus =
+  | "AWAITING_LINK"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export type ProviderInterviewCandidate = {
+  name?: string | null;
+
+  nationality?: string | null;
+
+  visaType?: string | null;
+
+  visaExpiryDate?: string | null;
+
+  japaneseLevel?: string | null;
+
+  skills: string[];
+
+  desiredJob?: string | null;
+
+  desiredLocation?: string | null;
+};
+
+export type ProviderInterviewVacancy = {
+  vacancyId: string;
+
+  title?: string | null;
+
+  companyName?: string | null;
+
+  employmentType?: string | null;
+
+  workLocation?: string | null;
+
+  japaneseLevel?: string | null;
+};
+
+export type ProviderInterview = {
+  interviewId: string;
+
+  applicationId: string;
+
+  vacancyId: string;
+
+  applicationStatus?: ProviderApplicationStatus | null;
+
+  interviewDate: string;
+
+  interviewTime: string;
+
+  timezone: string;
+
+  interviewMethod: ProviderInterviewMethod;
+
+  meetingLink?: string | null;
+
+  notes?: string | null;
+
+  status: ProviderInterviewStatus;
+
+  confirmedAt?: string | null;
+
+  createdAt?: string;
+
+  updatedAt?: string;
+
+  candidate?: ProviderInterviewCandidate | null;
+
+  vacancy?: ProviderInterviewVacancy | null;
+};
+
+export type ProviderInterviewListResponse = {
+  status: "success" | "error";
+
+  count: number;
+
+  data: ProviderInterview[];
+
+  message?: string;
+};
+
+export type ProviderInterviewResponse = {
+  status: "success" | "error";
+
+  data: ProviderInterview;
+
+  message?: string;
+};
+
+export type ScheduleProviderInterviewPayload = {
+  applicationId: string;
+
+  interviewDate: string;
+
+  interviewTime: string;
+
+  timezone: string;
+
+  interviewMethod: ProviderInterviewMethod;
+
+  meetingLink?: string;
+
+  notes?: string;
+};
+
+export type UpdateProviderInterviewPayload = {
+  interviewDate?: string;
+
+  interviewTime?: string;
+
+  timezone?: string;
+
+  interviewMethod?: ProviderInterviewMethod;
+
+  meetingLink?: string;
+
+  notes?: string;
+};
+
+// ======================================================
 // PLACEMENT REQUEST
 // ======================================================
 
@@ -445,7 +576,9 @@ export type PlacementCandidateStatus =
 // SAFE CANDIDATE SNAPSHOT
 //
 // IMPORTANT:
+//
 // Provider never receives:
+//
 // seekerId
 // email
 // phone

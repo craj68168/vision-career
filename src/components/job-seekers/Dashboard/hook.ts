@@ -12,6 +12,7 @@ import {
   getAvailableVacancies,
   getDashboardProfileStatus,
   getMyApplications,
+  getMyInterviews,
 } from "./api";
 
 import type {
@@ -19,6 +20,7 @@ import type {
   Application,
   DashboardTab,
   MissingField,
+  SeekerInterview,
   Vacancy,
 } from "./types";
 
@@ -34,6 +36,8 @@ export const useJobSeekerDashboard = () => {
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
 
   const [applications, setApplications] = useState<Application[]>([]);
+
+  const [interviews, setInterviews] = useState<SeekerInterview[]>([]);
 
   // ==================================================
   // PROFILE
@@ -149,14 +153,20 @@ export const useJobSeekerDashboard = () => {
 
         setError("");
 
-        const [profileResponse, vacancyResponse, applicationResponse] =
-          await Promise.all([
-            getDashboardProfileStatus(),
+        const [
+          profileResponse,
+          vacancyResponse,
+          applicationResponse,
+          interviewResponse,
+        ] = await Promise.all([
+          getDashboardProfileStatus(),
 
-            getAvailableVacancies(),
+          getAvailableVacancies(),
 
-            getMyApplications(),
-          ]);
+          getMyApplications(),
+
+          getMyInterviews(),
+        ]);
 
         // ==========================================
         // PROFILE
@@ -188,6 +198,14 @@ export const useJobSeekerDashboard = () => {
           Array.isArray(applicationResponse.data)
             ? applicationResponse.data
             : [],
+        );
+
+        // ==========================================
+        // INTERVIEWS
+        // ==========================================
+
+        setInterviews(
+          Array.isArray(interviewResponse.data) ? interviewResponse.data : [],
         );
 
         return true;
@@ -253,12 +271,6 @@ export const useJobSeekerDashboard = () => {
   const handleApplicationSubmitted = async () => {
     setApplyVacancy(null);
 
-    /*
-     * Reload all data.
-     *
-     * The backend removes already-applied vacancies
-     * automatically from GET /seekers/vacancies.
-     */
     await loadDashboard(false);
 
     setActiveTab("applied");
@@ -349,6 +361,47 @@ export const useJobSeekerDashboard = () => {
   }, [applications, search]);
 
   // ==================================================
+  // FILTER INTERVIEWS
+  // ==================================================
+
+  const filteredInterviews = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+
+    if (!keyword) {
+      return interviews;
+    }
+
+    return interviews.filter((interview) => {
+      const haystack = [
+        interview.interviewId,
+
+        interview.applicationId,
+
+        interview.vacancyId,
+
+        interview.status,
+
+        interview.interviewMethod,
+
+        interview.timezone,
+
+        interview.vacancy?.companyName,
+
+        interview.vacancy?.title,
+
+        interview.vacancy?.employmentType,
+
+        interview.vacancy?.workLocation,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(keyword);
+    });
+  }, [interviews, search]);
+
+  // ==================================================
   // COUNTS
   // ==================================================
 
@@ -360,6 +413,10 @@ export const useJobSeekerDashboard = () => {
     ["SENT_TO_PROVIDER", "UNDER_REVIEW", "INTERVIEW", "SELECTED"].includes(
       application.status,
     ),
+  ).length;
+
+  const interviewCount = interviews.filter(
+    (interview) => interview.status === "CONFIRMED",
   ).length;
 
   // ==================================================
@@ -375,6 +432,7 @@ export const useJobSeekerDashboard = () => {
 
     vacancies,
     applications,
+    interviews,
 
     isProfileComplete,
     profileCompletionPercentage,
@@ -388,10 +446,12 @@ export const useJobSeekerDashboard = () => {
 
     filteredVacancies,
     filteredApplications,
+    filteredInterviews,
 
     availableCount,
     appliedCount,
     inProgressCount,
+    interviewCount,
 
     applyVacancy,
 

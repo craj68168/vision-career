@@ -5,6 +5,11 @@ import type {
   ApplyVacancyPayload,
   ApplyVacancyResponse,
   DashboardProfileResponse,
+  MarkAllNotificationsReadResponse,
+  SeekerInterviewListResponse,
+  SeekerInterviewResponse,
+  SeekerNotificationListResponse,
+  SeekerNotificationResponse,
   VacancyItemResponse,
   VacancyListResponse,
 } from "./types";
@@ -67,9 +72,86 @@ export const applyToVacancy = async (
 ): Promise<ApplyVacancyResponse> => {
   const response = await axiosInstance.post<ApplyVacancyResponse>(
     "/seekers/applications",
-
     payload,
   );
 
   return response.data;
 };
+
+// ======================================================
+// MY INTERVIEWS
+// ======================================================
+
+export const getMyInterviews =
+  async (): Promise<SeekerInterviewListResponse> => {
+    const response = await axiosInstance.get<SeekerInterviewListResponse>(
+      "/seekers/interviews",
+    );
+
+    return response.data;
+  };
+
+// ======================================================
+// ONE INTERVIEW
+// ======================================================
+
+export const getMyInterviewById = async (
+  interviewId: string,
+): Promise<SeekerInterviewResponse> => {
+  const response = await axiosInstance.get<SeekerInterviewResponse>(
+    `/seekers/interviews/${interviewId}`,
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// MY NOTIFICATIONS
+// ======================================================
+
+export const getMyNotifications = async (
+  page = 1,
+  limit = 20,
+  unreadOnly = false,
+): Promise<SeekerNotificationListResponse> => {
+  const response = await axiosInstance.get<SeekerNotificationListResponse>(
+    "/seekers/notifications",
+    {
+      params: {
+        page,
+        limit,
+        unreadOnly,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// MARK ONE NOTIFICATION READ
+// ======================================================
+
+export const markNotificationRead = async (
+  notificationId: string,
+): Promise<SeekerNotificationResponse> => {
+  const response = await axiosInstance.patch<SeekerNotificationResponse>(
+    `/seekers/notifications/${notificationId}/read`,
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// MARK ALL NOTIFICATIONS READ
+// ======================================================
+
+export const markAllNotificationsRead =
+  async (): Promise<MarkAllNotificationsReadResponse> => {
+    const response =
+      await axiosInstance.patch<MarkAllNotificationsReadResponse>(
+        "/seekers/notifications/read-all",
+      );
+
+    return response.data;
+  };
