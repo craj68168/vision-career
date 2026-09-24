@@ -405,9 +405,9 @@ export default function AdminInterviewsPage() {
       )}
 
       {/* EDIT */}
-
       {editingInterview && (
         <EditInterviewModal
+          key={editingInterview.interviewId}
           interview={editingInterview}
           isSaving={isUpdating}
           onClose={closeEdit}
@@ -484,12 +484,11 @@ function InterviewStatusBadge({
   lang,
 }: {
   status: AdminInterviewStatus;
-
   lang: string;
 }) {
   let className = "border-slate-200 bg-slate-50 text-slate-700";
 
-  let label = status;
+  let label: string = status;
 
   switch (status) {
     case "AWAITING_LINK":
@@ -529,7 +528,6 @@ function InterviewStatusBadge({
     </span>
   );
 }
-
 // ======================================================
 // METHOD
 // ======================================================

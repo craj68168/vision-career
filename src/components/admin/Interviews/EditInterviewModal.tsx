@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   CalendarDays,
@@ -112,40 +112,42 @@ export default function EditInterviewModal({
 }: Props) {
   const { lang } = useLanguage();
 
-  const [interviewDate, setInterviewDate] = useState("");
+  // ==================================================
+  // FORM STATE
+  //
+  // IMPORTANT:
+  //
+  // Initialize directly from interview props.
+  //
+  // Do NOT use useEffect + setState here.
+  //
+  // The parent gives this modal a key using interviewId,
+  // so changing interview creates fresh form state.
+  // ==================================================
 
-  const [interviewTime, setInterviewTime] = useState("");
+  const [interviewDate, setInterviewDate] = useState(() =>
+    toDateInputValue(interview.interviewDate),
+  );
 
-  const [timezone, setTimezone] = useState("");
+  const [interviewTime, setInterviewTime] = useState(
+    () => interview.interviewTime || "",
+  );
 
-  const [interviewMethod, setInterviewMethod] =
-    useState<AdminInterviewMethod>("ZOOM");
+  const [timezone, setTimezone] = useState(
+    () => interview.timezone || "Asia/Tokyo",
+  );
 
-  const [meetingLink, setMeetingLink] = useState("");
+  const [interviewMethod, setInterviewMethod] = useState<AdminInterviewMethod>(
+    () => interview.interviewMethod,
+  );
 
-  const [notes, setNotes] = useState("");
+  const [meetingLink, setMeetingLink] = useState(
+    () => interview.meetingLink || "",
+  );
+
+  const [notes, setNotes] = useState(() => interview.notes || "");
 
   const [validationError, setValidationError] = useState("");
-
-  // ==================================================
-  // INITIAL VALUES
-  // ==================================================
-
-  useEffect(() => {
-    setInterviewDate(toDateInputValue(interview.interviewDate));
-
-    setInterviewTime(interview.interviewTime || "");
-
-    setTimezone(interview.timezone || "Asia/Tokyo");
-
-    setInterviewMethod(interview.interviewMethod);
-
-    setMeetingLink(interview.meetingLink || "");
-
-    setNotes(interview.notes || "");
-
-    setValidationError("");
-  }, [interview]);
 
   // ==================================================
   // SUBMIT
@@ -198,6 +200,10 @@ export default function EditInterviewModal({
       notes: notes.trim(),
     });
   };
+
+  // ==================================================
+  // ONLINE INTERVIEW
+  // ==================================================
 
   const onlineInterview =
     interviewMethod === "ZOOM" || interviewMethod === "GOOGLE_MEET";
@@ -253,6 +259,8 @@ export default function EditInterviewModal({
               </div>
             )}
 
+            {/* DATE / TIME */}
+
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
                 label={lang === "ja" ? "面接日" : "Interview Date"}
@@ -279,6 +287,8 @@ export default function EditInterviewModal({
               </Field>
             </div>
 
+            {/* TIMEZONE */}
+
             <Field
               label={lang === "ja" ? "タイムゾーン" : "Timezone"}
               icon={<Clock3 className="h-4 w-4" />}
@@ -295,6 +305,8 @@ export default function EditInterviewModal({
                 <option value="UTC">UTC</option>
               </select>
             </Field>
+
+            {/* METHOD */}
 
             <Field
               label={lang === "ja" ? "面接方法" : "Interview Method"}
@@ -314,6 +326,8 @@ export default function EditInterviewModal({
                 ))}
               </select>
             </Field>
+
+            {/* MEETING LINK */}
 
             <Field
               label={lang === "ja" ? "ミーティングリンク" : "Meeting Link"}
@@ -343,6 +357,8 @@ export default function EditInterviewModal({
                 </div>
               )}
             </Field>
+
+            {/* NOTES */}
 
             <Field
               label={lang === "ja" ? "重要事項・メモ" : "Important Notes"}
