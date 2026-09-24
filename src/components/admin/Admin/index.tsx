@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 import {
   Briefcase,
   Building2,
+  CalendarDays,
   ChevronDown,
   ClipboardList,
   CreditCard,
@@ -36,6 +37,8 @@ import type { AdminApiErrorResponse } from "@/components/auth/Admin/types";
 import { useLanguage } from "@/context/LanguageContext";
 
 import AdminApplicationsPage from "@/components/admin/Applications";
+
+import AdminInterviewsPage from "@/components/admin/Interviews";
 
 import AllVacanciesList from "@/components/admin/Vacancies";
 
@@ -64,6 +67,7 @@ interface TabConfig {
 
   label: {
     ja: string;
+
     en: string;
   };
 
@@ -255,6 +259,7 @@ export default function AdminPage() {
 
         label: {
           ja: "ダッシュボード",
+
           en: "Dashboard",
         },
 
@@ -268,6 +273,7 @@ export default function AdminPage() {
 
         label: {
           ja: "求人",
+
           en: "Vacancies",
         },
 
@@ -281,6 +287,7 @@ export default function AdminPage() {
 
         label: {
           ja: "応募",
+
           en: "Applications",
         },
 
@@ -290,10 +297,25 @@ export default function AdminPage() {
       },
 
       {
+        id: "interviews",
+
+        label: {
+          ja: "面接",
+
+          en: "Interviews",
+        },
+
+        icon: CalendarDays,
+
+        component: <AdminInterviewsPage />,
+      },
+
+      {
         id: "providers",
 
         label: {
           ja: "クライアント",
+
           en: "Clients",
         },
 
@@ -307,6 +329,7 @@ export default function AdminPage() {
 
         label: {
           ja: "求職者",
+
           en: "Job Seekers",
         },
 
@@ -320,6 +343,7 @@ export default function AdminPage() {
 
         label: {
           ja: "採用依頼",
+
           en: "Placement Requests",
         },
 
@@ -333,6 +357,7 @@ export default function AdminPage() {
 
         label: {
           ja: "採用請求",
+
           en: "Placement Billings",
         },
 
@@ -346,6 +371,7 @@ export default function AdminPage() {
 
         label: {
           ja: "スタッフ",
+
           en: "Staff",
         },
 
@@ -359,6 +385,7 @@ export default function AdminPage() {
 
         label: {
           ja: "スタッフ訓練",
+
           en: "Staff Training",
         },
 
@@ -372,6 +399,7 @@ export default function AdminPage() {
 
         label: {
           ja: "セキュリティ",
+
           en: "Security",
         },
 
@@ -387,7 +415,7 @@ export default function AdminPage() {
   // ACTIVE TAB
   // ====================================================
 
-  const activeTabConfig = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
+  const activeTabConfig = tabs.find((tab) => tab.id === activeTab) || tabs[0];
 
   const ActiveTabIcon = activeTabConfig.icon;
 
@@ -546,9 +574,7 @@ export default function AdminPage() {
 
       <nav className="sticky top-16 z-40 w-full border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* ================================================
-              DESKTOP
-          ================================================ */}
+          {/* DESKTOP */}
 
           <div className="hidden items-center gap-1 overflow-x-auto py-2 lg:flex">
             {tabs.map((tab) => {
@@ -577,9 +603,7 @@ export default function AdminPage() {
             })}
           </div>
 
-          {/* ================================================
-              MOBILE
-          ================================================ */}
+          {/* MOBILE */}
 
           <div className="relative lg:hidden">
             <button
