@@ -4,13 +4,10 @@ import type {
   CreatePlacementRequestPayload,
   PlacementRequestListResponse,
   PlacementRequestResponse,
-  ProviderPlacementCandidateListResponse,
-  ProviderPlacementCandidateResponse,
-  UpdateProviderPlacementCandidateStatusPayload,
 } from "./types";
 
 // ======================================================
-// PLACEMENT REQUESTS
+// GET PLACEMENT REQUESTS
 // ======================================================
 
 export const getProviderPlacementRequests = async () => {
@@ -21,6 +18,10 @@ export const getProviderPlacementRequests = async () => {
   return response.data;
 };
 
+// ======================================================
+// GET PLACEMENT REQUEST
+// ======================================================
+
 export const getProviderPlacementRequestById = async (recruitId: string) => {
   const response = await axiosInstance.get<PlacementRequestResponse>(
     `/providers/recruits/${recruitId}`,
@@ -28,6 +29,10 @@ export const getProviderPlacementRequestById = async (recruitId: string) => {
 
   return response.data;
 };
+
+// ======================================================
+// CREATE
+// ======================================================
 
 export const createProviderPlacementRequest = async (
   payload: CreatePlacementRequestPayload,
@@ -39,6 +44,10 @@ export const createProviderPlacementRequest = async (
 
   return response.data;
 };
+
+// ======================================================
+// UPDATE
+// ======================================================
 
 export const updateProviderPlacementRequest = async (
   recruitId: string,
@@ -52,6 +61,10 @@ export const updateProviderPlacementRequest = async (
   return response.data;
 };
 
+// ======================================================
+// SUBMIT
+// ======================================================
+
 export const submitProviderPlacementRequest = async (recruitId: string) => {
   const response = await axiosInstance.patch<PlacementRequestResponse>(
     `/providers/recruits/${recruitId}/submit`,
@@ -59,6 +72,10 @@ export const submitProviderPlacementRequest = async (recruitId: string) => {
 
   return response.data;
 };
+
+// ======================================================
+// DELETE
+// ======================================================
 
 export const deleteProviderPlacementRequest = async (recruitId: string) => {
   const response = await axiosInstance.delete<PlacementRequestResponse>(
@@ -69,34 +86,10 @@ export const deleteProviderPlacementRequest = async (recruitId: string) => {
 };
 
 // ======================================================
-// CANDIDATES
+// COMPATIBILITY EXPORTS
 // ======================================================
 
-export const getProviderPlacementCandidates = async (recruitId?: string) => {
-  const response =
-    await axiosInstance.get<ProviderPlacementCandidateListResponse>(
-      "/providers/placement-candidates",
-      {
-        params: recruitId
-          ? {
-              recruitId,
-            }
-          : undefined,
-      },
-    );
-
-  return response.data;
-};
-
-export const updateProviderPlacementCandidateStatus = async (
-  placementCandidateId: string,
-  payload: UpdateProviderPlacementCandidateStatusPayload,
-) => {
-  const response =
-    await axiosInstance.patch<ProviderPlacementCandidateResponse>(
-      `/providers/placement-candidates/${placementCandidateId}/status`,
-      payload,
-    );
-
-  return response.data;
-};
+export {
+  getProviderPlacementCandidates,
+  updateProviderPlacementCandidateStatus,
+} from "./placementCandidatesApi";

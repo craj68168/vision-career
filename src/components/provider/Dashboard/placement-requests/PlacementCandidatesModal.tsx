@@ -1,6 +1,6 @@
 "use client";
 
-import axios from "axios";
+import type { ReactNode } from "react";
 
 import {
   BriefcaseBusiness,
@@ -17,28 +17,23 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-
-import toast from "react-hot-toast";
-
-import { getProviderPlacementCandidates } from "./api";
-
-import { getProviderPlacementInterviews } from "./placementInterviewApi";
-
 import PlacementInterviewModal from "./PlacementInterviewModal";
+
+import { usePlacementCandidates } from "./placementCandidatesHook";
+
+import type { PlacementRequest } from "./types";
+
+import type {
+  PlacementCandidateStatus,
+  ProviderPlacementCandidate,
+  ProviderPlacementCandidateDecisionStatus,
+  UpdateProviderPlacementCandidateStatusPayload,
+} from "./placementCandidatesTypes";
 
 import type {
   PlacementInterview,
   PlacementInterviewStatus,
-} from "./placementInterviewApi";
-
-import type {
-  PlacementCandidateStatus,
-  PlacementRequest,
-  ProviderPlacementCandidate,
-  ProviderPlacementCandidateDecisionStatus,
-  UpdateProviderPlacementCandidateStatusPayload,
-} from "./types";
+} from "./placementInterviewTypes";
 
 // ======================================================
 // PROPS
@@ -64,26 +59,7 @@ type Props = {
 };
 
 // ======================================================
-// API ERROR
-// ======================================================
-
-type ApiErrorResponse = {
-  status?: string;
-
-  success?: boolean;
-
-  message?: string;
-};
-
-// ======================================================
-// NEXT STATUS ACTION
-//
-// IMPORTANT:
-//
-// UNDER_REVIEW does NOT directly move to INTERVIEW.
-//
-// Interview status is entered by the interview scheduling
-// endpoint after a valid schedule has been created.
+// NEXT ACTION
 // ======================================================
 
 const getNextAction = (
@@ -141,201 +117,53 @@ export default function PlacementCandidatesModal({
   onClose,
   onStatusChange,
 }: Props) {
-  const [remoteCandidates, setRemoteCandidates] = useState<
-    ProviderPlacementCandidate[] | null
-  >(null);
+  const {
+    currentCandidates,
 
-  const [interviews, setInterviews] = useState<PlacementInterview[]>([]);
+    interviewMap,
 
-  const [loadingInterviewData, setLoadingInterviewData] = useState(false);
+    placedCount,
 
-  const [interviewCandidate, setInterviewCandidate] =
-    useState<ProviderPlacementCandidate | null>(null);
+    loadingInterviewData,
 
-  const [editingInterview, setEditingInterview] =
-    useState<PlacementInterview | null>(null);
+    loadingCandidateInterviewId,
 
-  const [rejectingCandidateId, setRejectingCandidateId] = useState<
-    string | null
-  >(null);
+    interviewCandidate,
 
-  const [rejectionReason, setRejectionReason] = useState("");
+    editingInterview,
 
-  // ====================================================
-  // CURRENT CANDIDATES
-  // ====================================================
+    rejectingCandidateId,
+    setRejectingCandidateId,
 
-  const currentCandidates = remoteCandidates ?? candidates;
+    rejectionReason,
+    setRejectionReason,
 
-  // ====================================================
-  // REFRESH PLACEMENT DATA
-  // ====================================================
+    updateCandidateStatus,
 
-  const refreshPlacementData = useCallback(async () => {
-    if (!request) {
-      return;
-    }
+    closeReject,
 
-    try {
-      setLoadingInterviewData(true);
+    rejectCandidate,
 
-      const [candidateResponse, interviewResponse] = await Promise.all([
-        getProviderPlacementCandidates(request.recruitId),
+    openScheduleInterview,
 
-        getProviderPlacementInterviews(),
-      ]);
+    closeScheduleInterview,
 
-      const candidateData = Array.isArray(candidateResponse.data)
-        ? candidateResponse.data.filter(
-            (candidate) => candidate.recruitId === request.recruitId,
-          )
-        : [];
+    handleInterviewSuccess,
+  } = usePlacementCandidates({
+    open,
 
-      const interviewData = Array.isArray(interviewResponse.data)
-        ? interviewResponse.data.filter(
-            (interview) => interview.recruitId === request.recruitId,
-          )
-        : [];
+    request,
 
-      setRemoteCandidates(candidateData);
+    candidates,
 
-      setInterviews(interviewData);
-    } catch (error: unknown) {
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        toast.error(
-          error.response?.data?.message ||
-            (lang === "ja"
-              ? "面接情報の読み込みに失敗しました。"
-              : "Failed to load placement interview information."),
-        );
+    lang,
 
-        return;
-      }
-
-      toast.error(
-        lang === "ja"
-          ? "面接情報の読み込みに失敗しました。"
-          : "Failed to load placement interview information.",
-      );
-    } finally {
-      setLoadingInterviewData(false);
-    }
-  }, [lang, request]);
-
-  // ====================================================
-  // LOAD WHEN MODAL OPENS
-  // ====================================================
-
-  useEffect(() => {
-    if (!open || !request) {
-      return;
-    }
-
-    void refreshPlacementData();
-  }, [open, request, refreshPlacementData]);
-
-  // ====================================================
-  // INTERVIEW MAP
-  // ====================================================
-
-  const interviewMap = useMemo(() => {
-    const map = new Map<string, PlacementInterview>();
-
-    for (const interview of interviews) {
-      if (interview.placementCandidateId) {
-        map.set(interview.placementCandidateId, interview);
-      }
-    }
-
-    return map;
-  }, [interviews]);
-
-  // ====================================================
-  // SUMMARY
-  // ====================================================
-
-  const placedCount = useMemo(
-    () =>
-      currentCandidates.filter((candidate) => candidate.status === "PLACED")
-        .length,
-    [currentCandidates],
-  );
-
-  // ====================================================
-  // CLOSE REJECTION
-  // ====================================================
-
-  const closeReject = () => {
-    setRejectingCandidateId(null);
-
-    setRejectionReason("");
-  };
-
-  // ====================================================
-  // STATUS CHANGE
-  // ====================================================
-
-  const updateCandidateStatus = async (
-    placementCandidateId: string,
-    payload: UpdateProviderPlacementCandidateStatusPayload,
-  ) => {
-    await onStatusChange(placementCandidateId, payload);
-
-    await refreshPlacementData();
-  };
-
-  // ====================================================
-  // REJECT
-  // ====================================================
-
-  const rejectCandidate = async () => {
-    if (!rejectingCandidateId || !rejectionReason.trim()) {
-      return;
-    }
-
-    await updateCandidateStatus(rejectingCandidateId, {
-      status: "REJECTED",
-
-      rejectionReason: rejectionReason.trim(),
-    });
-
-    closeReject();
-  };
-
-  // ====================================================
-  // SCHEDULE INTERVIEW
-  // ====================================================
-
-  const openScheduleInterview = (
-    candidate: ProviderPlacementCandidate,
-    interview?: PlacementInterview | null,
-  ) => {
-    setInterviewCandidate(candidate);
-
-    setEditingInterview(interview || null);
-  };
-
-  const closeScheduleInterview = () => {
-    setInterviewCandidate(null);
-
-    setEditingInterview(null);
-  };
-
-  const handleInterviewSuccess = async () => {
-    await refreshPlacementData();
-  };
-
-  // ====================================================
-  // HIDDEN
-  // ====================================================
+    onStatusChange,
+  });
 
   if (!open || !request) {
     return null;
   }
-
-  // ====================================================
-  // UI
-  // ====================================================
 
   return (
     <>
@@ -441,9 +269,21 @@ export default function PlacementCandidatesModal({
                   const isBusy =
                     actionCandidateId === item.placementCandidateId;
 
+                  const isInterviewLookup =
+                    loadingCandidateInterviewId === item.placementCandidateId;
+
                   const canScheduleInterview =
-                    item.status === "UNDER_REVIEW" ||
-                    (item.status === "INTERVIEW" && !interview);
+                    item.status === "UNDER_REVIEW" && !interview;
+
+                  /*
+                   * Candidate status says INTERVIEW but
+                   * local interview was not loaded.
+                   *
+                   * Do NOT create another one.
+                   * Ask backend for the existing interview.
+                   */
+                  const needsInterviewLookup =
+                    item.status === "INTERVIEW" && !interview;
 
                   const canEditInterview =
                     item.status === "INTERVIEW" &&
@@ -565,7 +405,9 @@ export default function PlacementCandidatesModal({
                             {item.candidate.education.map(
                               (education, index) => (
                                 <div
-                                  key={`${education.school ?? "school"}-${index}`}
+                                  key={`${
+                                    education.school ?? "school"
+                                  }-${index}`}
                                   className="rounded-xl bg-slate-50 p-3"
                                 >
                                   <p className="font-medium text-slate-900">
@@ -597,7 +439,9 @@ export default function PlacementCandidatesModal({
                             {item.candidate.employment_history.map(
                               (employment, index) => (
                                 <div
-                                  key={`${employment.company_name ?? "company"}-${index}`}
+                                  key={`${
+                                    employment.company_name ?? "company"
+                                  }-${index}`}
                                   className="rounded-xl bg-slate-50 p-3"
                                 >
                                   <p className="font-medium text-slate-900">
@@ -621,7 +465,9 @@ export default function PlacementCandidatesModal({
                           interview={interview}
                           lang={lang}
                           canEdit={canEditInterview}
-                          onEdit={() => openScheduleInterview(item, interview)}
+                          onEdit={() =>
+                            void openScheduleInterview(item, interview)
+                          }
                         />
                       )}
 
@@ -639,7 +485,7 @@ export default function PlacementCandidatesModal({
                         </div>
                       )}
 
-                      {/* STATUS DATES */}
+                      {/* DATES */}
 
                       <div className="mt-5 flex flex-wrap gap-4 text-xs text-slate-400">
                         {item.providerReviewedAt && (
@@ -675,6 +521,7 @@ export default function PlacementCandidatesModal({
 
                       {(nextAction ||
                         canScheduleInterview ||
+                        needsInterviewLookup ||
                         canEditInterview ||
                         canReject) && (
                         <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5">
@@ -704,14 +551,22 @@ export default function PlacementCandidatesModal({
                             </button>
                           )}
 
+                          {/* SCHEDULE */}
+
                           {canScheduleInterview && (
                             <button
                               type="button"
-                              disabled={Boolean(actionCandidateId)}
-                              onClick={() => openScheduleInterview(item, null)}
+                              disabled={
+                                Boolean(actionCandidateId) || isInterviewLookup
+                              }
+                              onClick={() => void openScheduleInterview(item)}
                               className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
                             >
-                              <CalendarDays className="h-4 w-4" />
+                              {isInterviewLookup ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <CalendarDays className="h-4 w-4" />
+                              )}
 
                               {lang === "ja"
                                 ? "面接を設定"
@@ -719,12 +574,39 @@ export default function PlacementCandidatesModal({
                             </button>
                           )}
 
+                          {/* INTERVIEW EXISTS BUT LOCAL MAP MISSED IT */}
+
+                          {needsInterviewLookup && (
+                            <button
+                              type="button"
+                              disabled={
+                                Boolean(actionCandidateId) || isInterviewLookup
+                              }
+                              onClick={() => void openScheduleInterview(item)}
+                              className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:opacity-50"
+                            >
+                              {isInterviewLookup ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Video className="h-4 w-4" />
+                              )}
+
+                              {lang === "ja"
+                                ? "面接情報を開く"
+                                : "Open Interview"}
+                            </button>
+                          )}
+
+                          {/* EDIT */}
+
                           {canEditInterview && interview && (
                             <button
                               type="button"
-                              disabled={Boolean(actionCandidateId)}
+                              disabled={
+                                Boolean(actionCandidateId) || isInterviewLookup
+                              }
                               onClick={() =>
-                                openScheduleInterview(item, interview)
+                                void openScheduleInterview(item, interview)
                               }
                               className="inline-flex items-center gap-2 rounded-xl border border-blue-200 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 disabled:opacity-50"
                             >
@@ -733,6 +615,8 @@ export default function PlacementCandidatesModal({
                               {lang === "ja" ? "面接を編集" : "Edit Interview"}
                             </button>
                           )}
+
+                          {/* REJECT */}
 
                           {canReject && (
                             <button
@@ -813,7 +697,7 @@ export default function PlacementCandidatesModal({
         </div>
       </div>
 
-      {/* INTERVIEW FORM */}
+      {/* INTERVIEW MODAL */}
 
       {interviewCandidate && (
         <PlacementInterviewModal
@@ -909,8 +793,8 @@ function InterviewCard({
       {interview.status === "AWAITING_LINK" && (
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
           {lang === "ja"
-            ? "ミーティングリンク待ちです。リンクを追加すると面接が確定し、候補者へ通知されます。"
-            : "Waiting for a meeting link. Add the link to confirm the interview and notify the candidate."}
+            ? "ミーティングリンク待ちです。リンクを追加すると面接が確定します。"
+            : "Waiting for a meeting link. Add the link to confirm the interview."}
         </div>
       )}
 
@@ -951,7 +835,7 @@ function InterviewInfo({
   label,
   value,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
 
   label: string;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import axios from "axios";
+import type { ReactNode } from "react";
 
 import {
   CalendarDays,
@@ -13,20 +13,12 @@ import {
   X,
 } from "lucide-react";
 
-import { useState } from "react";
-
-import toast from "react-hot-toast";
-
-import {
-  schedulePlacementInterview,
-  updatePlacementInterview,
-} from "./placementInterviewApi";
+import { usePlacementInterview } from "./placementInterviewHook";
 
 import type {
   PlacementInterview,
-  PlacementInterviewFormPayload,
   PlacementInterviewMethod,
-} from "./placementInterviewApi";
+} from "./placementInterviewTypes";
 
 import type { PlacementRequest, ProviderPlacementCandidate } from "./types";
 
@@ -49,42 +41,6 @@ type Props = {
 };
 
 // ======================================================
-// API ERROR
-// ======================================================
-
-type ApiErrorResponse = {
-  status?: string;
-
-  success?: boolean;
-
-  message?: string;
-};
-
-// ======================================================
-// DATE INPUT VALUE
-// ======================================================
-
-const toDateInputValue = (value?: string | null) => {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const year = date.getUTCFullYear();
-
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-
-  const day = String(date.getUTCDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
-
-// ======================================================
 // COMPONENT
 // ======================================================
 
@@ -96,163 +52,45 @@ export default function PlacementInterviewModal({
   onClose,
   onSuccess,
 }: Props) {
-  const isEdit = Boolean(interview);
+  const {
+    isEdit,
 
-  const [interviewDate, setInterviewDate] = useState(() =>
-    toDateInputValue(interview?.interviewDate),
-  );
+    interviewDate,
+    setInterviewDate,
 
-  const [interviewTime, setInterviewTime] = useState(
-    () => interview?.interviewTime || "",
-  );
+    interviewTime,
+    setInterviewTime,
 
-  const [timezone, setTimezone] = useState(
-    () => interview?.timezone || "Asia/Tokyo",
-  );
+    timezone,
+    setTimezone,
 
-  const [interviewMethod, setInterviewMethod] =
-    useState<PlacementInterviewMethod>(
-      () => interview?.interviewMethod || "ZOOM",
-    );
+    interviewMethod,
+    setInterviewMethod,
 
-  const [meetingLink, setMeetingLink] = useState(
-    () => interview?.meetingLink || "",
-  );
+    meetingLink,
+    setMeetingLink,
 
-  const [notes, setNotes] = useState(() => interview?.notes || "");
+    notes,
+    setNotes,
 
-  const [validationError, setValidationError] = useState("");
+    validationError,
 
-  const [saving, setSaving] = useState(false);
+    saving,
 
-  // ====================================================
-  // ONLINE METHOD
-  // ====================================================
+    onlineInterview,
 
-  const onlineInterview =
-    interviewMethod === "ZOOM" || interviewMethod === "GOOGLE_MEET";
+    handleSubmit,
+  } = usePlacementInterview({
+    placementCandidateId: candidate.placementCandidateId,
 
-  // ====================================================
-  // SUBMIT
-  // ====================================================
+    interview,
 
-  const handleSubmit = async () => {
-    setValidationError("");
+    lang,
 
-    if (!interviewDate) {
-      setValidationError(
-        lang === "ja"
-          ? "面接日を選択してください。"
-          : "Interview date is required.",
-      );
+    onClose,
 
-      return;
-    }
-
-    if (!interviewTime) {
-      setValidationError(
-        lang === "ja"
-          ? "面接時間を選択してください。"
-          : "Interview time is required.",
-      );
-
-      return;
-    }
-
-    if (!timezone.trim()) {
-      setValidationError(
-        lang === "ja"
-          ? "タイムゾーンを入力してください。"
-          : "Timezone is required.",
-      );
-
-      return;
-    }
-
-    if (meetingLink.trim().length > 2000) {
-      setValidationError(
-        lang === "ja"
-          ? "ミーティングリンクが長すぎます。"
-          : "Meeting link is too long.",
-      );
-
-      return;
-    }
-
-    if (notes.trim().length > 2000) {
-      setValidationError(
-        lang === "ja"
-          ? "備考は2000文字以内で入力してください。"
-          : "Notes cannot exceed 2000 characters.",
-      );
-
-      return;
-    }
-
-    const payload: PlacementInterviewFormPayload = {
-      interviewDate,
-
-      interviewTime,
-
-      timezone: timezone.trim(),
-
-      interviewMethod,
-
-      meetingLink: meetingLink.trim(),
-
-      notes: notes.trim(),
-    };
-
-    try {
-      setSaving(true);
-
-      const response =
-        isEdit && interview
-          ? await updatePlacementInterview(interview.interviewId, payload)
-          : await schedulePlacementInterview(
-              candidate.placementCandidateId,
-              payload,
-            );
-
-      toast.success(
-        response.message ||
-          (isEdit
-            ? lang === "ja"
-              ? "面接情報を更新しました。"
-              : "Interview updated successfully."
-            : lang === "ja"
-              ? "面接を設定しました。"
-              : "Interview scheduled successfully."),
-      );
-
-      await onSuccess();
-
-      onClose();
-    } catch (error: unknown) {
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        toast.error(
-          error.response?.data?.message ||
-            (lang === "ja"
-              ? "面接の保存に失敗しました。"
-              : "Failed to save interview."),
-        );
-
-        return;
-      }
-
-      toast.error(
-        lang === "ja"
-          ? "面接の保存に失敗しました。"
-          : "Failed to save interview.",
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // ====================================================
-  // UI
-  // ====================================================
+    onSuccess,
+  });
 
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
@@ -444,7 +282,7 @@ export default function PlacementInterviewModal({
                 <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-700">
                   {lang === "ja"
                     ? "リンクなしでも保存できますが、面接はリンク待ちになります。リンクを追加して面接が確定するまで候補者への最終通知は送信されません。"
-                    : "You can schedule without a link, but the interview will remain Awaiting Link. The final seeker notification is sent when the link is added and the interview becomes confirmed."}
+                    : "You can schedule without a link, but the interview will remain Awaiting Link. Add the link later to confirm the interview."}
                 </div>
               )}
             </div>
@@ -528,7 +366,7 @@ export default function PlacementInterviewModal({
 }
 
 // ======================================================
-// FIELD
+// FORM FIELD
 // ======================================================
 
 function FormField({
@@ -540,7 +378,7 @@ function FormField({
 
   required?: boolean;
 
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <label className="block">
@@ -556,7 +394,7 @@ function FormField({
 }
 
 // ======================================================
-// SUMMARY ITEM
+// SUMMARY
 // ======================================================
 
 function SummaryItem({
@@ -564,7 +402,7 @@ function SummaryItem({
   label,
   value,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
 
   label: string;
 

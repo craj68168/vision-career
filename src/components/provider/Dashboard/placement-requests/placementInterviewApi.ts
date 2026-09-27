@@ -1,136 +1,14 @@
 import axiosInstance from "@/services/axiosInstance";
 
-// ======================================================
-// INTERVIEW TYPES
-// ======================================================
-
-export type PlacementInterviewMethod =
-  | "ZOOM"
-  | "GOOGLE_MEET"
-  | "PHONE"
-  | "FACE_TO_FACE"
-  | "OTHER";
-
-export type PlacementInterviewStatus =
-  | "AWAITING_LINK"
-  | "CONFIRMED"
-  | "COMPLETED"
-  | "CANCELLED";
-
-export type PlacementInterviewCandidate = {
-  name?: string | null;
-
-  nationality?: string | null;
-
-  visaType?: string | null;
-
-  visaExpiryDate?: string | null;
-
-  japaneseLevel?: string | null;
-
-  skills?: string[];
-
-  desiredJob?: string | null;
-
-  desiredLocation?: string | null;
-};
-
-export type PlacementInterviewRequestSummary = {
-  recruitId?: string | null;
-
-  title?: string | null;
-
-  companyName?: string | null;
-
-  employmentType?: string | null;
-
-  workLocation?: string | null;
-
-  japaneseLevel?: string | null;
-};
-
-export type PlacementInterview = {
-  interviewId: string;
-
-  sourceType: "APPLICATION" | "PLACEMENT";
-
-  applicationId?: string | null;
-
-  vacancyId?: string | null;
-
-  placementCandidateId?: string | null;
-
-  recruitId?: string | null;
-
-  applicationStatus?: string | null;
-
-  placementCandidateStatus?: string | null;
-
-  interviewDate: string;
-
-  interviewTime: string;
-
-  timezone: string;
-
-  interviewMethod: PlacementInterviewMethod;
-
-  meetingLink?: string | null;
-
-  notes?: string | null;
-
-  status: PlacementInterviewStatus;
-
-  confirmedAt?: string | null;
-
-  completedAt?: string | null;
-
-  cancelledAt?: string | null;
-
-  cancellationReason?: string | null;
-
-  createdAt?: string | null;
-
-  updatedAt?: string | null;
-
-  candidate?: PlacementInterviewCandidate | null;
-
-  placementRequest?: PlacementInterviewRequestSummary | null;
-};
-
-export type PlacementInterviewListResponse = {
-  status: "success" | "error";
-
-  count: number;
-
-  data: PlacementInterview[];
-
-  message?: string;
-};
-
-export type PlacementInterviewResponse = {
-  status: "success" | "error";
-
-  data: PlacementInterview;
-
-  message?: string;
-};
-
-export type PlacementInterviewFormPayload = {
-  interviewDate: string;
-
-  interviewTime: string;
-
-  timezone: string;
-
-  interviewMethod: PlacementInterviewMethod;
-
-  meetingLink?: string;
-
-  notes?: string;
-};
+import type {
+  PlacementInterview,
+  PlacementInterviewFormPayload,
+  PlacementInterviewListResponse,
+  PlacementInterviewResponse,
+} from "./placementInterviewTypes";
 
 // ======================================================
-// GET PROVIDER PLACEMENT INTERVIEWS
+// GET PLACEMENT INTERVIEWS
 // ======================================================
 
 export const getProviderPlacementInterviews =
@@ -143,21 +21,45 @@ export const getProviderPlacementInterviews =
       ? response.data.data
       : [];
 
+    const placementInterviews = allInterviews.filter(
+      (interview) => interview.sourceType === "PLACEMENT",
+    );
+
     return {
       ...response.data,
 
-      count: allInterviews.filter(
-        (interview) => interview.sourceType === "PLACEMENT",
-      ).length,
+      count: placementInterviews.length,
 
-      data: allInterviews.filter(
-        (interview) => interview.sourceType === "PLACEMENT",
-      ),
+      data: placementInterviews,
     };
   };
 
 // ======================================================
-// SCHEDULE PLACEMENT INTERVIEW
+// FIND INTERVIEW BY CANDIDATE
+// ======================================================
+
+export const getProviderPlacementInterviewByCandidateId = async (
+  placementCandidateId: string,
+): Promise<PlacementInterview | null> => {
+  const response = await axiosInstance.get<PlacementInterviewListResponse>(
+    "/providers/interviews",
+  );
+
+  const interviews = Array.isArray(response.data.data)
+    ? response.data.data
+    : [];
+
+  return (
+    interviews.find(
+      (interview) =>
+        interview.sourceType === "PLACEMENT" &&
+        interview.placementCandidateId === placementCandidateId,
+    ) ?? null
+  );
+};
+
+// ======================================================
+// CREATE INTERVIEW
 // ======================================================
 
 export const schedulePlacementInterview = async (
@@ -187,7 +89,7 @@ export const schedulePlacementInterview = async (
 };
 
 // ======================================================
-// UPDATE PLACEMENT INTERVIEW
+// UPDATE INTERVIEW
 // ======================================================
 
 export const updatePlacementInterview = async (
