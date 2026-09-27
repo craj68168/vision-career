@@ -8,6 +8,7 @@ import {
   Briefcase,
   Building2,
   ClipboardList,
+  CreditCard,
   Eye,
   FileText,
   Inbox,
@@ -35,8 +36,13 @@ import DeletePlacementRequestModal from "./DeletePlacementRequestModal";
 import SubmitPlacementRequestModal from "./SubmitPlacementRequestModal";
 import PlacementCandidatesModal from "./PlacementCandidatesModal";
 import ProviderApplicationCard from "./ProviderApplicationCard";
+import ProviderBillings from "./ProviderBillings";
 
-import type { PlacementRequestStatus, Vacancy } from "./types";
+import type {
+  PlacementRequestStatus,
+  ProviderDashboardTab,
+  Vacancy,
+} from "./types";
 
 // ======================================================
 // VACANCY ACTION RULES
@@ -156,6 +162,53 @@ export default function ProviderDashboard() {
   } = useProviderDashboard();
 
   // ====================================================
+  // TAB CHANGE
+  //
+  // IMPORTANT:
+  //
+  // Vacancies, Applications and Placement Requests use
+  // the same search state.
+  //
+  // Clear search whenever the user changes dashboard
+  // sections so an old search does not hide another
+  // section's data.
+  // ====================================================
+
+  const handleTabChange = (tab: ProviderDashboardTab) => {
+    setSearch("");
+
+    setActiveTab(tab);
+  };
+
+  // ====================================================
+  // CREATE VACANCY SUCCESS
+  //
+  // Clear old search before reloading vacancies.
+  // ====================================================
+
+  const handleVacancyCreatedAndResetSearch = async () => {
+    setSearch("");
+
+    await handleVacancyCreated();
+  };
+
+  // ====================================================
+  // CREATE PLACEMENT REQUEST SUCCESS
+  //
+  // This is especially important when already inside the
+  // Placement Requests tab.
+  //
+  // Calling setActiveTab("placement-requests") again does
+  // not reset search by itself.
+  // ====================================================
+
+  const handlePlacementCreatedAndResetSearch = async () => {
+    setSearch("");
+
+    await handlePlacementCreated();
+  };
+
+  // ====================================================
   // LOADING
   // ====================================================
 
@@ -192,8 +245,8 @@ export default function ProviderDashboard() {
 
                 <p className="mt-2 max-w-3xl text-sm text-slate-600 md:text-base">
                   {lang === "ja"
-                    ? "会社情報、求人、応募状況、採用依頼を管理します。"
-                    : "Manage your company profile, vacancies, applications, and placement requests."}
+                    ? "会社情報、求人、応募状況、採用依頼、採用請求を管理します。"
+                    : "Manage your company profile, vacancies, applications, placement requests, and placement billing."}
                 </p>
               </div>
 
@@ -300,7 +353,7 @@ export default function ProviderDashboard() {
               <div className="flex flex-wrap gap-1 rounded-2xl bg-slate-100 p-1">
                 <TabButton
                   active={activeTab === "vacancies"}
-                  onClick={() => setActiveTab("vacancies")}
+                  onClick={() => handleTabChange("vacancies")}
                   label={
                     lang === "ja"
                       ? `求人 (${totalVacancies})`
@@ -310,7 +363,7 @@ export default function ProviderDashboard() {
 
                 <TabButton
                   active={activeTab === "applications"}
-                  onClick={() => setActiveTab("applications")}
+                  onClick={() => handleTabChange("applications")}
                   label={
                     lang === "ja"
                       ? `応募者 (${totalApplications})`
@@ -320,38 +373,51 @@ export default function ProviderDashboard() {
 
                 <TabButton
                   active={activeTab === "placement-requests"}
-                  onClick={() => setActiveTab("placement-requests")}
+                  onClick={() => handleTabChange("placement-requests")}
                   label={
                     lang === "ja"
                       ? `採用依頼 (${totalPlacementRequests})`
                       : `Placement Requests (${totalPlacementRequests})`
                   }
                 />
-              </div>
 
-              <div className="relative w-full lg:max-w-md">
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder={
-                    activeTab === "vacancies"
-                      ? lang === "ja"
-                        ? "求人を検索..."
-                        : "Search vacancies..."
-                      : activeTab === "applications"
-                        ? lang === "ja"
-                          ? "応募者を検索..."
-                          : "Search applications..."
-                        : lang === "ja"
-                          ? "採用依頼を検索..."
-                          : "Search placement requests..."
-                  }
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition focus:border-blue-400 focus:bg-white"
+                <TabButton
+                  active={activeTab === "billing"}
+                  onClick={() => handleTabChange("billing")}
+                  label={lang === "ja" ? "採用請求" : "Billing"}
+                  icon={<CreditCard className="h-4 w-4" />}
                 />
               </div>
+
+              {/* ============================================= */}
+              {/* SEARCH */}
+              {/* ============================================= */}
+
+              {activeTab !== "billing" && (
+                <div className="relative w-full lg:max-w-md">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder={
+                      activeTab === "vacancies"
+                        ? lang === "ja"
+                          ? "求人を検索..."
+                          : "Search vacancies..."
+                        : activeTab === "applications"
+                          ? lang === "ja"
+                            ? "応募者を検索..."
+                            : "Search applications..."
+                          : lang === "ja"
+                            ? "採用依頼を検索..."
+                            : "Search placement requests..."
+                    }
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none transition focus:border-blue-400 focus:bg-white"
+                  />
+                </div>
+              )}
             </div>
           </section>
 
@@ -762,6 +828,12 @@ export default function ProviderDashboard() {
               )}
             </section>
           )}
+
+          {/* ================================================= */}
+          {/* BILLING */}
+          {/* ================================================= */}
+
+          {activeTab === "billing" && <ProviderBillings lang={lang} />}
         </main>
       </div>
 
@@ -774,7 +846,7 @@ export default function ProviderDashboard() {
         open={postVacancyOpen}
         mode="create"
         onClose={closePostVacancy}
-        onSuccess={handleVacancyCreated}
+        onSuccess={handleVacancyCreatedAndResetSearch}
         lang={lang}
       />
 
@@ -811,7 +883,7 @@ export default function ProviderDashboard() {
       <PlacementRequestModal
         open={placementRequestOpen}
         onClose={closePlacementRequest}
-        onSuccess={handlePlacementCreated}
+        onSuccess={handlePlacementCreatedAndResetSearch}
         lang={lang}
       />
 
@@ -887,7 +959,9 @@ function StatCard({
   icon,
 }: {
   label: string;
+
   value: number;
+
   icon: ReactNode;
 }) {
   return (
@@ -911,21 +985,28 @@ function TabButton({
   active,
   onClick,
   label,
+  icon,
 }: {
   active: boolean;
+
   onClick: () => void;
+
   label: string;
+
+  icon?: ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl px-4 py-2 text-sm transition ${
+      className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm transition ${
         active
           ? "bg-white font-semibold text-slate-900 shadow-sm"
           : "text-slate-600 hover:text-slate-900"
       }`}
     >
+      {icon}
+
       {label}
     </button>
   );
@@ -941,7 +1022,9 @@ function EmptyState({
   action,
 }: {
   title: string;
+
   description: string;
+
   action?: ReactNode;
 }) {
   return (
@@ -961,7 +1044,14 @@ function EmptyState({
 // INFO FIELD
 // ======================================================
 
-function InfoField({ label, value }: { label: string; value?: string | null }) {
+function InfoField({
+  label,
+  value,
+}: {
+  label: string;
+
+  value?: string | null;
+}) {
   return (
     <div className="rounded-xl bg-slate-50 p-3">
       <p className="text-xs text-slate-500">{label}</p>

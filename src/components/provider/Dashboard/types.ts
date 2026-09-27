@@ -324,6 +324,18 @@ export type UpdateProviderApplicationStatusPayload = {
 };
 
 // ======================================================
+// INTERVIEW SOURCE
+//
+// APPLICATION
+// = normal vacancy application
+//
+// PLACEMENT
+// = matched candidate from placement request
+// ======================================================
+
+export type ProviderInterviewSourceType = "APPLICATION" | "PLACEMENT";
+
+// ======================================================
 // PROVIDER INTERVIEW
 // ======================================================
 
@@ -359,7 +371,7 @@ export type ProviderInterviewCandidate = {
 };
 
 export type ProviderInterviewVacancy = {
-  vacancyId: string;
+  vacancyId?: string | null;
 
   title?: string | null;
 
@@ -372,14 +384,52 @@ export type ProviderInterviewVacancy = {
   japaneseLevel?: string | null;
 };
 
+// ======================================================
+// PLACEMENT INTERVIEW JOB SUMMARY
+// ======================================================
+
+export type ProviderInterviewPlacementRequest = {
+  recruitId?: string | null;
+
+  title?: string | null;
+
+  companyName?: string | null;
+
+  employmentType?: string | null;
+
+  workLocation?: string | null;
+
+  japaneseLevel?: string | null;
+};
+
+// ======================================================
+// INTERVIEW
+//
+// Fields for both interview sources are supported.
+//
+// Current application interviews:
+// applicationId + vacancyId
+//
+// Placement interviews:
+// placementCandidateId + recruitId
+// ======================================================
+
 export type ProviderInterview = {
   interviewId: string;
 
-  applicationId: string;
+  sourceType?: ProviderInterviewSourceType;
 
-  vacancyId: string;
+  applicationId?: string | null;
+
+  vacancyId?: string | null;
+
+  placementCandidateId?: string | null;
+
+  recruitId?: string | null;
 
   applicationStatus?: ProviderApplicationStatus | null;
+
+  placementCandidateStatus?: PlacementCandidateStatus | null;
 
   interviewDate: string;
 
@@ -397,6 +447,12 @@ export type ProviderInterview = {
 
   confirmedAt?: string | null;
 
+  completedAt?: string | null;
+
+  cancelledAt?: string | null;
+
+  cancellationReason?: string | null;
+
   createdAt?: string;
 
   updatedAt?: string;
@@ -404,6 +460,8 @@ export type ProviderInterview = {
   candidate?: ProviderInterviewCandidate | null;
 
   vacancy?: ProviderInterviewVacancy | null;
+
+  placementRequest?: ProviderInterviewPlacementRequest | null;
 };
 
 export type ProviderInterviewListResponse = {
@@ -424,6 +482,10 @@ export type ProviderInterviewResponse = {
   message?: string;
 };
 
+// ======================================================
+// SCHEDULE APPLICATION INTERVIEW
+// ======================================================
+
 export type ScheduleProviderInterviewPayload = {
   applicationId: string;
 
@@ -439,6 +501,30 @@ export type ScheduleProviderInterviewPayload = {
 
   notes?: string;
 };
+
+// ======================================================
+// SCHEDULE PLACEMENT INTERVIEW
+// ======================================================
+
+export type ScheduleProviderPlacementInterviewPayload = {
+  placementCandidateId: string;
+
+  interviewDate: string;
+
+  interviewTime: string;
+
+  timezone: string;
+
+  interviewMethod: ProviderInterviewMethod;
+
+  meetingLink?: string;
+
+  notes?: string;
+};
+
+// ======================================================
+// UPDATE INTERVIEW
+// ======================================================
 
 export type UpdateProviderInterviewPayload = {
   interviewDate?: string;
@@ -575,8 +661,6 @@ export type PlacementCandidateStatus =
 // ======================================================
 // SAFE CANDIDATE SNAPSHOT
 //
-// IMPORTANT:
-//
 // Provider never receives:
 //
 // seekerId
@@ -656,6 +740,18 @@ export type ProviderPlacementCandidateResponse = {
   message?: string;
 };
 
+// ======================================================
+// PLACEMENT CANDIDATE STATUS ACTION
+//
+// IMPORTANT:
+//
+// INTERVIEW remains in this union for backend compatibility,
+// but the UI should NOT call it directly anymore.
+//
+// UNDER_REVIEW → INTERVIEW should happen through
+// interview scheduling.
+// ======================================================
+
 export type ProviderPlacementCandidateDecisionStatus =
   | "UNDER_REVIEW"
   | "INTERVIEW"
@@ -670,13 +766,137 @@ export type UpdateProviderPlacementCandidateStatusPayload = {
 };
 
 // ======================================================
+// PROVIDER PLACEMENT BILLING
+// ======================================================
+
+export type ProviderPlacementBillingStatus =
+  | "issued"
+  | "paid"
+  | "partially_refunded"
+  | "refunded"
+  | "cancelled";
+
+export type ProviderBillingRefund = {
+  refundId: string;
+
+  amount: number;
+
+  reason: string;
+
+  refundedAt?: string | null;
+};
+
+export type ProviderPlacementBilling = {
+  billingId: string;
+
+  placementCandidateId: string;
+
+  recruitId: string;
+
+  companyName: string;
+
+  candidateName: string;
+
+  jobTitle: string;
+
+  placementDate: string;
+
+  currency: string;
+
+  placementFee: number;
+
+  taxRate: number;
+
+  taxAmount: number;
+
+  totalAmount: number;
+
+  dueDate?: string | null;
+
+  paidAmount: number;
+
+  refundedAmount: number;
+
+  netPaidAmount: number;
+
+  amountDue: number;
+
+  status: ProviderPlacementBillingStatus;
+
+  issuedAt?: string | null;
+
+  paidAt?: string | null;
+
+  cancelledAt?: string | null;
+
+  fullyRefundedAt?: string | null;
+
+  cancellationReason?: string | null;
+
+  notes?: string | null;
+
+  refundHistory: ProviderBillingRefund[];
+
+  createdAt?: string | null;
+
+  updatedAt?: string | null;
+};
+
+export type ProviderPlacementBillingSummary = {
+  total: number;
+
+  issued: number;
+
+  paid: number;
+
+  partiallyRefunded: number;
+
+  refunded: number;
+
+  cancelled: number;
+
+  overdue: number;
+
+  billedTotal: number;
+
+  paidTotal: number;
+
+  refundedTotal: number;
+
+  outstandingTotal: number;
+
+  overdueTotal: number;
+};
+
+export type ProviderPlacementBillingListResponse = {
+  success: boolean;
+
+  count: number;
+
+  summary: ProviderPlacementBillingSummary;
+
+  data: ProviderPlacementBilling[];
+
+  message?: string;
+};
+
+export type ProviderPlacementBillingResponse = {
+  success: boolean;
+
+  data: ProviderPlacementBilling;
+
+  message?: string;
+};
+
+// ======================================================
 // DASHBOARD TAB
 // ======================================================
 
 export type ProviderDashboardTab =
   | "vacancies"
   | "applications"
-  | "placement-requests";
+  | "placement-requests"
+  | "billing";
 
 // ======================================================
 // API ERROR

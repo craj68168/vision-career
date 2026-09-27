@@ -144,6 +144,11 @@ export const useProviderDashboard = () => {
   const [deleteVacancyTarget, setDeleteVacancyTarget] =
     useState<Vacancy | null>(null);
 
+  const changeActiveTab = (tab: ProviderDashboardTab) => {
+    setSearch("");
+
+    setActiveTab(tab);
+  };
   // ======================================================
   // AUTH
   // ======================================================
@@ -326,6 +331,8 @@ export const useProviderDashboard = () => {
   const handleVacancyCreated = async () => {
     setPostVacancyOpen(false);
 
+    setSearch("");
+
     setActiveTab("vacancies");
 
     await loadDashboard(false);
@@ -448,6 +455,8 @@ export const useProviderDashboard = () => {
 
   const handlePlacementCreated = async () => {
     setPlacementRequestOpen(false);
+
+    setSearch("");
 
     setActiveTab("placement-requests");
 
@@ -900,6 +909,7 @@ export const useProviderDashboard = () => {
 
     activeTab,
     setActiveTab,
+    changeActiveTab,
 
     search,
     setSearch,

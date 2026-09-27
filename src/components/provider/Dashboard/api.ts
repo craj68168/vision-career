@@ -9,6 +9,8 @@ import type {
   ProviderApplicationResponse,
   ProviderInterviewListResponse,
   ProviderInterviewResponse,
+  ProviderPlacementBillingListResponse,
+  ProviderPlacementBillingResponse,
   ProviderPlacementCandidateListResponse,
   ProviderPlacementCandidateResponse,
   ScheduleProviderInterviewPayload,
@@ -257,6 +259,42 @@ export const updateProviderPlacementCandidateStatus = async (
       `/providers/placement-candidates/${placementCandidateId}/status`,
       payload,
     );
+
+  return response.data;
+};
+
+// ======================================================
+// PROVIDER PLACEMENT BILLINGS
+// ======================================================
+
+export const getProviderPlacementBillings = async (
+  status?: string,
+): Promise<ProviderPlacementBillingListResponse> => {
+  const response =
+    await axiosInstance.get<ProviderPlacementBillingListResponse>(
+      "/providers/placement-billings",
+      {
+        params: status
+          ? {
+              status,
+            }
+          : undefined,
+      },
+    );
+
+  return response.data;
+};
+
+// ======================================================
+// PROVIDER PLACEMENT BILLING DETAILS
+// ======================================================
+
+export const getProviderPlacementBillingById = async (
+  billingId: string,
+): Promise<ProviderPlacementBillingResponse> => {
+  const response = await axiosInstance.get<ProviderPlacementBillingResponse>(
+    `/providers/placement-billings/${billingId}`,
+  );
 
   return response.data;
 };
