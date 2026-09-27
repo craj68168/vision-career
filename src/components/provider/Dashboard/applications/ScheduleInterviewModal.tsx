@@ -18,14 +18,13 @@ import {
 import { scheduleProviderInterview, updateProviderInterview } from "./api";
 
 import type {
-  ApiErrorResponse,
   ProviderApplication,
   ProviderInterview,
   ProviderInterviewMethod,
   ScheduleProviderInterviewPayload,
   UpdateProviderInterviewPayload,
 } from "./types";
-
+import type { ProviderDashboardApiError } from "../types";
 // ======================================================
 // PROPS
 // ======================================================
@@ -91,7 +90,7 @@ const METHOD_OPTIONS: Array<{
 // ======================================================
 
 const getErrorMessage = (error: unknown, fallback: string) => {
-  if (axios.isAxiosError<ApiErrorResponse>(error)) {
+  if (axios.isAxiosError<ProviderDashboardApiError>(error)) {
     return error.response?.data?.message || fallback;
   }
 

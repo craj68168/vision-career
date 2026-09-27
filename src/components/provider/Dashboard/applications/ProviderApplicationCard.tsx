@@ -31,7 +31,6 @@ import {
 import ScheduleInterviewModal from "./ScheduleInterviewModal";
 
 import type {
-  ApiErrorResponse,
   ProviderApplication,
   ProviderApplicationDecisionStatus,
   ProviderApplicationStatus,
@@ -39,6 +38,7 @@ import type {
   ProviderInterviewMethod,
   ProviderInterviewStatus,
 } from "./types";
+import type { ProviderDashboardApiError } from "../types";
 
 // ======================================================
 // PROPS
@@ -55,7 +55,7 @@ type Props = {
 // ======================================================
 
 const getErrorMessage = (error: unknown, fallback: string) => {
-  if (axios.isAxiosError<ApiErrorResponse>(error)) {
+  if (axios.isAxiosError<ProviderDashboardApiError>(error)) {
     return error.response?.data?.message || fallback;
   }
 

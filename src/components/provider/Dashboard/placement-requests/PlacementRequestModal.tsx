@@ -3,15 +3,19 @@
 import { type FormEvent, useEffect, useState } from "react";
 
 import axios from "axios";
+
 import toast from "react-hot-toast";
 
 import { BriefcaseBusiness, Loader2, X } from "lucide-react";
 
 import { createProviderPlacementRequest } from "./api";
 
-import { getProviderProfile } from "../Profile/api";
+import { getProviderProfile } from "../../Profile/api";
 
-import type { ApiErrorResponse, CreatePlacementRequestPayload } from "./types";
+import type {
+  CreatePlacementRequestPayload,
+  PlacementRequestApiError,
+} from "./types";
 
 // ======================================================
 // OPTIONS
@@ -258,7 +262,7 @@ export default function PlacementRequestModal({
     } catch (error: unknown) {
       console.error("Create placement request error:", error);
 
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
+      if (axios.isAxiosError<PlacementRequestApiError>(error)) {
         toast.error(
           error.response?.data?.message ||
             (lang === "ja"

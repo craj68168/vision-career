@@ -10,83 +10,40 @@ import {
   Search,
 } from "lucide-react";
 
-import { useMemo, useState } from "react";
-
-import { useQuery } from "@tanstack/react-query";
-
-import { getProviderPlacementBillings } from "./api";
+import { useProviderBilling } from "./hook";
 
 import ProviderBillingDetailsModal from "./ProviderBillingDetailsModal";
 
-import type {
-  ProviderPlacementBilling,
-  ProviderPlacementBillingStatus,
-} from "./types";
+import type { ProviderPlacementBillingStatus } from "./types";
 
 type Props = {
   lang: string;
+
+  refreshVersion: number;
 };
 
-export default function ProviderBillings({ lang }: Props) {
-  const [search, setSearch] = useState("");
+export default function Billing({ lang, refreshVersion }: Props) {
+  const {
+    search,
 
-  const [statusFilter, setStatusFilter] = useState<
-    "ALL" | ProviderPlacementBillingStatus
-  >("ALL");
+    setSearch,
 
-  const [viewingBilling, setViewingBilling] =
-    useState<ProviderPlacementBilling | null>(null);
+    statusFilter,
 
-  const billingsQuery = useQuery({
-    queryKey: ["provider-placement-billings"],
+    setStatusFilter,
 
-    queryFn: () => getProviderPlacementBillings(),
+    viewingBilling,
 
-    staleTime: 1000 * 30,
+    setViewingBilling,
 
-    refetchOnWindowFocus: false,
+    billingsQuery,
 
-    retry: 1,
+    summary,
+
+    filteredBillings,
+  } = useProviderBilling({
+    refreshVersion,
   });
-
-  const billings = billingsQuery.data?.data || [];
-
-  const summary = billingsQuery.data?.summary;
-
-  const filteredBillings = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-
-    return billings.filter((billing) => {
-      if (statusFilter !== "ALL" && billing.status !== statusFilter) {
-        return false;
-      }
-
-      if (!keyword) {
-        return true;
-      }
-
-      const haystack = [
-        billing.billingId,
-
-        billing.recruitId,
-
-        billing.placementCandidateId,
-
-        billing.companyName,
-
-        billing.candidateName,
-
-        billing.jobTitle,
-
-        billing.status,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return haystack.includes(keyword);
-    });
-  }, [billings, search, statusFilter]);
 
   return (
     <>
@@ -108,7 +65,7 @@ export default function ProviderBillings({ lang }: Props) {
             type="button"
             disabled={billingsQuery.isFetching}
             onClick={() => void billingsQuery.refetch()}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700"
           >
             <RefreshCw
               className={`h-4 w-4 ${
@@ -261,7 +218,7 @@ export default function ProviderBillings({ lang }: Props) {
                         {billing.jobTitle}
                       </td>
 
-                      <td className="px-5 py-4 font-semibold text-slate-900">
+                      <td className="px-5 py-4 font-semibold">
                         {formatMoney(billing.totalAmount)}
                       </td>
 
@@ -283,7 +240,7 @@ export default function ProviderBillings({ lang }: Props) {
                         <button
                           type="button"
                           onClick={() => setViewingBilling(billing)}
-                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
                         >
                           <Eye className="h-4 w-4" />
 
@@ -306,6 +263,10 @@ export default function ProviderBillings({ lang }: Props) {
     </>
   );
 }
+
+// ======================================================
+// HELPERS
+// ======================================================
 
 function MoneyCard({
   label,

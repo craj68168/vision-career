@@ -3,10 +3,11 @@ import { useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Loader2, X } from "lucide-react";
-import { getProviderProfile } from "../Profile/api";
+import { getProviderProfile } from "../../Profile/api";
 import { createProviderVacancy, updateProviderVacancy } from "./api";
 
-import type { ApiErrorResponse, CreateVacancyPayload, Vacancy } from "./types";
+import type { CreateVacancyPayload, Vacancy } from "./types";
+import { ProviderDashboardApiError } from "../types";
 
 // ======================================================
 // OPTIONS
@@ -436,7 +437,7 @@ export default function PostVacancyModal({
         error,
       );
 
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
+      if (axios.isAxiosError<ProviderDashboardApiError>(error)) {
         console.error("Backend response:", error.response?.data);
 
         toast.error(

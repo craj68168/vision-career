@@ -9,7 +9,8 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 
 import { deleteProviderVacancy } from "./api";
 
-import type { ApiErrorResponse, Vacancy } from "./types";
+import type { Vacancy } from "./types";
+import { ProviderDashboardApiError } from "../types";
 
 type DeleteVacancyModalProps = {
   open: boolean;
@@ -53,7 +54,7 @@ export default function DeleteVacancyModal({
     } catch (error: unknown) {
       console.error("Delete vacancy error:", error);
 
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
+      if (axios.isAxiosError<ProviderDashboardApiError>(error)) {
         toast.error(
           error.response?.data?.message || "Failed to delete vacancy.",
         );
