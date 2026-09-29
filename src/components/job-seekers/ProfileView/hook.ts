@@ -2,12 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import axios from "axios";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useLanguage } from "@/context/LanguageContext";
-import { getJobSeekerProfile } from "../Profile/api";
+import {
+  getGeneratedJobSeekerResume,
+  getJobSeekerProfile,
+} from "../Profile/api";
 import type {
   ApiErrorResponse,
   EducationRecord,
@@ -27,6 +31,7 @@ const formatDate = (value?: string | null) => {
 
 export const useJobSeekerProfileView = () => {
   const router = useRouter();
+  const t = useTranslations("jobSeeker.profile");
   const { lang } = useLanguage();
   const [profile, setProfile] = useState<JobSeekerProfile | null>(null);
   const [education, setEducation] = useState<EducationRecord[]>([]);
@@ -49,7 +54,7 @@ export const useJobSeekerProfileView = () => {
       }
       const data = await getJobSeekerProfile();
       if (data.status !== "success") {
-        throw new Error(data.message || "Failed to load profile");
+        throw new Error(data.message || t("loadProfileError"));
       }
       setProfile(data.profile);
       setEducation(data.education || []);
@@ -68,18 +73,14 @@ export const useJobSeekerProfileView = () => {
           );
           return;
         }
-        toast.error(error.response?.data?.message || "Failed to load profile");
+        toast.error(error.response?.data?.message || t("loadProfileError"));
         return;
       }
-      toast.error(
-        lang === "ja"
-          ? "プロフィールの読み込みに失敗しました"
-          : "Failed to load profile",
-      );
+      toast.error(t("loadProfileError"));
     } finally {
       setLoading(false);
     }
-  }, [lang, router]);
+  }, [lang, router, t]);
 
   useEffect(() => {
     loadProfile();
@@ -88,11 +89,28 @@ export const useJobSeekerProfileView = () => {
   const editProfile = () => {
     router.push(
       lang === "ja" ? "/job-seekers/profile" : "/en/job-seekers/profile",
+
+      //     ? "/job-seekers/profile?edit=1"
+      // : "/en/job-seekers/profile?edit=1",
+
     );
   };
 
   const backToDashboard = () => {
     router.push(lang === "ja" ? "/job-seekers" : "/en/job-seekers");
+  };
+
+  const viewGeneratedResume = async () => {
+    try {
+      const blob = await getGeneratedJobSeekerResume();
+      const fileUrl = URL.createObjectURL(blob);
+
+      window.open(fileUrl, "_blank", "noopener,noreferrer");
+      window.setTimeout(() => URL.revokeObjectURL(fileUrl), 60_000);
+    } catch (error: unknown) {
+      console.error("Generated resume view error:", error);
+      toast.error(t("generatedResumeUnavailable"));
+    }
   };
 
   return {
@@ -107,5 +125,6 @@ export const useJobSeekerProfileView = () => {
     formatDate,
     editProfile,
     backToDashboard,
+    viewGeneratedResume,
   };
 };

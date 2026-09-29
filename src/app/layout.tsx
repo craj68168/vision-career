@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 
+import AppIntlProvider from "@/context/IntlProvider";
 import QueryProvider from "./QueryProvider";
 
 export const metadata: Metadata = {
@@ -17,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <QueryProvider>{children}</QueryProvider>
+        <AppIntlProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </AppIntlProvider>
       </body>
     </html>
   );

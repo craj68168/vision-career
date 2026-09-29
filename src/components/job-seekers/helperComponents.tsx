@@ -10,9 +10,34 @@ import {
   MapPin,
   Users,
 } from "lucide-react";
-import type { Vacancy, Application } from "./body";
 
-function formatSalary(vacancy: Vacancy, lang: string) {
+type LegacyVacancy = {
+  title: string;
+  company_name?: string | null;
+  employment_type?: string | null;
+  japanese_level?: string | null;
+  remote_work?: string | null;
+  work_location?: string | null;
+  created_at?: string | null;
+  salary_min?: number | null;
+  salary_max?: number | null;
+  salary_note?: string | null;
+  number_of_people?: number | null;
+  job_description?: string | null;
+  contact_email?: string | null;
+};
+
+type LegacyApplication = {
+  application_id: string;
+  applied_at?: string | null;
+  cover_letter?: string | null;
+  status: string;
+  vacancy?: LegacyVacancy | null;
+};
+
+type StatusLabels = Record<string, string>;
+
+function formatSalary(vacancy: LegacyVacancy, lang: string) {
   if (vacancy.salary_min || vacancy.salary_max) {
     const min = vacancy.salary_min ?? 0;
     const max = vacancy.salary_max ?? 0;
@@ -21,7 +46,7 @@ function formatSalary(vacancy: Vacancy, lang: string) {
   return vacancy.salary_note || (lang === "ja" ? "未指定" : "Not specified");
 }
 
-function formatDate(dateString?: string, lang?: string) {
+function formatDate(dateString?: string | null, lang?: string) {
   if (!dateString) return "-";
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return dateString;
@@ -88,12 +113,10 @@ export function VacancyCard({
   vacancy,
   onApply,
   lang,
-  statusLabels,
 }: {
-  vacancy: Vacancy;
+  vacancy: LegacyVacancy;
   onApply: () => void;
   lang: string;
-  statusLabels: any;
 }) {
   return (
     <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
@@ -183,9 +206,9 @@ export function ApplicationCard({
   lang,
   statusLabels,
 }: {
-  application: Application;
+  application: LegacyApplication;
   lang: string;
-  statusLabels: any;
+  statusLabels: StatusLabels;
 }) {
   return (
     <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -287,7 +310,6 @@ export function FormField({
   onChange,
   placeholder,
   type = "text",
-  lang,
 }: {
   label: string;
   name: string;
@@ -295,7 +317,6 @@ export function FormField({
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder: string;
   type?: string;
-  lang: string;
 }) {
   return (
     <div>

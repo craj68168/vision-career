@@ -6,12 +6,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   Bell,
+  CalendarDays,
   CheckCheck,
+  Clock3,
   ExternalLink,
   Loader2,
   LogOut,
   Video,
-  X,
 } from "lucide-react";
 
 import { usePathname, useRouter } from "next/navigation";
@@ -32,40 +33,37 @@ import type {
 } from "@/components/job-seekers/Dashboard/types";
 
 // ======================================================
-// LINKS
+// DESIGN TOKENS (same as job seeker dashboard)
+// - primary emerald-700 (hover 800), soft emerald-50
+// - text emerald-950, muted slate-600
+// - weights: headings semibold, labels/body medium or normal
+// - density: 40px controls, 16px card padding
 // ======================================================
 
-const links = [
-  {
-    label: "Home",
-    href: "/",
-  },
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700";
 
-  {
-    label: "How It Works",
-    href: "/how-it-works/",
-  },
+const container = "mx-auto w-full max-w-[90rem] px-4 sm:px-6 lg:px-10";
 
-  {
-    label: "Pricing",
-    href: "/pricing/",
-  },
+const iconButtonBase = `relative inline-flex h-10 min-w-10 cursor-pointer items-center justify-center rounded-md border text-[13px] font-medium transition active:translate-y-px ${focusRing}`;
+const iconButtonIdle =
+  "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-100 hover:text-emerald-700";
+const iconButtonActive = "border-emerald-200 bg-emerald-50 text-emerald-700";
 
-  {
-    label: "Why Us",
-    href: "/why-us/",
-  },
+const wrap = "[overflow-wrap:anywhere]";
 
-  {
-    label: "Book a Call",
-    href: "/book-call/",
-  },
+const LANGUAGES = [
+  { code: "ja", label: "JA", flag: "🇯🇵" },
+  { code: "en", label: "EN", flag: "🇺🇸" },
+] as const;
 
-  {
-    label: "Get Started",
-    href: "/get-started/",
-  },
-];
+function getIsSeeker() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return localStorage.getItem("user_role") === "seeker";
+}
 
 // ======================================================
 // COMPONENT
@@ -78,9 +76,9 @@ const Navbar = () => {
 
   const { lang } = useLanguage();
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const [scrolled, setScrolled] = useState(false);
+
+  const [seeker, setSeeker] = useState(false);
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -92,24 +90,22 @@ const Navbar = () => {
 
   const notificationRef = useRef<HTMLDivElement | null>(null);
 
+  const bellRef = useRef<HTMLButtonElement | null>(null);
+
   // ====================================================
-  // SEEKER CHECK
+  // SEEKER CHECK (client only, avoids hydration mismatch)
   // ====================================================
 
-  const isSeeker = () => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-
-    return localStorage.getItem("user_role") === "seeker";
-  };
+  useEffect(() => {
+    setSeeker(getIsSeeker());
+  }, [pathname]);
 
   // ====================================================
   // LOAD NOTIFICATIONS
   // ====================================================
 
   const loadNotifications = useCallback(async () => {
-    if (!isSeeker()) {
+    if (!getIsSeeker()) {
       setNotifications([]);
 
       setUnreadCount(0);
@@ -139,10 +135,18 @@ const Navbar = () => {
   }, []);
 
   // ====================================================
-  // INITIAL NOTIFICATION LOAD
+  // INITIAL LOAD + POLLING
   // ====================================================
 
   useEffect(() => {
+    if (!seeker) {
+      setNotifications([]);
+
+      setUnreadCount(0);
+
+      return;
+    }
+
     void loadNotifications();
 
     const interval = window.setInterval(() => {
@@ -152,7 +156,7 @@ const Navbar = () => {
     return () => {
       window.clearInterval(interval);
     };
-  }, [loadNotifications]);
+  }, [seeker, loadNotifications]);
 
   // ====================================================
   // SCROLL
@@ -163,7 +167,9 @@ const Navbar = () => {
       setScrolled(window.scrollY > 0);
     };
 
-    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -171,37 +177,23 @@ const Navbar = () => {
   }, []);
 
   // ====================================================
-  // CLOSE MENU ON PATH CHANGE
+  // CLOSE DROPDOWN ON PATH CHANGE
   // ====================================================
 
   useEffect(() => {
-    setIsMenuOpen(false);
-
     setNotificationsOpen(false);
   }, [pathname]);
 
   // ====================================================
-  // BODY OVERFLOW
+  // CLOSE DROPDOWN: OUTSIDE CLICK + ESCAPE
   // ====================================================
 
   useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+    if (!notificationsOpen) {
+      return;
     }
 
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isMenuOpen]);
-
-  // ====================================================
-  // CLOSE NOTIFICATION DROPDOWN
-  // ====================================================
-
-  useEffect(() => {
-    const handleMouseDown = (event: MouseEvent) => {
+    const handlePointerDown = (event: PointerEvent) => {
       if (
         notificationRef.current &&
         !notificationRef.current.contains(event.target as Node)
@@ -210,12 +202,24 @@ const Navbar = () => {
       }
     };
 
-    document.addEventListener("mousedown", handleMouseDown);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setNotificationsOpen(false);
+
+        bellRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("pointerdown", handlePointerDown);
+
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [notificationsOpen]);
 
   // ====================================================
   // LANGUAGE
@@ -249,6 +253,10 @@ const Navbar = () => {
     localStorage.removeItem("access_token");
 
     localStorage.removeItem("user_role");
+
+    setSeeker(false);
+
+    setNotificationsOpen(false);
 
     setNotifications([]);
 
@@ -352,229 +360,211 @@ const Navbar = () => {
   };
 
   // ====================================================
+  // LABELS
+  // ====================================================
+
+  const notificationsLabel = lang === "ja" ? "通知" : "Notifications";
+
+  const bellLabel =
+    unreadCount > 0
+      ? lang === "ja"
+        ? `通知(未読${unreadCount}件)`
+        : `Notifications, ${unreadCount} unread`
+      : notificationsLabel;
+
+  // ====================================================
   // UI
   // ====================================================
 
   return (
-    <>
-      <nav
-        className={`sticky top-0 z-50 w-full border-b border-gray-200 ${
-          scrolled
-            ? "bg-white/80 text-slate-600 backdrop-blur-2xl"
-            : "bg-white text-black"
-        } transition-all duration-500`}
-      >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            {/* LOGO */}
+    <nav
+      className={`sticky top-0 z-50 w-full border-b border-slate-200 text-emerald-950 transition-[background-color,box-shadow] duration-300 ${
+        scrolled ? "bg-white/85 shadow-sm backdrop-blur-md" : "bg-white"
+      }`}
+    >
+      <div className={container}>
+        <div className="flex h-14 items-center justify-between gap-3 sm:h-16">
+          {/* LOGO */}
 
-            <Link
-              href={lang === "ja" ? "/" : "/en"}
-              className="flex items-center gap-2 font-bold uppercase tracking-wider"
+          <Link
+            href={lang === "ja" ? "/job-seekers" : "/en/job-seekers"}
+            className={`group inline-flex min-w-0 items-center gap-2.5 rounded-md ${focusRing}`}
+          >
+            <span
+              aria-hidden
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-emerald-700 text-sm font-semibold text-white transition group-hover:bg-emerald-800"
             >
+              V
+            </span>
+
+            <span className="hidden truncate text-lg font-semibold tracking-tight min-[380px]:inline">
               Vacancify
-            </Link>
+            </span>
+          </Link>
 
-            {/* ACTIONS */}
+          {/* ACTIONS */}
 
-            <div className="flex items-center gap-3">
-              {/* SEEKER NOTIFICATIONS */}
+          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+            {/* SEEKER NOTIFICATIONS */}
 
-              {typeof window !== "undefined" && isSeeker() && (
-                <div ref={notificationRef} className="relative">
-                  <button
-                    type="button"
-                    onClick={() => void toggleNotifications()}
-                    className="relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
-                    aria-label="Notifications"
-                  >
-                    <Bell className="h-5 w-5" />
+            {seeker && (
+              <div ref={notificationRef} className="relative">
+                <button
+                  ref={bellRef}
+                  type="button"
+                  onClick={() => void toggleNotifications()}
+                  className={`${iconButtonBase} w-10 ${
+                    notificationsOpen ? iconButtonActive : iconButtonIdle
+                  }`}
+                  aria-label={bellLabel}
+                  aria-haspopup="dialog"
+                  aria-expanded={notificationsOpen}
+                  aria-controls="seeker-notifications"
+                >
+                  <Bell className="h-4 w-4" />
+
+                  {unreadCount > 0 && (
+                    <span
+                      aria-hidden
+                      className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-emerald-700 px-1 text-[10px] font-medium tabular-nums text-white ring-2 ring-white"
+                    >
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* DROPDOWN: full-width sheet on phones, anchored card from sm up */}
+
+                <div
+                  id="seeker-notifications"
+                  role="dialog"
+                  aria-label={notificationsLabel}
+                  aria-hidden={!notificationsOpen}
+                  className={`fixed inset-x-3 top-[3.75rem] z-[100] origin-top-right overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg transition-[opacity,transform,visibility] duration-150 motion-reduce:transition-none sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[26rem] ${
+                    notificationsOpen
+                      ? "visible translate-y-0 scale-100 opacity-100"
+                      : "invisible -translate-y-1 scale-95 opacity-0"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold">
+                        {notificationsLabel}
+                      </h3>
+
+                      <p className="mt-0.5 text-xs text-slate-600">
+                        {unreadCount > 0
+                          ? lang === "ja"
+                            ? `${unreadCount}件の未読通知`
+                            : `${unreadCount} unread`
+                          : lang === "ja"
+                            ? "未読通知はありません"
+                            : "You're all caught up"}
+                      </p>
+                    </div>
 
                     {unreadCount > 0 && (
-                      <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => void handleMarkAllRead()}
+                        className={`inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 hover:text-emerald-900 ${focusRing}`}
+                      >
+                        <CheckCheck className="h-4 w-4" />
+
+                        {lang === "ja" ? "すべて既読" : "Mark all read"}
+                      </button>
                     )}
+                  </div>
+
+                  <div className="max-h-[min(70dvh,30rem)] overflow-y-auto overscroll-contain">
+                    {loadingNotifications && notifications.length === 0 ? (
+                      <div
+                        className="flex min-h-40 items-center justify-center"
+                        role="status"
+                        aria-busy="true"
+                        aria-label={lang === "ja" ? "読み込み中" : "Loading"}
+                      >
+                        <Loader2 className="h-5 w-5 animate-spin text-emerald-700 motion-reduce:animate-none" />
+                      </div>
+                    ) : notifications.length === 0 ? (
+                      <div className="px-6 py-10 text-center">
+                        <span
+                          aria-hidden
+                          className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-emerald-50 text-emerald-700"
+                        >
+                          <Bell className="h-4 w-4" />
+                        </span>
+
+                        <p className="mt-3 text-[13px] font-medium text-slate-700">
+                          {lang === "ja" ? "通知はありません" : "No notifications"}
+                        </p>
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <NotificationItem
+                          key={notification.notificationId}
+                          notification={notification}
+                          lang={lang}
+                          onRead={handleNotificationClick}
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* LANGUAGE */}
+
+            <div
+              role="group"
+              aria-label={lang === "ja" ? "言語" : "Language"}
+              className="inline-flex h-10 items-center rounded-md border border-slate-200 bg-slate-100 p-0.5"
+            >
+              {LANGUAGES.map(({ code, label, flag }) => {
+                const active = lang === code;
+
+                return (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => handleLangChange(code)}
+                    aria-pressed={active}
+                    lang={code}
+                    className={`inline-flex h-full cursor-pointer items-center gap-1 rounded-[5px] px-2 text-[11px] font-medium transition sm:px-2.5 ${focusRing} ${
+                      active
+                        ? "bg-white text-emerald-950 shadow-sm"
+                        : "text-slate-500 hover:text-emerald-950"
+                    }`}
+                  >
+                    {label}
+
+                    <span aria-hidden className="hidden sm:inline">
+                      {flag}
+                    </span>
                   </button>
-
-                  {/* DROPDOWN */}
-
-                  {notificationsOpen && (
-                    <div className="absolute right-0 top-12 z-[100] w-[min(92vw,420px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-                      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-                        <div>
-                          <h3 className="font-semibold text-slate-950">
-                            {lang === "ja" ? "通知" : "Notifications"}
-                          </h3>
-
-                          <p className="mt-0.5 text-xs text-slate-500">
-                            {unreadCount > 0
-                              ? lang === "ja"
-                                ? `${unreadCount}件の未読通知`
-                                : `${unreadCount} unread`
-                              : lang === "ja"
-                                ? "未読通知はありません"
-                                : "No unread notifications"}
-                          </p>
-                        </div>
-
-                        {unreadCount > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => void handleMarkAllRead()}
-                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700"
-                          >
-                            <CheckCheck className="h-4 w-4" />
-
-                            {lang === "ja" ? "すべて既読" : "Mark all read"}
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="max-h-[480px] overflow-y-auto">
-                        {loadingNotifications && notifications.length === 0 ? (
-                          <div className="flex min-h-40 items-center justify-center">
-                            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-                          </div>
-                        ) : notifications.length === 0 ? (
-                          <div className="px-6 py-10 text-center">
-                            <Bell className="mx-auto h-8 w-8 text-slate-300" />
-
-                            <p className="mt-3 text-sm font-medium text-slate-700">
-                              {lang === "ja"
-                                ? "通知はありません"
-                                : "No notifications"}
-                            </p>
-                          </div>
-                        ) : (
-                          notifications.map((notification) => (
-                            <NotificationItem
-                              key={notification.notificationId}
-                              notification={notification}
-                              lang={lang}
-                              onRead={handleNotificationClick}
-                            />
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* LANGUAGE */}
-
-              <button
-                type="button"
-                onClick={() => handleLangChange(lang === "ja" ? "en" : "ja")}
-                className={`relative flex h-8 w-[90px] cursor-pointer items-center rounded-full p-1 transition-colors duration-300 hover:bg-gray-200 ${
-                  scrolled ? "bg-gray-200" : "bg-gray-100"
-                }`}
-              >
-                <div
-                  className={`absolute left-1 top-1 h-6 w-[42px] rounded-full bg-white shadow-sm transition-transform ${
-                    lang === "ja" ? "" : "translate-x-10"
-                  }`}
-                />
-
-                <div className="relative z-10 flex w-full justify-between px-2 text-[10px] font-semibold">
-                  <span
-                    className={
-                      lang === "ja" ? "text-neutral-900" : "text-neutral-500"
-                    }
-                  >
-                    JA 🇯🇵
-                  </span>
-
-                  <span
-                    className={
-                      lang === "en" ? "text-neutral-900" : "text-neutral-500"
-                    }
-                  >
-                    EN 🇺🇸
-                  </span>
-                </div>
-              </button>
-
-              {/* LOGOUT */}
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-blue-600"
-                aria-label="Logout"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
+                );
+              })}
             </div>
-          </div>
-        </div>
-      </nav>
 
-      {/* MOBILE BACKDROP */}
-
-      <div
-        className={`fixed inset-0 z-60 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 xl:hidden ${
-          isMenuOpen ? "visible opacity-100" : "invisible opacity-0"
-        }`}
-        onClick={() => setIsMenuOpen(false)}
-      />
-
-      {/* MOBILE PANEL */}
-
-      <div
-        className={`fixed bottom-0 right-0 top-0 z-70 h-full w-70 bg-white shadow-2xl transition-transform duration-300 ease-out xl:hidden ${
-          isMenuOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-slate-50 p-6">
-            <span className="font-bold text-slate-900">Menu</span>
+            {/* LOGOUT */}
 
             <button
               type="button"
-              onClick={() => setIsMenuOpen(false)}
-              className="rounded-full p-2 transition-colors hover:bg-slate-100"
+              onClick={handleLogout}
+              className={`${iconButtonBase} ${iconButtonIdle} w-10 sm:w-auto sm:gap-2 sm:px-3`}
+              aria-label={lang === "ja" ? "ログアウト" : "Logout"}
             >
-              <X size={20} className="text-slate-500" />
-            </button>
-          </div>
+              <LogOut className="h-4 w-4" />
 
-          <div className="flex-1 overflow-y-auto px-6 py-8">
-            <div className="flex flex-col space-y-2">
-              {links.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className={`rounded-xl p-3 text-lg font-medium transition-all ${
-                    pathname === link.href
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div className="border-t border-slate-50 p-6">
-            <button
-              type="button"
-              onClick={() => {
-                setIsMenuOpen(false);
-
-                router.push("/book-call");
-              }}
-              className="w-full rounded-2xl bg-blue-600 py-4 font-bold text-white shadow-lg transition-transform active:scale-[0.98]"
-            >
-              Book a free call
+              <span className="hidden sm:inline">
+                {lang === "ja" ? "ログアウト" : "Logout"}
+              </span>
             </button>
           </div>
         </div>
       </div>
-    </>
+    </nav>
   );
 };
 
@@ -597,70 +587,95 @@ function NotificationItem({
 
   return (
     <div
-      className={`border-b border-slate-100 px-5 py-4 transition last:border-b-0 ${
-        notification.isRead ? "bg-white" : "bg-blue-50/60"
+      className={`border-b border-slate-100 px-4 py-3 transition last:border-b-0 ${
+        notification.isRead
+          ? "bg-white hover:bg-slate-50"
+          : "bg-emerald-50/60 hover:bg-emerald-50"
       }`}
     >
       <button
         type="button"
         onClick={() => void onRead(notification)}
-        className="w-full text-left"
+        className={`w-full rounded-md text-left ${
+          notification.isRead ? "cursor-default" : "cursor-pointer"
+        } ${focusRing}`}
       >
         <div className="flex items-start gap-3">
-          <div
-            className={`mt-0.5 rounded-xl p-2 ${
+          <span
+            aria-hidden
+            className={`grid h-8 w-8 shrink-0 place-items-center rounded-md ${
               notification.isRead
                 ? "bg-slate-100 text-slate-500"
-                : "bg-blue-100 text-blue-600"
+                : "bg-emerald-100 text-emerald-700"
             }`}
           >
             <Video className="h-4 w-4" />
-          </div>
+          </span>
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">
-              <p className="text-sm font-semibold text-slate-900">
+              <p className={`text-[13px] font-semibold ${wrap}`}>
                 {notification.title}
               </p>
 
               {!notification.isRead && (
-                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+                <span
+                  role="img"
+                  aria-label={lang === "ja" ? "未読" : "Unread"}
+                  className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-700"
+                />
               )}
             </div>
 
-            <p className="mt-1 text-xs leading-5 text-slate-600">
+            <p className={`mt-0.5 text-xs leading-5 text-slate-600 ${wrap}`}>
               {notification.message}
             </p>
 
-            <p className="mt-2 text-[11px] text-slate-400">
-              {formatNotificationDate(notification.createdAt)}
+            <p className="mt-1.5 text-[11px] text-slate-500">
+              {formatNotificationDate(notification.createdAt, lang)}
             </p>
           </div>
         </div>
       </button>
 
       {interview && (
-        <div className="ml-11 mt-3 rounded-xl bg-slate-50 p-3">
+        <div className="ml-11 mt-2.5 rounded-md border border-slate-200 bg-white p-3">
           {interview.jobTitle && (
-            <p className="text-xs font-semibold text-slate-900">
+            <p className={`text-xs font-semibold ${wrap}`}>
               {interview.jobTitle}
             </p>
           )}
 
           {interview.companyName && (
-            <p className="mt-1 text-xs text-slate-500">
+            <p className={`mt-0.5 text-xs text-slate-600 ${wrap}`}>
               {interview.companyName}
             </p>
           )}
 
-          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-600">
             {interview.interviewDate && (
-              <span>{formatNotificationDate(interview.interviewDate)}</span>
+              <span className="inline-flex items-center gap-1">
+                <CalendarDays
+                  aria-hidden
+                  className="h-3 w-3 shrink-0 text-slate-400"
+                />
+
+                {formatNotificationDate(interview.interviewDate, lang, false)}
+              </span>
             )}
 
-            {interview.interviewTime && <span>{interview.interviewTime}</span>}
+            {interview.interviewTime && (
+              <span className="inline-flex items-center gap-1">
+                <Clock3
+                  aria-hidden
+                  className="h-3 w-3 shrink-0 text-slate-400"
+                />
 
-            {interview.timezone && <span>{interview.timezone}</span>}
+                {interview.interviewTime}
+
+                {interview.timezone ? ` (${interview.timezone})` : ""}
+              </span>
+            )}
           </div>
 
           {interview.meetingLink && (
@@ -668,7 +683,7 @@ function NotificationItem({
               href={interview.meetingLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700"
+              className={`mt-3 inline-flex min-h-8 items-center gap-1.5 rounded-md bg-emerald-700 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-emerald-800 active:translate-y-px ${focusRing}`}
             >
               {lang === "ja" ? "面接リンクを開く" : "Open Interview Link"}
 
@@ -685,7 +700,11 @@ function NotificationItem({
 // DATE
 // ======================================================
 
-function formatNotificationDate(value?: string | null) {
+function formatNotificationDate(
+  value?: string | null,
+  lang?: string,
+  withTime = true,
+) {
   if (!value) {
     return "";
   }
@@ -696,16 +715,14 @@ function formatNotificationDate(value?: string | null) {
     return "";
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(lang === "ja" ? "ja-JP" : "en-US", {
     year: "numeric",
 
     month: "short",
 
     day: "numeric",
 
-    hour: "2-digit",
-
-    minute: "2-digit",
+    ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
   }).format(date);
 }
 

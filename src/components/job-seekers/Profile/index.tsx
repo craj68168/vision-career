@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   User,
@@ -25,7 +26,6 @@ import {
   Languages,
   BookLock,
   ArrowLeft,
-  CheckCircle2,
   Plus,
   Trash2,
   GraduationCap,
@@ -33,6 +33,57 @@ import {
 } from "lucide-react";
 
 import { useJobSeekerProfile } from "./hook";
+
+/*
+  Design tokens (same as job seeker dashboard, Tailwind only)
+  - page      oklch(0.975 0.008 150)   text emerald-950   muted slate-600
+  - primary   emerald-700 (hover 800)  soft emerald-50
+  - warning   amber (incomplete / missing)   danger red
+  - weights   headings semibold, labels/body medium or normal (no bold)
+  - density   compact: 40px controls, 16px card padding, 12px gaps
+*/
+
+const pageBg = "bg-[oklch(0.975_0.008_150)] text-emerald-950";
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700";
+const btnBase = `inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md px-3.5 py-2 text-[13px] font-semibold transition active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55 ${focusRing}`;
+const btnPrimary = `${btnBase} bg-emerald-700 text-white hover:bg-emerald-800`;
+const btnSecondary = `${btnBase} border border-slate-200 bg-white text-emerald-950 hover:border-slate-300 hover:bg-slate-100`;
+const btnTinted = `${btnBase} border border-emerald-200 bg-white text-emerald-800 hover:border-emerald-300 hover:bg-emerald-100`;
+const btnDanger = `${btnBase} border border-red-200 bg-white text-red-700 hover:bg-red-50`;
+
+const container = "mx-auto w-full max-w-[90rem] px-4 sm:px-6 lg:px-10";
+const sectionCard =
+  "min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm";
+const recordCard =
+  "relative rounded-md border border-slate-200 bg-slate-50 p-3.5";
+const labelCaps =
+  "text-[10px] font-medium uppercase tracking-wider text-slate-500";
+const fieldLabel =
+  "flex items-center gap-1.5 text-[13px] font-medium text-slate-700";
+const readText = "min-h-10 py-2.5 text-[13px] text-slate-900 [overflow-wrap:anywhere]";
+const wrap = "[overflow-wrap:anywhere]";
+const dashedAction = `inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-dashed border-slate-300 bg-white px-4 py-2 text-[13px] font-medium text-slate-700 transition ${focusRing}`;
+const dashedEnabled =
+  "cursor-pointer hover:border-emerald-700 hover:bg-emerald-50";
+const dashedDisabled = "cursor-not-allowed opacity-55";
+
+const controlBase =
+  "w-full rounded-md text-base outline-none transition placeholder:text-slate-400 focus:ring-2 sm:text-sm";
+
+function controlClass(isEditing: boolean, error?: string) {
+  const border = error
+    ? "border border-red-400 focus:border-red-500 focus:ring-red-500/25"
+    : isEditing
+      ? "border border-slate-300 hover:border-slate-400 focus:border-emerald-700 focus:ring-emerald-700/25"
+      : "border border-slate-200 focus:border-emerald-700 focus:ring-emerald-700/25";
+
+  const tone = isEditing
+    ? "bg-white text-slate-900"
+    : "cursor-not-allowed bg-slate-50 text-slate-500";
+
+  return `${controlBase} ${border} ${tone}`;
+}
 
 const MISSING_FIELD_LABELS: Record<
   string,
@@ -256,30 +307,26 @@ function InputField({
   autoComplete = "off",
 }: InputFieldProps) {
   const charCount = rows && typeof value === "string" ? value.length : 0;
-
-  const commonClasses = `w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
-    !isEditing
-      ? "cursor-not-allowed bg-slate-50 text-slate-500"
-      : "hover:border-slate-300"
-  } ${
-    error
-      ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-      : "border-slate-200"
-  }`;
+  const commonClasses = controlClass(isEditing, error);
 
   return (
-    <div className="space-y-2">
-      <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-        {icon && <span className="text-slate-400">{icon}</span>}
+    <div className="space-y-1.5">
+      <label htmlFor={name} className={fieldLabel}>
+        {icon && (
+          <span aria-hidden className="text-slate-400 [&>svg]:h-4 [&>svg]:w-4">
+            {icon}
+          </span>
+        )}
 
         {label}
 
-        {required && <span className="text-red-500">*</span>}
+        {required && <span className="text-red-600">*</span>}
       </label>
 
       {rows ? (
         <>
           <textarea
+            id={name}
             name={name}
             value={value}
             onChange={onChange}
@@ -289,17 +336,19 @@ function InputField({
             maxLength={maxLength}
             autoComplete={autoComplete}
             placeholder={placeholder}
-            className={`${commonClasses} resize-none`}
+            aria-invalid={Boolean(error)}
+            className={`${commonClasses} resize-none px-3 py-2`}
           />
 
           {maxLength && (
-            <div className="text-right text-xs text-slate-400">
+            <div className="text-right text-xs tabular-nums text-slate-500">
               {charCount}/{maxLength}
             </div>
           )}
         </>
       ) : (
         <input
+          id={name}
           name={name}
           type={type}
           value={value}
@@ -309,13 +358,14 @@ function InputField({
           maxLength={maxLength}
           autoComplete={autoComplete}
           placeholder={placeholder}
-          className={commonClasses}
+          aria-invalid={Boolean(error)}
+          className={`${commonClasses} h-10 px-3`}
         />
       )}
 
       {error && (
-        <div className="flex items-center gap-1 text-xs text-red-500">
-          <AlertCircle className="h-3 w-3" />
+        <div className="flex items-center gap-1 text-xs text-red-600">
+          <AlertCircle className="h-3 w-3 shrink-0" />
           <p>{error}</p>
         </div>
       )}
@@ -331,17 +381,22 @@ type SectionHeaderProps = {
 
 function SectionHeader({ title, icon, description }: SectionHeaderProps) {
   return (
-    <div className="mb-6">
-      <div className="flex items-center gap-3">
-        <div className="rounded-xl bg-slate-100 p-2 text-slate-700">{icon}</div>
+    <div className="mb-4 flex items-start gap-3">
+      <span
+        aria-hidden
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-emerald-50 text-emerald-700 [&>svg]:h-4 [&>svg]:w-4"
+      >
+        {icon}
+      </span>
 
-        <div>
-          <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
+      <div className="min-w-0">
+        <h2 className="text-base font-semibold">{title}</h2>
 
-          {description && (
-            <p className="mt-1 text-sm text-slate-500">{description}</p>
-          )}
-        </div>
+        {description && (
+          <p className="mt-0.5 text-[13px] leading-5 text-slate-600">
+            {description}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -349,6 +404,7 @@ function SectionHeader({ title, icon, description }: SectionHeaderProps) {
 
 export default function JobSeekerProfilePage() {
   const router = useRouter();
+  const t = useTranslations("jobSeeker.profile");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
@@ -374,6 +430,8 @@ export default function JobSeekerProfilePage() {
     loading,
     saving,
     uploadingResume,
+    generatingResume,
+    viewingGeneratedResume,
     uploadingProfilePhoto,
     uploadingDocument,
     removingDocumentId,
@@ -397,6 +455,8 @@ export default function JobSeekerProfilePage() {
 
     handleProfilePhotoUpload,
     handleResumeUpload,
+    handleGenerateResume,
+    handleViewGeneratedResume,
     handleDocumentUpload,
     handleRemoveDocument,
 
@@ -469,16 +529,39 @@ export default function JobSeekerProfilePage() {
     return lang === "ja" ? labels.ja : labels.en;
   };
 
+  const getPlacementStatusLabel = (status?: string | null) => {
+    const labels: Record<string, string> = {
+      unplaced: t("placementUnplaced"),
+      matching: t("placementMatching"),
+      interview: t("placementInterview"),
+      selected: t("placementSelected"),
+      placed: t("placementPlaced"),
+    };
+
+    const normalized = status || "unplaced";
+
+    return labels[normalized] || normalized;
+  };
+
+  const generatedResumeName = profile?.generated_resume_file
+    ? getDisplayFileName(
+        profile.generated_resume_file,
+        t("autoGeneratedResume"),
+      )
+    : null;
+
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
+      <div
+        className={`flex min-h-dvh items-center justify-center ${pageBg}`}
+        role="status"
+        aria-busy="true"
+      >
         <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-slate-400" />
+          <Loader2 className="mx-auto h-6 w-6 animate-spin text-emerald-700" />
 
-          <p className="mt-4 text-sm text-slate-600">
-            {lang === "ja"
-              ? "プロフィールを読み込み中..."
-              : "Loading profile..."}
+          <p className="mt-3 text-[13px] text-slate-600">
+            {t("loadingProfile")}
           </p>
         </div>
       </div>
@@ -486,173 +569,138 @@ export default function JobSeekerProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <User className="h-6 w-6 text-slate-500" />
+    <div className={`min-h-dvh ${pageBg}`}>
+      {/* Header */}
+      <header className="border-b border-slate-200 bg-white">
+        <div
+          className={`${container} flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between`}
+        >
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-emerald-700">
+              {t("pageLabel")}
+            </p>
 
-                <p className="text-sm font-medium text-slate-500">
-                  {lang === "ja" ? "求職者プロフィール" : "Job Seeker Profile"}
-                </p>
-              </div>
+            <h1 className="mt-1 text-balance text-xl font-semibold tracking-tight sm:text-2xl lg:text-[1.75rem]">
+              {profile?.name || t("profileSetup")}
+            </h1>
 
-              <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-                {profile?.name ||
-                  (lang === "ja" ? "プロフィール設定" : "Profile Setup")}
-              </h1>
-
-              <p className="mt-2 text-sm text-slate-600">
-                {lang === "ja"
-                  ? "あなたの基本情報や就職希望条件を管理します。"
-                  : "Manage your basic information and job preferences."}
-              </p>
-            </div>
-
-            {!isEditing ? (
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() =>
-                    router.push(
-                      lang === "ja" ? "/job-seekers/" : "/en/job-seekers/",
-                    )
-                  }
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-
-                  {lang === "ja" ? "戻る" : "Back to Dashboard"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(true)}
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
-                >
-                  <Edit2 className="h-4 w-4" />
-
-                  {lang === "ja" ? "プロフィールを編集" : "Edit Profile"}
-                </button>
-              </div>
-            ) : (
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={cancelEdit}
-                  disabled={saving}
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-                >
-                  <X className="h-4 w-4" />
-
-                  {lang === "ja" ? "キャンセル" : "Cancel"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={saveProfile}
-                  disabled={saving}
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {saving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-
-                  {saving
-                    ? lang === "ja"
-                      ? "保存中..."
-                      : "Saving..."
-                    : lang === "ja"
-                      ? "保存する"
-                      : "Save Changes"}
-                </button>
-              </div>
-            )}
+            <p className="mt-1 max-w-2xl text-pretty text-sm leading-6 text-slate-600">
+              {t("profileDescription")}
+            </p>
           </div>
-        </div>
 
+          {!isEditing ? (
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:shrink-0">
+              <button
+                type="button"
+                onClick={() =>
+                  router.push(
+                    lang === "ja" ? "/job-seekers/" : "/en/job-seekers/",
+                  )
+                }
+                className={btnSecondary}
+              >
+                <ArrowLeft className="h-4 w-4" />
+
+                {t("backToDashboard")}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className={btnPrimary}
+              >
+                <Edit2 className="h-4 w-4" />
+
+                {t("editProfile")}
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:shrink-0">
+              <button
+                type="button"
+                onClick={cancelEdit}
+                disabled={saving}
+                className={btnSecondary}
+              >
+                <X className="h-4 w-4" />
+
+                {t("cancel")}
+              </button>
+
+              <button
+                type="button"
+                onClick={saveProfile}
+                disabled={saving}
+                className={btnPrimary}
+              >
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+
+                {saving ? t("saving") : t("saveChanges")}
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+
+      <main className={`${container} py-5 sm:py-6`}>
         {/* Completion status */}
         {!profileStatus.isComplete && (
-          <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+          <section className="mb-4 flex items-start justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50 p-3.5">
+            <div className="flex min-w-0 items-start gap-3">
+              <span
+                aria-hidden
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-amber-500 text-white"
+              >
+                <AlertCircle className="h-4 w-4" />
+              </span>
 
-                <div>
-                  <h3 className="font-semibold text-blue-800">
-                    {lang === "ja"
-                      ? "プロフィール完成度"
-                      : "Profile Completion"}
-                  </h3>
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold text-amber-950">
+                  {t("profileCompletion")}
+                </h2>
 
-                  <p className="mt-1 text-sm text-blue-700">
-                    {lang === "ja"
-                      ? `あなたのプロフィールは ${profileStatus.completionPercentage}% 完了しています。以下の項目を入力してください:`
-                      : `Your profile is ${profileStatus.completionPercentage}% complete. Please fill in the following fields:`}
-                  </p>
+                <p className="mt-0.5 text-[13px] leading-5 text-amber-900/80">
+                  {t("profileCompletionDescription", {
+                    percentage: profileStatus.completionPercentage,
+                  })}
+                </p>
 
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {profileStatus.missingFields.map((field) => (
-                      <span
-                        key={field.field}
-                        className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700"
-                      >
-                        {getMissingFieldLabel(field.field, field.label)}
-                      </span>
-                    ))}
-                  </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {profileStatus.missingFields.map((field) => (
+                    <span
+                      key={field.field}
+                      className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-900"
+                    >
+                      {getMissingFieldLabel(field.field, field.label)}
+                    </span>
+                  ))}
                 </div>
               </div>
-
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-blue-100">
-                <span className="text-lg font-bold text-blue-700">
-                  {profileStatus.completionPercentage}%
-                </span>
-              </div>
             </div>
-          </div>
+
+            <span className="shrink-0 text-xl font-semibold tabular-nums text-amber-900">
+              {profileStatus.completionPercentage}%
+            </span>
+          </section>
         )}
 
-        {/* Complete */}
-        {profileStatus.isComplete && !isEditing && (
-          <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-
-              <div>
-                <h3 className="font-semibold text-green-800">
-                  {lang === "ja" ? "プロフィール完了" : "Profile Complete"}
-                </h3>
-
-                <p className="mt-1 text-sm text-green-700">
-                  {lang === "ja"
-                    ? "あなたのプロフィールは完了しています。"
-                    : "Your profile is complete."}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-8">
+        <div className="space-y-3 sm:space-y-4">
           {/* Basic Information */}
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className={sectionCard}>
             <SectionHeader
-              title={lang === "ja" ? "基本情報" : "Basic Information"}
-              icon={<User className="h-5 w-5" />}
-              description={
-                lang === "ja" ? "あなたの基本情報" : "Your basic information"
-              }
+              title={t("basicInformation")}
+              icon={<User />}
+              description={t("basicInformationDescription")}
             />
 
-            <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-                <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-white">
+            <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 p-3.5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-white">
                   {profile?.profile_photo ? (
                     <img
                       src={getFileUrl(profile.profile_photo)}
@@ -660,23 +708,21 @@ export default function JobSeekerProfilePage() {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <User className="h-12 w-12 text-slate-300" />
+                    <User className="h-8 w-8 text-slate-300" />
                   )}
                 </div>
 
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold text-slate-900">
-                    {lang === "ja" ? "プロフィール写真" : "Profile Photo"}
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-[13px] font-semibold">
+                    {t("profilePhoto")}
                   </h3>
 
-                  <p className="mt-1 text-sm text-slate-500">
-                    {lang === "ja"
-                      ? "JPG、PNG、WEBP形式。最大5MB。"
-                      : "JPG, PNG or WEBP. Maximum 5MB."}
+                  <p className="mt-0.5 text-[13px] leading-5 text-slate-600">
+                    {t("profilePhotoHelp")}
                   </p>
 
                   {isEditing && (
-                    <div className="mt-4">
+                    <div className="mt-3">
                       <input
                         ref={profilePhotoInputRef}
                         id="profile-photo-upload"
@@ -701,10 +747,10 @@ export default function JobSeekerProfilePage() {
 
                       <label
                         htmlFor="profile-photo-upload"
-                        className={`inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition ${
+                        className={`${btnBase} border border-slate-200 bg-white text-emerald-950 ${
                           uploadingProfilePhoto
-                            ? "cursor-not-allowed opacity-50"
-                            : "cursor-pointer hover:border-slate-400 hover:bg-slate-50"
+                            ? "cursor-not-allowed opacity-55"
+                            : "hover:border-slate-300 hover:bg-slate-100"
                         }`}
                       >
                         {uploadingProfilePhoto ? (
@@ -714,16 +760,10 @@ export default function JobSeekerProfilePage() {
                         )}
 
                         {uploadingProfilePhoto
-                          ? lang === "ja"
-                            ? "アップロード中..."
-                            : "Uploading..."
+                          ? t("uploading")
                           : profile?.profile_photo
-                            ? lang === "ja"
-                              ? "写真を変更"
-                              : "Change Photo"
-                            : lang === "ja"
-                              ? "写真をアップロード"
-                              : "Upload Photo"}
+                            ? t("changePhoto")
+                            : t("uploadPhoto")}
                       </label>
                     </div>
                   )}
@@ -731,44 +771,44 @@ export default function JobSeekerProfilePage() {
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="rounded-xl bg-slate-50 p-4">
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">
-                      {lang === "ja" ? "氏名" : "Full Name"}
-                    </label>
+            <div className="space-y-4">
+              <dl className="grid gap-x-3 gap-y-2.5 rounded-md bg-slate-50 p-3.5 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="min-w-0">
+                  <dt className={labelCaps}>{t("fullName")}</dt>
 
-                    <p className="text-sm text-slate-900">
-                      {profile?.name || "-"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">
-                      {lang === "ja" ? "メールアドレス" : "Email Address"}
-                    </label>
-
-                    <p className="text-sm text-slate-900">
-                      {profile?.email || "-"}
-                    </p>
-                  </div>
+                  <dd className={`mt-0.5 text-[13px] font-medium ${wrap}`}>
+                    {profile?.name || "-"}
+                  </dd>
                 </div>
-              </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
+                <div className="min-w-0">
+                  <dt className={labelCaps}>{t("emailAddress")}</dt>
+
+                  <dd className={`mt-0.5 text-[13px] font-medium ${wrap}`}>
+                    {profile?.email || "-"}
+                  </dd>
+                </div>
+
+                <div className="min-w-0">
+                  <dt className={labelCaps}>{t("placementStatus")}</dt>
+
+                  <dd className="mt-0.5">
+                    <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800">
+                      {getPlacementStatusLabel(profile?.placement_status)}
+                    </span>
+                  </dd>
+                </div>
+              </dl>
+
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                <div>
                   <InputField
-                    label={lang === "ja" ? "電話番号" : "Phone Number"}
+                    label={t("phoneNumber")}
                     name="phone"
                     value={formData.phone}
                     type="tel"
-                    placeholder={
-                      lang === "ja"
-                        ? "例：090-1234-5678"
-                        : "e.g., +81 90-1234-5678"
-                    }
-                    icon={<Phone className="h-4 w-4" />}
+                    placeholder={t("phonePlaceholder")}
+                    icon={<Phone />}
                     isEditing={isEditing}
                     error={getFieldError("phone")}
                     onChange={handleInputChange}
@@ -777,21 +817,17 @@ export default function JobSeekerProfilePage() {
                   />
 
                   {isFieldMissing("phone") && (
-                    <MissingFieldMessage lang={lang} />
+                    <MissingFieldMessage label={t("fieldRequiredForProfile")} />
                   )}
                 </div>
 
-                <div className="space-y-2">
+                <div>
                   <InputField
-                    label={lang === "ja" ? "住所" : "Address"}
+                    label={t("address")}
                     name="address"
                     value={formData.address}
-                    placeholder={
-                      lang === "ja"
-                        ? "例：東京都渋谷区神南1-1-1"
-                        : "e.g., Shibuya-ku, Tokyo"
-                    }
-                    icon={<MapPin className="h-4 w-4" />}
+                    placeholder={t("addressPlaceholder")}
+                    icon={<MapPin />}
                     isEditing={isEditing}
                     error={getFieldError("address")}
                     onChange={handleInputChange}
@@ -800,18 +836,18 @@ export default function JobSeekerProfilePage() {
                   />
 
                   {isFieldMissing("address") && (
-                    <MissingFieldMessage lang={lang} />
+                    <MissingFieldMessage label={t("fieldRequiredForProfile")} />
                   )}
                 </div>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                 <InputField
-                  label={lang === "ja" ? "生年月日" : "Date of Birth"}
+                  label={t("dateOfBirth")}
                   name="date_of_birth"
                   value={formData.date_of_birth}
                   type="date"
-                  icon={<Cake className="h-4 w-4" />}
+                  icon={<Cake />}
                   isEditing={isEditing}
                   error={getFieldError("date_of_birth")}
                   onChange={handleInputChange}
@@ -819,33 +855,29 @@ export default function JobSeekerProfilePage() {
                 />
 
                 <SelectField
-                  label={lang === "ja" ? "性別" : "Gender"}
+                  label={t("gender")}
                   name="gender"
                   value={formData.gender}
                   options={GENDERS[lang as keyof typeof GENDERS] || GENDERS.en}
-                  placeholder={
-                    lang === "ja" ? "選択してください" : "Select gender"
-                  }
-                  icon={<Users className="h-4 w-4" />}
+                  placeholder={t("selectGender")}
+                  icon={<Users />}
                   isEditing={isEditing}
                   onChange={handleInputChange}
                 />
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                 <div>
                   <SelectField
-                    label={lang === "ja" ? "国籍" : "Nationality"}
+                    label={t("nationality")}
                     name="nationality"
                     value={formData.nationality}
                     options={
                       NATIONALITIES[lang as keyof typeof NATIONALITIES] ||
                       NATIONALITIES.en
                     }
-                    placeholder={
-                      lang === "ja" ? "選択してください" : "Select nationality"
-                    }
-                    icon={<Flag className="h-4 w-4" />}
+                    placeholder={t("selectNationality")}
+                    icon={<Flag />}
                     isEditing={isEditing}
                     onChange={handleInputChange}
                     required
@@ -854,25 +886,21 @@ export default function JobSeekerProfilePage() {
 
                   {isFieldMissing("nationality") &&
                     !getFieldError("nationality") && (
-                      <MissingFieldMessage lang={lang} />
+                      <MissingFieldMessage label={t("fieldRequiredForProfile")} />
                     )}
                 </div>
 
                 <div>
                   <SelectField
-                    label={lang === "ja" ? "日本語レベル" : "Japanese Level"}
+                    label={t("japaneseLevel")}
                     name="japanese_level"
                     value={formData.japanese_level}
                     options={
                       JAPANESE_LEVELS[lang as keyof typeof JAPANESE_LEVELS] ||
                       JAPANESE_LEVELS.en
                     }
-                    placeholder={
-                      lang === "ja"
-                        ? "選択してください"
-                        : "Select Japanese level"
-                    }
-                    icon={<Languages className="h-4 w-4" />}
+                    placeholder={t("selectJapaneseLevel")}
+                    icon={<Languages />}
                     isEditing={isEditing}
                     onChange={handleInputChange}
                     required
@@ -881,67 +909,63 @@ export default function JobSeekerProfilePage() {
 
                   {isFieldMissing("japanese_level") &&
                     !getFieldError("japanese_level") && (
-                      <MissingFieldMessage lang={lang} />
+                      <MissingFieldMessage label={t("fieldRequiredForProfile")} />
                     )}
                 </div>
               </div>
+
+              <InputField
+                label={t("skills")}
+                name="skills"
+                value={formData.skills}
+                placeholder={t("skillsPlaceholder")}
+                icon={<BookLock />}
+                rows={3}
+                maxLength={500}
+                isEditing={isEditing}
+                error={getFieldError("skills")}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+              />
             </div>
           </section>
 
           {/* Education */}
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className={sectionCard}>
             <SectionHeader
-              title={lang === "ja" ? "学歴" : "Education"}
-              icon={<GraduationCap className="h-5 w-5" />}
-              description={
-                lang === "ja"
-                  ? "あなたの学歴情報（必須）"
-                  : "Your educational background (required)"
-              }
+              title={t("education")}
+              icon={<GraduationCap />}
+              description={t("educationDescription")}
             />
 
             {isFieldMissing("education") && (
-              <div className="mb-4 flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700">
-                <AlertCircle className="h-4 w-4" />
-
-                <p>
-                  {lang === "ja"
-                    ? "少なくとも1つの学歴を追加してください。"
-                    : "Please add at least one education record."}
-                </p>
-              </div>
+              <RequiredNotice text={t("educationRequired")} />
             )}
 
-            <div className="space-y-6">
+            <div className="space-y-3">
               {!isEditing && education.length === 0 && (
-                <p className="py-4 text-center text-sm text-slate-500">
-                  {lang === "ja"
-                    ? "学歴情報はまだ登録されていません"
-                    : "No education records added yet"}
-                </p>
+                <EmptyBox text={t("noEducationRecords")} />
               )}
 
               {education.map((record, index) => (
-                <div
-                  key={record._id || index}
-                  className="relative rounded-xl border border-slate-200 bg-slate-50 p-4"
-                >
+                <div key={record._id || index} className={recordCard}>
                   {isEditing && (
                     <button
                       type="button"
                       onClick={() => removeEducationRecord(index)}
-                      className="absolute right-3 top-3 cursor-pointer text-slate-400 transition hover:text-red-500"
+                      aria-label={t("remove")}
+                      className={`absolute right-2 top-2 grid h-8 w-8 cursor-pointer place-items-center rounded-md text-slate-400 transition hover:bg-red-50 hover:text-red-600 ${focusRing}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   )}
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                     <div className="md:col-span-2">
-                      <label className="mb-1 block text-sm font-medium text-slate-700">
-                        {lang === "ja" ? "学校名" : "School Name"}
+                      <label className={`${fieldLabel} mb-1.5 ${isEditing ? "pr-8" : ""}`}>
+                        {t("schoolName")}
 
-                        <span className="text-red-500">*</span>
+                        <span className="text-red-600">*</span>
                       </label>
 
                       {isEditing ? (
@@ -955,17 +979,15 @@ export default function JobSeekerProfilePage() {
                               event.target.value,
                             )
                           }
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                          className={`${controlClass(true)} h-10 px-3`}
                         />
                       ) : (
-                        <p className="py-3 text-sm text-slate-900">
-                          {record.school || "-"}
-                        </p>
+                        <p className={readText}>{record.school || "-"}</p>
                       )}
                     </div>
 
                     <RecordDateField
-                      label={lang === "ja" ? "入学日" : "Enrollment Date"}
+                      label={t("enrollmentDate")}
                       value={record.enrollment_date}
                       isEditing={isEditing}
                       onChange={(value) =>
@@ -974,7 +996,7 @@ export default function JobSeekerProfilePage() {
                     />
 
                     <RecordDateField
-                      label={lang === "ja" ? "卒業日" : "Graduation Date"}
+                      label={t("graduationDate")}
                       value={record.graduation_date}
                       isEditing={isEditing}
                       onChange={(value) =>
@@ -983,8 +1005,8 @@ export default function JobSeekerProfilePage() {
                     />
 
                     <div>
-                      <label className="mb-1 block text-sm font-medium text-slate-700">
-                        {lang === "ja" ? "学校種別" : "School Type"}
+                      <label className={`${fieldLabel} mb-1.5`}>
+                        {t("schoolType")}
                       </label>
 
                       {isEditing ? (
@@ -997,11 +1019,9 @@ export default function JobSeekerProfilePage() {
                               event.target.value,
                             )
                           }
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+                          className={`${controlClass(true)} h-10 px-3`}
                         >
-                          <option value="">
-                            {lang === "ja" ? "選択してください" : "Select type"}
-                          </option>
+                          <option value="">{t("selectType")}</option>
 
                           {(
                             SCHOOL_TYPES[lang as keyof typeof SCHOOL_TYPES] ||
@@ -1013,15 +1033,13 @@ export default function JobSeekerProfilePage() {
                           ))}
                         </select>
                       ) : (
-                        <p className="py-3 text-sm text-slate-900">
-                          {record.school_type || "-"}
-                        </p>
+                        <p className={readText}>{record.school_type || "-"}</p>
                       )}
                     </div>
 
                     <div>
-                      <label className="mb-1 block text-sm font-medium text-slate-700">
-                        {lang === "ja" ? "専攻" : "Major"}
+                      <label className={`${fieldLabel} mb-1.5`}>
+                        {t("major")}
                       </label>
 
                       {isEditing ? (
@@ -1035,12 +1053,10 @@ export default function JobSeekerProfilePage() {
                               event.target.value,
                             )
                           }
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+                          className={`${controlClass(true)} h-10 px-3`}
                         />
                       ) : (
-                        <p className="py-3 text-sm text-slate-900">
-                          {record.major || "-"}
-                        </p>
+                        <p className={readText}>{record.major || "-"}</p>
                       )}
                     </div>
                   </div>
@@ -1051,58 +1067,48 @@ export default function JobSeekerProfilePage() {
                 <button
                   type="button"
                   onClick={addEducationRecord}
-                  className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-white px-6 py-4 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                  className={`${dashedAction} ${dashedEnabled} w-full`}
                 >
                   <Plus className="h-4 w-4" />
 
-                  {lang === "ja" ? "学歴を追加" : "Add Education"}
+                  {t("addEducation")}
                 </button>
               )}
             </div>
           </section>
 
           {/* Employment */}
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className={sectionCard}>
             <SectionHeader
-              title={lang === "ja" ? "職歴" : "Employment History"}
-              icon={<Building2 className="h-5 w-5" />}
-              description={
-                lang === "ja"
-                  ? "あなたの職歴情報（任意）"
-                  : "Your employment history (optional)"
-              }
+              title={t("employmentHistory")}
+              icon={<Building2 />}
+              description={t("employmentHistoryDescription")}
             />
 
-            <div className="space-y-6">
+            <div className="space-y-3">
               {!isEditing && employmentHistory.length === 0 && (
-                <p className="py-4 text-center text-sm text-slate-500">
-                  {lang === "ja"
-                    ? "職歴情報はまだ登録されていません"
-                    : "No employment records added yet"}
-                </p>
+                <EmptyBox text={t("noEmploymentRecords")} />
               )}
 
               {employmentHistory.map((record, index) => (
-                <div
-                  key={record._id || index}
-                  className="relative rounded-xl border border-slate-200 bg-slate-50 p-4"
-                >
+                <div key={record._id || index} className={recordCard}>
                   {isEditing && (
                     <button
                       type="button"
                       onClick={() => removeEmploymentRecord(index)}
-                      className="absolute right-3 top-3 cursor-pointer text-slate-400 transition hover:text-red-500"
+                      aria-label={t("remove")}
+                      className={`absolute right-2 top-2 grid h-8 w-8 cursor-pointer place-items-center rounded-md text-slate-400 transition hover:bg-red-50 hover:text-red-600 ${focusRing}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   )}
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                     <div className="md:col-span-2">
-                      <label className="mb-1 block text-sm font-medium text-slate-700">
-                        {lang === "ja" ? "会社名" : "Company Name"}
+                      <label className={`${fieldLabel} mb-1.5 ${isEditing ? "pr-8" : ""}`}>
+                        {t("companyName")}
 
-                        <span className="text-red-500">*</span>
+                        <span className="text-red-600">*</span>
                       </label>
 
                       {isEditing ? (
@@ -1116,17 +1122,15 @@ export default function JobSeekerProfilePage() {
                               event.target.value,
                             )
                           }
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+                          className={`${controlClass(true)} h-10 px-3`}
                         />
                       ) : (
-                        <p className="py-3 text-sm text-slate-900">
-                          {record.company_name || "-"}
-                        </p>
+                        <p className={readText}>{record.company_name || "-"}</p>
                       )}
                     </div>
 
                     <RecordDateField
-                      label={lang === "ja" ? "入社日" : "Start Date"}
+                      label={t("startDate")}
                       value={record.start_date}
                       isEditing={isEditing}
                       onChange={(value) =>
@@ -1135,7 +1139,7 @@ export default function JobSeekerProfilePage() {
                     />
 
                     <RecordDateField
-                      label={lang === "ja" ? "退社日" : "End Date"}
+                      label={t("endDate")}
                       value={record.end_date}
                       isEditing={isEditing}
                       onChange={(value) =>
@@ -1144,8 +1148,8 @@ export default function JobSeekerProfilePage() {
                     />
 
                     <div>
-                      <label className="mb-1 block text-sm font-medium text-slate-700">
-                        {lang === "ja" ? "雇用形態" : "Employment Type"}
+                      <label className={`${fieldLabel} mb-1.5`}>
+                        {t("employmentType")}
                       </label>
 
                       {isEditing ? (
@@ -1158,11 +1162,9 @@ export default function JobSeekerProfilePage() {
                               event.target.value,
                             )
                           }
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none"
+                          className={`${controlClass(true)} h-10 px-3`}
                         >
-                          <option value="">
-                            {lang === "ja" ? "選択してください" : "Select type"}
-                          </option>
+                          <option value="">{t("selectType")}</option>
 
                           {(
                             EMPLOYMENT_TYPES[
@@ -1175,7 +1177,7 @@ export default function JobSeekerProfilePage() {
                           ))}
                         </select>
                       ) : (
-                        <p className="py-3 text-sm text-slate-900">
+                        <p className={readText}>
                           {record.employment_type || "-"}
                         </p>
                       )}
@@ -1188,41 +1190,35 @@ export default function JobSeekerProfilePage() {
                 <button
                   type="button"
                   onClick={addEmploymentRecord}
-                  className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-white px-6 py-4 text-sm font-medium text-slate-700"
+                  className={`${dashedAction} ${dashedEnabled} w-full`}
                 >
                   <Plus className="h-4 w-4" />
 
-                  {lang === "ja" ? "職歴を追加" : "Add Employment"}
+                  {t("addEmployment")}
                 </button>
               )}
             </div>
           </section>
 
           {/* Visa */}
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className={sectionCard}>
             <SectionHeader
-              title={lang === "ja" ? "ビザ情報" : "Visa Information"}
-              icon={<BookLock className="h-5 w-5" />}
-              description={
-                lang === "ja"
-                  ? "現在のビザステータス"
-                  : "Your current visa status"
-              }
+              title={t("visaInformation")}
+              icon={<BookLock />}
+              description={t("visaInformationDescription")}
             />
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
               <div>
                 <SelectField
-                  label={lang === "ja" ? "ビザ種類" : "Visa Type"}
+                  label={t("visaType")}
                   name="visa_type"
                   value={formData.visa_type}
                   options={
                     VISA_TYPES[lang as keyof typeof VISA_TYPES] || VISA_TYPES.en
                   }
-                  placeholder={
-                    lang === "ja" ? "選択してください" : "Select visa type"
-                  }
-                  icon={<Globe className="h-4 w-4" />}
+                  placeholder={t("selectVisaType")}
+                  icon={<Globe />}
                   isEditing={isEditing}
                   onChange={handleInputChange}
                   required
@@ -1230,16 +1226,16 @@ export default function JobSeekerProfilePage() {
                 />
 
                 {isFieldMissing("visa_type") && !getFieldError("visa_type") && (
-                  <MissingFieldMessage lang={lang} />
+                  <MissingFieldMessage label={t("fieldRequiredForProfile")} />
                 )}
               </div>
 
               <InputField
-                label={lang === "ja" ? "ビザ有効期限" : "Visa Expiry Date"}
+                label={t("visaExpiryDate")}
                 name="visa_expiry_date"
                 value={formData.visa_expiry_date}
                 type="date"
-                icon={<Calendar className="h-4 w-4" />}
+                icon={<Calendar />}
                 isEditing={isEditing}
                 error={getFieldError("visa_expiry_date")}
                 onChange={handleInputChange}
@@ -1249,30 +1245,22 @@ export default function JobSeekerProfilePage() {
           </section>
 
           {/* Job preferences */}
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className={sectionCard}>
             <SectionHeader
-              title={lang === "ja" ? "就職希望" : "Job Preferences"}
-              icon={<Briefcase className="h-5 w-5" />}
-              description={
-                lang === "ja"
-                  ? "あなたの希望する職種や勤務地"
-                  : "Your desired job type and location"
-              }
+              title={t("jobPreferences")}
+              icon={<Briefcase />}
+              description={t("jobPreferencesDescription")}
             />
 
-            <div className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                 <div>
                   <InputField
-                    label={lang === "ja" ? "希望職種" : "Desired Job"}
+                    label={t("desiredJob")}
                     name="desired_job"
                     value={formData.desired_job}
-                    placeholder={
-                      lang === "ja"
-                        ? "例：ソフトウェアエンジニア"
-                        : "e.g., Software Engineer"
-                    }
-                    icon={<Briefcase className="h-4 w-4" />}
+                    placeholder={t("desiredJobPlaceholder")}
+                    icon={<Briefcase />}
                     isEditing={isEditing}
                     error={getFieldError("desired_job")}
                     onChange={handleInputChange}
@@ -1281,17 +1269,17 @@ export default function JobSeekerProfilePage() {
                   />
 
                   {isFieldMissing("desired_job") && (
-                    <MissingFieldMessage lang={lang} />
+                    <MissingFieldMessage label={t("fieldRequiredForProfile")} />
                   )}
                 </div>
 
                 <div>
                   <InputField
-                    label={lang === "ja" ? "希望勤務地" : "Desired Location"}
+                    label={t("desiredLocation")}
                     name="desired_location"
                     value={formData.desired_location}
-                    placeholder={lang === "ja" ? "例：東京都" : "e.g., Tokyo"}
-                    icon={<MapPinIcon className="h-4 w-4" />}
+                    placeholder={t("desiredLocationPlaceholder")}
+                    icon={<MapPinIcon />}
                     isEditing={isEditing}
                     error={getFieldError("desired_location")}
                     onChange={handleInputChange}
@@ -1300,18 +1288,18 @@ export default function JobSeekerProfilePage() {
                   />
 
                   {isFieldMissing("desired_location") && (
-                    <MissingFieldMessage lang={lang} />
+                    <MissingFieldMessage label={t("fieldRequiredForProfile")} />
                   )}
                 </div>
               </div>
 
-              <div>
+              <div className="md:max-w-[calc(50%-0.5rem)]">
                 <InputField
-                  label={lang === "ja" ? "就業可能日" : "Available From"}
+                  label={t("availableFrom")}
                   name="available_from"
                   value={formData.available_from}
                   type="date"
-                  icon={<Clock className="h-4 w-4" />}
+                  icon={<Clock />}
                   isEditing={isEditing}
                   error={getFieldError("available_from")}
                   onChange={handleInputChange}
@@ -1319,43 +1307,31 @@ export default function JobSeekerProfilePage() {
                 />
 
                 {isFieldMissing("available_from") && (
-                  <MissingFieldMessage lang={lang} />
+                  <MissingFieldMessage label={t("fieldRequiredForProfile")} />
                 )}
               </div>
             </div>
           </section>
 
           {/* Resume */}
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className={sectionCard}>
             <SectionHeader
-              title={lang === "ja" ? "履歴書" : "Resume/CV"}
-              icon={<FileText className="h-5 w-5" />}
-              description={
-                lang === "ja"
-                  ? "履歴書のアップロード（必須）"
-                  : "Upload your resume (required)"
-              }
+              title={t("resume")}
+              icon={<FileText />}
+              description={t("resumeDescription")}
             />
 
             {isFieldMissing("resume_file") && (
-              <div className="mb-4 flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700">
-                <AlertCircle className="h-4 w-4" />
-
-                <p>
-                  {lang === "ja"
-                    ? "履歴書のアップロードは必須です。"
-                    : "Resume upload is required for profile completion."}
-                </p>
-              </div>
+              <RequiredNotice text={t("resumeRequired")} />
             )}
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {profile?.resume_file && (
-                <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-slate-500" />
+                <div className="flex items-center justify-between gap-3 rounded-md bg-slate-50 p-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <FileText className="h-4 w-4 shrink-0 text-slate-500" />
 
-                    <span className="text-sm text-slate-700">
+                    <span className={`text-[13px] text-slate-700 ${wrap}`}>
                       {getDisplayFileName(profile.resume_file, "Resume/CV")}
                     </span>
                   </div>
@@ -1364,12 +1340,65 @@ export default function JobSeekerProfilePage() {
                     href={getFileUrl(profile.resume_file)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+                    className={`shrink-0 rounded text-[13px] font-medium text-emerald-700 underline-offset-2 hover:text-emerald-900 hover:underline ${focusRing}`}
                   >
-                    {lang === "ja" ? "表示" : "View"}
+                    {t("view")}
                   </a>
                 </div>
               )}
+
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-start gap-2.5">
+                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
+
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold text-emerald-950">
+                        {t("autoGeneratedResume")}
+                      </p>
+
+                      <p className="mt-0.5 truncate text-xs leading-5 text-emerald-900/80">
+                        {generatedResumeName || t("notGeneratedYet")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                    {profile?.generated_resume_file && (
+                      <button
+                        type="button"
+                        onClick={() => void handleViewGeneratedResume()}
+                        disabled={viewingGeneratedResume}
+                        className={btnTinted}
+                      >
+                        {viewingGeneratedResume && (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        )}
+                        {t("view")}
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => void handleGenerateResume()}
+                      disabled={generatingResume}
+                      className={btnPrimary}
+                    >
+                      {generatingResume ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <FileText className="h-4 w-4" />
+                      )}
+
+                      {generatingResume
+                        ? t("generating")
+                        : profile?.generated_resume_file
+                          ? t("regenerate")
+                          : t("generate")}
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               {isEditing && (
                 <div>
@@ -1397,10 +1426,8 @@ export default function JobSeekerProfilePage() {
 
                   <label
                     htmlFor="resume-upload"
-                    className={`inline-flex items-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-white px-6 py-4 text-sm font-medium text-slate-700 transition ${
-                      uploadingResume
-                        ? "cursor-not-allowed opacity-50"
-                        : "cursor-pointer hover:border-slate-400 hover:bg-slate-50"
+                    className={`${dashedAction} ${
+                      uploadingResume ? dashedDisabled : dashedEnabled
                     }`}
                   >
                     {uploadingResume ? (
@@ -1409,19 +1436,11 @@ export default function JobSeekerProfilePage() {
                       <Upload className="h-4 w-4" />
                     )}
 
-                    {uploadingResume
-                      ? lang === "ja"
-                        ? "アップロード中..."
-                        : "Uploading..."
-                      : lang === "ja"
-                        ? "新しい履歴書をアップロード"
-                        : "Upload New Resume"}
+                    {uploadingResume ? t("uploading") : t("uploadNewResume")}
                   </label>
 
-                  <p className="mt-2 text-xs text-slate-500">
-                    {lang === "ja"
-                      ? "対応形式: PDF, DOC, DOCX (最大5MB)"
-                      : "Supported formats: PDF, DOC, DOCX (Max 5MB)"}
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    {t("resumeFormatHelp")}
                   </p>
                 </div>
               )}
@@ -1429,44 +1448,38 @@ export default function JobSeekerProfilePage() {
           </section>
 
           {/* Additional Documents */}
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className={sectionCard}>
             <SectionHeader
-              title={lang === "ja" ? "追加書類" : "Additional Documents"}
-              icon={<FileText className="h-5 w-5" />}
-              description={
-                lang === "ja"
-                  ? "パスポート、在留カード、証明書などの書類を管理します"
-                  : "Manage passport, residence card, certificates and other supporting documents"
-              }
+              title={t("additionalDocuments")}
+              icon={<FileText />}
+              description={t("additionalDocumentsDescription")}
             />
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {profile?.other_documents?.length ? (
                 profile.other_documents.map((document) => (
                   <div
                     key={document._id || document.file_url}
-                    className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-3">
-                        <div className="rounded-lg bg-white p-2 text-slate-500">
-                          <FileText className="h-5 w-5" />
-                        </div>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span
+                        aria-hidden
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-slate-200 bg-white text-emerald-700"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </span>
 
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-900">
-                            {document.name}
-                          </p>
+                      <div className="min-w-0">
+                        <p className="truncate text-[13px] font-semibold">
+                          {document.name}
+                        </p>
 
-                          <p className="mt-1 text-xs text-slate-500">
-                            {document.document_type || "other"}
-                            {" · "}
-                            {getDisplayFileName(
-                              document.file_url,
-                              lang === "ja" ? "書類" : "Document",
-                            )}
-                          </p>
-                        </div>
+                        <p className="mt-0.5 truncate text-xs text-slate-500">
+                          {document.document_type || "other"}
+                          {" · "}
+                          {getDisplayFileName(document.file_url, t("document"))}
+                        </p>
                       </div>
                     </div>
 
@@ -1475,9 +1488,9 @@ export default function JobSeekerProfilePage() {
                         href={getFileUrl(document.file_url)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-slate-100"
+                        className={btnSecondary}
                       >
-                        {lang === "ja" ? "表示" : "View"}
+                        {t("view")}
                       </a>
 
                       {isEditing && document._id && (
@@ -1485,7 +1498,7 @@ export default function JobSeekerProfilePage() {
                           type="button"
                           onClick={() => handleRemoveDocument(document)}
                           disabled={removingDocumentId === document._id}
-                          className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          className={btnDanger}
                         >
                           {removingDocumentId === document._id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -1493,89 +1506,70 @@ export default function JobSeekerProfilePage() {
                             <Trash2 className="h-4 w-4" />
                           )}
 
-                          {lang === "ja" ? "削除" : "Remove"}
+                          {t("remove")}
                         </button>
                       )}
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center">
-                  <FileText className="mx-auto h-7 w-7 text-slate-300" />
-
-                  <p className="mt-2 text-sm text-slate-500">
-                    {lang === "ja"
-                      ? "追加書類はまだアップロードされていません"
-                      : "No additional documents uploaded yet"}
-                  </p>
-                </div>
+                <EmptyBox
+                  text={t("noAdditionalDocuments")}
+                  icon={<FileText className="h-4 w-4" />}
+                />
               )}
 
               {isEditing && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <h3 className="text-sm font-semibold text-slate-900">
-                    {lang === "ja" ? "書類を追加" : "Add Document"}
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-3.5">
+                  <h3 className="text-[13px] font-semibold">
+                    {t("addDocument")}
                   </h3>
 
-                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <div className="mt-3 grid gap-3 sm:gap-4 md:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
-                        {lang === "ja" ? "書類名" : "Document Name"}
+                      <label className={`${fieldLabel} mb-1.5`}>
+                        {t("documentName")}
                       </label>
 
                       <input
                         type="text"
                         value={documentName}
-                        onChange={(event) =>
-                          setDocumentName(event.target.value)
-                        }
-                        placeholder={
-                          lang === "ja" ? "例：パスポート" : "e.g., Passport"
-                        }
-                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                        onChange={(event) => setDocumentName(event.target.value)}
+                        placeholder={t("documentNamePlaceholder")}
+                        className={`${controlClass(true)} h-10 px-3`}
                       />
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
-                        {lang === "ja" ? "書類種類" : "Document Type"}
+                      <label className={`${fieldLabel} mb-1.5`}>
+                        {t("documentType")}
                       </label>
 
                       <select
                         value={documentType}
-                        onChange={(event) =>
-                          setDocumentType(event.target.value)
-                        }
-                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                        onChange={(event) => setDocumentType(event.target.value)}
+                        className={`${controlClass(true)} h-10 px-3`}
                       >
                         <option value="passport">
-                          {lang === "ja" ? "パスポート" : "Passport"}
+                          {t("documentTypePassport")}
                         </option>
                         <option value="residence_card">
-                          {lang === "ja" ? "在留カード" : "Residence Card"}
+                          {t("documentTypeResidenceCard")}
                         </option>
-                        <option value="visa">
-                          {lang === "ja" ? "ビザ関連書類" : "Visa Document"}
-                        </option>
+                        <option value="visa">{t("documentTypeVisa")}</option>
                         <option value="certificate">
-                          {lang === "ja" ? "証明書" : "Certificate"}
+                          {t("documentTypeCertificate")}
                         </option>
-                        <option value="jlpt">
-                          {lang === "ja"
-                            ? "日本語証明"
-                            : "JLPT / Japanese Certificate"}
-                        </option>
+                        <option value="jlpt">{t("documentTypeJlpt")}</option>
                         <option value="education">
-                          {lang === "ja" ? "学歴書類" : "Education Document"}
+                          {t("documentTypeEducation")}
                         </option>
-                        <option value="other">
-                          {lang === "ja" ? "その他" : "Other"}
-                        </option>
+                        <option value="other">{t("documentTypeOther")}</option>
                       </select>
                     </div>
                   </div>
 
-                  <div className="mt-4">
+                  <div className="mt-3">
                     <input
                       ref={documentInputRef}
                       id="other-document-upload"
@@ -1584,52 +1578,42 @@ export default function JobSeekerProfilePage() {
                       disabled={uploadingDocument}
                       className="hidden"
                       onChange={(event) => {
-                        setSelectedDocumentFile(
-                          event.target.files?.[0] || null,
-                        );
+                        setSelectedDocumentFile(event.target.files?.[0] || null);
                       }}
                     />
 
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
                       <label
                         htmlFor="other-document-upload"
-                        className={`inline-flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition ${
-                          uploadingDocument
-                            ? "cursor-not-allowed opacity-50"
-                            : "cursor-pointer hover:border-slate-400 hover:bg-slate-50"
+                        className={`${dashedAction} ${
+                          uploadingDocument ? dashedDisabled : dashedEnabled
                         }`}
                       >
                         <Upload className="h-4 w-4" />
 
                         {selectedDocumentFile
-                          ? lang === "ja"
-                            ? "別のファイルを選択"
-                            : "Choose Another File"
-                          : lang === "ja"
-                            ? "ファイルを選択"
-                            : "Choose File"}
+                          ? t("chooseAnotherFile")
+                          : t("chooseFile")}
                       </label>
 
                       {selectedDocumentFile && (
-                        <p className="min-w-0 truncate text-sm text-slate-600">
+                        <p className="min-w-0 truncate text-[13px] text-slate-600">
                           {selectedDocumentFile.name}
                         </p>
                       )}
                     </div>
 
-                    <p className="mt-2 text-xs text-slate-500">
-                      {lang === "ja"
-                        ? "対応形式: JPG, PNG, GIF, WEBP, PDF, DOC, DOCX (最大10MB)"
-                        : "Supported formats: JPG, PNG, GIF, WEBP, PDF, DOC, DOCX (Max 10MB)"}
+                    <p className="mt-1.5 text-xs text-slate-500">
+                      {t("documentFormatHelp")}
                     </p>
                   </div>
 
-                  <div className="mt-5 flex justify-end">
+                  <div className="mt-4 flex justify-end">
                     <button
                       type="button"
                       onClick={uploadSelectedDocument}
                       disabled={uploadingDocument}
-                      className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      className={`${btnPrimary} w-full sm:w-auto`}
                     >
                       {uploadingDocument ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -1637,13 +1621,7 @@ export default function JobSeekerProfilePage() {
                         <Upload className="h-4 w-4" />
                       )}
 
-                      {uploadingDocument
-                        ? lang === "ja"
-                          ? "アップロード中..."
-                          : "Uploading..."
-                        : lang === "ja"
-                          ? "書類をアップロード"
-                          : "Upload Document"}
+                      {uploadingDocument ? t("uploading") : t("uploadDocument")}
                     </button>
                   </div>
                 </div>
@@ -1652,22 +1630,18 @@ export default function JobSeekerProfilePage() {
           </section>
 
           {/* Notes */}
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className={sectionCard}>
             <SectionHeader
-              title={lang === "ja" ? "備考・メモ" : "Additional Notes"}
-              icon={<FileText className="h-5 w-5" />}
+              title={t("additionalNotes")}
+              icon={<FileText />}
             />
 
             <InputField
-              label={lang === "ja" ? "その他の情報" : "Other Information"}
+              label={t("otherInformation")}
               name="notes"
               value={formData.notes}
               rows={4}
-              placeholder={
-                lang === "ja"
-                  ? "その他、採用担当者に伝えたい情報があれば記載してください"
-                  : "Any additional information you'd like to share"
-              }
+              placeholder={t("otherInformationPlaceholder")}
               isEditing={isEditing}
               error={getFieldError("notes")}
               onChange={handleInputChange}
@@ -1676,7 +1650,7 @@ export default function JobSeekerProfilePage() {
             />
           </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
@@ -1708,25 +1682,27 @@ function SelectField({
   onChange,
 }: SelectFieldProps) {
   return (
-    <div className="space-y-2">
-      <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-        {icon && <span className="text-slate-400">{icon}</span>}
+    <div className="space-y-1.5">
+      <label htmlFor={name} className={fieldLabel}>
+        {icon && (
+          <span aria-hidden className="text-slate-400 [&>svg]:h-4 [&>svg]:w-4">
+            {icon}
+          </span>
+        )}
 
         {label}
 
-        {required && <span className="text-red-500">*</span>}
+        {required && <span className="text-red-600">*</span>}
       </label>
 
       <select
+        id={name}
         name={name}
         value={value}
         onChange={onChange}
         disabled={!isEditing}
-        className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
-          !isEditing
-            ? "cursor-not-allowed bg-slate-50 text-slate-500"
-            : "hover:border-slate-300"
-        } ${error ? "border-red-300" : "border-slate-200"}`}
+        aria-invalid={Boolean(error)}
+        className={`${controlClass(isEditing, error)} h-10 px-3`}
       >
         <option value="">{placeholder}</option>
 
@@ -1737,20 +1713,45 @@ function SelectField({
         ))}
       </select>
 
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 }
 
-function MissingFieldMessage({ lang }: { lang: string }) {
+function MissingFieldMessage({ label }: { label: string }) {
   return (
-    <p className="mt-2 flex items-center gap-1 text-xs text-blue-600">
-      <AlertCircle className="h-3 w-3" />
+    <p className="mt-1.5 flex items-center gap-1 text-xs text-amber-700">
+      <AlertCircle className="h-3 w-3 shrink-0" />
 
-      {lang === "ja"
-        ? "この項目は必須です"
-        : "This field is required for profile completion"}
+      {label}
     </p>
+  );
+}
+
+function RequiredNotice({ text }: { text: string }) {
+  return (
+    <div className="mb-3 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5 text-[13px] text-amber-900">
+      <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
+
+      <p>{text}</p>
+    </div>
+  );
+}
+
+function EmptyBox({ text, icon }: { text: string; icon?: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
+      <span
+        aria-hidden
+        className="mx-auto grid h-9 w-9 place-items-center rounded-full bg-emerald-50 text-emerald-700 [&>svg]:h-4 [&>svg]:w-4"
+      >
+        {icon || <Plus />}
+      </span>
+
+      <p className="mx-auto mt-2 max-w-sm text-[13px] leading-5 text-slate-600">
+        {text}
+      </p>
+    </div>
   );
 }
 
@@ -1767,19 +1768,17 @@ function RecordDateField({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-slate-700">
-        {label}
-      </label>
+      <label className={`${fieldLabel} mb-1.5`}>{label}</label>
 
       {isEditing ? (
         <input
           type="date"
           value={value || ""}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          className={`${controlClass(true)} h-10 px-3`}
         />
       ) : (
-        <p className="py-3 text-sm text-slate-900">{value || "-"}</p>
+        <p className={readText}>{value || "-"}</p>
       )}
     </div>
   );

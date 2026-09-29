@@ -161,6 +161,8 @@ export type Application = {
 
   cover_letter?: string | null;
 
+  resume_available?: boolean;
+
   status: ApplicationStatus;
 
   status_tracking?: ApplicationStatusTracking;

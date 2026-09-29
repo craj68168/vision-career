@@ -52,6 +52,8 @@ export type JobSeekerProfile = {
 
   japanese_level: string | null;
 
+  skills: string[];
+
   desired_job: string | null;
 
   desired_location: string | null;
@@ -86,6 +88,7 @@ export type ProfileFormData = {
   visa_type: string;
   visa_expiry_date: string;
   japanese_level: string;
+  skills: string;
   desired_job: string;
   desired_location: string;
   available_from: string;

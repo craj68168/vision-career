@@ -63,6 +63,19 @@ export const getMyApplications = async (): Promise<ApplicationListResponse> => {
   return response.data;
 };
 
+export const getMyApplicationResume = async (
+  applicationId: string,
+): Promise<Blob> => {
+  const response = await axiosInstance.get(
+    `/seekers/applications/${applicationId}/resume`,
+    {
+      responseType: "blob",
+    },
+  );
+
+  return response.data;
+};
+
 // ======================================================
 // APPLY
 // ======================================================

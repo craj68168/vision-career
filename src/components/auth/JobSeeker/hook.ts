@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useLanguage } from "@/context/LanguageContext";
@@ -22,6 +23,7 @@ import type {
 
 export const useJobSeekerAuth = () => {
   const router = useRouter();
+  const t = useTranslations("jobSeeker.auth");
   const { lang } = useLanguage();
   const [mode, setMode] = useState<AuthMode>("login");
   const [registerData, setRegisterData] = useState<JobSeekerRegisterData>({
@@ -37,6 +39,13 @@ export const useJobSeekerAuth = () => {
 
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const validationMessages = {
+    nameRequired: t("nameRequired"),
+    emailRequired: t("emailRequired"),
+    emailInvalid: t("emailInvalid"),
+    passwordRequired: t("passwordRequired"),
+    passwordMinLength: t("passwordMinLength"),
+  };
 
   const handleRegisterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -65,7 +74,7 @@ export const useJobSeekerAuth = () => {
   };
 
   const handleRegister = async () => {
-    const validationErrors = validateRegister(registerData);
+    const validationErrors = validateRegister(registerData, validationMessages);
     if (hasValidationErrors(validationErrors)) {
       setErrors(validationErrors);
       return;
@@ -77,7 +86,7 @@ export const useJobSeekerAuth = () => {
 
       const data = await registerJobSeeker(registerData);
       console.log("Job seeker registration response:", data);
-      toast.success(data.message || "Registration successful.");
+      toast.success(data.message || t("registrationSuccess"));
       setRegisterData({
         name: "",
         email: "",
@@ -90,25 +99,20 @@ export const useJobSeekerAuth = () => {
 
       if (axios.isAxiosError(error)) {
         toast.error(
-          error.response?.data?.message ||
-            (lang === "ja"
-              ? "登録中にエラーが発生しました"
-              : "Registration failed."),
+          error.response?.data?.message || t("registrationFailed"),
         );
 
         return;
       }
 
-      toast.error(
-        lang === "ja" ? "登録中にエラーが発生しました" : "Registration failed.",
-      );
+      toast.error(t("registrationFailed"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleLogin = async () => {
-    const validationErrors = validateLogin(loginData);
+    const validationErrors = validateLogin(loginData, validationMessages);
 
     if (hasValidationErrors(validationErrors)) {
       setErrors(validationErrors);
@@ -124,36 +128,31 @@ export const useJobSeekerAuth = () => {
 
       if (data.status === "pending_approval") {
         toast.error(
-          data.message || "Your account is waiting for admin approval.",
+          data.message || t("pendingApproval"),
         );
         return;
       }
 
       if (!data.token) {
-        toast.error(data.message || "Login failed.");
+        toast.error(data.message || t("loginFailed"));
         return;
       }
 
       localStorage.setItem("access_token", data.token);
       localStorage.setItem("user_role", data.user?.role || "seeker");
-      toast.success(data.message || "Login successful.");
+      toast.success(data.message || t("loginSuccess"));
       router.push(lang === "ja" ? "/job-seekers" : "/en/job-seekers");
     } catch (error: unknown) {
-      console.error("Job seeker registration error:", error);
+      console.error("Job seeker login error:", error);
 
       if (axios.isAxiosError(error)) {
         toast.error(
-          error.response?.data?.message ||
-            (lang === "ja"
-              ? "登録中にエラーが発生しました"
-              : "Registration failed."),
+          error.response?.data?.message || t("loginFailed"),
         );
 
         return;
       }
-      toast.error(
-        lang === "ja" ? "登録中にエラーが発生しました" : "Registration failed.",
-      );
+      toast.error(t("loginFailed"));
     } finally {
       setIsSubmitting(false);
     }
