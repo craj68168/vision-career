@@ -16,9 +16,7 @@ import {
   User,
   X,
 } from "lucide-react";
-
 import { useRouter } from "next/navigation";
-
 import { useProviderProfile } from "./hook";
 
 const INDUSTRIES = {
@@ -35,7 +33,6 @@ const INDUSTRIES = {
     "ホスピタリティ・観光",
     "その他",
   ],
-
   en: [
     "IT & Telecommunications",
     "Manufacturing",
@@ -56,26 +53,18 @@ export default function ProviderProfile() {
 
   const {
     lang,
-
     profile,
     profileStatus,
-
     formData,
-
     loading,
     saving,
-
     isEditing,
     setIsEditing,
-
     handleInputChange,
     handleBlur,
-
     saveProfile,
     cancelEdit,
-
     getFieldError,
-    isFieldMissing,
   } = useProviderProfile();
 
   if (loading) {
@@ -83,7 +72,6 @@ export default function ProviderProfile() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-slate-400" />
-
           <p className="mt-4 text-sm text-slate-600">
             {lang === "ja"
               ? "会社情報を読み込み中..."
@@ -98,13 +86,11 @@ export default function ProviderProfile() {
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         {/* HEADER */}
-
         <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
                 <Building2 className="h-5 w-5" />
-
                 {lang === "ja" ? "会社プロフィール" : "Company Profile"}
               </div>
 
@@ -134,7 +120,6 @@ export default function ProviderProfile() {
                   className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 text-sm font-medium"
                 >
                   <ArrowLeft className="h-4 w-4" />
-
                   {lang === "ja" ? "ダッシュボード" : "Dashboard"}
                 </button>
 
@@ -144,7 +129,6 @@ export default function ProviderProfile() {
                   className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white"
                 >
                   <Edit2 className="h-4 w-4" />
-
                   {lang === "ja" ? "編集" : "Edit Profile"}
                 </button>
               </div>
@@ -157,7 +141,6 @@ export default function ProviderProfile() {
                   className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 text-sm font-medium"
                 >
                   <X className="h-4 w-4" />
-
                   {lang === "ja" ? "キャンセル" : "Cancel"}
                 </button>
 
@@ -187,7 +170,6 @@ export default function ProviderProfile() {
         </section>
 
         {/* COMPLETION */}
-
         {!profileStatus.isComplete ? (
           <section className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 p-4">
             <div className="flex items-center gap-3">
@@ -211,7 +193,6 @@ export default function ProviderProfile() {
           <section className="mb-8 rounded-2xl border border-green-200 bg-green-50 p-4">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="h-5 w-5 text-green-600" />
-
               <p className="font-semibold text-green-800">
                 {lang === "ja"
                   ? "会社プロフィール完了"
@@ -223,7 +204,6 @@ export default function ProviderProfile() {
 
         <div className="space-y-8">
           {/* BASIC COMPANY */}
-
           <Section
             title={lang === "ja" ? "会社情報" : "Company Information"}
             icon={<Building2 className="h-5 w-5" />}
@@ -233,9 +213,14 @@ export default function ProviderProfile() {
                 <ViewField
                   label={lang === "ja" ? "登録担当者" : "Registered User"}
                   value={profile?.name}
+                  lang={lang}
                 />
 
-                <ViewField label="Email" value={profile?.email} />
+                <ViewField
+                  label="Email"
+                  value={profile?.email}
+                  lang={lang}
+                />
               </div>
             </div>
 
@@ -244,6 +229,11 @@ export default function ProviderProfile() {
                 label={lang === "ja" ? "会社名" : "Company Name"}
                 name="companyName"
                 value={formData.companyName}
+                placeholder={
+                  lang === "ja"
+                    ? "株式会社サンプル"
+                    : "Sample Co., Ltd."
+                }
                 isEditing={isEditing}
                 required
                 icon={<Building2 className="h-4 w-4" />}
@@ -256,6 +246,11 @@ export default function ProviderProfile() {
                 label={lang === "ja" ? "電話番号" : "Phone"}
                 name="phone"
                 value={formData.phone}
+                placeholder={
+                  lang === "ja"
+                    ? "03-1234-5678"
+                    : "03-1234-5678"
+                }
                 isEditing={isEditing}
                 required
                 icon={<Phone className="h-4 w-4" />}
@@ -268,6 +263,11 @@ export default function ProviderProfile() {
                 label={lang === "ja" ? "住所" : "Address"}
                 name="address"
                 value={formData.address}
+                placeholder={
+                  lang === "ja"
+                    ? "東京"
+                    : "Tokyo"
+                }
                 isEditing={isEditing}
                 required
                 icon={<MapPin className="h-4 w-4" />}
@@ -280,6 +280,11 @@ export default function ProviderProfile() {
                 label={lang === "ja" ? "ウェブサイト" : "Website"}
                 name="website"
                 value={formData.website}
+                placeholder={
+                  lang === "ja"
+                    ? "https://example.com"
+                    : "https://example.com"
+                }
                 isEditing={isEditing}
                 icon={<Globe className="h-4 w-4" />}
                 error={getFieldError("website")}
@@ -290,7 +295,6 @@ export default function ProviderProfile() {
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   {lang === "ja" ? "業種" : "Industry"}
-
                   <span className="text-red-500">*</span>
                 </label>
 
@@ -302,7 +306,9 @@ export default function ProviderProfile() {
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm disabled:bg-slate-50"
                 >
                   <option value="">
-                    {lang === "ja" ? "選択してください" : "Select industry"}
+                    {lang === "ja"
+                      ? "選択してください"
+                      : "select an industry"}
                   </option>
 
                   {INDUSTRIES[lang as keyof typeof INDUSTRIES].map(
@@ -318,7 +324,6 @@ export default function ProviderProfile() {
           </Section>
 
           {/* CONTACT */}
-
           <Section
             title={lang === "ja" ? "採用担当者" : "Recruitment Contact"}
             icon={<User className="h-5 w-5" />}
@@ -328,6 +333,9 @@ export default function ProviderProfile() {
                 label={lang === "ja" ? "担当者名" : "Contact Person"}
                 name="contact_person"
                 value={formData.contact_person}
+                placeholder={
+                  lang === "ja" ? "山田 太郎" : "Taro Yamada"
+                }
                 isEditing={isEditing}
                 required
                 icon={<User className="h-4 w-4" />}
@@ -340,6 +348,11 @@ export default function ProviderProfile() {
                 label={lang === "ja" ? "担当者電話番号" : "Contact Phone"}
                 name="contact_person_phone"
                 value={formData.contact_person_phone}
+                placeholder={
+                  lang === "ja"
+                    ? "090-1234-5678"
+                    : "090-1234-5678"
+                }
                 isEditing={isEditing}
                 required
                 icon={<Phone className="h-4 w-4" />}
@@ -352,6 +365,11 @@ export default function ProviderProfile() {
                 label={lang === "ja" ? "担当者メール" : "Contact Email"}
                 name="contact_person_email"
                 value={formData.contact_person_email}
+                placeholder={
+                  lang === "ja"
+                    ? "recruit@example.com"
+                    : "recruit@example.com"
+                }
                 isEditing={isEditing}
                 required
                 icon={<Mail className="h-4 w-4" />}
@@ -363,7 +381,6 @@ export default function ProviderProfile() {
           </Section>
 
           {/* HIRING */}
-
           <Section
             title={lang === "ja" ? "採用情報" : "Hiring Information"}
             icon={<Briefcase className="h-5 w-5" />}
@@ -373,6 +390,11 @@ export default function ProviderProfile() {
                 label={lang === "ja" ? "採用ニーズ" : "Hiring Needs"}
                 name="hiring_needs"
                 value={formData.hiring_needs}
+                placeholder={
+                  lang === "ja"
+                    ? "製造スタッフを3名募集しています。勤務地は東京都、勤務開始希望日は来月です。"
+                    : "We are hiring three manufacturing staff in Tokyo, starting next month."
+                }
                 isEditing={isEditing}
                 rows={4}
                 onChange={handleInputChange}
@@ -383,6 +405,11 @@ export default function ProviderProfile() {
                 label={lang === "ja" ? "備考" : "Notes"}
                 name="notes"
                 value={formData.notes}
+                placeholder={
+                  lang === "ja"
+                    ? "日本語での基本的なコミュニケーションができる方を希望します。"
+                    : "Basic Japanese communication skills are preferred."
+                }
                 isEditing={isEditing}
                 rows={4}
                 onChange={handleInputChange}
@@ -409,10 +436,8 @@ function Section({
     <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-6 flex items-center gap-3">
         <div className="rounded-xl bg-slate-100 p-2">{icon}</div>
-
         <h2 className="text-xl font-semibold">{title}</h2>
       </div>
-
       {children}
     </section>
   );
@@ -420,27 +445,19 @@ function Section({
 
 type TextFieldProps = {
   label: string;
-
   name: string;
-
   value: string;
-
+  placeholder: string;
   isEditing: boolean;
-
   required?: boolean;
-
   icon?: React.ReactNode;
-
   error?: string;
-
   rows?: number;
-
   onChange: (
     event: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => void;
-
   onBlur?: (
     event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => void;
@@ -450,6 +467,7 @@ function TextField({
   label,
   name,
   value,
+  placeholder,
   isEditing,
   required,
   icon,
@@ -462,9 +480,7 @@ function TextField({
     <div>
       <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
         {icon}
-
         {label}
-
         {required && <span className="text-red-500">*</span>}
       </label>
 
@@ -472,20 +488,22 @@ function TextField({
         <textarea
           name={name}
           value={value}
+          placeholder={placeholder}
           rows={rows}
           disabled={!isEditing}
           onChange={onChange}
           onBlur={onBlur}
-          className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none disabled:bg-slate-50"
+          className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:bg-slate-50"
         />
       ) : (
         <input
           name={name}
           value={value}
+          placeholder={placeholder}
           disabled={!isEditing}
           onChange={onChange}
           onBlur={onBlur}
-          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none disabled:bg-slate-50"
+          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 disabled:bg-slate-50"
         />
       )}
 
@@ -494,12 +512,21 @@ function TextField({
   );
 }
 
-function ViewField({ label, value }: { label: string; value?: string | null }) {
+function ViewField({
+  label,
+  value,
+  lang,
+}: {
+  label: string;
+  value?: string | null;
+  lang: string;
+}) {
   return (
     <div>
       <p className="text-xs font-medium text-slate-500">{label}</p>
-
-      <p className="mt-1 text-sm text-slate-900">{value || "-"}</p>
+      <p className="mt-1 text-sm text-slate-900">
+        {value?.trim() || (lang === "ja" ? "未登録" : "Not provided")}
+      </p>
     </div>
   );
 }

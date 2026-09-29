@@ -28,7 +28,7 @@ export const PLACEMENT_REQUEST_FORM = {
     jobTitle: {
       label: { en: "Job Title", ja: "求人タイトル" },
       placeholder: {
-        en: "e.g., Software Engineer",
+        en: "e.g.,  Engineer",
         ja: "例：ソフトウェアエンジニア",
       },
       required: true,

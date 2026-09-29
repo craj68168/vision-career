@@ -224,6 +224,9 @@ export default function ClientPage() {
   } | null>(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
 
+  // Bilingual helper
+  const t = (ja: string, en: string) => (lang === "ja" ? ja : en);
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -290,9 +293,7 @@ export default function ClientPage() {
       if (!res.ok || data.status !== "success") {
         setVacancyError(
           data.message ||
-            (lang === "ja"
-              ? "求人情報の読み込みに失敗しました"
-              : "Failed to load vacancies"),
+            t("求人情報の読み込みに失敗しました", "Failed to load vacancies"),
         );
         return;
       }
@@ -301,9 +302,10 @@ export default function ClientPage() {
     } catch (error) {
       console.error("Error fetching vacancies:", error);
       setVacancyError(
-        lang === "ja"
-          ? "求人情報の読み込み中にエラーが発生しました"
-          : "Something went wrong while loading vacancies.",
+        t(
+          "求人情報の読み込み中にエラーが発生しました",
+          "Something went wrong while loading vacancies.",
+        ),
       );
     } finally {
       setLoadingVacancies(false);
@@ -345,9 +347,10 @@ export default function ClientPage() {
       if (!res.ok || data.ok !== true) {
         setApplicationsError(
           data.message ||
-            (lang === "ja"
-              ? "応募情報の読み込みに失敗しました"
-              : "Failed to load applications"),
+            t(
+              "応募情報の読み込みに失敗しました",
+              "Failed to load applications",
+            ),
         );
         return;
       }
@@ -358,9 +361,10 @@ export default function ClientPage() {
     } catch (error) {
       console.error("Error fetching applications:", error);
       setApplicationsError(
-        lang === "ja"
-          ? "応募情報の読み込み中にエラーが発生しました"
-          : "Something went wrong while loading applications.",
+        t(
+          "応募情報の読み込み中にエラーが発生しました",
+          "Something went wrong while loading applications.",
+        ),
       );
     } finally {
       setLoadingApplications(false);
@@ -416,9 +420,10 @@ export default function ClientPage() {
     if (!res.ok || data.status !== "success") {
       throw new Error(
         data.message ||
-          (lang === "ja"
-            ? "求人詳細の取得に失敗しました"
-            : "Failed to fetch vacancy details"),
+          t(
+            "求人詳細の取得に失敗しました",
+            "Failed to fetch vacancy details",
+          ),
       );
     }
 
@@ -437,9 +442,10 @@ export default function ClientPage() {
     } catch (error) {
       console.error("Error fetching vacancy details:", error);
       setDetailsError(
-        lang === "ja"
-          ? "求人詳細の読み込み中にエラーが発生しました"
-          : "Something went wrong while loading vacancy details.",
+        t(
+          "求人詳細の読み込み中にエラーが発生しました",
+          "Something went wrong while loading vacancy details.",
+        ),
       );
     } finally {
       setLoadingDetails(false);
@@ -459,9 +465,10 @@ export default function ClientPage() {
     } catch (error) {
       console.error("Error fetching vacancy for edit:", error);
       setEditError(
-        lang === "ja"
-          ? "編集用の求人情報の読み込み中にエラーが発生しました"
-          : "Something went wrong while loading vacancy for editing.",
+        t(
+          "編集用の求人情報の読み込み中にエラーが発生しました",
+          "Something went wrong while loading vacancy for editing.",
+        ),
       );
     } finally {
       setLoadingEdit(false);
@@ -476,7 +483,7 @@ export default function ClientPage() {
   const handleDeleteVacancy = async () => {
     try {
       const toastId = toast.loading(
-        lang === "ja" ? "求人を削除中..." : "Deleting vacancy...",
+        t("求人を削除中...", "Deleting vacancy..."),
       );
       const res = await axiosInstance.post("/delete_vacancy.php", {
         id: deletingId,
@@ -489,9 +496,7 @@ export default function ClientPage() {
       console.error("Failed to delete vacancy:", err);
       toast.error(
         err.response?.data?.message ||
-          (lang === "ja"
-            ? "求人の削除に失敗しました"
-            : "Failed to delete vacancy"),
+          t("求人の削除に失敗しました", "Failed to delete vacancy"),
       );
     } finally {
       setDeletingId(null);
@@ -507,7 +512,7 @@ export default function ClientPage() {
       const token = localStorage.getItem("token");
 
       const toastId = toast.loading(
-        lang === "ja" ? "ステータスを更新中..." : "Updating status...",
+        t("ステータスを更新中...", "Updating status..."),
       );
 
       const res = await fetch("https://vision-career.co.jp/change_status.php", {
@@ -527,25 +532,23 @@ export default function ClientPage() {
       if (!res.ok || data.ok === false) {
         throw new Error(
           data.message ||
-            (lang === "ja"
-              ? "ステータスの更新に失敗しました"
-              : "Failed to update status"),
+            t(
+              "ステータスの更新に失敗しました",
+              "Failed to update status",
+            ),
         );
       }
 
-      toast.success(
-        lang === "ja" ? "ステータスを更新しました" : "Status updated",
-        { id: toastId },
-      );
+      toast.success(t("ステータスを更新しました", "Status updated"), {
+        id: toastId,
+      });
 
       fetchApplications();
     } catch (error: any) {
       console.error("Status update error:", error);
       toast.error(
         error.message ||
-          (lang === "ja"
-            ? "ステータスの更新に失敗しました"
-            : "Failed to update status"),
+          t("ステータスの更新に失敗しました", "Failed to update status"),
       );
     }
   };
@@ -578,7 +581,7 @@ export default function ClientPage() {
   };
 
   const formatSalary = (min?: number, max?: number) => {
-    if (!min && !max) return lang === "ja" ? "未指定" : "Not specified";
+    if (!min && !max) return t("未指定", "Not specified");
     if (min && max)
       return lang === "ja"
         ? `${min.toLocaleString()} - ${max.toLocaleString()} 万円`
@@ -714,12 +717,13 @@ export default function ClientPage() {
         <div className="rounded-3xl border border-slate-200 bg-white px-8 py-10 text-center shadow-sm">
           <ShieldCheck className="mx-auto mb-4 h-10 w-10 text-slate-400" />
           <h2 className="text-xl font-semibold text-slate-900">
-            {lang === "ja" ? "認証を確認中..." : "Checking authentication..."}
+            {t("認証を確認中...", "Checking authentication...")}
           </h2>
           <p className="mt-2 text-sm text-slate-500">
-            {lang === "ja"
-              ? "セッションを確認しています。"
-              : "Please wait while we verify your session."}
+            {t(
+              "セッションを確認しています。",
+              "Please wait while we verify your session.",
+            )}
           </p>
         </div>
       </div>
@@ -743,14 +747,16 @@ export default function ClientPage() {
                   <AlertCircle className="mt-0.5 h-5 w-5 text-amber-600" />
                   <div>
                     <h3 className="font-semibold text-amber-800">
-                      {lang === "ja"
-                        ? "会社プロフィールが未完成です"
-                        : "Company profile incomplete"}
+                      {t(
+                        "会社プロフィールが未完成です",
+                        "Company profile incomplete",
+                      )}
                     </h3>
                     <p className="mt-1 text-sm text-amber-700">
-                      {lang === "ja"
-                        ? "求人を効果的に管理するために、会社情報を完成させてください。会社名と電話番号は必須項目です。"
-                        : "Please complete your company profile to manage vacancies effectively. Company name and phone number are required."}
+                      {t(
+                        "求人を効果的に管理するために、会社情報を完成させてください。会社名と電話番号は必須項目です。",
+                        "Please complete your company profile to manage vacancies effectively. Company name and phone number are required.",
+                      )}
                     </p>
                   </div>
                 </div>
@@ -758,7 +764,7 @@ export default function ClientPage() {
                   href={lang === "ja" ? "/profile/" : "/en/profile/"}
                   className="inline-flex items-center gap-2 self-start rounded-xl bg-amber-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-700 sm:self-auto"
                 >
-                  {lang === "ja" ? "プロフィールを設定" : "Complete Profile"}
+                  {t("プロフィールを設定", "Complete Profile")}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -770,7 +776,7 @@ export default function ClientPage() {
               {/* Welcome Section */}
               <div>
                 <p className="text-sm font-medium text-slate-500">
-                  {lang === "ja" ? "採用ダッシュボード" : "Hiring Dashboard"}
+                  {t("採用ダッシュボード", "Hiring Dashboard")}
                 </p>
                 <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
                   {lang === "ja"
@@ -778,15 +784,15 @@ export default function ClientPage() {
                     : `Welcome${user.name ? `, ${user.name}` : ""}`}
                 </h1>
                 <p className="mt-2 text-sm text-slate-600">
-                  {lang === "ja"
-                    ? "求人を管理し、掲載した求人に応募されたすべての応募を確認します。"
-                    : "Manage vacancies and review all applications received for your posted jobs."}
+                  {t(
+                    "求人を管理し、掲載した求人に応募されたすべての応募を確認します。",
+                    "Manage vacancies and review all applications received for your posted jobs.",
+                  )}
                 </p>
               </div>
 
-              {/* Action Buttons - Restructured */}
+              {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 pt-5">
-                {/* Primary Actions Group */}
                 <div className="flex flex-wrap gap-2">
                   {isProfileComplete && (
                     <Link
@@ -795,7 +801,7 @@ export default function ClientPage() {
                     >
                       <UserCircle className="h-4 w-4" />
                       <span className="hidden sm:inline">
-                        {lang === "ja" ? "プロフィール" : "Profile"}
+                        {t("プロフィール", "Profile")}
                       </span>
                     </Link>
                   )}
@@ -805,34 +811,31 @@ export default function ClientPage() {
                     className="inline-flex items-center cursor-pointer justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>{lang === "ja" ? "求人を投稿" : "Post Vacancy"}</span>
+                    <span>{t("求人を投稿", "Post Vacancy")}</span>
                   </button>
                 </div>
 
-                {/* Divider */}
                 <div className="hidden h-8 w-px bg-slate-200 sm:block" />
 
-                {/* Secondary Actions Group */}
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setShowPlacementRequestModal(true)}
                     className="inline-flex items-center cursor-pointer justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
                   >
                     <FileText className="h-4 w-4" />
-                    <span>
-                      {lang === "ja" ? "採用依頼" : "Placement Request"}
-                    </span>
+                    <span>{t("採用依頼", "Placement Request")}</span>
                   </button>
 
                   <button
                     onClick={() => {
-                      /* Add refresh functionality */
+                      fetchVacancies();
+                      fetchApplications();
                     }}
                     className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-slate-50"
                   >
                     <RefreshCw className="h-4 w-4" />
                     <span className="hidden sm:inline">
-                      {lang === "ja" ? "更新" : "Refresh"}
+                      {t("更新", "Refresh")}
                     </span>
                   </button>
                 </div>
@@ -840,30 +843,30 @@ export default function ClientPage() {
             </div>
           </div>
 
-          {/* Stats Cards - Only show if profile is complete, otherwise show simplified stats */}
+          {/* Stats Cards */}
           <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             <StatCard
-              label={lang === "ja" ? "総求人数" : "Total Vacancies"}
+              label={t("総求人数", "Total Vacancies")}
               value={String(applicationCounts.vacancies || vacancies.length)}
               icon={<Briefcase className="h-5 w-5" />}
             />
             <StatCard
-              label={lang === "ja" ? "応募数" : "Applications"}
+              label={t("応募数", "Applications")}
               value={String(applicationCounts.total)}
               icon={<Inbox className="h-5 w-5" />}
             />
             <StatCard
-              label={lang === "ja" ? "保留中" : "Pending"}
+              label={t("保留中", "Pending")}
               value={String(applicationCounts.pending)}
               icon={<Clock3 className="h-5 w-5" />}
             />
             <StatCard
-              label={lang === "ja" ? "審査中" : "Reviewed"}
+              label={t("審査中", "Reviewed")}
               value={String(applicationCounts.reviewed)}
               icon={<Eye className="h-5 w-5" />}
             />
             <StatCard
-              label={lang === "ja" ? "選考中" : "Shortlisted"}
+              label={t("選考中", "Shortlisted")}
               value={String(applicationCounts.shortlisted)}
               icon={<CheckCircle2 className="h-5 w-5" />}
             />
@@ -876,19 +879,19 @@ export default function ClientPage() {
                   active={activeTab === "vacancies"}
                   onClick={() => setActiveTab("vacancies")}
                   icon={<Briefcase className="h-4 w-4" />}
-                  label={`${lang === "ja" ? "求人" : "Vacancies"} (${filteredVacancies.length})`}
+                  label={`${t("求人", "Vacancies")} (${filteredVacancies.length})`}
                 />
                 <TabButton
                   active={activeTab === "applications"}
                   onClick={() => setActiveTab("applications")}
                   icon={<Users className="h-4 w-4" />}
-                  label={`${lang === "ja" ? "応募" : "Applications"} (${filteredApplications.length})`}
+                  label={`${t("応募", "Applications")} (${filteredApplications.length})`}
                 />
                 <TabButton
                   active={activeTab === "placement-requests"}
                   onClick={() => setActiveTab("placement-requests")}
                   icon={<FileText className="h-4 w-4" />}
-                  label={lang === "ja" ? "採用依頼" : "Placement Requests"}
+                  label={t("採用依頼", "Placement Requests")}
                 />
               </div>
 
@@ -900,16 +903,16 @@ export default function ClientPage() {
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder={
                       activeTab === "vacancies"
-                        ? lang === "ja"
-                          ? "求人を検索..."
-                          : "Search vacancies..."
+                        ? t("求人を検索...", "Search vacancies...")
                         : activeTab === "applications"
-                          ? lang === "ja"
-                            ? "応募者、メール、職種を検索..."
-                            : "Search applicants, emails, job titles..."
-                          : lang === "ja"
-                            ? "職種、ステータスで検索..."
-                            : "Search by job title, status..."
+                          ? t(
+                              "応募者、メール、職種を検索...",
+                              "Search applicants, emails, job titles...",
+                            )
+                          : t(
+                              "職種、ステータスで検索...",
+                              "Search by job title, status...",
+                            )
                     }
                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white"
                   />
@@ -922,34 +925,27 @@ export default function ClientPage() {
             <>
               {loadingVacancies ? (
                 <LoadingPanel
-                  text={
-                    lang === "ja"
-                      ? "求人情報を読み込み中..."
-                      : "Loading vacancies..."
-                  }
+                  text={t(
+                    "求人情報を読み込み中...",
+                    "Loading vacancies...",
+                  )}
                 />
               ) : vacancyError ? (
                 <ErrorPanel
-                  title={
-                    lang === "ja"
-                      ? "求人情報を読み込めません"
-                      : "Unable to load vacancies"
-                  }
+                  title={t(
+                    "求人情報を読み込めません",
+                    "Unable to load vacancies",
+                  )}
                   message={vacancyError}
                 />
               ) : filteredVacancies.length === 0 ? (
                 <EmptyPanel
                   icon={<Briefcase className="h-10 w-10 text-slate-400" />}
-                  title={
-                    lang === "ja"
-                      ? "求人が見つかりません"
-                      : "No vacancies found"
-                  }
-                  description={
-                    lang === "ja"
-                      ? "新しい求人を投稿するか、別の検索をお試しください。"
-                      : "Post a new vacancy or try a different search."
-                  }
+                  title={t("求人が見つかりません", "No vacancies found")}
+                  description={t(
+                    "新しい求人を投稿するか、別の検索をお試しください。",
+                    "Post a new vacancy or try a different search.",
+                  )}
                 />
               ) : (
                 <Vacancies
@@ -967,34 +963,30 @@ export default function ClientPage() {
             <>
               {loadingApplications ? (
                 <LoadingPanel
-                  text={
-                    lang === "ja"
-                      ? "応募情報を読み込み中..."
-                      : "Loading applications..."
-                  }
+                  text={t(
+                    "応募情報を読み込み中...",
+                    "Loading applications...",
+                  )}
                 />
               ) : applicationsError ? (
                 <ErrorPanel
-                  title={
-                    lang === "ja"
-                      ? "応募情報を読み込めません"
-                      : "Unable to load applications"
-                  }
+                  title={t(
+                    "応募情報を読み込めません",
+                    "Unable to load applications",
+                  )}
                   message={applicationsError}
                 />
               ) : filteredApplications.length === 0 ? (
                 <EmptyPanel
                   icon={<Inbox className="h-10 w-10 text-slate-400" />}
-                  title={
-                    lang === "ja"
-                      ? "まだ応募はありません"
-                      : "No applications received yet"
-                  }
-                  description={
-                    lang === "ja"
-                      ? "求職者からの応募は、応募があったときにここに表示されます。"
-                      : "Applications from job seekers will appear here once they apply."
-                  }
+                  title={t(
+                    "まだ応募はありません",
+                    "No applications received yet",
+                  )}
+                  description={t(
+                    "求職者からの応募は、応募があったときにここに表示されます。",
+                    "Applications from job seekers will appear here once they apply.",
+                  )}
                 />
               ) : (
                 <Applications
@@ -1013,7 +1005,7 @@ export default function ClientPage() {
         </div>
       </div>
 
-      {/* Rest of modals remain the same */}
+      {/* Modals */}
       {showDetailsModal && (
         <DetailsModal
           closeDetailsModal={closeDetailsModal}
@@ -1071,9 +1063,10 @@ export default function ClientPage() {
           companyId={user.id}
           onSuccess={() => {
             toast.success(
-              lang === "ja"
-                ? "採用依頼が正常に提出されました"
-                : "Placement request submitted successfully",
+              t(
+                "採用依頼が正常に提出されました",
+                "Placement request submitted successfully",
+              ),
             );
             setShowPlacementRequestModal(false);
           }}
