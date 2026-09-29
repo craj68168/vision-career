@@ -1,30 +1,44 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
-import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+
 import { useJobSeekerAuth } from "./hook";
+
+/*
+  Palette
+  - page      #EEF3F2  soft mist
+  - ink       #0B2A2F  deep teal-ink (brand panel, headings)
+  - primary   teal-600 / teal-700 (buttons, focus, active tab)
+  - mint      #99F6E4  accent on the dark panel only
+  - text      slate-600 body, slate-900 headings
+*/
+
+const isEnglishPath = (pathname: string) =>
+  pathname === "/en" || pathname.startsWith("/en/");
+
+const withoutEnglishPrefix = (pathname: string) =>
+  pathname === "/en" ? "/" : pathname.replace(/^\/en\//, "/");
+
 export default function JobSeekerAuth() {
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("jobSeeker.auth");
+  const reduceMotion = useReducedMotion();
 
   const {
     lang,
-
     mode,
     setMode,
-
     registerData,
     loginData,
-
     errors,
-
     isSubmitting,
-
     handleRegisterChange,
     handleLoginChange,
-
     handleRegister,
     handleLogin,
   } = useJobSeekerAuth();
@@ -33,314 +47,306 @@ export default function JobSeekerAuth() {
     if (lang === targetLang) return;
 
     if (targetLang === "en") {
-      router.push(`/en${pathname}`);
-    } else {
-      const newPath = pathname.replace(/^\/en/, "") || "/";
-      router.push(newPath);
+      router.push(isEnglishPath(pathname) ? pathname : `/en${pathname}`);
+      return;
     }
+
+    router.push(withoutEnglishPrefix(pathname));
   };
 
-  const content = {
-    portalTitle: lang === "ja" ? "求職者ポータル" : "Job Seeker Portal",
+  const employerHref = lang === "ja" ? "/auth" : "/en/auth";
+  const forgotHref =
+    lang === "ja"
+      ? "/job-seekers-auth/forgot-password"
+      : "/en/job-seekers-auth/forgot-password";
 
-    mainTitle: lang === "ja" ? "次の仕事を見つける" : "Find your next",
-
-    mainTitleHighlight: lang === "ja" ? "理想の仕事" : "dream job",
-
-    description:
-      lang === "ja"
-        ? "求人情報の検索、応募、追跡をすべて一箇所で。あなたの可能性を発見しようとするトップ雇用主とつながりましょう。"
-        : "Search, apply, and track job opportunities all in one place. Connect with top employers ready to discover your potential.",
-
-    employerText:
-      lang === "ja"
-        ? "候補者を探していますか？"
-        : "Are you looking for a candidate?",
-
-    employerLink: lang === "ja" ? "こちらから登録" : "Sign up here",
-
-    loginTab: lang === "ja" ? "ログイン" : "Login",
-
-    registerTab: lang === "ja" ? "登録" : "Register",
-  };
+  const panelMotion = reduceMotion
+    ? {}
+    : {
+        initial: { opacity: 0, y: 12 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -12 },
+        transition: { duration: 0.2 },
+      };
 
   return (
-    <main className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center p-6">
-      <div className="fixed bottom-5 right-5 z-50">
-        <button
-          type="button"
-          onClick={() => handleLangChange(lang === "ja" ? "en" : "ja")}
-          className="group relative flex h-12 w-12 items-center text-white justify-center rounded-full bg-neutral-800/90 backdrop-blur-md hover:bg-neutral-700/90 transition-all duration-300 shadow-lg border border-white/20"
-        >
-          <span className="text-lg font-semibold">
-            {lang === "ja" ? "🇯🇵" : "🇺🇸"}
-          </span>
-        </button>
+    <main className="relative flex min-h-dvh items-center justify-center bg-[#EEF3F2] px-4 py-16 sm:px-6 lg:py-10">
+      {/* Language switch */}
+      <div
+        role="group"
+        aria-label="Language"
+        className="fixed right-4 top-4 z-50 flex rounded-full border border-slate-200 bg-white/90 p-1 text-xs font-semibold shadow-sm backdrop-blur sm:right-6 sm:top-6"
+      >
+        {(["ja", "en"] as const).map((code) => (
+          <button
+            key={code}
+            type="button"
+            onClick={() => handleLangChange(code)}
+            aria-pressed={lang === code}
+            className={`cursor-pointer rounded-full px-3.5 py-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 ${
+              lang === code
+                ? "bg-[#0B2A2F] text-white"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            {code === "ja" ? "JP" : "EN"}
+          </button>
+        ))}
       </div>
 
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-white/5 backdrop-blur-xl">
-        <section className="flex flex-col justify-between p-10 bg-white/5 border-r border-white/10">
-          <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-300">
-              {content.portalTitle}
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-20px_rgba(11,42,47,0.35)] lg:grid-cols-[1.05fr_1fr]">
+        {/* Brand panel */}
+        <section className="relative flex flex-col justify-between gap-10 overflow-hidden bg-[#0B2A2F] p-7 text-white sm:p-10 lg:p-12">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-teal-400/15 blur-3xl"
+          />
+
+          <div className="relative">
+            <p className="text-sm font-medium text-teal-200">
+              {t("portalTitle")}
             </p>
 
-            <h1 className="mt-4 text-4xl font-semibold text-white leading-tight">
-              {content.mainTitle}
-
-              <span className="block text-sky-400">
-                {content.mainTitleHighlight}
-              </span>
+            <h1 className="mt-3 text-3xl font-semibold leading-tight sm:text-4xl lg:text-[2.75rem]">
+              {t("mainTitle")}{" "}
+              <span className="text-[#99F6E4]">{t("mainTitleHighlight")}</span>
             </h1>
 
-            <p className="mt-5 text-slate-300 max-w-md leading-7">
-              {content.description}
+            <p className="mt-5 hidden max-w-md leading-7 text-slate-300 lg:block">
+              {t("description")}
             </p>
 
-            <p className="my-5 text-slate-300 max-w-md leading-7">
-              {content.employerText}{" "}
+            <p className="mt-5 hidden max-w-md leading-7 text-slate-300 lg:block">
+              {t("employerText")}{" "}
               <a
-                href={lang === "ja" ? "/auth" : "/en/auth"}
-                className="underline"
+                href={employerHref}
+                className="font-medium text-[#99F6E4] underline underline-offset-4 hover:text-white"
               >
-                {content.employerLink}
+                {t("employerLink")}
               </a>
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-2xl bg-white/10 p-4">
-              <p className="text-2xl font-semibold text-white">
-                {lang === "ja" ? "検索" : "Search"}
-              </p>
-
-              <p className="mt-2 text-sm text-slate-300">
-                {lang === "ja"
-                  ? "数千もの求人を数分で探索"
-                  : "Explore thousands of job openings in minutes."}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white/10 p-4">
-              <p className="text-2xl font-semibold text-white">
-                {lang === "ja" ? "応募" : "Apply"}
-              </p>
-
-              <p className="mt-2 text-sm text-slate-300">
-                {lang === "ja"
-                  ? "簡単に応募書類を提出し、進捗を追跡"
-                  : "Submit applications and track your progress effortlessly."}
-              </p>
-            </div>
+          <div className="relative hidden grid-cols-2 gap-4 sm:grid">
+            {[
+              { title: t("searchTitle"), desc: t("searchDescription") },
+              { title: t("applyTitle"), desc: t("applyDescription") },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="rounded-2xl border border-white/10 bg-white/5 p-4"
+              >
+                <p className="text-lg font-semibold">{item.title}</p>
+                <p className="mt-1.5 text-sm leading-6 text-slate-300">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
 
-        <section className="p-6 sm:p-10 bg-slate-950/70">
+        {/* Form panel */}
+        <section className="p-6 sm:p-10 lg:p-12">
           <div className="mx-auto w-full max-w-md">
-            <div className="inline-flex rounded-2xl bg-white/5 p-1 border border-white/10 mb-8">
-              <button
-                type="button"
-                onClick={() => setMode("login")}
-                className={`relative px-5 py-2.5 rounded-xl cursor-pointer text-sm font-medium ${
-                  mode === "login" ? "text-white" : "text-slate-400"
-                }`}
-              >
-                {mode === "login" && (
-                  <motion.span
-                    layoutId="authTab"
-                    className="absolute inset-0 rounded-xl bg-sky-500"
-                  />
-                )}
-
-                <span className="relative z-10">{content.loginTab}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMode("register")}
-                className={`relative px-5 py-2.5 rounded-xl cursor-pointer text-sm font-medium ${
-                  mode === "register" ? "text-white" : "text-slate-400"
-                }`}
-              >
-                {mode === "register" && (
-                  <motion.span
-                    layoutId="authTab"
-                    className="absolute inset-0 rounded-xl bg-sky-500"
-                  />
-                )}
-
-                <span className="relative z-10">{content.registerTab}</span>
-              </button>
+            <div
+              role="tablist"
+              aria-label={t("portalTitle")}
+              className="mb-8 grid grid-cols-2 rounded-2xl bg-slate-100 p-1"
+            >
+              {(["login", "register"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === tab}
+                  onClick={() => setMode(tab)}
+                  className={`relative cursor-pointer rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 ${
+                    mode === tab
+                      ? "text-teal-800"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  {mode === tab && (
+                    <motion.span
+                      layoutId="authTab"
+                      transition={
+                        reduceMotion ? { duration: 0 } : { duration: 0.25 }
+                      }
+                      className="absolute inset-0 rounded-xl bg-white shadow-sm"
+                    />
+                  )}
+                  <span className="relative z-10">
+                    {tab === "login" ? t("loginTab") : t("registerTab")}
+                  </span>
+                </button>
+              ))}
             </div>
 
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait" initial={false}>
               {mode === "login" ? (
-                <motion.div
-                  key="login"
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -18 }}
-                >
+                <motion.div key="login" {...panelMotion}>
                   <form
+                    noValidate
                     onSubmit={(event) => {
                       event.preventDefault();
                       handleLogin();
                     }}
-                    className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 shadow-xl"
                   >
-                    <h2 className="text-3xl font-semibold text-white">
-                      {lang === "ja" ? "サインイン" : "Sign in"}
+                    <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
+                      {t("signInTitle")}
                     </h2>
-
-                    <p className="mt-2 text-slate-400">
-                      {lang === "ja"
-                        ? "メールアドレスとパスワードでアカウントにアクセスします。"
-                        : "Access your account with your email and password."}
+                    <p className="mt-2 text-slate-600">
+                      {t("signInDescription")}
                     </p>
 
-                    <div className="mt-8 space-y-4">
+                    <div className="mt-8 space-y-5">
                       <InputField
-                        label={lang === "ja" ? "メールアドレス" : "Email"}
+                        id="login-email"
+                        label={t("email")}
                         name="email"
                         type="email"
+                        autoComplete="email"
                         value={loginData.email}
-                        placeholder="you@example.com"
+                        placeholder={t("emailPlaceholder")}
                         icon={Mail}
                         error={errors.email}
                         onChange={handleLoginChange}
                       />
 
                       <InputField
-                        label={lang === "ja" ? "パスワード" : "Password"}
+                        id="login-password"
+                        label={t("password")}
                         name="password"
                         type="password"
+                        autoComplete="current-password"
                         value={loginData.password}
-                        placeholder="••••••••"
+                        placeholder={t("passwordPlaceholder")}
                         icon={Lock}
                         error={errors.password}
+                        showPasswordLabel={t("showPassword")}
+                        hidePasswordLabel={t("hidePassword")}
                         onChange={handleLoginChange}
                       />
 
                       <div className="flex justify-end">
                         <button
                           type="button"
-                          onClick={() =>
-                            router.push(
-                              lang === "ja"
-                                ? "/job-seekers-auth/forgot-password"
-                                : "/en/job-seekers-auth/forgot-password",
-                            )
-                          }
-                          className="cursor-pointer text-sm font-medium text-sky-400 transition hover:text-sky-300 hover:underline"
+                          onClick={() => router.push(forgotHref)}
+                          className="cursor-pointer rounded text-sm font-medium text-teal-700 transition hover:text-teal-900 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
                         >
-                          {lang === "ja"
-                            ? "パスワードを忘れた方"
-                            : "Forgot password?"}
+                          {t("forgotPassword")}
                         </button>
                       </div>
 
                       <SubmitButton
                         isSubmitting={isSubmitting}
-                        lang={lang}
-                        label={lang === "ja" ? "ログイン" : "Login"}
+                        loadingLabel={t("loading")}
+                        label={t("loginButton")}
                       />
                     </div>
 
-                    <p className="mt-6 text-sm text-slate-400">
-                      {lang === "ja"
-                        ? "アカウントをお持ちでないですか？"
-                        : "Don't have an account?"}{" "}
+                    <p className="mt-6 text-center text-sm text-slate-600">
+                      {t("noAccount")}{" "}
                       <button
                         type="button"
                         onClick={() => setMode("register")}
-                        className="text-sky-400"
+                        className="cursor-pointer rounded font-semibold text-teal-700 hover:text-teal-900 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
                       >
-                        {lang === "ja" ? "作成する" : "Create one"}
+                        {t("createOne")}
                       </button>
                     </p>
                   </form>
                 </motion.div>
               ) : (
-                <motion.div
-                  key="register"
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -18 }}
-                >
+                <motion.div key="register" {...panelMotion}>
                   <form
+                    noValidate
                     onSubmit={(event) => {
                       event.preventDefault();
                       handleRegister();
                     }}
-                    className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 shadow-xl"
                   >
-                    <h2 className="text-3xl font-semibold text-white">
-                      {lang === "ja" ? "アカウント作成" : "Create account"}
+                    <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
+                      {t("createAccountTitle")}
                     </h2>
-
-                    <p className="mt-2 text-slate-400">
-                      {lang === "ja"
-                        ? "数秒で新しいアカウントを作成します。"
-                        : "Start with a new account in just a few seconds."}
+                    <p className="mt-2 text-slate-600">
+                      {t("createAccountDescription")}
                     </p>
 
-                    <div className="mt-8 space-y-4">
+                    <div className="mt-8 space-y-5">
                       <InputField
-                        label={lang === "ja" ? "氏名" : "Full name"}
+                        id="register-name"
+                        label={t("fullName")}
                         name="name"
                         type="text"
+                        autoComplete="name"
                         value={registerData.name}
-                        placeholder={lang === "ja" ? "山田 太郎" : "Jane Doe"}
+                        placeholder={t("namePlaceholder")}
                         icon={User}
                         error={errors.name}
                         onChange={handleRegisterChange}
                       />
 
                       <InputField
-                        label={lang === "ja" ? "メールアドレス" : "Email"}
+                        id="register-email"
+                        label={t("email")}
                         name="email"
                         type="email"
+                        autoComplete="email"
                         value={registerData.email}
-                        placeholder="you@example.com"
+                        placeholder={t("emailPlaceholder")}
                         icon={Mail}
                         error={errors.email}
                         onChange={handleRegisterChange}
                       />
 
                       <InputField
-                        label={lang === "ja" ? "パスワード" : "Password"}
+                        id="register-password"
+                        label={t("password")}
                         name="password"
                         type="password"
+                        autoComplete="new-password"
                         value={registerData.password}
-                        placeholder="••••••••"
+                        placeholder={t("passwordPlaceholder")}
                         icon={Lock}
                         error={errors.password}
+                        showPasswordLabel={t("showPassword")}
+                        hidePasswordLabel={t("hidePassword")}
                         onChange={handleRegisterChange}
                       />
 
                       <SubmitButton
                         isSubmitting={isSubmitting}
-                        lang={lang}
-                        label={lang === "ja" ? "登録" : "Register"}
+                        loadingLabel={t("loading")}
+                        label={t("registerButton")}
                       />
                     </div>
 
-                    <p className="mt-6 text-sm text-slate-400">
-                      {lang === "ja"
-                        ? "すでにアカウントをお持ちですか？"
-                        : "Already have an account?"}{" "}
+                    <p className="mt-6 text-center text-sm text-slate-600">
+                      {t("hasAccount")}{" "}
                       <button
                         type="button"
                         onClick={() => setMode("login")}
-                        className="text-sky-400"
+                        className="cursor-pointer rounded font-semibold text-teal-700 hover:text-teal-900 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
                       >
-                        {lang === "ja" ? "サインイン" : "Sign in"}
+                        {t("signInLink")}
                       </button>
                     </p>
                   </form>
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Employer link: shown here on small screens, where the brand panel hides it */}
+            <p className="mt-8 border-t border-slate-200 pt-6 text-center text-sm text-slate-600 lg:hidden">
+              {t("employerText")}{" "}
+              <a
+                href={employerHref}
+                className="font-semibold text-teal-700 underline underline-offset-4 hover:text-teal-900"
+              >
+                {t("employerLink")}
+              </a>
+            </p>
           </div>
         </section>
       </div>
@@ -349,63 +355,79 @@ export default function JobSeekerAuth() {
 }
 
 type InputFieldProps = {
+  id: string;
   label: string;
   name: string;
   type: string;
   value: string;
   placeholder: string;
-  icon: React.ComponentType<{
-    className?: string;
-  }>;
+  autoComplete?: string;
+  icon: React.ComponentType<{ className?: string }>;
   error?: string;
+  showPasswordLabel?: string;
+  hidePasswordLabel?: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 function InputField({
+  id,
   label,
   name,
   type,
   value,
   placeholder,
+  autoComplete,
   icon: Icon,
   error,
+  showPasswordLabel = "Show password",
+  hidePasswordLabel = "Hide password",
   onChange,
 }: InputFieldProps) {
   const [showPassword, setShowPassword] = React.useState(false);
 
   const isPassword = type === "password";
-
   const inputType = isPassword && showPassword ? "text" : type;
+  const errorId = `${id}-error`;
 
   return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-medium text-slate-300">
+    <div>
+      <label
+        htmlFor={id}
+        className="mb-2 block text-sm font-medium text-slate-800"
+      >
         {label}
-      </span>
+      </label>
 
       <div
-        className={`flex items-center gap-3 rounded-2xl border bg-white/5 px-4 py-3 transition focus-within:border-sky-400 ${
-          error ? "border-red-400/70" : "border-white/10"
+        className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3 transition focus-within:ring-4 ${
+          error
+            ? "border-red-400 focus-within:ring-red-100"
+            : "border-slate-300 focus-within:border-teal-600 focus-within:ring-teal-100"
         }`}
       >
-        <Icon className="h-5 w-5 shrink-0 text-slate-400" />
+        <Icon
+          className={`h-5 w-5 shrink-0 ${error ? "text-red-500" : "text-slate-400"}`}
+        />
 
         <input
+          id={id}
           name={name}
           type={inputType}
           value={value}
           placeholder={placeholder}
           onChange={onChange}
-          autoComplete={isPassword ? "current-password" : undefined}
-          className="w-full bg-transparent text-white placeholder:text-slate-500 outline-none"
+          autoComplete={autoComplete}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
+          className="min-w-0 flex-1 bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400"
         />
 
         {isPassword && (
           <button
             type="button"
             onClick={() => setShowPassword((previous) => !previous)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
-            className="shrink-0 cursor-pointer text-slate-400 transition hover:text-white"
+            aria-label={showPassword ? hidePasswordLabel : showPasswordLabel}
+            className="shrink-0 cursor-pointer rounded text-slate-400 transition hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600"
           >
             {showPassword ? (
               <EyeOff className="h-5 w-5" />
@@ -416,27 +438,37 @@ function InputField({
         )}
       </div>
 
-      {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
-    </label>
+      {error && (
+        <p id={errorId} role="alert" className="mt-1.5 text-sm text-red-600">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 
 function SubmitButton({
   label,
-  lang,
+  loadingLabel,
   isSubmitting,
 }: {
   label: string;
-  lang: string;
+  loadingLabel: string;
   isSubmitting: boolean;
 }) {
   return (
     <button
       type="submit"
       disabled={isSubmitting}
-      className="w-full rounded-2xl bg-sky-500 px-4 py-3 cursor-pointer text-sm font-semibold text-white shadow-lg shadow-sky-500/20 disabled:opacity-50"
+      className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {isSubmitting ? (lang === "ja" ? "読み込み中..." : "Loading...") : label}
+      {isSubmitting && (
+        <span
+          aria-hidden
+          className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+        />
+      )}
+      {isSubmitting ? loadingLabel : label}
     </button>
   );
 }

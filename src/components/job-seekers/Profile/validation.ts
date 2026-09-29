@@ -12,15 +12,27 @@ export const validateProfileField = (
 ): string | undefined => {
   switch (field) {
     case "phone":
-      if (value && !/^[\d\s\-+()]+$/.test(value)) {
+      if (!value.trim()) {
         return lang === "ja"
-          ? "有効な電話番号を入力してください"
-          : "Please enter a valid phone number";
+          ? "電話番号を入力してください"
+          : "Please enter your phone number";
+      }
+
+      if (!/^[0-9+\-()\s]{7,20}$/.test(value)) {
+        return lang === "ja"
+          ? "有効な電話番号を入力してください（7〜20文字）"
+          : "Please enter a valid phone number (7-20 characters)";
       }
       break;
 
     case "address":
-      if (value && value.length < 5) {
+      if (!value.trim()) {
+        return lang === "ja"
+          ? "住所を入力してください"
+          : "Please enter your address";
+      }
+
+      if (value.length < 5) {
         return lang === "ja"
           ? "住所は5文字以上で入力してください"
           : "Address must be at least 5 characters";
@@ -58,8 +70,21 @@ export const validateProfileField = (
       break;
 
     case "visa_expiry_date":
-    case "available_from":
       if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return lang === "ja"
+          ? "有効な日付を入力してください"
+          : "Please enter a valid date";
+      }
+      break;
+
+    case "available_from":
+      if (!value) {
+        return lang === "ja"
+          ? "就業可能日を入力してください"
+          : "Please enter your available start date";
+      }
+
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
         return lang === "ja"
           ? "有効な日付を入力してください"
           : "Please enter a valid date";

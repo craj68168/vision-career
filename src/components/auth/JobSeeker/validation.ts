@@ -6,41 +6,53 @@ import type {
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+export type AuthValidationMessages = {
+  nameRequired: string;
+  emailRequired: string;
+  emailInvalid: string;
+  passwordRequired: string;
+  passwordMinLength: string;
+};
+
 export const validateRegister = (
   data: JobSeekerRegisterData,
+  messages: AuthValidationMessages,
 ): ValidationErrors => {
   const errors: ValidationErrors = {};
 
   if (!data.name.trim()) {
-    errors.name = "Name is required.";
+    errors.name = messages.nameRequired;
   }
 
   if (!data.email.trim()) {
-    errors.email = "Email is required.";
+    errors.email = messages.emailRequired;
   } else if (!emailRegex.test(data.email)) {
-    errors.email = "Please enter a valid email address.";
+    errors.email = messages.emailInvalid;
   }
 
   if (!data.password) {
-    errors.password = "Password is required.";
+    errors.password = messages.passwordRequired;
   } else if (data.password.length < 8) {
-    errors.password = "Password must be at least 8 characters.";
+    errors.password = messages.passwordMinLength;
   }
 
   return errors;
 };
 
-export const validateLogin = (data: JobSeekerLoginData): ValidationErrors => {
+export const validateLogin = (
+  data: JobSeekerLoginData,
+  messages: AuthValidationMessages,
+): ValidationErrors => {
   const errors: ValidationErrors = {};
 
   if (!data.email.trim()) {
-    errors.email = "Email is required.";
+    errors.email = messages.emailRequired;
   } else if (!emailRegex.test(data.email)) {
-    errors.email = "Please enter a valid email address.";
+    errors.email = messages.emailInvalid;
   }
 
   if (!data.password) {
-    errors.password = "Password is required.";
+    errors.password = messages.passwordRequired;
   }
 
   return errors;

@@ -9,6 +9,8 @@ dayjs.extend(utc);
 import { useLanguage } from "@/context/LanguageContext";
 
 import {
+  generateJobSeekerResume,
+  getGeneratedJobSeekerResume,
   getJobSeekerProfile,
   removeJobSeekerDocument,
   updateJobSeekerProfile,
@@ -40,6 +42,7 @@ const initialFormData: ProfileFormData = {
   visa_type: "",
   visa_expiry_date: "",
   japanese_level: "",
+  skills: "",
   desired_job: "",
   desired_location: "",
   available_from: "",
@@ -77,6 +80,8 @@ export const useJobSeekerProfile = () => {
   const [saving, setSaving] = useState(false);
 
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [generatingResume, setGeneratingResume] = useState(false);
+  const [viewingGeneratedResume, setViewingGeneratedResume] = useState(false);
 
   const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
 
@@ -133,6 +138,8 @@ export const useJobSeekerProfile = () => {
         visa_expiry_date: formatDateForInput(data.profile.visa_expiry_date),
 
         japanese_level: data.profile.japanese_level || "",
+
+        skills: (data.profile.skills || []).join(", "),
 
         desired_job: data.profile.desired_job || "",
 
@@ -210,6 +217,12 @@ export const useJobSeekerProfile = () => {
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+//   useEffect(() => {
+//   if (new URLSearchParams(window.location.search).get("edit") === "1") {
+//     setIsEditing(true);
+//   }
+// }, []);
 
   const handleInputChange = useCallback(
     (
@@ -560,6 +573,81 @@ export const useJobSeekerProfile = () => {
     }
   };
 
+  const handleGenerateResume = async () => {
+    try {
+      setGeneratingResume(true);
+
+      const data = await generateJobSeekerResume();
+
+      if (!data.success) {
+        throw new Error(data.message || "Failed to generate resume");
+      }
+
+      await fetchProfile();
+
+      toast.success(
+        lang === "ja"
+          ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã‚’ä½œæˆã—ã¾ã—ãŸ"
+          : "Generated resume created successfully",
+      );
+    } catch (error: unknown) {
+      console.error("Generated resume error:", error);
+
+      if (axios.isAxiosError<ApiErrorResponse>(error)) {
+        toast.error(
+          error.response?.data?.message ||
+            (lang === "ja"
+              ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ"
+              : "Failed to generate resume"),
+        );
+
+        return;
+      }
+
+      toast.error(
+        lang === "ja"
+          ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ"
+          : "Failed to generate resume",
+      );
+    } finally {
+      setGeneratingResume(false);
+    }
+  };
+
+  const handleViewGeneratedResume = async () => {
+    try {
+      setViewingGeneratedResume(true);
+
+      const blob = await getGeneratedJobSeekerResume();
+      const fileUrl = URL.createObjectURL(blob);
+
+      window.open(fileUrl, "_blank", "noopener,noreferrer");
+
+      window.setTimeout(() => URL.revokeObjectURL(fileUrl), 60_000);
+    } catch (error: unknown) {
+      console.error("View generated resume error:", error);
+
+      if (axios.isAxiosError<ApiErrorResponse>(error)) {
+        toast.error(
+          error.response?.data?.message ||
+            (lang === "ja"
+              ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã‚’è¡¨ç¤ºã§ãã¾ã›ã‚“"
+              : "Generated resume is not available"),
+        );
+
+        return;
+      }
+
+      toast.error(
+        lang === "ja"
+          ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã‚’è¡¨ç¤ºã§ãã¾ã›ã‚“"
+          : "Generated resume is not available",
+      );
+    } finally {
+      setViewingGeneratedResume(false);
+    }
+  };
+
   const handleDocumentUpload = async ({
     file,
     name,
@@ -770,6 +858,8 @@ export const useJobSeekerProfile = () => {
     loading,
     saving,
     uploadingResume,
+    generatingResume,
+    viewingGeneratedResume,
     uploadingProfilePhoto,
     uploadingDocument,
     removingDocumentId,
@@ -794,6 +884,8 @@ export const useJobSeekerProfile = () => {
 
     handleProfilePhotoUpload,
     handleResumeUpload,
+    handleGenerateResume,
+    handleViewGeneratedResume,
     handleDocumentUpload,
     handleRemoveDocument,
 

@@ -27,8 +27,22 @@ export const updateJobSeekerProfile = async ({
   const payload = new FormData();
 
   Object.entries(formData).forEach(([key, value]) => {
+    if (key === "skills") {
+      return;
+    }
+
     payload.append(key, value);
   });
+
+  payload.append(
+    "skills",
+    JSON.stringify(
+      formData.skills
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean),
+    ),
+  );
 
   payload.append("education", JSON.stringify(education));
 
@@ -38,6 +52,26 @@ export const updateJobSeekerProfile = async ({
     "/seekers/profile",
     payload,
   );
+
+  return response.data;
+};
+
+export const generateJobSeekerResume = async (): Promise<{
+  success: boolean;
+  message?: string;
+  data?: {
+    generated_resume_file?: string;
+  };
+}> => {
+  const response = await axiosInstance.post("/seekers/resume/generate");
+
+  return response.data;
+};
+
+export const getGeneratedJobSeekerResume = async (): Promise<Blob> => {
+  const response = await axiosInstance.get("/seekers/resume/generated", {
+    responseType: "blob",
+  });
 
   return response.data;
 };

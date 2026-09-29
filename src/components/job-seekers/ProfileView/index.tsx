@@ -1,10 +1,12 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import {
+  AlertCircle,
   ArrowLeft,
   Briefcase,
   Building2,
-  CheckCircle2,
   Edit2,
   FileText,
   GraduationCap,
@@ -16,9 +18,33 @@ import {
 
 import { useJobSeekerProfileView } from "./hook";
 
+/*
+  Design tokens (same as job seeker dashboard, Tailwind only)
+  - page      oklch(0.975 0.008 150)   text emerald-950   muted slate-600
+  - primary   emerald-700 (hover 800)  soft emerald-50
+  - weights   headings semibold, labels/body medium or normal (no bold)
+  - density   compact: 40px controls, 16px card padding, 12px gaps
+*/
+
+const pageBg = "bg-[oklch(0.975_0.008_150)] text-emerald-950";
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700";
+const btnBase = `inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md px-3.5 py-2 text-[13px] font-semibold transition active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55 ${focusRing}`;
+const btnPrimary = `${btnBase} bg-emerald-700 text-white hover:bg-emerald-800`;
+const btnSecondary = `${btnBase} border border-slate-200 bg-white text-emerald-950 hover:border-slate-300 hover:bg-slate-100`;
+const btnWarning = `${btnBase} bg-amber-600 text-white hover:bg-amber-700`;
+
+const container = "mx-auto w-full max-w-[90rem] px-4 sm:px-6 lg:px-10";
+const sectionCard =
+  "min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm";
+const recordCard = "rounded-md border border-slate-200 bg-slate-50 p-3.5";
+const labelCaps =
+  "text-[10px] font-medium uppercase tracking-wider text-slate-500";
+const wrap = "[overflow-wrap:anywhere]";
+
 export default function JobSeekerProfileView() {
+  const t = useTranslations("jobSeeker.profile");
   const {
-    lang,
     profile,
     education,
     employmentHistory,
@@ -28,12 +54,17 @@ export default function JobSeekerProfileView() {
     formatDate,
     editProfile,
     backToDashboard,
+    viewGeneratedResume,
   } = useJobSeekerProfileView();
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      <div
+        className={`flex min-h-dvh items-center justify-center ${pageBg}`}
+        role="status"
+        aria-busy="true"
+      >
+        <Loader2 className="h-6 w-6 animate-spin text-emerald-700" />
       </div>
     );
   }
@@ -42,176 +73,197 @@ export default function JobSeekerProfileView() {
     return null;
   }
 
+  const placementStatusLabels: Record<string, string> = {
+    unplaced: t("placementUnplaced"),
+    matching: t("placementMatching"),
+    interview: t("placementInterview"),
+    selected: t("placementSelected"),
+    placed: t("placementPlaced"),
+  };
+
+  const placementStatus =
+    placementStatusLabels[profile.placement_status || "unplaced"] ||
+    profile.placement_status ||
+    "-";
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header */}
-        <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <User className="h-5 w-5" />
-                {lang === "ja" ? "求職者プロフィール" : "Job Seeker Profile"}
-              </div>
-              <h1 className="mt-2 text-3xl font-bold text-slate-900">
-                {profile.name}
-              </h1>
-              <p className="mt-1 text-sm text-slate-500">{profile.email}</p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={backToDashboard}
-                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {lang === "ja" ? "戻る" : "Dashboard"}
-              </button>
-              <button
-                type="button"
-                onClick={editProfile}
-                className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white"
-              >
-                <Edit2 className="h-4 w-4" />
-                {lang === "ja" ? "編集する" : "Edit Profile"}
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* Completion */}
-        <section
-          className={`mb-8 rounded-2xl border p-4 ${
-            isComplete
-              ? "border-green-200 bg-green-50"
-              : "border-amber-200 bg-amber-50"
-          }`}
+    <div className={`min-h-dvh ${pageBg}`}>
+      <header className="border-b border-slate-200 bg-white">
+        <div
+          className={`${container} flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5" />
-              <div>
-                <p className="font-semibold">
-                  {isComplete
-                    ? lang === "ja"
-                      ? "プロフィール完了"
-                      : "Profile Complete"
-                    : lang === "ja"
-                      ? "プロフィール未完了"
-                      : "Profile Incomplete"}
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-emerald-700">
+              {t("pageLabel")}
+            </p>
+
+            <h1
+              className={`mt-1 text-balance text-xl font-semibold tracking-tight sm:text-2xl lg:text-[1.75rem] ${wrap}`}
+            >
+              {profile.name}
+            </h1>
+
+            <p className={`mt-1 text-sm leading-6 text-slate-600 ${wrap}`}>
+              {profile.email}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:shrink-0">
+            <button
+              type="button"
+              onClick={backToDashboard}
+              className={btnSecondary}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {t("dashboard")}
+            </button>
+
+            <button type="button" onClick={editProfile} className={btnPrimary}>
+              <Edit2 className="h-4 w-4" />
+              {t("editProfile")}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className={`${container} py-5 sm:py-6`}>
+        {!isComplete && (
+          <section className="mb-4 flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3.5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <span
+                aria-hidden
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-amber-500 text-white"
+              >
+                <AlertCircle className="h-4 w-4" />
+              </span>
+
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold text-amber-950">
+                  {t("profileIncomplete")}
+                </h2>
+
+                <p className="mt-0.5 text-[13px] tabular-nums leading-5 text-amber-900/80">
+                  {completionPercentage}%
                 </p>
-                <p className="text-sm">{completionPercentage}%</p>
               </div>
             </div>
-            {!isComplete && (
-              <button
-                type="button"
-                onClick={editProfile}
-                className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-medium text-white"
-              >
-                {lang === "ja" ? "プロフィールを完成する" : "Complete Profile"}
-              </button>
-            )}
-          </div>
-        </section>
 
-        <div className="space-y-8">
-          {/* Basic Information */}
-          <ProfileSection
-            title={lang === "ja" ? "基本情報" : "Basic Information"}
-            icon={<User className="h-5 w-5" />}
-          >
-            <div className="grid gap-6 md:grid-cols-2">
+            <button
+              type="button"
+              onClick={editProfile}
+              className={`${btnWarning} w-full shrink-0 sm:w-auto`}
+            >
+              {t("completeProfile")}
+            </button>
+          </section>
+        )}
+
+        <div className="space-y-3 sm:space-y-4">
+          <ProfileSection title={t("basicInformation")} icon={<User />}>
+            <FieldGrid>
               <ViewField
-                label="Phone"
+                label={t("phone")}
                 value={profile.phone}
-                icon={<Phone className="h-4 w-4" />}
+                icon={<Phone />}
               />
-
+              <ViewField label={t("placementStatus")} value={placementStatus} />
               <ViewField
-                label="Address"
+                label={t("address")}
                 value={profile.address}
-                icon={<MapPin className="h-4 w-4" />}
+                icon={<MapPin />}
               />
-
               <ViewField
-                label="Date of Birth"
+                label={t("dateOfBirth")}
                 value={formatDate(profile.date_of_birth)}
               />
-
-              <ViewField label="Gender" value={profile.gender} />
-
-              <ViewField label="Nationality" value={profile.nationality} />
-
+              <ViewField label={t("gender")} value={profile.gender} />
+              <ViewField label={t("nationality")} value={profile.nationality} />
               <ViewField
-                label="Japanese Level"
+                label={t("japaneseLevel")}
                 value={profile.japanese_level}
               />
-            </div>
+              <ViewField
+                label={t("skills")}
+                value={profile.skills?.length ? profile.skills.join(", ") : "-"}
+                className="sm:col-span-2"
+              />
+            </FieldGrid>
           </ProfileSection>
 
-          {/* Visa */}
-          <ProfileSection
-            title={lang === "ja" ? "ビザ情報" : "Visa Information"}
-            icon={<FileText className="h-5 w-5" />}
-          >
-            <div className="grid gap-6 md:grid-cols-2">
-              <ViewField label="Visa Type" value={profile.visa_type} />
-
+          <ProfileSection title={t("visaInformation")} icon={<FileText />}>
+            <FieldGrid>
+              <ViewField label={t("visaType")} value={profile.visa_type} />
               <ViewField
-                label="Visa Expiry Date"
+                label={t("visaExpiryDate")}
                 value={formatDate(profile.visa_expiry_date)}
               />
-            </div>
+            </FieldGrid>
           </ProfileSection>
 
-          {/* Preferences */}
-          <ProfileSection
-            title={lang === "ja" ? "就職希望" : "Job Preferences"}
-            icon={<Briefcase className="h-5 w-5" />}
-          >
-            <div className="grid gap-6 md:grid-cols-2">
-              <ViewField label="Desired Job" value={profile.desired_job} />
-
+          <ProfileSection title={t("jobPreferences")} icon={<Briefcase />}>
+            <FieldGrid>
+              <ViewField label={t("desiredJob")} value={profile.desired_job} />
               <ViewField
-                label="Desired Location"
+                label={t("desiredLocation")}
                 value={profile.desired_location}
               />
-
               <ViewField
-                label="Available From"
+                label={t("availableFrom")}
                 value={formatDate(profile.available_from)}
               />
-            </div>
+            </FieldGrid>
           </ProfileSection>
 
-          {/* Education */}
-          <ProfileSection
-            title={lang === "ja" ? "学歴" : "Education"}
-            icon={<GraduationCap className="h-5 w-5" />}
-          >
+          <ProfileSection title={t("resume")} icon={<FileText />}>
+            <FieldGrid>
+              <ViewField
+                label={t("uploadedResume")}
+                value={profile.resume_file ? t("available") : "-"}
+              />
+
+              <div className="min-w-0">
+                <dt className={labelCaps}>{t("autoGeneratedResume")}</dt>
+
+                <dd className="mt-1">
+                  {profile.generated_resume_file ? (
+                    <button
+                      type="button"
+                      onClick={() => void viewGeneratedResume()}
+                      className={btnSecondary}
+                    >
+                      <FileText className="h-4 w-4" />
+                      {t("view")}
+                    </button>
+                  ) : (
+                    <span className="text-[13px] font-medium">-</span>
+                  )}
+                </dd>
+              </div>
+            </FieldGrid>
+          </ProfileSection>
+
+          <ProfileSection title={t("education")} icon={<GraduationCap />}>
             {education.length === 0 ? (
-              <EmptyText />
+              <EmptyText label={t("noInformation")} />
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {education.map((record, index) => (
-                  <div
-                    key={record._id ?? index}
-                    className="rounded-2xl bg-slate-50 p-5"
-                  >
-                    <h3 className="font-semibold text-slate-900">
+                  <div key={record._id ?? index} className={recordCard}>
+                    <h3
+                      className={`text-[15px] font-semibold leading-snug ${wrap}`}
+                    >
                       {record.school}
                     </h3>
 
-                    <p className="mt-1 text-sm text-slate-600">
+                    <p className={`mt-0.5 text-[13px] text-slate-600 ${wrap}`}>
                       {record.school_type || "-"}
-                      {" • "}
+                      {" / "}
                       {record.major || "-"}
                     </p>
 
                     <p className="mt-2 text-xs text-slate-500">
                       {formatDate(record.enrollment_date)}
-                      {" → "}
+                      {" -> "}
                       {formatDate(record.graduation_date)}
                     </p>
                   </div>
@@ -220,29 +272,26 @@ export default function JobSeekerProfileView() {
             )}
           </ProfileSection>
 
-          {/* Employment */}
-          <ProfileSection
-            title={lang === "ja" ? "職歴" : "Employment History"}
-            icon={<Building2 className="h-5 w-5" />}
-          >
+          <ProfileSection title={t("employmentHistory")} icon={<Building2 />}>
             {employmentHistory.length === 0 ? (
-              <EmptyText />
+              <EmptyText label={t("noInformation")} />
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {employmentHistory.map((record, index) => (
-                  <div
-                    key={record._id ?? index}
-                    className="rounded-2xl bg-slate-50 p-5"
-                  >
-                    <h3 className="font-semibold">{record.company_name}</h3>
+                  <div key={record._id ?? index} className={recordCard}>
+                    <h3
+                      className={`text-[15px] font-semibold leading-snug ${wrap}`}
+                    >
+                      {record.company_name}
+                    </h3>
 
-                    <p className="mt-1 text-sm text-slate-600">
+                    <p className="mt-0.5 text-[13px] text-slate-600">
                       {record.employment_type || "-"}
                     </p>
 
                     <p className="mt-2 text-xs text-slate-500">
                       {formatDate(record.start_date)}
-                      {" → "}
+                      {" -> "}
                       {formatDate(record.end_date)}
                     </p>
                   </div>
@@ -251,17 +300,15 @@ export default function JobSeekerProfileView() {
             )}
           </ProfileSection>
 
-          {/* Notes */}
-          <ProfileSection
-            title={lang === "ja" ? "備考" : "Additional Notes"}
-            icon={<FileText className="h-5 w-5" />}
-          >
-            <p className="whitespace-pre-wrap text-sm text-slate-700">
+          <ProfileSection title={t("additionalNotes")} icon={<FileText />}>
+            <p
+              className={`whitespace-pre-wrap text-[13px] leading-5 text-slate-700 ${wrap}`}
+            >
               {profile.notes || "-"}
             </p>
           </ProfileSection>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
@@ -272,15 +319,20 @@ function ProfileSection({
   children,
 }: {
   title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
+  icon: ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-6 flex items-center gap-3">
-        <div className="rounded-xl bg-slate-100 p-2">{icon}</div>
+    <section className={sectionCard}>
+      <div className="mb-4 flex items-center gap-3">
+        <span
+          aria-hidden
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-emerald-50 text-emerald-700 [&>svg]:h-4 [&>svg]:w-4"
+        >
+          {icon}
+        </span>
 
-        <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
+        <h2 className="text-base font-semibold">{title}</h2>
       </div>
 
       {children}
@@ -288,28 +340,45 @@ function ProfileSection({
   );
 }
 
+function FieldGrid({ children }: { children: ReactNode }) {
+  return (
+    <dl className="grid gap-x-3 gap-y-3 sm:grid-cols-2 sm:gap-x-4">
+      {children}
+    </dl>
+  );
+}
+
 function ViewField({
   label,
   value,
   icon,
+  className = "",
 }: {
   label: string;
   value?: string | null;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
+  className?: string;
 }) {
   return (
-    <div>
-      <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-        {icon}
+    <div className={`min-w-0 ${className}`}>
+      <dt className="flex items-center gap-1 text-slate-500 [&>span>svg]:h-3 [&>span>svg]:w-3">
+        <span className={`${labelCaps} inline-flex items-center gap-1`}>
+          {label}
+          {icon && <span aria-hidden>{icon}</span>}
+        </span>
+      </dt>
 
-        {label}
-      </div>
-
-      <p className="mt-2 text-sm font-medium text-slate-900">{value || "-"}</p>
+      <dd className={`mt-0.5 text-[13px] font-medium ${wrap}`}>
+        {value || "-"}
+      </dd>
     </div>
   );
 }
 
-function EmptyText() {
-  return <p className="text-sm text-slate-500">No information added.</p>;
+function EmptyText({ label }: { label: string }) {
+  return (
+    <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center">
+      <p className="text-[13px] leading-5 text-slate-600">{label}</p>
+    </div>
+  );
 }
