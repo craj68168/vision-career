@@ -23,6 +23,7 @@ import type {
   SeekerInterview,
   Vacancy,
 } from "./types";
+import { isInterviewDatePast } from "./shared";
 
 export const useJobSeekerDashboard = () => {
   const router = useRouter();
@@ -291,17 +292,11 @@ export const useJobSeekerDashboard = () => {
       const haystack = [
         vacancy.vacancyId,
 
-        vacancy.companyName,
-
-        vacancy.companyNameKana,
-
         vacancy.title,
 
         vacancy.titleKana,
 
         vacancy.employmentType,
-
-        vacancy.workLocation,
 
         vacancy.jobDescription,
 
@@ -344,13 +339,9 @@ export const useJobSeekerDashboard = () => {
 
         application.status,
 
-        application.vacancy?.companyName,
-
         application.vacancy?.title,
 
         application.vacancy?.employmentType,
-
-        application.vacancy?.workLocation,
       ]
         .filter(Boolean)
         .join(" ")
@@ -385,13 +376,9 @@ export const useJobSeekerDashboard = () => {
 
         interview.timezone,
 
-        interview.vacancy?.companyName,
-
         interview.vacancy?.title,
 
         interview.vacancy?.employmentType,
-
-        interview.vacancy?.workLocation,
       ]
         .filter(Boolean)
         .join(" ")
@@ -416,7 +403,9 @@ export const useJobSeekerDashboard = () => {
   ).length;
 
   const interviewCount = interviews.filter(
-    (interview) => interview.status === "CONFIRMED",
+    (interview) =>
+      interview.status === "CONFIRMED" &&
+      !isInterviewDatePast(interview.interviewDate, interview.timezone),
   ).length;
 
   // ==================================================

@@ -8,9 +8,9 @@ import { useTranslations } from "next-intl";
 
 import toast from "react-hot-toast";
 
-import { Briefcase, Check, Info, Loader2, MapPin, X } from "lucide-react";
+import { Briefcase, Check, FileText, Info, Loader2, X } from "lucide-react";
 
-import { applyToVacancy } from "./api";
+import { applyToVacancy, getGeneratedJobSeekerResume } from "./api";
 
 import type { ApiErrorResponse, Vacancy } from "./types";
 
@@ -45,6 +45,7 @@ export default function ApplyVacancyModal({
   const [coverLetter, setCoverLetter] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
+  const [viewingResume, setViewingResume] = useState(false);
 
   // ======================================================
   // RESET WHEN OPENING
@@ -124,7 +125,33 @@ export default function ApplyVacancyModal({
     }
   };
 
-  const initial = (vacancy.companyName || vacancy.title || "?")
+  const handleViewGeneratedResume = async () => {
+    try {
+      setViewingResume(true);
+
+      const resumeBlob = await getGeneratedJobSeekerResume();
+      const resumeUrl = URL.createObjectURL(resumeBlob);
+
+      window.open(resumeUrl, "_blank", "noopener,noreferrer");
+      window.setTimeout(() => URL.revokeObjectURL(resumeUrl), 60_000);
+    } catch (error: unknown) {
+      console.error("View generated resume error:", error);
+
+      if (axios.isAxiosError<ApiErrorResponse>(error)) {
+        toast.error(
+          error.response?.data?.message || t("applicationResumeUnavailable"),
+        );
+
+        return;
+      }
+
+      toast.error(t("applicationResumeUnavailable"));
+    } finally {
+      setViewingResume(false);
+    }
+  };
+
+  const initial = (vacancy.title || "?")
     .trim()
     .charAt(0)
     .toUpperCase();
@@ -176,9 +203,6 @@ export default function ApplyVacancyModal({
               {t("applyForTitle", { title: vacancy.title })}
             </h2>
 
-            <p className={`mt-0.5 text-[13px] text-slate-600 ${wrap}`}>
-              {vacancy.companyName}
-            </p>
           </div>
 
           <button
@@ -213,12 +237,6 @@ export default function ApplyVacancyModal({
               />
 
               <DetailRow
-                icon={<MapPin className="h-3.5 w-3.5" />}
-                label={t("location")}
-                value={vacancy.workLocation}
-              />
-
-              <DetailRow
                 label={t("salary")}
                 highlight
                 value={formatSalary(
@@ -244,6 +262,20 @@ export default function ApplyVacancyModal({
                 <p className="mt-1 text-xs leading-5 text-emerald-900/80">
                   {t("automaticProfileSubmissionDescription")}
                 </p>
+
+                <button
+                  type="button"
+                  disabled={submitting || viewingResume}
+                  onClick={() => void handleViewGeneratedResume()}
+                  className={`${btnBase} mt-3 min-h-9 border border-emerald-200 bg-white px-3 py-1.5 text-emerald-800 hover:border-emerald-300 hover:bg-emerald-50`}
+                >
+                  {viewingResume ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileText className="h-4 w-4" />
+                  )}
+                  {t("viewApplicationResume")}
+                </button>
 
                 <ul className="mt-2.5 grid gap-x-4 gap-y-1.5 sm:grid-cols-2">
                   {snapshotItems.map((item) => (

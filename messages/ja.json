@@ -180,6 +180,8 @@
       "selectJapaneseLevel": "日本語レベルを選択",
       "skills": "スキル",
       "skillsPlaceholder": "例: JavaScript, React, 接客",
+      "addSkill": "\u30b9\u30ad\u30eb\u3092\u8ffd\u52a0",
+      "removeSkill": "{skill}\u3092\u524a\u9664",
       "fieldRequiredForProfile": "この項目はプロフィール完成に必要です",
       "visaInformation": "ビザ情報",
       "visaInformationDescription": "現在のビザステータス",
@@ -255,6 +257,8 @@
       "placementSelected": "選考通過",
       "placementPlaced": "配置済み",
       "loadProfileError": "プロフィールの読み込みに失敗しました",
+      "generatedResumeCreated": "\u81ea\u52d5\u751f\u6210\u5c65\u6b74\u66f8\u3092\u4f5c\u6210\u3057\u307e\u3057\u305f",
+      "generatedResumeCreateFailed": "\u81ea\u52d5\u751f\u6210\u5c65\u6b74\u66f8\u306e\u4f5c\u6210\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
       "generatedResumeUnavailable": "自動生成履歴書を表示できません"
     }
   }

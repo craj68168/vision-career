@@ -180,6 +180,8 @@
       "selectJapaneseLevel": "Select Japanese level",
       "skills": "Skills",
       "skillsPlaceholder": "e.g., JavaScript, React, Customer service",
+      "addSkill": "Add skill",
+      "removeSkill": "Remove {skill}",
       "fieldRequiredForProfile": "This field is required for profile completion",
       "visaInformation": "Visa Information",
       "visaInformationDescription": "Your current visa status",
@@ -255,6 +257,8 @@
       "placementSelected": "Selected",
       "placementPlaced": "Placed",
       "loadProfileError": "Failed to load profile",
+      "generatedResumeCreated": "Generated resume created successfully",
+      "generatedResumeCreateFailed": "Failed to generate resume",
       "generatedResumeUnavailable": "Generated resume is not available"
     }
   }

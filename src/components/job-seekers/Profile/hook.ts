@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import axios from "axios";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
@@ -51,7 +52,11 @@ const initialFormData: ProfileFormData = {
 
 export const useJobSeekerProfile = () => {
   const { lang } = useLanguage();
+  const t = useTranslations("jobSeeker.profile");
   const router = useRouter();
+  const openInEditMode =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("edit") === "1";
 
   const [profile, setProfile] = useState<JobSeekerProfile | null>(null);
 
@@ -94,7 +99,10 @@ export const useJobSeekerProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   const populateProfile = useCallback(
-    (data: Awaited<ReturnType<typeof getJobSeekerProfile>>) => {
+    (
+      data: Awaited<ReturnType<typeof getJobSeekerProfile>>,
+      forceReadOnly = false,
+    ) => {
       setProfile(data.profile);
 
       setProfileStatus({
@@ -150,14 +158,12 @@ export const useJobSeekerProfile = () => {
         notes: data.profile.notes || "",
       });
 
-      if (!data.is_complete) {
-        setIsEditing(true);
-      }
+      setIsEditing(!forceReadOnly && (!data.is_complete || openInEditMode));
     },
-    [],
+    [openInEditMode],
   );
 
-  const fetchProfile = useCallback(async () => {
+  const fetchProfile = useCallback(async (forceReadOnly = false) => {
     try {
       const token = localStorage.getItem("access_token");
 
@@ -177,7 +183,7 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to load profile");
       }
 
-      populateProfile(data);
+      populateProfile(data, forceReadOnly);
     } catch (error: unknown) {
       console.error("Error fetching profile:", error);
 
@@ -585,30 +591,19 @@ export const useJobSeekerProfile = () => {
 
       await fetchProfile();
 
-      toast.success(
-        lang === "ja"
-          ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã‚’ä½œæˆã—ã¾ã—ãŸ"
-          : "Generated resume created successfully",
-      );
+      toast.success(t("generatedResumeCreated"));
     } catch (error: unknown) {
       console.error("Generated resume error:", error);
 
       if (axios.isAxiosError<ApiErrorResponse>(error)) {
         toast.error(
-          error.response?.data?.message ||
-            (lang === "ja"
-              ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ"
-              : "Failed to generate resume"),
+          error.response?.data?.message || t("generatedResumeCreateFailed"),
         );
 
         return;
       }
 
-      toast.error(
-        lang === "ja"
-          ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ"
-          : "Failed to generate resume",
-      );
+      toast.error(t("generatedResumeCreateFailed"));
     } finally {
       setGeneratingResume(false);
     }
@@ -629,20 +624,13 @@ export const useJobSeekerProfile = () => {
 
       if (axios.isAxiosError<ApiErrorResponse>(error)) {
         toast.error(
-          error.response?.data?.message ||
-            (lang === "ja"
-              ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã‚’è¡¨ç¤ºã§ãã¾ã›ã‚“"
-              : "Generated resume is not available"),
+          error.response?.data?.message || t("generatedResumeUnavailable"),
         );
 
         return;
       }
 
-      toast.error(
-        lang === "ja"
-          ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã‚’è¡¨ç¤ºã§ãã¾ã›ã‚“"
-          : "Generated resume is not available",
-      );
+      toast.error(t("generatedResumeUnavailable"));
     } finally {
       setViewingGeneratedResume(false);
     }
@@ -826,8 +814,11 @@ export const useJobSeekerProfile = () => {
     setErrors({});
     setTouched({});
     setIsEditing(false);
+    router.replace(
+      lang === "ja" ? "/job-seekers/profile" : "/en/job-seekers/profile",
+    );
 
-    await fetchProfile();
+    await fetchProfile(true);
   };
 
   const getFieldError = (field: keyof ProfileFormData) => {

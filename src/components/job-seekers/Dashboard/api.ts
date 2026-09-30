@@ -76,6 +76,14 @@ export const getMyApplicationResume = async (
   return response.data;
 };
 
+export const getGeneratedJobSeekerResume = async (): Promise<Blob> => {
+  const response = await axiosInstance.get("/seekers/resume/generated", {
+    responseType: "blob",
+  });
+
+  return response.data;
+};
+
 // ======================================================
 // APPLY
 // ======================================================

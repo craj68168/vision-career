@@ -85,75 +85,35 @@ function controlClass(isEditing: boolean, error?: string) {
   return `${controlBase} ${border} ${tone}`;
 }
 
-const MISSING_FIELD_LABELS: Record<
-  string,
-  {
-    ja: string;
-    en: string;
-  }
-> = {
-  phone: {
-    ja: "電話番号",
-    en: "Phone Number",
-  },
-  address: {
-    ja: "住所",
-    en: "Address",
-  },
-  nationality: {
-    ja: "国籍",
-    en: "Nationality",
-  },
-  visa_type: {
-    ja: "ビザ種類",
-    en: "Visa Type",
-  },
-  japanese_level: {
-    ja: "日本語レベル",
-    en: "Japanese Level",
-  },
-  desired_job: {
-    ja: "希望職種",
-    en: "Desired Job",
-  },
-  desired_location: {
-    ja: "希望勤務地",
-    en: "Desired Location",
-  },
-  available_from: {
-    ja: "就業可能日",
-    en: "Available From",
-  },
-  resume_file: {
-    ja: "履歴書",
-    en: "Resume File",
-  },
-  education: {
-    ja: "学歴",
-    en: "Educational Background",
-  },
-  employment_history: {
-    ja: "職歴",
-    en: "Employment History",
-  },
+const MISSING_FIELD_LABELS: Record<string, { ja: string; en: string }> = {
+  phone: { ja: "\u96fb\u8a71\u756a\u53f7", en: "Phone Number" },
+  address: { ja: "\u4f4f\u6240", en: "Address" },
+  nationality: { ja: "\u56fd\u7c4d", en: "Nationality" },
+  visa_type: { ja: "\u30d3\u30b6\u7a2e\u985e", en: "Visa Type" },
+  japanese_level: { ja: "\u65e5\u672c\u8a9e\u30ec\u30d9\u30eb", en: "Japanese Level" },
+  desired_job: { ja: "\u5e0c\u671b\u8077\u7a2e", en: "Desired Job" },
+  desired_location: { ja: "\u5e0c\u671b\u52e4\u52d9\u5730", en: "Desired Location" },
+  available_from: { ja: "\u5c31\u696d\u53ef\u80fd\u65e5", en: "Available From" },
+  resume_file: { ja: "\u5c65\u6b74\u66f8", en: "Resume File" },
+  education: { ja: "\u5b66\u6b74", en: "Educational Background" },
+  employment_history: { ja: "\u8077\u6b74", en: "Employment History" },
 };
 
 const GENDERS = {
-  ja: ["男性", "女性", "その他", "回答しない"],
+  ja: ["\u7537\u6027", "\u5973\u6027", "\u305d\u306e\u4ed6", "\u56de\u7b54\u3057\u306a\u3044"],
   en: ["Male", "Female", "Other", "Prefer not to say"],
 };
 
 const JAPANESE_LEVELS = {
   ja: [
-    "ネイティブ",
-    "N1 (ビジネスレベル)",
-    "N2 (日常会話レベル)",
-    "N3 (基本的なコミュニケーション)",
-    "N4 (初級)",
-    "N5 (入門)",
-    "学習中",
+    "\u30cd\u30a4\u30c6\u30a3\u30d6",
+    "N1 (\u30d3\u30b8\u30cd\u30b9\u30ec\u30d9\u30eb)",
+    "N2 (\u65e5\u5e38\u4f1a\u8a71\u30ec\u30d9\u30eb)",
+    "N3 (\u57fa\u672c\u7684\u306a\u30b3\u30df\u30e5\u30cb\u30b1\u30fc\u30b7\u30e7\u30f3)",
+    "N4 (\u521d\u7d1a)",
+    "N5 (\u5165\u9580)",
+    "\u5b66\u7fd2\u4e2d",
   ],
-
   en: [
     "Native",
     "N1 (Business Level)",
@@ -167,19 +127,18 @@ const JAPANESE_LEVELS = {
 
 const VISA_TYPES = {
   ja: [
-    "永住者",
-    "日本人の配偶者等",
-    "永住者の配偶者等",
-    "定住者",
-    "技術・人文知識・国際業務",
-    "特定技能",
-    "技能実習",
-    "留学",
-    "ワーキングホリデー",
-    "その他",
-    "就労ビザ不要",
+    "\u6c38\u4f4f\u8005",
+    "\u65e5\u672c\u4eba\u306e\u914d\u5076\u8005\u7b49",
+    "\u6c38\u4f4f\u8005\u306e\u914d\u5076\u8005\u7b49",
+    "\u5b9a\u4f4f\u8005",
+    "\u6280\u8853\u30fb\u4eba\u6587\u77e5\u8b58\u30fb\u56fd\u969b\u696d\u52d9",
+    "\u7279\u5b9a\u6280\u80fd",
+    "\u6280\u80fd\u5b9f\u7fd2",
+    "\u7559\u5b66",
+    "\u30ef\u30fc\u30ad\u30f3\u30b0\u30db\u30ea\u30c7\u30fc",
+    "\u305d\u306e\u4ed6",
+    "\u5c31\u52b4\u30d3\u30b6\u4e0d\u8981",
   ],
-
   en: [
     "Permanent Resident",
     "Spouse of Japanese National",
@@ -197,23 +156,22 @@ const VISA_TYPES = {
 
 const NATIONALITIES = {
   ja: [
-    "日本",
-    "中国",
-    "韓国",
-    "ベトナム",
-    "ネパール",
-    "インドネシア",
-    "フィリピン",
-    "タイ",
-    "ミャンマー",
-    "インド",
-    "アメリカ",
-    "イギリス",
-    "カナダ",
-    "オーストラリア",
-    "その他",
+    "\u65e5\u672c",
+    "\u4e2d\u56fd",
+    "\u97d3\u56fd",
+    "\u30d9\u30c8\u30ca\u30e0",
+    "\u30cd\u30d1\u30fc\u30eb",
+    "\u30a4\u30f3\u30c9\u30cd\u30b7\u30a2",
+    "\u30d5\u30a3\u30ea\u30d4\u30f3",
+    "\u30bf\u30a4",
+    "\u30df\u30e3\u30f3\u30de\u30fc",
+    "\u30a4\u30f3\u30c9",
+    "\u30a2\u30e1\u30ea\u30ab",
+    "\u30a4\u30ae\u30ea\u30b9",
+    "\u30ab\u30ca\u30c0",
+    "\u30aa\u30fc\u30b9\u30c8\u30e9\u30ea\u30a2",
+    "\u305d\u306e\u4ed6",
   ],
-
   en: [
     "Japan",
     "China",
@@ -234,8 +192,7 @@ const NATIONALITIES = {
 };
 
 const SCHOOL_TYPES = {
-  ja: ["高校", "専門学校", "短期大学", "大学", "大学院", "その他"],
-
+  ja: ["\u9ad8\u6821", "\u5c02\u9580\u5b66\u6821", "\u77ed\u671f\u5927\u5b66", "\u5927\u5b66", "\u5927\u5b66\u9662", "\u305d\u306e\u4ed6"],
   en: [
     "High School",
     "Vocational School",
@@ -247,15 +204,7 @@ const SCHOOL_TYPES = {
 };
 
 const EMPLOYMENT_TYPES = {
-  ja: [
-    "正社員",
-    "契約社員",
-    "派遣社員",
-    "パート・アルバイト",
-    "インターン",
-    "その他",
-  ],
-
+  ja: ["\u6b63\u793e\u54e1", "\u5951\u7d04\u793e\u54e1", "\u6d3e\u9063\u793e\u54e1", "\u30d1\u30fc\u30c8\u30fb\u30a2\u30eb\u30d0\u30a4\u30c8", "\u30a4\u30f3\u30bf\u30fc\u30f3", "\u305d\u306e\u4ed6"],
   en: [
     "Full-time",
     "Contract",
@@ -265,7 +214,6 @@ const EMPLOYMENT_TYPES = {
     "Other",
   ],
 };
-
 type InputFieldProps = {
   label: string;
   name: string;
@@ -361,6 +309,203 @@ function InputField({
           aria-invalid={Boolean(error)}
           className={`${commonClasses} h-10 px-3`}
         />
+      )}
+
+      {error && (
+        <div className="flex items-center gap-1 text-xs text-red-600">
+          <AlertCircle className="h-3 w-3 shrink-0" />
+          <p>{error}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type SkillsFieldProps = {
+  label: string;
+  name: string;
+  value: string;
+  placeholder?: string;
+  icon?: React.ReactNode;
+  isEditing: boolean;
+  error?: string;
+  maxLength?: number;
+  addSkillLabel: string;
+  removeSkillLabel: (skill: string) => string;
+  onChange: (value: string) => void;
+};
+
+const parseSkills = (value: string) =>
+  value
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean);
+
+const formatSkills = (skills: string[]) => skills.join(", ");
+
+function SkillsField({
+  label,
+  name,
+  value,
+  placeholder,
+  icon,
+  isEditing,
+  error,
+  maxLength = 500,
+  addSkillLabel,
+  removeSkillLabel,
+  onChange,
+}: SkillsFieldProps) {
+  const [draft, setDraft] = useState("");
+  const skills = parseSkills(value);
+  const commonClasses = controlClass(isEditing, error);
+
+  const getUniqueSkills = (nextSkills: string[]) =>
+    nextSkills.reduce<string[]>((result, skill) => {
+      const trimmed = skill.trim();
+
+      if (
+        trimmed &&
+        !result.some(
+          (existing) => existing.toLowerCase() === trimmed.toLowerCase(),
+        )
+      ) {
+        result.push(trimmed);
+      }
+
+      return result;
+    }, []);
+
+  const updateSkills = (nextSkills: string[]) => {
+    const uniqueSkills = getUniqueSkills(nextSkills);
+
+    onChange(formatSkills(uniqueSkills));
+  };
+
+  const addDraftSkills = (rawValue = draft) => {
+    const nextSkills = parseSkills(rawValue);
+
+    if (!nextSkills.length) {
+      setDraft("");
+      return;
+    }
+
+    const uniqueSkills = getUniqueSkills([...skills, ...nextSkills]);
+    const nextValue = formatSkills(uniqueSkills);
+
+    if (nextValue.length > maxLength) {
+      setDraft(rawValue);
+      return;
+    }
+
+    onChange(nextValue);
+    setDraft("");
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    updateSkills(skills.filter((skill) => skill !== skillToRemove));
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" || event.key === "Tab") {
+      if (draft.trim()) {
+        event.preventDefault();
+        addDraftSkills();
+      }
+    }
+
+    if (event.key === "Backspace" && !draft && skills.length) {
+      removeSkill(skills[skills.length - 1]);
+    }
+  };
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = event.clipboardData.getData("text");
+
+    if (pasted.includes(",")) {
+      event.preventDefault();
+      addDraftSkills(pasted);
+    }
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={name} className={fieldLabel}>
+        {icon && (
+          <span aria-hidden className="text-slate-400 [&>svg]:h-4 [&>svg]:w-4">
+            {icon}
+          </span>
+        )}
+
+        {label}
+      </label>
+
+      <div
+        className={`${commonClasses} min-h-10 px-2 py-2 ${
+          isEditing ? "" : "cursor-default"
+        }`}
+      >
+        <div className="flex flex-wrap items-center gap-1.5">
+          {skills.map((skill) => (
+            <span
+              key={skill}
+              className="inline-flex max-w-full items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-900"
+            >
+              <span className={wrap}>{skill}</span>
+
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={() => removeSkill(skill)}
+                  aria-label={removeSkillLabel(skill)}
+                  className={`grid h-5 w-5 shrink-0 cursor-pointer place-items-center rounded-full text-emerald-700 transition hover:bg-emerald-100 hover:text-emerald-950 ${focusRing}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </span>
+          ))}
+
+          {isEditing && (
+            <div className="flex min-w-[12rem] flex-1 items-center gap-1">
+              <input
+                id={name}
+                type="text"
+                value={draft}
+                maxLength={maxLength}
+                placeholder={skills.length ? "" : placeholder}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                onBlur={() => addDraftSkills()}
+                className="h-7 min-w-0 flex-1 border-0 bg-transparent px-1 text-base text-slate-900 outline-none placeholder:text-slate-400 sm:text-sm"
+              />
+
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => addDraftSkills()}
+                disabled={!draft.trim()}
+                aria-label={addSkillLabel}
+                className={`grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-md bg-emerald-700 text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-45 ${focusRing}`}
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          {!isEditing && !skills.length && (
+            <span className="px-1 text-[13px] text-slate-500">-</span>
+          )}
+        </div>
+      </div>
+
+      {isEditing && (
+        <div className="flex justify-end">
+          <span className="text-xs tabular-nums text-slate-500">
+            {value.length}/{maxLength}
+          </span>
+        </div>
       )}
 
       {error && (
@@ -914,18 +1059,25 @@ export default function JobSeekerProfilePage() {
                 </div>
               </div>
 
-              <InputField
+              <SkillsField
                 label={t("skills")}
                 name="skills"
                 value={formData.skills}
                 placeholder={t("skillsPlaceholder")}
                 icon={<BookLock />}
-                rows={3}
                 maxLength={500}
                 isEditing={isEditing}
                 error={getFieldError("skills")}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
+                addSkillLabel={t("addSkill")}
+                removeSkillLabel={(skill) => t("removeSkill", { skill })}
+                onChange={(nextValue) =>
+                  handleInputChange({
+                    target: {
+                      name: "skills",
+                      value: nextValue,
+                    },
+                  } as React.ChangeEvent<HTMLInputElement>)
+                }
               />
             </div>
           </section>
@@ -1477,7 +1629,7 @@ export default function JobSeekerProfilePage() {
 
                         <p className="mt-0.5 truncate text-xs text-slate-500">
                           {document.document_type || "other"}
-                          {" · "}
+                          {" Â· "}
                           {getDisplayFileName(document.file_url, t("document"))}
                         </p>
                       </div>
