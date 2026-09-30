@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
   AlertTriangle,
   CalendarDays,
@@ -9,6 +10,8 @@ import {
   RefreshCw,
   Search,
 } from "lucide-react";
+import dayjs from "dayjs";
+import { useTranslations } from "next-intl";
 
 import { useProviderBilling } from "./hook";
 
@@ -22,7 +25,26 @@ type Props = {
   refreshVersion: number;
 };
 
+// Shared tokens: keep in sync with vacancies.tsx / provider-dashboard.tsx
+const PANEL = "rounded-[14px] bg-white/70 ring-1 ring-black/5";
+
+const FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800/50 focus-visible:ring-offset-1";
+
+const BTN = `inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-[12px] px-3.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${FOCUS}`;
+
+const BTN_SECONDARY = `${BTN} bg-white/80 text-slate-700 ring-1 ring-black/10 hover:bg-white hover:text-slate-900`;
+
+const CONTROL =
+  "w-full rounded-[12px] bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-800/50 disabled:cursor-not-allowed disabled:bg-slate-900/[0.03] disabled:text-slate-500";
+
+const TH = "px-5 py-3 text-xs font-medium uppercase tracking-wide";
+
+const TD = "px-5 py-4 text-sm";
+
 export default function Billing({ lang, refreshVersion }: Props) {
+  const t = useTranslations("provider.billing.list");
+
   const {
     search,
 
@@ -48,135 +70,167 @@ export default function Billing({ lang, refreshVersion }: Props) {
   return (
     <>
       <section className="mt-8 space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-950">
-              {lang === "ja" ? "採用請求" : "Placement Billing"}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold tracking-tight">
+              {t("title")}
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
-              {lang === "ja"
-                ? "発行済みの採用請求、支払い状況、返金状況を確認できます。"
-                : "Review issued placement invoices, payment status, and refunds."}
-            </p>
+            <p className="mt-1 text-sm text-slate-500">{t("description")}</p>
           </div>
 
           <button
             type="button"
             disabled={billingsQuery.isFetching}
             onClick={() => void billingsQuery.refetch()}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700"
+            className={`${BTN_SECONDARY} self-start sm:self-auto`}
           >
             <RefreshCw
-              className={`h-4 w-4 ${
+              className={`h-4 w-4 shrink-0 text-slate-500 ${
                 billingsQuery.isFetching ? "animate-spin" : ""
               }`}
+              aria-hidden="true"
             />
 
-            {lang === "ja" ? "更新" : "Refresh"}
+            {t("refresh")}
           </button>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
           <MoneyCard
-            label={lang === "ja" ? "請求総額" : "Total Billed"}
+            lang={lang}
+            label={t("summary.totalBilled")}
             value={summary?.billedTotal || 0}
-            icon={<ReceiptText className="h-5 w-5" />}
+            icon={<ReceiptText className="h-4 w-4 text-slate-600" />}
+            iconBg="bg-slate-100 ring-slate-200/80"
           />
 
           <MoneyCard
-            label={lang === "ja" ? "未払額" : "Outstanding"}
+            lang={lang}
+            label={t("summary.outstanding")}
             value={summary?.outstandingTotal || 0}
-            icon={<CalendarDays className="h-5 w-5" />}
+            icon={<CalendarDays className="h-4 w-4 text-amber-600" />}
+            iconBg="bg-amber-50 ring-amber-200/70"
+            rail="bg-amber-600"
           />
 
           <MoneyCard
-            label={lang === "ja" ? "支払済" : "Net Paid"}
+            lang={lang}
+            label={t("summary.netPaid")}
             value={summary?.paidTotal || 0}
-            icon={<CheckCircle2 className="h-5 w-5" />}
+            icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
+            iconBg="bg-emerald-50 ring-emerald-200/70"
+            rail="bg-emerald-600"
           />
 
           <MoneyCard
-            label={lang === "ja" ? "期限超過" : "Overdue"}
+            lang={lang}
+            label={t("summary.overdue")}
             value={summary?.overdueTotal || 0}
-            icon={<AlertTriangle className="h-5 w-5" />}
+            icon={<AlertTriangle className="h-4 w-4 text-red-700" />}
+            iconBg="bg-red-50 ring-red-200/70"
+            rail="bg-red-700"
           />
         </div>
 
-        <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_220px]">
+        <div className={`grid gap-3 p-3 md:grid-cols-[1fr_220px] ${PANEL}`}>
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+              aria-hidden="true"
+            />
 
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder={
-                lang === "ja"
-                  ? "請求、候補者、職種を検索..."
-                  : "Search invoice, candidate, position..."
-              }
-              className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm outline-none focus:border-indigo-400"
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
+              className={`${CONTROL} pl-10`}
             />
           </div>
 
           <select
             value={statusFilter}
+            aria-label={t("allStatuses")}
             onChange={(event) =>
               setStatusFilter(
                 event.target.value as "ALL" | ProviderPlacementBillingStatus,
               )
             }
-            className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none"
+            className={CONTROL}
           >
-            <option value="ALL">
-              {lang === "ja" ? "すべて" : "All statuses"}
+            <option value="ALL">{t("allStatuses")}</option>
+
+            <option value="issued">{t("statuses.issued")}</option>
+
+            <option value="paid">{t("statuses.paid")}</option>
+
+            <option value="partially_refunded">
+              {t("statuses.partiallyRefunded")}
             </option>
 
-            <option value="issued">Issued</option>
+            <option value="refunded">{t("statuses.refunded")}</option>
 
-            <option value="paid">Paid</option>
-
-            <option value="partially_refunded">Partially Refunded</option>
-
-            <option value="refunded">Refunded</option>
-
-            <option value="cancelled">Cancelled</option>
+            <option value="cancelled">{t("statuses.cancelled")}</option>
           </select>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className={`overflow-hidden ${PANEL}`}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1000px]">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-900/[0.03] text-left text-slate-500">
                 <tr>
-                  <th className="px-5 py-4">Invoice</th>
+                  <th scope="col" className={TH}>
+                    {t("table.invoice")}
+                  </th>
 
-                  <th className="px-5 py-4">Candidate</th>
+                  <th scope="col" className={TH}>
+                    {t("table.candidate")}
+                  </th>
 
-                  <th className="px-5 py-4">Position</th>
+                  <th scope="col" className={TH}>
+                    {t("table.position")}
+                  </th>
 
-                  <th className="px-5 py-4">Total</th>
+                  <th scope="col" className={`${TH} text-right`}>
+                    {t("table.total")}
+                  </th>
 
-                  <th className="px-5 py-4">Amount Due</th>
+                  <th scope="col" className={`${TH} text-right`}>
+                    {t("table.amountDue")}
+                  </th>
 
-                  <th className="px-5 py-4">Due Date</th>
+                  <th scope="col" className={TH}>
+                    {t("table.dueDate")}
+                  </th>
 
-                  <th className="px-5 py-4">Status</th>
+                  <th scope="col" className={TH}>
+                    {t("table.status")}
+                  </th>
 
-                  <th className="px-5 py-4 text-right">Action</th>
+                  <th scope="col" className={`${TH} text-right`}>
+                    {t("table.action")}
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
                 {billingsQuery.isLoading && (
                   <tr>
-                    <td
-                      colSpan={8}
-                      className="py-16 text-center text-sm text-slate-500"
-                    >
-                      {lang === "ja"
-                        ? "請求を読み込み中..."
-                        : "Loading placement billings..."}
+                    <td colSpan={8} className="py-16">
+                      <div
+                        role="status"
+                        className="flex flex-col items-center gap-3"
+                      >
+                        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/80 ring-1 ring-black/5">
+                          <RefreshCw
+                            className="h-5 w-5 animate-spin text-teal-800"
+                            aria-hidden="true"
+                          />
+                        </div>
+
+                        <p className="text-sm text-slate-500">{t("loading")}</p>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -187,9 +241,7 @@ export default function Billing({ lang, refreshVersion }: Props) {
                       colSpan={8}
                       className="py-16 text-center text-sm text-slate-500"
                     >
-                      {lang === "ja"
-                        ? "発行済みの請求はありません。"
-                        : "No issued placement invoices found."}
+                      {t("empty")}
                     </td>
                   </tr>
                 )}
@@ -198,53 +250,60 @@ export default function Billing({ lang, refreshVersion }: Props) {
                   filteredBillings.map((billing) => (
                     <tr
                       key={billing.billingId}
-                      className="border-t border-slate-100"
+                      className="border-t border-black/5 transition-colors hover:bg-white/60"
                     >
-                      <td className="px-5 py-4">
-                        <p className="font-semibold text-slate-950">
+                      <td className={TD}>
+                        <p className="font-mono font-medium tabular-nums">
                           {billing.billingId}
                         </p>
 
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-0.5 font-mono text-xs tabular-nums text-slate-500">
                           {billing.recruitId}
                         </p>
                       </td>
 
-                      <td className="px-5 py-4 font-medium text-slate-900">
+                      <td className={`${TD} font-medium`}>
                         {billing.candidateName}
                       </td>
 
-                      <td className="px-5 py-4 text-slate-600">
+                      <td className={`${TD} text-slate-600`}>
                         {billing.jobTitle}
                       </td>
 
-                      <td className="px-5 py-4 font-semibold">
-                        {formatMoney(billing.totalAmount)}
+                      <td
+                        className={`${TD} text-right font-mono font-medium tabular-nums`}
+                      >
+                        {formatMoney(billing.totalAmount, lang)}
                       </td>
 
-                      <td className="px-5 py-4">
+                      <td
+                        className={`${TD} text-right font-mono tabular-nums`}
+                      >
                         {billing.status === "issued"
-                          ? formatMoney(billing.amountDue)
+                          ? formatMoney(billing.amountDue, lang)
                           : "-"}
                       </td>
 
-                      <td className="px-5 py-4 text-slate-600">
-                        {formatDate(billing.dueDate)}
+                      <td className={`${TD} text-slate-600`}>
+                        {formatDate(billing.dueDate, lang)}
                       </td>
 
-                      <td className="px-5 py-4">
-                        <StatusBadge status={billing.status} />
+                      <td className={TD}>
+                        <StatusLabel status={billing.status} />
                       </td>
 
-                      <td className="px-5 py-4 text-right">
+                      <td className={`${TD} text-right`}>
                         <button
                           type="button"
                           onClick={() => setViewingBilling(billing)}
-                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
+                          className={BTN_SECONDARY}
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye
+                            className="h-4 w-4 shrink-0 text-slate-500"
+                            aria-hidden="true"
+                          />
 
-                          {lang === "ja" ? "詳細" : "View Invoice"}
+                          {t("viewInvoice")}
                         </button>
                       </td>
                     </tr>
@@ -264,80 +323,100 @@ export default function Billing({ lang, refreshVersion }: Props) {
   );
 }
 
-// ======================================================
-// HELPERS
-// ======================================================
-
 function MoneyCard({
+  lang,
   label,
   value,
   icon,
+  iconBg,
+  rail,
 }: {
+  lang: string;
+
   label: string;
 
   value: number;
 
-  icon: React.ReactNode;
+  icon: ReactNode;
+
+  iconBg: string;
+
+  /** Status rail, only for cards that map to a status. */
+  rail?: string;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
+    <div
+      className={`relative overflow-hidden p-4 md:p-5 ${rail ? "pl-5 md:pl-6" : ""} ${PANEL}`}
+    >
+      {rail && (
+        <span
+          aria-hidden="true"
+          className={`absolute inset-y-0 left-0 w-1.5 ${rail}`}
+        />
+      )}
+
+      <div className="flex items-start justify-between gap-2">
         <p className="text-sm text-slate-500">{label}</p>
 
-        <div className="text-slate-400">{icon}</div>
+        <div
+          aria-hidden="true"
+          className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ring-1 ${iconBg}`}
+        >
+          {icon}
+        </div>
       </div>
 
-      <p className="mt-3 text-2xl font-bold text-slate-950">
-        {formatMoney(value)}
+      <p className="mt-3 break-words font-mono text-2xl font-semibold tabular-nums tracking-tight">
+        {formatMoney(value, lang)}
       </p>
     </div>
   );
 }
 
-function StatusBadge({ status }: { status: ProviderPlacementBillingStatus }) {
-  const classes: Record<ProviderPlacementBillingStatus, string> = {
-    issued: "bg-blue-50 text-blue-700",
+const STATUS_TONES: Record<
+  ProviderPlacementBillingStatus,
+  { text: string; dot: string }
+> = {
+  issued: { text: "text-teal-700", dot: "bg-teal-700" },
 
-    paid: "bg-emerald-50 text-emerald-700",
+  paid: { text: "text-emerald-700", dot: "bg-emerald-600" },
 
-    partially_refunded: "bg-amber-50 text-amber-700",
+  partially_refunded: { text: "text-amber-700", dot: "bg-amber-600" },
 
-    refunded: "bg-violet-50 text-violet-700",
+  refunded: { text: "text-slate-500", dot: "bg-slate-400" },
 
-    cancelled: "bg-red-50 text-red-700",
-  };
+  cancelled: { text: "text-red-700", dot: "bg-red-700" },
+};
+
+function StatusLabel({ status }: { status: ProviderPlacementBillingStatus }) {
+  const t = useTranslations("provider.billing.list.statuses");
+
+  const tone = STATUS_TONES[status];
 
   return (
     <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${classes[status]}`}
+      className={`inline-flex items-center gap-2 whitespace-nowrap text-xs font-medium uppercase tracking-[0.15em] ${tone.text}`}
     >
-      {status
-        .replaceAll("_", " ")
-        .replace(/\b\w/g, (character) => character.toUpperCase())}
+      <span
+        aria-hidden="true"
+        className={`h-1.5 w-1.5 shrink-0 rounded-full ${tone.dot}`}
+      />
+
+      {t(status === "partially_refunded" ? "partiallyRefunded" : status)}
     </span>
   );
 }
 
-function formatMoney(value: number) {
-  return `¥${Number(value || 0).toLocaleString()}`;
+function formatMoney(value: number, lang: string) {
+  return `¥${new Intl.NumberFormat(lang === "ja" ? "ja-JP" : "en-US").format(
+    Number(value || 0),
+  )}`;
 }
 
-function formatDate(value?: string | null) {
-  if (!value) {
+function formatDate(value: string | null | undefined, lang: string) {
+  if (!value || !dayjs(value).isValid()) {
     return "-";
   }
 
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-
-    month: "short",
-
-    day: "numeric",
-  }).format(date);
+  return dayjs(value).format(lang === "ja" ? "YYYY/MM/DD" : "MMM D, YYYY");
 }

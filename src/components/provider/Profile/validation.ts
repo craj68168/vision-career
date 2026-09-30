@@ -1,105 +1,104 @@
-import type { ProviderProfileErrors, ProviderProfileFormData } from "./types";
+import type {
+  ProviderProfileErrors,
+  ProviderProfileFormData,
+} from "./types";
+
+type ProviderProfileValidationKey =
+  | "validation.companyNameRequired"
+  | "validation.companyNameMinLength"
+  | "validation.phoneRequired"
+  | "validation.phoneInvalid"
+  | "validation.addressRequired"
+  | "validation.addressMinLength"
+  | "validation.industryRequired"
+  | "validation.contactPersonRequired"
+  | "validation.contactPhoneRequired"
+  | "validation.contactEmailRequired"
+  | "validation.contactEmailInvalid"
+  | "validation.websiteInvalid";
+
+type ProviderProfileTranslator = (
+  key: ProviderProfileValidationKey,
+) => string;
 
 export const validateProviderProfileField = (
   field: keyof ProviderProfileFormData,
   value: string,
-  lang: string,
+  t: ProviderProfileTranslator,
 ): string | undefined => {
   switch (field) {
     case "companyName":
       if (!value.trim()) {
-        return lang === "ja" ? "会社名は必須です" : "Company name is required";
+        return t("validation.companyNameRequired");
       }
 
       if (value.trim().length < 2) {
-        return lang === "ja"
-          ? "会社名は2文字以上で入力してください"
-          : "Company name must be at least 2 characters";
+        return t("validation.companyNameMinLength");
       }
 
       break;
 
     case "phone":
       if (!value.trim()) {
-        return lang === "ja"
-          ? "電話番号は必須です"
-          : "Phone number is required";
+        return t("validation.phoneRequired");
       }
 
       if (!/^[\d\s\-+()]+$/.test(value)) {
-        return lang === "ja"
-          ? "有効な電話番号を入力してください"
-          : "Please enter a valid phone number";
+        return t("validation.phoneInvalid");
       }
 
       break;
 
     case "address":
       if (!value.trim()) {
-        return lang === "ja" ? "住所は必須です" : "Address is required";
+        return t("validation.addressRequired");
       }
 
       if (value.trim().length < 5) {
-        return lang === "ja"
-          ? "住所は5文字以上で入力してください"
-          : "Address must be at least 5 characters";
+        return t("validation.addressMinLength");
       }
 
       break;
 
     case "industry":
       if (!value) {
-        return lang === "ja"
-          ? "業種を選択してください"
-          : "Please select an industry";
+        return t("validation.industryRequired");
       }
 
       break;
 
     case "contact_person":
       if (!value.trim()) {
-        return lang === "ja"
-          ? "担当者名は必須です"
-          : "Contact person is required";
+        return t("validation.contactPersonRequired");
       }
 
       break;
 
     case "contact_person_phone":
       if (!value.trim()) {
-        return lang === "ja"
-          ? "担当者電話番号は必須です"
-          : "Contact person phone is required";
+        return t("validation.contactPhoneRequired");
       }
 
       if (!/^[\d\s\-+()]+$/.test(value)) {
-        return lang === "ja"
-          ? "有効な電話番号を入力してください"
-          : "Please enter a valid phone number";
+        return t("validation.phoneInvalid");
       }
 
       break;
 
     case "contact_person_email":
       if (!value.trim()) {
-        return lang === "ja"
-          ? "担当者メールアドレスは必須です"
-          : "Contact person email is required";
+        return t("validation.contactEmailRequired");
       }
 
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        return lang === "ja"
-          ? "有効なメールアドレスを入力してください"
-          : "Please enter a valid email address";
+        return t("validation.contactEmailInvalid");
       }
 
       break;
 
     case "website":
       if (value && !/^https?:\/\/.+/i.test(value)) {
-        return lang === "ja"
-          ? "https:// を含むURLを入力してください"
-          : "Website must include http:// or https://";
+        return t("validation.websiteInvalid");
       }
 
       break;
@@ -110,19 +109,23 @@ export const validateProviderProfileField = (
 
 export const validateProviderProfile = (
   data: ProviderProfileFormData,
-  lang: string,
+  t: ProviderProfileTranslator,
 ) => {
   const errors: ProviderProfileErrors = {};
 
-  (Object.keys(data) as Array<keyof ProviderProfileFormData>).forEach(
-    (field) => {
-      const error = validateProviderProfileField(field, data[field], lang);
+  (
+    Object.keys(data) as Array<keyof ProviderProfileFormData>
+  ).forEach((field) => {
+    const error = validateProviderProfileField(
+      field,
+      data[field],
+      t,
+    );
 
-      if (error) {
-        errors[field] = error;
-      }
-    },
-  );
+    if (error) {
+      errors[field] = error;
+    }
+  });
 
   return {
     errors,

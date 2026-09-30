@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useTranslations } from "next-intl";
 
 import {
   CalendarDays,
@@ -25,69 +26,31 @@ import type {
   UpdateProviderInterviewPayload,
 } from "./types";
 import type { ProviderDashboardApiError } from "../types";
-// ======================================================
-// PROPS
-// ======================================================
 
 type Props = {
   open: boolean;
-
   application: ProviderApplication | null;
-
   interview?: ProviderInterview | null;
-
   lang: string;
-
   onClose: () => void;
-
   onSuccess: (interview: ProviderInterview) => void | Promise<void>;
 };
 
-// ======================================================
-// INTERVIEW METHOD OPTIONS
-// ======================================================
-
 const METHOD_OPTIONS: Array<{
   value: ProviderInterviewMethod;
-
-  en: string;
-
-  ja: string;
+  labelKey:
+    | "methods.zoom"
+    | "methods.googleMeet"
+    | "methods.phone"
+    | "methods.faceToFace"
+    | "methods.other";
 }> = [
-  {
-    value: "ZOOM",
-    en: "Zoom",
-    ja: "Zoom",
-  },
-
-  {
-    value: "GOOGLE_MEET",
-    en: "Google Meet",
-    ja: "Google Meet",
-  },
-
-  {
-    value: "PHONE",
-    en: "Phone",
-    ja: "電話",
-  },
-
-  {
-    value: "FACE_TO_FACE",
-    en: "Face-to-Face",
-    ja: "対面",
-  },
-
-  {
-    value: "OTHER",
-    en: "Other",
-    ja: "その他",
-  },
+  { value: "ZOOM", labelKey: "methods.zoom" },
+  { value: "GOOGLE_MEET", labelKey: "methods.googleMeet" },
+  { value: "PHONE", labelKey: "methods.phone" },
+  { value: "FACE_TO_FACE", labelKey: "methods.faceToFace" },
+  { value: "OTHER", labelKey: "methods.other" },
 ];
-
-// ======================================================
-// ERROR
-// ======================================================
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (axios.isAxiosError<ProviderDashboardApiError>(error)) {
@@ -101,10 +64,6 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
-// ======================================================
-// DATE INPUT VALUE
-// ======================================================
-
 const getDateInputValue = (value?: string | null) => {
   if (!value) {
     return "";
@@ -117,46 +76,30 @@ const getDateInputValue = (value?: string | null) => {
   }
 
   const year = date.getUTCFullYear();
-
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-
   const day = String(date.getUTCDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 };
 
-// ======================================================
-// COMPONENT
-// ======================================================
-
 export default function ScheduleInterviewModal({
   open,
   application,
   interview = null,
-  lang,
   onClose,
   onSuccess,
 }: Props) {
+  const t = useTranslations("provider.applications.scheduleModal");
   const isEdit = Boolean(interview);
 
   const [interviewDate, setInterviewDate] = useState("");
-
   const [interviewTime, setInterviewTime] = useState("");
-
   const [timezone, setTimezone] = useState("Asia/Tokyo");
-
   const [interviewMethod, setInterviewMethod] =
     useState<ProviderInterviewMethod>("ZOOM");
-
   const [meetingLink, setMeetingLink] = useState("");
-
   const [notes, setNotes] = useState("");
-
   const [submitting, setSubmitting] = useState(false);
-
-  // ====================================================
-  // SYNC
-  // ====================================================
 
   useEffect(() => {
     if (!open) {
@@ -165,40 +108,25 @@ export default function ScheduleInterviewModal({
 
     if (interview) {
       setInterviewDate(getDateInputValue(interview.interviewDate));
-
       setInterviewTime(interview.interviewTime || "");
-
       setTimezone(interview.timezone || "Asia/Tokyo");
-
       setInterviewMethod(interview.interviewMethod);
-
       setMeetingLink(interview.meetingLink || "");
-
       setNotes(interview.notes || "");
-
       return;
     }
 
     setInterviewDate("");
-
     setInterviewTime("");
-
     setTimezone("Asia/Tokyo");
-
     setInterviewMethod("ZOOM");
-
     setMeetingLink("");
-
     setNotes("");
   }, [open, interview]);
 
   if (!open || !application) {
     return null;
   }
-
-  // ====================================================
-  // CLOSE
-  // ====================================================
 
   const handleClose = () => {
     if (submitting) {
@@ -208,38 +136,19 @@ export default function ScheduleInterviewModal({
     onClose();
   };
 
-  // ====================================================
-  // SUBMIT
-  // ====================================================
-
   const handleSubmit = async () => {
     if (!interviewDate) {
-      toast.error(
-        lang === "ja"
-          ? "面接日を選択してください。"
-          : "Please select the interview date.",
-      );
-
+      toast.error(t("validation.dateRequired"));
       return;
     }
 
     if (!interviewTime) {
-      toast.error(
-        lang === "ja"
-          ? "面接時間を選択してください。"
-          : "Please select the interview time.",
-      );
-
+      toast.error(t("validation.timeRequired"));
       return;
     }
 
     if (!timezone.trim()) {
-      toast.error(
-        lang === "ja"
-          ? "タイムゾーンを入力してください。"
-          : "Timezone is required.",
-      );
-
+      toast.error(t("validation.timezoneRequired"));
       return;
     }
 
@@ -249,15 +158,10 @@ export default function ScheduleInterviewModal({
       if (isEdit && interview) {
         const payload: UpdateProviderInterviewPayload = {
           interviewDate,
-
           interviewTime,
-
           timezone: timezone.trim(),
-
           interviewMethod,
-
           meetingLink: meetingLink.trim(),
-
           notes: notes.trim(),
         };
 
@@ -266,55 +170,30 @@ export default function ScheduleInterviewModal({
           payload,
         );
 
-        toast.success(
-          response.message ||
-            (lang === "ja"
-              ? "面接情報を更新しました。"
-              : "Interview updated successfully."),
-        );
-
+        toast.success(response.message || t("toast.updated"));
         await onSuccess(response.data);
-
         return;
       }
 
       const payload: ScheduleProviderInterviewPayload = {
         applicationId: application.application_id,
-
         interviewDate,
-
         interviewTime,
-
         timezone: timezone.trim(),
-
         interviewMethod,
-
         meetingLink: meetingLink.trim(),
-
         notes: notes.trim(),
       };
 
       const response = await scheduleProviderInterview(payload);
 
-      toast.success(
-        response.message ||
-          (lang === "ja"
-            ? "面接を登録しました。"
-            : "Interview scheduled successfully."),
-      );
-
+      toast.success(response.message || t("toast.scheduled"));
       await onSuccess(response.data);
     } catch (error) {
       toast.error(
         getErrorMessage(
           error,
-          isEdit
-            ? lang === "ja"
-              ? "面接情報の更新に失敗しました。"
-              : "Failed to update interview."
-            : lang === "ja"
-              ? "面接の登録に失敗しました。"
-              : "Failed to schedule interview.",
+          isEdit ? t("toast.updateFailed") : t("toast.scheduleFailed"),
         ),
       );
     } finally {
@@ -325,32 +204,20 @@ export default function ScheduleInterviewModal({
   const onlineInterview =
     interviewMethod === "ZOOM" || interviewMethod === "GOOGLE_MEET";
 
-  // ====================================================
-  // UI
-  // ====================================================
-
   return (
     <div className="fixed inset-0 z-[220] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
       <button
         type="button"
-        aria-label="Close interview modal"
+        aria-label={t("close")}
         className="absolute inset-0"
         onClick={handleClose}
       />
 
       <div className="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
-        {/* HEADER */}
-
         <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-              {isEdit
-                ? lang === "ja"
-                  ? "面接情報を編集"
-                  : "Edit Interview"
-                : lang === "ja"
-                  ? "面接を設定"
-                  : "Schedule Interview"}
+              {isEdit ? t("editEyebrow") : t("scheduleEyebrow")}
             </p>
 
             <h2 className="mt-1 text-2xl font-bold text-slate-950">
@@ -364,6 +231,7 @@ export default function ScheduleInterviewModal({
 
           <button
             type="button"
+            aria-label={t("close")}
             disabled={submitting}
             onClick={handleClose}
             className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 disabled:opacity-40"
@@ -372,15 +240,11 @@ export default function ScheduleInterviewModal({
           </button>
         </div>
 
-        {/* BODY */}
-
         <div className="overflow-y-auto px-6 py-6">
           <div className="space-y-5">
-            {/* DATE / TIME */}
-
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
-                label={lang === "ja" ? "面接日" : "Interview Date"}
+                label={t("fields.interviewDate")}
                 icon={<CalendarDays className="h-4 w-4" />}
               >
                 <input
@@ -392,7 +256,7 @@ export default function ScheduleInterviewModal({
               </Field>
 
               <Field
-                label={lang === "ja" ? "面接時間" : "Interview Time"}
+                label={t("fields.interviewTime")}
                 icon={<Clock3 className="h-4 w-4" />}
               >
                 <input
@@ -404,10 +268,8 @@ export default function ScheduleInterviewModal({
               </Field>
             </div>
 
-            {/* TIMEZONE */}
-
             <Field
-              label={lang === "ja" ? "タイムゾーン" : "Timezone"}
+              label={t("fields.timezone")}
               icon={<Clock3 className="h-4 w-4" />}
             >
               <select
@@ -416,17 +278,13 @@ export default function ScheduleInterviewModal({
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-indigo-400"
               >
                 <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
-
                 <option value="Asia/Kathmandu">Asia/Kathmandu</option>
-
                 <option value="UTC">UTC</option>
               </select>
             </Field>
 
-            {/* METHOD */}
-
             <Field
-              label={lang === "ja" ? "面接方法" : "Interview Method"}
+              label={t("fields.interviewMethod")}
               icon={<Video className="h-4 w-4" />}
             >
               <select
@@ -440,16 +298,14 @@ export default function ScheduleInterviewModal({
               >
                 {METHOD_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {lang === "ja" ? option.ja : option.en}
+                    {t(option.labelKey)}
                   </option>
                 ))}
               </select>
             </Field>
 
-            {/* LINK */}
-
             <Field
-              label={lang === "ja" ? "ミーティングリンク" : "Meeting Link"}
+              label={t("fields.meetingLink")}
               icon={<Link2 className="h-4 w-4" />}
             >
               <input
@@ -461,26 +317,20 @@ export default function ScheduleInterviewModal({
                     ? "https://zoom.us/..."
                     : interviewMethod === "GOOGLE_MEET"
                       ? "https://meet.google.com/..."
-                      : lang === "ja"
-                        ? "必要な場合のみ入力"
-                        : "Optional when applicable"
+                      : t("optionalPlaceholder")
                 }
                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-indigo-400"
               />
 
               {onlineInterview && !meetingLink.trim() && (
                 <div className="mt-2 rounded-xl bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-700">
-                  {lang === "ja"
-                    ? "リンクなしでも保存できます。この場合、面接はリンク待ち状態になります。管理者またはスタッフが後からリンクを追加できます。"
-                    : "You may schedule without a link. The interview will remain Awaiting Link until the Provider, Admin, or Staff adds the meeting link."}
+                  {t("missingLinkNotice")}
                 </div>
               )}
             </Field>
 
-            {/* NOTES */}
-
             <Field
-              label={lang === "ja" ? "重要事項・メモ" : "Important Notes"}
+              label={t("fields.notes")}
               icon={<MessageSquareText className="h-4 w-4" />}
             >
               <textarea
@@ -488,11 +338,7 @@ export default function ScheduleInterviewModal({
                 maxLength={2000}
                 rows={4}
                 onChange={(event) => setNotes(event.target.value)}
-                placeholder={
-                  lang === "ja"
-                    ? "候補者に伝える注意事項など"
-                    : "Add interview instructions or important notes..."
-                }
+                placeholder={t("notesPlaceholder")}
                 className="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-indigo-400"
               />
 
@@ -503,8 +349,6 @@ export default function ScheduleInterviewModal({
           </div>
         </div>
 
-        {/* FOOTER */}
-
         <div className="flex flex-col-reverse gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:justify-end">
           <button
             type="button"
@@ -512,7 +356,7 @@ export default function ScheduleInterviewModal({
             onClick={handleClose}
             className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-40"
           >
-            {lang === "ja" ? "キャンセル" : "Cancel"}
+            {t("cancel")}
           </button>
 
           <button
@@ -524,16 +368,10 @@ export default function ScheduleInterviewModal({
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
 
             {submitting
-              ? lang === "ja"
-                ? "保存中..."
-                : "Saving..."
+              ? t("saving")
               : isEdit
-                ? lang === "ja"
-                  ? "変更を保存"
-                  : "Save Changes"
-                : lang === "ja"
-                  ? "面接を設定"
-                  : "Schedule Interview"}
+                ? t("saveChanges")
+                : t("scheduleInterview")}
           </button>
         </div>
       </div>
@@ -541,26 +379,19 @@ export default function ScheduleInterviewModal({
   );
 }
 
-// ======================================================
-// FIELD
-// ======================================================
-
 function Field({
   label,
   icon,
   children,
 }: {
   label: string;
-
   icon: React.ReactNode;
-
   children: React.ReactNode;
 }) {
   return (
     <div>
       <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
         <span className="text-indigo-500">{icon}</span>
-
         <span>{label}</span>
       </div>
 
