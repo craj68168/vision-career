@@ -12,6 +12,7 @@ import {
   Video,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { usePlacementInterview } from "./placementInterviewHook";
 
@@ -22,27 +23,14 @@ import type {
 
 import type { PlacementRequest, ProviderPlacementCandidate } from "./types";
 
-// ======================================================
-// PROPS
-// ======================================================
-
 type Props = {
   candidate: ProviderPlacementCandidate;
-
   request: PlacementRequest;
-
   interview?: PlacementInterview | null;
-
   lang: string;
-
   onClose: () => void;
-
   onSuccess: () => void | Promise<void>;
 };
-
-// ======================================================
-// COMPONENT
-// ======================================================
 
 export default function PlacementInterviewModal({
   candidate,
@@ -52,43 +40,31 @@ export default function PlacementInterviewModal({
   onClose,
   onSuccess,
 }: Props) {
+  const t = useTranslations("provider.placementRequests.interviewModal");
+
   const {
     isEdit,
-
     interviewDate,
     setInterviewDate,
-
     interviewTime,
     setInterviewTime,
-
     timezone,
     setTimezone,
-
     interviewMethod,
     setInterviewMethod,
-
     meetingLink,
     setMeetingLink,
-
     notes,
     setNotes,
-
     validationError,
-
     saving,
-
     onlineInterview,
-
     handleSubmit,
   } = usePlacementInterview({
     placementCandidateId: candidate.placementCandidateId,
-
     interview,
-
     lang,
-
     onClose,
-
     onSuccess,
   });
 
@@ -96,25 +72,17 @@ export default function PlacementInterviewModal({
     <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t("close")}
         disabled={saving}
         onClick={saving ? undefined : onClose}
         className="absolute inset-0 cursor-default"
       />
 
       <div className="relative z-10 flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
-        {/* HEADER */}
-
         <header className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-              {lang === "ja"
-                ? isEdit
-                  ? "面接情報を編集"
-                  : "面接を設定"
-                : isEdit
-                  ? "Edit Placement Interview"
-                  : "Schedule Placement Interview"}
+              {isEdit ? t("editTitle") : t("scheduleTitle")}
             </p>
 
             <h2 className="mt-2 text-2xl font-bold text-slate-950">
@@ -134,27 +102,23 @@ export default function PlacementInterviewModal({
           </button>
         </header>
 
-        {/* CONTENT */}
-
         <div className="overflow-y-auto p-6">
-          {/* SUMMARY */}
-
           <div className="mb-6 grid gap-3 sm:grid-cols-3">
             <SummaryItem
               icon={<UserRound className="h-4 w-4" />}
-              label={lang === "ja" ? "候補者" : "Candidate"}
+              label={t("summary.candidate")}
               value={candidate.candidate.name}
             />
 
             <SummaryItem
               icon={<MapPin className="h-4 w-4" />}
-              label={lang === "ja" ? "勤務地" : "Work Location"}
+              label={t("summary.workLocation")}
               value={request.work_location || "-"}
             />
 
             <SummaryItem
               icon={<CalendarDays className="h-4 w-4" />}
-              label={lang === "ja" ? "採用依頼ID" : "Placement Request"}
+              label={t("summary.placementRequest")}
               value={request.recruitId}
             />
           </div>
@@ -166,12 +130,7 @@ export default function PlacementInterviewModal({
           )}
 
           <div className="grid gap-5 md:grid-cols-2">
-            {/* DATE */}
-
-            <FormField
-              label={lang === "ja" ? "面接日" : "Interview Date"}
-              required
-            >
+            <FormField label={t("fields.interviewDate")} required>
               <div className="relative">
                 <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
@@ -185,12 +144,7 @@ export default function PlacementInterviewModal({
               </div>
             </FormField>
 
-            {/* TIME */}
-
-            <FormField
-              label={lang === "ja" ? "面接時間" : "Interview Time"}
-              required
-            >
+            <FormField label={t("fields.interviewTime")} required>
               <div className="relative">
                 <Clock3 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
@@ -204,12 +158,7 @@ export default function PlacementInterviewModal({
               </div>
             </FormField>
 
-            {/* TIMEZONE */}
-
-            <FormField
-              label={lang === "ja" ? "タイムゾーン" : "Timezone"}
-              required
-            >
+            <FormField label={t("fields.timezone")} required>
               <select
                 value={timezone}
                 disabled={saving}
@@ -217,19 +166,12 @@ export default function PlacementInterviewModal({
                 className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-indigo-400"
               >
                 <option value="Asia/Tokyo">Asia/Tokyo</option>
-
                 <option value="Asia/Kathmandu">Asia/Kathmandu</option>
-
                 <option value="UTC">UTC</option>
               </select>
             </FormField>
 
-            {/* METHOD */}
-
-            <FormField
-              label={lang === "ja" ? "面接方法" : "Interview Method"}
-              required
-            >
+            <FormField label={t("fields.interviewMethod")} required>
               <select
                 value={interviewMethod}
                 disabled={saving}
@@ -241,25 +183,17 @@ export default function PlacementInterviewModal({
                 className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-indigo-400"
               >
                 <option value="ZOOM">Zoom</option>
-
                 <option value="GOOGLE_MEET">Google Meet</option>
-
-                <option value="PHONE">Phone</option>
-
-                <option value="FACE_TO_FACE">Face-to-Face</option>
-
-                <option value="OTHER">Other</option>
+                <option value="PHONE">{t("methods.phone")}</option>
+                <option value="FACE_TO_FACE">{t("methods.faceToFace")}</option>
+                <option value="OTHER">{t("methods.other")}</option>
               </select>
             </FormField>
           </div>
 
-          {/* MEETING LINK */}
-
           {onlineInterview && (
             <div className="mt-5">
-              <FormField
-                label={lang === "ja" ? "ミーティングリンク" : "Meeting Link"}
-              >
+              <FormField label={t("fields.meetingLink")}>
                 <div className="relative">
                   <Video className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
@@ -280,34 +214,24 @@ export default function PlacementInterviewModal({
 
               {!meetingLink.trim() && (
                 <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-700">
-                  {lang === "ja"
-                    ? "リンクなしでも保存できますが、面接はリンク待ちになります。リンクを追加して面接が確定するまで候補者への最終通知は送信されません。"
-                    : "You can schedule without a link, but the interview will remain Awaiting Link. Add the link later to confirm the interview."}
+                  {t("missingLinkNotice")}
                 </div>
               )}
             </div>
           )}
 
-          {/* NOTES */}
-
           <div className="mt-5">
-            <FormField label={lang === "ja" ? "備考" : "Notes"}>
+            <FormField label={t("fields.notes")}>
               <textarea
                 rows={5}
                 value={notes}
                 disabled={saving}
                 onChange={(event) => setNotes(event.target.value)}
-                placeholder={
-                  lang === "ja"
-                    ? "例：面接開始10分前に参加してください。"
-                    : "Example: Please join 10 minutes before the interview."
-                }
+                placeholder={t("notesPlaceholder")}
                 className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm outline-none transition focus:border-indigo-400"
               />
             </FormField>
           </div>
-
-          {/* CURRENT LINK */}
 
           {isEdit && interview?.meetingLink && (
             <a
@@ -317,13 +241,10 @@ export default function PlacementInterviewModal({
               className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:underline"
             >
               <ExternalLink className="h-4 w-4" />
-
-              {lang === "ja" ? "現在のリンクを開く" : "Open Current Link"}
+              {t("openCurrentLink")}
             </a>
           )}
         </div>
-
-        {/* FOOTER */}
 
         <footer className="flex flex-col-reverse gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:justify-end">
           <button
@@ -332,7 +253,7 @@ export default function PlacementInterviewModal({
             onClick={onClose}
             className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
           >
-            {lang === "ja" ? "キャンセル" : "Cancel"}
+            {t("cancel")}
           </button>
 
           <button
@@ -348,16 +269,10 @@ export default function PlacementInterviewModal({
             )}
 
             {saving
-              ? lang === "ja"
-                ? "保存中..."
-                : "Saving..."
+              ? t("saving")
               : isEdit
-                ? lang === "ja"
-                  ? "面接を更新"
-                  : "Update Interview"
-                : lang === "ja"
-                  ? "面接を設定"
-                  : "Schedule Interview"}
+                ? t("updateInterview")
+                : t("scheduleInterview")}
           </button>
         </footer>
       </div>
@@ -365,26 +280,19 @@ export default function PlacementInterviewModal({
   );
 }
 
-// ======================================================
-// FORM FIELD
-// ======================================================
-
 function FormField({
   label,
   required = false,
   children,
 }: {
   label: string;
-
   required?: boolean;
-
   children: ReactNode;
 }) {
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-semibold text-slate-700">
         {label}
-
         {required && <span className="ml-1 text-red-500">*</span>}
       </span>
 
@@ -393,26 +301,19 @@ function FormField({
   );
 }
 
-// ======================================================
-// SUMMARY
-// ======================================================
-
 function SummaryItem({
   icon,
   label,
   value,
 }: {
   icon: ReactNode;
-
   label: string;
-
   value?: string | null;
 }) {
   return (
     <div className="rounded-2xl bg-slate-50 p-4">
       <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
         {icon}
-
         {label}
       </div>
 

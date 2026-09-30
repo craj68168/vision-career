@@ -180,8 +180,8 @@
       "selectJapaneseLevel": "日本語レベルを選択",
       "skills": "スキル",
       "skillsPlaceholder": "例: JavaScript, React, 接客",
-      "addSkill": "\u30b9\u30ad\u30eb\u3092\u8ffd\u52a0",
-      "removeSkill": "{skill}\u3092\u524a\u9664",
+      "addSkill": "スキルを追加",
+      "removeSkill": "{skill}を削除",
       "fieldRequiredForProfile": "この項目はプロフィール完成に必要です",
       "visaInformation": "ビザ情報",
       "visaInformationDescription": "現在のビザステータス",
@@ -257,9 +257,1039 @@
       "placementSelected": "選考通過",
       "placementPlaced": "配置済み",
       "loadProfileError": "プロフィールの読み込みに失敗しました",
-      "generatedResumeCreated": "\u81ea\u52d5\u751f\u6210\u5c65\u6b74\u66f8\u3092\u4f5c\u6210\u3057\u307e\u3057\u305f",
-      "generatedResumeCreateFailed": "\u81ea\u52d5\u751f\u6210\u5c65\u6b74\u66f8\u306e\u4f5c\u6210\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+      "generatedResumeCreated": "自動生成履歴書を作成しました",
+      "generatedResumeCreateFailed": "自動生成履歴書の作成に失敗しました",
       "generatedResumeUnavailable": "自動生成履歴書を表示できません"
+    }
+  },
+  "provider": {
+    "applications": {
+      "list": {
+        "searchPlaceholder": "応募者を検索...",
+        "refresh": "更新",
+        "loading": "応募者を読み込み中...",
+        "emptyTitle": "応募はまだありません",
+        "emptyDescription": "管理者が応募を承認するとここに表示されます。",
+        "loadFailed": "応募者情報の読み込みに失敗しました。"
+      },
+      "scheduleModal": {
+        "close": "面接モーダルを閉じる",
+        "editEyebrow": "面接情報を編集",
+        "scheduleEyebrow": "面接を設定",
+        "optionalPlaceholder": "必要な場合のみ入力",
+        "missingLinkNotice": "リンクなしでも保存できます。この場合、面接はリンク待ち状態になります。Provider、管理者、またはスタッフが後からミーティングリンクを追加できます。",
+        "notesPlaceholder": "候補者に伝える注意事項などを入力してください...",
+        "cancel": "キャンセル",
+        "saving": "保存中...",
+        "saveChanges": "変更を保存",
+        "scheduleInterview": "面接を設定",
+        "fields": {
+          "interviewDate": "面接日",
+          "interviewTime": "面接時間",
+          "timezone": "タイムゾーン",
+          "interviewMethod": "面接方法",
+          "meetingLink": "ミーティングリンク",
+          "notes": "重要事項・メモ"
+        },
+        "methods": {
+          "zoom": "Zoom",
+          "googleMeet": "Google Meet",
+          "phone": "電話",
+          "faceToFace": "対面",
+          "other": "その他"
+        },
+        "validation": {
+          "dateRequired": "面接日を選択してください。",
+          "timeRequired": "面接時間を選択してください。",
+          "timezoneRequired": "タイムゾーンを入力してください。"
+        },
+        "toast": {
+          "updated": "面接情報を更新しました。",
+          "scheduled": "面接を登録しました。",
+          "updateFailed": "面接情報の更新に失敗しました。",
+          "scheduleFailed": "面接の登録に失敗しました。"
+        }
+      },
+      "card": {
+        "statuses": {
+          "sentToProvider": "企業へ送信済み",
+          "underReview": "選考中",
+          "interview": "面接",
+          "selected": "選考通過",
+          "hired": "採用",
+          "rejected": "不採用"
+        },
+        "actions": {
+          "startReview": "選考開始",
+          "moveToInterview": "面接へ進む",
+          "markSelected": "選考通過",
+          "markHired": "採用にする",
+          "reject": "不採用"
+        },
+        "methods": {
+          "zoom": "Zoom",
+          "googleMeet": "Google Meet",
+          "phone": "電話",
+          "faceToFace": "対面",
+          "other": "その他"
+        },
+        "interviewStatuses": {
+          "awaitingLink": "リンク待ち",
+          "confirmed": "確定",
+          "completed": "完了",
+          "cancelled": "キャンセル"
+        },
+        "confirmReject": "この応募を不採用にしますか？この操作で応募は不採用として完了します。",
+        "toast": {
+          "loadDetailsFailed": "応募詳細の読み込みに失敗しました。",
+          "resumeUnavailable": "この応募には履歴書がありません。",
+          "allowPopups": "履歴書を開くにはポップアップを許可してください。",
+          "openResumeFailed": "履歴書を開けませんでした。",
+          "statusUpdated": "応募ステータスを更新しました。",
+          "statusUpdateFailed": "応募ステータスの更新に失敗しました。"
+        },
+        "title": "応募詳細",
+        "viewDetails": "詳細を見る",
+        "closeDetails": "応募詳細を閉じる",
+        "loadingDetails": "応募詳細を読み込み中...",
+        "sections": {
+          "vacancy": "求人情報",
+          "candidateProfile": "候補者プロフィール",
+          "skills": "スキル",
+          "education": "学歴",
+          "employmentHistory": "職歴",
+          "resume": "応募時の履歴書",
+          "interview": "面接情報",
+          "applicationStatus": "応募ステータス"
+        },
+        "fields": {
+          "candidate": "候補者",
+          "nationality": "国籍",
+          "japanese": "日本語",
+          "applied": "応募日",
+          "position": "職種",
+          "company": "会社",
+          "employment": "雇用形態",
+          "location": "勤務地",
+          "requiredJapanese": "日本語要件",
+          "openings": "募集人数",
+          "salaryMin": "最低給与",
+          "salaryMax": "最高給与",
+          "name": "氏名",
+          "visa": "在留資格",
+          "visaExpiry": "在留期限",
+          "desiredJob": "希望職種",
+          "desiredLocation": "希望勤務地"
+        },
+        "close": "閉じる",
+        "opening": "開いています...",
+        "viewResume": "履歴書を見る",
+        "present": "現在",
+        "editSchedule": "面接情報を編集",
+        "currentStatus": "現在の状態",
+        "scheduleInterview": "面接を設定",
+        "updating": "更新中...",
+        "interviewRequiredNotice": "面接へ進む場合は、面接日時と方法を設定してください。",
+        "finalStatusNotice": "この応募は完了しています。",
+        "resume": {
+          "title": "応募時に保存された履歴書",
+          "description": "応募時点の候補者情報を保存した履歴書です。"
+        },
+        "interview": {
+          "date": "面接日",
+          "time": "時間",
+          "timezone": "タイムゾーン",
+          "method": "面接方法",
+          "meetingLink": "ミーティングリンク",
+          "awaitingLinkNotice": "オンライン面接のリンクがまだ登録されていません。リンクを追加すると面接が確定し、候補者へ通知されます。",
+          "notes": "重要事項",
+          "notFound": "面接ステータスですが、面接情報が見つかりませんでした。"
+        }
+      }
+    },
+    "profile": {
+      "saving": "保存中...",
+      "saveChanges": "保存",
+      "completionPercentage": "{percentage}% 完了",
+      "email": "メールアドレス",
+      "loading": "会社情報を読み込み中...",
+      "companyProfile": "会社プロフィール",
+      "companyInformation": "会社情報",
+      "description": "会社情報と採用担当者情報を管理します。",
+      "dashboard": "ダッシュボード",
+      "editProfile": "編集",
+      "cancel": "キャンセル",
+      "profileIncomplete": "会社プロフィール未完了",
+      "profileComplete": "会社プロフィール完了",
+      "registeredUser": "登録担当者",
+      "companyName": "会社名",
+      "placeholders": {
+        "companyName": "株式会社サンプル",
+        "phone": "03-1234-5678",
+        "address": "東京",
+        "website": "https://example.com",
+        "contactPerson": "山田 太郎",
+        "contactPhone": "090-1234-5678",
+        "contactEmail": "recruit@example.com",
+        "hiringNeeds": "製造スタッフを3名募集しています。勤務地は東京都、勤務開始希望日は来月です。",
+        "notes": "日本語での基本的なコミュニケーションができる方を希望します。"
+      },
+      "toast": {
+        "loadFailed": "プロフィールの読み込みに失敗しました",
+        "updateFailed": "会社情報の更新に失敗しました",
+        "checkInput": "入力内容を確認してください",
+        "updated": "会社情報を更新しました"
+      },
+      "validation": {
+        "companyNameRequired": "会社名は必須です",
+        "companyNameMinLength": "会社名は2文字以上で入力してください",
+        "phoneRequired": "電話番号は必須です",
+        "phoneInvalid": "有効な電話番号を入力してください",
+        "addressRequired": "住所は必須です",
+        "addressMinLength": "住所は5文字以上で入力してください",
+        "industryRequired": "業種を選択してください",
+        "contactPersonRequired": "担当者名は必須です",
+        "contactPhoneRequired": "担当者電話番号は必須です",
+        "contactEmailRequired": "担当者メールアドレスは必須です",
+        "contactEmailInvalid": "有効なメールアドレスを入力してください",
+        "websiteInvalid": "https:// を含むURLを入力してください"
+      },
+      "phone": "電話番号",
+      "address": "住所",
+      "website": "ウェブサイト",
+      "industry": "業種",
+      "selectIndustry": "選択してください",
+      "recruitmentContact": "採用担当者",
+      "contactPerson": "担当者名",
+      "contactPhone": "担当者電話番号",
+      "contactEmail": "担当者メール",
+      "hiringInformation": "採用情報",
+      "hiringNeeds": "採用ニーズ",
+      "notes": "備考",
+      "notProvided": "未登録",
+      "industries": {
+        "itTelecommunications": "IT・情報通信",
+        "manufacturing": "製造業",
+        "retailWholesale": "小売・卸売",
+        "services": "サービス業",
+        "financeInsurance": "金融・保険",
+        "constructionRealEstate": "建設・不動産",
+        "healthcareWelfare": "医療・福祉",
+        "education": "教育",
+        "transportationLogistics": "運輸・物流",
+        "hospitalityTourism": "ホスピタリティ・観光",
+        "other": "その他"
+      }
+    },
+    "dashboard": {
+      "loading": "ダッシュボードを読み込み中...",
+      "title": "企業ダッシュボード",
+      "description": "会社情報、求人、応募状況、採用依頼、採用請求を管理します。",
+      "companyProfile": "会社プロフィール",
+      "refresh": "更新",
+      "refreshing": "更新中...",
+      "refreshed": "最新情報に更新しました",
+      "loadFailed": "企業ダッシュボードの読み込みに失敗しました。",
+      "postVacancy": "求人を掲載",
+      "stats": {
+        "totalVacancies": "求人総数",
+        "published": "公開中",
+        "pendingReview": "審査中",
+        "applications": "応募者",
+        "placementRequests": "採用依頼"
+      },
+      "tabs": {
+        "vacancies": "求人 ({count})",
+        "applications": "応募者 ({count})",
+        "placementRequests": "採用依頼 ({count})",
+        "billing": "採用請求"
+      }
+    },
+    "billing": {
+      "details": {
+        "title": "採用請求書",
+        "invoiceSummary": "請求明細",
+        "paymentPendingTitle": "お支払い待ち",
+        "paymentPendingDescription": "現在は管理者が支払いを確認して請求状態を更新します。オンライン決済は次の段階で追加します。",
+        "notes": "備考",
+        "invoiceCancelled": "請求キャンセル",
+        "refundHistory": "返金履歴",
+        "close": "閉じる",
+        "fields": {
+          "candidate": "候補者",
+          "position": "職種",
+          "placementDate": "採用日",
+          "dueDate": "支払期限",
+          "placementFee": "紹介手数料",
+          "tax": "税 ({rate}%)",
+          "total": "合計",
+          "amountDue": "未払額",
+          "paid": "支払額",
+          "refunded": "返金額",
+          "netPaid": "純支払額",
+          "placementRequest": "採用依頼ID",
+          "placementCandidate": "候補者配置ID",
+          "issuedAt": "発行日"
+        }
+      },
+      "list": {
+        "title": "採用請求",
+        "description": "発行済みの採用請求、支払い状況、返金状況を確認できます。",
+        "refresh": "更新",
+        "summary": {
+          "totalBilled": "請求総額",
+          "outstanding": "未払額",
+          "netPaid": "支払済",
+          "overdue": "期限超過"
+        },
+        "searchPlaceholder": "請求、候補者、職種を検索...",
+        "allStatuses": "すべてのステータス",
+        "statuses": {
+          "issued": "発行済み",
+          "paid": "支払済",
+          "partiallyRefunded": "一部返金済み",
+          "refunded": "返金済み",
+          "cancelled": "キャンセル済み"
+        },
+        "table": {
+          "invoice": "請求書",
+          "candidate": "候補者",
+          "position": "職種",
+          "total": "合計",
+          "amountDue": "未払額",
+          "dueDate": "支払期限",
+          "status": "ステータス",
+          "action": "操作"
+        },
+        "loading": "採用請求を読み込み中...",
+        "empty": "発行済みの採用請求はありません。",
+        "viewInvoice": "請求書を表示"
+      }
+    },
+    "placementRequests": {
+      "deleteModal": {
+        "title": "採用依頼を削除",
+        "description": "この採用依頼を完全に削除しますか？",
+        "cancel": "キャンセル",
+        "delete": "削除"
+      },
+      "submitModal": {
+        "submitTitle": "レビューに提出",
+        "resubmitTitle": "採用依頼を再提出",
+        "submitDescription": "提出後、管理者のレビュー中はこの依頼を編集または削除できません。",
+        "resubmitDescription": "更新した依頼を管理者に再度レビュー依頼します。",
+        "cancel": "キャンセル",
+        "submit": "レビューに提出",
+        "resubmit": "再提出"
+      },
+      "list": {
+        "searchPlaceholder": "採用依頼を検索...",
+        "refresh": "更新",
+        "newPlacementRequest": "新しい採用依頼",
+        "loading": "採用依頼を読み込み中...",
+        "emptyTitle": "採用依頼はまだありません",
+        "emptyDescription": "候補者の紹介を希望する場合は採用依頼を作成してください。",
+        "rejectionReason": "却下理由",
+        "pendingReviewNotice": "管理者による審査を待っています。",
+        "matchedNotice": "{count}名の候補者が紹介されています。",
+        "approvedNotice": "採用依頼は承認済みです。管理者からの候補者紹介を待っています。",
+        "view": "詳細",
+        "candidatesWithCount": "候補者 ({count})",
+        "edit": "編集",
+        "delete": "削除",
+        "resubmit": "再申請",
+        "submitForReview": "審査へ送信",
+        "fields": {
+          "employment": "雇用形態",
+          "positions": "募集人数",
+          "japanese": "日本語レベル",
+          "visa": "ビザ",
+          "candidates": "紹介候補者"
+        },
+        "statuses": {
+          "draft": "下書き",
+          "pendingreview": "審査中",
+          "approved": "承認済み",
+          "rejected": "却下",
+          "closed": "終了"
+        },
+        "toast": {
+          "loadFailed": "採用依頼の読み込みに失敗しました。",
+          "cannotEdit": "この採用依頼は編集できません。",
+          "updated": "採用依頼を更新しました。",
+          "updateFailed": "採用依頼の更新に失敗しました。",
+          "cannotDelete": "この採用依頼は削除できません。",
+          "deleted": "採用依頼を削除しました。",
+          "deleteFailed": "採用依頼の削除に失敗しました。",
+          "cannotSubmit": "この採用依頼は送信できません。",
+          "submitted": "管理者審査へ送信しました。",
+          "submitFailed": "採用依頼の送信に失敗しました。",
+          "approvedOnlyCandidates": "承認済みの採用依頼のみ候補者を確認できます。",
+          "refreshCandidatesFailed": "候補者情報の更新に失敗しました。",
+          "candidateStatusUpdated": "候補者のステータスを更新しました。",
+          "candidateStatusUpdateFailed": "候補者ステータスの更新に失敗しました。"
+        }
+      },
+      "details": {
+        "close": "閉じる",
+        "rejectionReason": "却下理由",
+        "submitted": "送信日時",
+        "reviewed": "審査日時",
+        "fields": {
+          "jobCategory": "職種カテゴリー",
+          "employmentType": "雇用形態",
+          "numberOfPositions": "募集人数",
+          "workLocation": "勤務地",
+          "japaneseLevel": "日本語レベル",
+          "visaRequirement": "ビザ条件",
+          "salaryType": "給与形態",
+          "salaryAmount": "給与額",
+          "workingHours": "勤務時間",
+          "daysOff": "休日",
+          "startDate": "勤務開始日"
+        },
+        "sections": {
+          "jobDescription": "仕事内容",
+          "requirements": "応募条件"
+        }
+      },
+      "editModal": {
+        "close": "閉じる",
+        "title": "採用依頼を編集",
+        "selectPlaceholder": "選択してください",
+        "adminRejectionReason": "管理者からの却下理由",
+        "rejectionHelp": "内容を修正して保存した後、再度審査へ送信できます。",
+        "cancel": "キャンセル",
+        "saveChanges": "変更を保存",
+        "sections": {
+          "position": "募集内容",
+          "candidateRequirements": "候補者条件",
+          "salaryWorkConditions": "給与・勤務条件",
+          "jobInformation": "仕事内容"
+        },
+        "fields": {
+          "jobTitle": "職種",
+          "jobCategory": "職種カテゴリー",
+          "employmentType": "雇用形態",
+          "numberOfPositions": "募集人数",
+          "workLocation": "勤務地",
+          "japaneseLevel": "日本語レベル",
+          "visaType": "必要な在留資格",
+          "salaryType": "給与形態",
+          "salaryAmount": "給与額",
+          "workingHours": "勤務時間",
+          "daysOff": "休日",
+          "startDate": "勤務開始日",
+          "jobDescription": "仕事内容",
+          "requirements": "応募条件"
+        },
+        "validation": {
+          "jobTitleRequired": "職種を入力してください。",
+          "employmentTypeRequired": "雇用形態を選択してください。",
+          "positionsMin": "募集人数は1名以上必要です。",
+          "workLocationRequired": "勤務地を入力してください。",
+          "jobDescriptionRequired": "仕事内容を入力してください。",
+          "salaryAmountInvalid": "給与額を確認してください。"
+        },
+        "options": {
+          "employmentTypes": {
+            "fullTimeEmployee": "正社員",
+            "contractEmployee": "契約社員",
+            "temporaryStaff": "派遣スタッフ",
+            "partTime": "パートタイム",
+            "freelanceContract": "フリーランス/業務委託",
+            "intern": "インターン"
+          },
+          "japaneseLevels": {
+            "native": "ネイティブ",
+            "n1": "N1",
+            "n2": "N2",
+            "n3": "N3",
+            "n4": "N4",
+            "n5": "N5",
+            "notRequired": "不問"
+          },
+          "visaTypes": {
+            "engineerSpecialist": "技術・人文知識・国際業務",
+            "specifiedSkilledWorker": "特定技能",
+            "permanentResident": "永住者",
+            "spouse": "日本人の配偶者等",
+            "longTermResident": "定住者",
+            "student": "留学",
+            "dependent": "家族滞在",
+            "anyVisa": "ビザ不問"
+          },
+          "salaryTypes": {
+            "hourly": "時給",
+            "daily": "日給",
+            "monthly": "月給",
+            "annual": "年収"
+          }
+        }
+      },
+      "createModal": {
+        "close": "閉じる",
+        "closePlacementRequest": "採用依頼を閉じる",
+        "headerEyebrow": "採用依頼",
+        "required": "必須",
+        "loadingCompany": "会社情報を読み込み中...",
+        "companyHelp": "会社はログイン中のプロバイダーから自動的に設定されます。",
+        "salaryHelp": "例: 月給300,000円の場合、「月給」を選択して300000を入力します。",
+        "startDateHelp": "勤務開始日を選択してください",
+        "footerNote": "最初は下書きとして保存されます。次に管理者審査へ送信します。",
+        "reset": "リセット",
+        "creating": "作成中...",
+        "create": "採用依頼を作成",
+        "intro": {
+          "badge": "採用依頼フォーム",
+          "title": "新しい採用依頼",
+          "description": "希望する人材の条件を入力してください。管理者が内容を確認し、候補者の紹介を行います。"
+        },
+        "sections": {
+          "company": "会社情報",
+          "position": "募集内容",
+          "jobDetails": "仕事内容・勤務地",
+          "candidateRequirements": "候補者条件",
+          "salary": "給与",
+          "workConditions": "勤務条件"
+        },
+        "sectionDescriptions": {
+          "position": "必要な職種と募集人数を入力してください。",
+          "candidateRequirements": "紹介する候補者に必要な条件です。"
+        },
+        "fields": {
+          "companyName": "会社名",
+          "jobTitle": "職種",
+          "jobCategory": "職種カテゴリー",
+          "employmentType": "雇用形態",
+          "numberOfPositions": "募集人数",
+          "workLocation": "勤務地",
+          "jobDescription": "仕事内容",
+          "requirements": "応募条件・必要経験",
+          "japaneseLevelRequired": "必要な日本語レベル",
+          "visaTypeRequired": "必要な在留資格",
+          "salaryType": "給与形態",
+          "salaryAmount": "給与額",
+          "workingHours": "勤務時間",
+          "daysOff": "休日",
+          "startDate": "勤務開始日"
+        },
+        "placeholders": {
+          "companyName": "会社名を読み込み中...",
+          "jobTitle": "例: ソフトウェアエンジニア",
+          "jobCategory": "例: IT・エンジニアリング",
+          "employmentType": "雇用形態を選択してください",
+          "numberOfPositions": "例: 3名",
+          "workLocation": "例: 東京都新宿区",
+          "jobDescription": "例: Webアプリケーションの開発・保守を担当します。",
+          "requirements": "例: 実務経験2年以上、必要な資格やスキル",
+          "japaneseLevel": "日本語レベルを選択してください",
+          "visaType": "在留資格を選択してください",
+          "salaryType": "給与形態を選択してください",
+          "salaryAmount": "例: 300000",
+          "workingHours": "例: 9:00-18:00",
+          "daysOff": "例: 土曜・日曜・祝日"
+        },
+        "validation": {
+          "jobTitleRequired": "職種を入力してください。",
+          "employmentTypeRequired": "雇用形態を選択してください。",
+          "positionsMin": "募集人数は1名以上の整数で入力してください。",
+          "workLocationRequired": "勤務地を入力してください。",
+          "jobDescriptionRequired": "仕事内容を入力してください。",
+          "salaryAmountInvalid": "給与額を確認してください。"
+        },
+        "toast": {
+          "created": "採用依頼を作成しました。",
+          "createFailed": "採用依頼の作成に失敗しました。"
+        },
+        "difference": {
+          "title": "求人掲載との違い",
+          "description": "これは公開求人ではありません。会社が管理者に対して、条件に合う候補者の紹介を依頼するための採用依頼です。"
+        },
+        "options": {
+          "employmentTypes": {
+            "fullTimeEmployee": "正社員",
+            "contractEmployee": "契約社員",
+            "temporaryStaff": "派遣スタッフ",
+            "partTime": "パートタイム",
+            "freelanceContract": "フリーランス/業務委託",
+            "intern": "インターン"
+          },
+          "japaneseLevels": {
+            "native": "ネイティブ",
+            "n1": "N1",
+            "n2": "N2",
+            "n3": "N3",
+            "n4": "N4",
+            "n5": "N5",
+            "notRequired": "不問"
+          },
+          "visaTypes": {
+            "engineerSpecialist": "技術・人文知識・国際業務",
+            "specifiedSkilledWorker": "特定技能",
+            "permanentResident": "永住者",
+            "spouse": "日本人の配偶者等",
+            "longTermResident": "定住者",
+            "student": "留学",
+            "dependent": "家族滞在",
+            "anyVisa": "ビザ不問"
+          },
+          "salaryTypes": {
+            "hourly": "時給",
+            "daily": "日給",
+            "monthly": "月給",
+            "annual": "年収"
+          }
+        }
+      },
+      "interviewModal": {
+        "close": "閉じる",
+        "editTitle": "面接情報を編集",
+        "scheduleTitle": "面接を設定",
+        "missingLinkNotice": "リンクなしでも保存できますが、面接はリンク待ちになります。リンクを追加して面接が確定するまで候補者への最終通知は送信されません。",
+        "notesPlaceholder": "例: 面接開始10分前に参加してください。",
+        "openCurrentLink": "現在のリンクを開く",
+        "cancel": "キャンセル",
+        "saving": "保存中...",
+        "updateInterview": "面接を更新",
+        "scheduleInterview": "面接を設定",
+        "summary": {
+          "candidate": "候補者",
+          "workLocation": "勤務地",
+          "placementRequest": "採用依頼ID"
+        },
+        "fields": {
+          "interviewDate": "面接日",
+          "interviewTime": "面接時間",
+          "timezone": "タイムゾーン",
+          "interviewMethod": "面接方法",
+          "meetingLink": "ミーティングリンク",
+          "notes": "備考"
+        },
+        "methods": {
+          "phone": "電話",
+          "faceToFace": "対面",
+          "other": "その他"
+        }
+      },
+      "candidatesModal": {
+        "close": "閉じる",
+        "title": "紹介候補者",
+        "positions": "募集人数",
+        "emptyTitle": "候補者はまだ紹介されていません",
+        "emptyDescription": "管理者が候補者を紹介すると、ここに表示されます。",
+        "rejectionReason": "却下理由",
+        "rejectionPlaceholder": "却下理由を入力してください...",
+        "cancel": "キャンセル",
+        "confirmReject": "却下する",
+        "edit": "編集",
+        "summary": {
+          "positionsRequired": "募集人数",
+          "candidatesReceived": "紹介候補者",
+          "placed": "採用決定"
+        },
+        "fields": {
+          "nationality": "国籍",
+          "japanese": "日本語",
+          "visa": "在留資格",
+          "currentLocation": "現在地",
+          "desiredJob": "希望職種",
+          "desiredLocation": "希望勤務地",
+          "visaExpiry": "ビザ有効期限",
+          "matched": "紹介日"
+        },
+        "sections": {
+          "skills": "スキル",
+          "education": "学歴",
+          "employmentHistory": "職歴"
+        },
+        "dates": {
+          "review": "審査",
+          "interview": "面接",
+          "selected": "選考",
+          "placed": "採用"
+        },
+        "actions": {
+          "startReview": "審査開始",
+          "selectCandidate": "候補者を選考",
+          "markAsPlaced": "採用決定",
+          "scheduleInterview": "面接を設定",
+          "openInterview": "面接情報を開く",
+          "editInterview": "面接を編集",
+          "rejectCandidate": "候補者を却下"
+        },
+        "toast": {
+          "loadCandidateFailed": "候補者情報の読み込みに失敗しました。",
+          "checkInterviewFailed": "面接情報の確認に失敗しました。"
+        },
+        "statuses": {
+          "matched": "紹介済み",
+          "under_review": "審査中",
+          "interview": "面接",
+          "selected": "選考済み",
+          "placed": "採用決定",
+          "rejected": "却下"
+        },
+        "methods": {
+          "phone": "電話",
+          "faceToFace": "対面",
+          "other": "その他"
+        },
+        "interview": {
+          "schedule": "面接予定",
+          "date": "日付",
+          "time": "時間",
+          "timezone": "タイムゾーン",
+          "method": "方法",
+          "awaitingLink": "ミーティングリンク待ちです。リンクを追加すると面接が確定します。",
+          "openLink": "面接リンクを開く",
+          "notes": "備考",
+          "statuses": {
+            "awaiting_link": "リンク待ち",
+            "confirmed": "確定",
+            "completed": "完了",
+            "cancelled": "キャンセル"
+          }
+        }
+      }
+    },
+    "vacancies": {
+      "deleteModal": {
+        "title": "本当に削除しますか？",
+        "description": "「{title}」を完全に削除します。この操作は取り消せません。",
+        "vacancyId": "求人ID",
+        "close": "閉じる",
+        "cancel": "キャンセル",
+        "delete": "削除",
+        "deleting": "削除中...",
+        "success": "求人を削除しました。",
+        "error": "求人の削除に失敗しました。"
+      },
+      "details": {
+        "title": "求人詳細",
+        "close": "閉じる",
+        "posted": "掲載日",
+        "edit": "求人を編集",
+        "sections": {
+          "overview": "概要",
+          "jobDescription": "仕事内容",
+          "requirements": "応募条件",
+          "workConditions": "勤務条件",
+          "benefitsInsurance": "福利厚生・保険",
+          "applicationInformation": "応募情報",
+          "contactPerson": "担当者"
+        },
+        "fields": {
+          "companyName": "会社名",
+          "companyNameKana": "会社名カナ",
+          "jobTitle": "職種",
+          "jobTitleKana": "職種カナ",
+          "employmentType": "雇用形態",
+          "numberOfPeople": "募集人数",
+          "japaneseLevel": "日本語レベル",
+          "workLocation": "勤務地",
+          "detailedLocation": "詳細住所",
+          "remoteWork": "リモートワーク",
+          "salary": "給与",
+          "salaryNotes": "給与備考",
+          "description": "説明",
+          "detailedResponsibilities": "詳細な業務内容",
+          "requiredSkills": "必須スキル・経験",
+          "preferredSkills": "歓迎スキル",
+          "education": "学歴",
+          "experience": "経験",
+          "workingHours": "勤務時間",
+          "breakTime": "休憩時間",
+          "overtime": "残業",
+          "holidays": "休日",
+          "trialPeriod": "試用期間",
+          "benefits": "福利厚生",
+          "socialInsurance": "社会保険",
+          "applicationDeadline": "応募締切",
+          "startDate": "開始日",
+          "selectionProcess": "選考プロセス",
+          "contactPerson": "担当者",
+          "contactPersonKana": "担当者カナ",
+          "contactEmail": "担当者メール"
+        }
+      },
+      "list": {
+        "searchPlaceholder": "求人を検索...",
+        "refresh": "更新",
+        "postVacancy": "求人を掲載",
+        "loading": "求人を読み込み中...",
+        "emptyTitle": "求人はまだありません",
+        "emptyDescription": "最初の求人を登録してください。",
+        "awaitingReview": "管理者による審査中",
+        "openings": "名",
+        "annualSalary": "給与",
+        "salaryUnit": "万円",
+        "rejectionReason": "却下理由",
+        "view": "詳細",
+        "edit": "編集",
+        "delete": "削除",
+        "closeVacancy": "求人終了",
+        "statuses": {
+          "draft": "下書き",
+          "pendingReview": "審査中",
+          "approved": "承認済み",
+          "published": "公開中",
+          "rejected": "却下",
+          "closed": "終了"
+        },
+        "notYetPublished": "まだ公開されていません",
+        "acceptingApplicants": "応募受付中",
+        "approvedNotLive": "承認済み・未公開",
+        "notAcceptingApplicants": "応募受付停止中",
+        "toast": {
+          "loadFailed": "求人情報の読み込みに失敗しました。",
+          "onlyPublishedCanClose": "公開中の求人のみ終了できます。",
+          "confirmClose": "「{title}」の掲載を終了しますか？求職者には表示されなくなります。",
+          "closed": "求人の掲載を終了しました。",
+          "closeFailed": "求人の終了に失敗しました。"
+        }
+      },
+      "form": {
+        "close": "閉じる",
+        "required": "必須",
+        "selectPlaceholder": "選択してください",
+        "salaryUnit": "万円",
+        "reset": "リセット",
+        "saving": "保存中...",
+        "posting": "送信中...",
+        "saveChanges": "変更を保存",
+        "postJobVacancy": "求人を掲載",
+        "footerNote": "送信された情報は求人掲載および採用支援の目的で使用されます。",
+        "header": {
+          "editEyebrow": "求人編集",
+          "createEyebrow": "求人追加"
+        },
+        "intro": {
+          "badge": "求人フォーム",
+          "editTitle": "求人情報を編集",
+          "createTitle": "求人を登録",
+          "editDescription": "求人情報を更新してください。保存後、管理者による再審査が行われます。",
+          "createDescription": "必要事項を入力してください。登録後、管理者による審査が行われます。"
+        },
+        "sections": {
+          "company": {
+            "title": "会社情報",
+            "description": "基本的な会社情報"
+          },
+          "position": {
+            "title": "募集内容",
+            "description": "例: ソフトウェアエンジニア"
+          },
+          "description": {
+            "title": "仕事内容",
+            "description": "具体的な仕事内容を記載してください"
+          },
+          "requirements": {
+            "title": "応募条件",
+            "description": "例: JavaScript/TypeScriptでの開発経験3年以上"
+          },
+          "location": {
+            "title": "勤務地・勤務条件",
+            "description": "例: 東京都千代田区"
+          },
+          "schedule": {
+            "title": "勤務時間・休日",
+            "description": "例: 9:00 - 18:00"
+          },
+          "benefits": {
+            "title": "福利厚生",
+            "description": "福利厚生"
+          },
+          "application": {
+            "title": "応募情報",
+            "description": "書類選考 -> 一次面接 -> 最終面接 -> 内定"
+          },
+          "contact": {
+            "title": "担当者",
+            "description": "求人に関する連絡先情報"
+          }
+        },
+        "fields": {
+          "companyName": "会社名",
+          "companyNameKana": "会社名（カナ）",
+          "jobTitle": "職種",
+          "jobTitleKana": "職種（カナ）",
+          "employmentType": "雇用形態",
+          "numberOfOpenings": "募集人数",
+          "jobDescription": "仕事内容",
+          "responsibilities": "詳細な業務内容",
+          "requiredSkills": "必須スキル・経験",
+          "preferredSkills": "歓迎スキル",
+          "educationRequirements": "学歴要件",
+          "yearsOfExperience": "経験年数",
+          "japaneseLevel": "日本語レベル",
+          "workLocation": "勤務地",
+          "detailedLocation": "詳細住所",
+          "remoteWorkPolicy": "リモートワーク",
+          "salaryNotes": "給与備考",
+          "salaryRange": "年収（下限）/ 年収（上限）",
+          "workingHours": "勤務時間",
+          "breakTime": "休憩時間",
+          "overtime": "残業",
+          "holidays": "休日・休暇",
+          "benefits": "福利厚生",
+          "socialInsurance": "社会保険",
+          "trialPeriod": "試用期間",
+          "applicationDeadline": "応募締切",
+          "startDate": "開始日",
+          "selectionProcess": "選考プロセス",
+          "contactPerson": "担当者名",
+          "contactPersonKana": "担当者名（カナ）",
+          "emailAddress": "メールアドレス"
+        },
+        "placeholders": {
+          "companyName": "例: サンプル株式会社",
+          "companyNameKana": "例: サンプルカブシキガイシャ",
+          "jobTitle": "例: ソフトウェアエンジニア",
+          "jobTitleKana": "例: ソフトウェアエンジニア",
+          "jobDescription": "具体的な仕事内容を記載してください",
+          "responsibilities": "日々の業務内容を詳しく記載してください",
+          "requiredSkills": "必須スキルと経験",
+          "preferredSkills": "例: React または Next.js の経験",
+          "educationRequirements": "例: 大卒以上",
+          "yearsOfExperience": "例: 3年以上 / 未経験歓迎",
+          "workLocation": "例: 東京都千代田区",
+          "detailedLocation": "例: 東京駅から徒歩5分",
+          "salaryNotes": "例: 賞与年2回",
+          "overtime": "月20時間程度",
+          "holidays": "土日祝、年末年始...",
+          "trialPeriod": "例: 3か月",
+          "startDate": "例: 即日 / 2027年4月",
+          "selectionProcess": "書類選考 -> 一次面接 -> 最終面接 -> 内定",
+          "contactPerson": "例: 山田 太郎",
+          "contactPersonKana": "例: ヤマダ タロウ"
+        },
+        "validation": {
+          "companyNameRequired": "会社名が必要です。",
+          "jobTitleRequired": "求人タイトルが必要です。",
+          "employmentTypeRequired": "雇用形態を選択してください。",
+          "jobDescriptionRequired": "仕事内容を入力してください。",
+          "workLocationRequired": "勤務地を入力してください。",
+          "contactPersonRequired": "担当者名が必要です。",
+          "contactEmailRequired": "メールアドレスが必要です。",
+          "contactEmailInvalid": "有効なメールアドレスを入力してください。",
+          "salaryRangeInvalid": "最低給与は最高給与以下にしてください。"
+        },
+        "toast": {
+          "updated": "求人情報を更新しました。",
+          "created": "求人を送信しました。",
+          "updateFailed": "求人情報の更新に失敗しました。",
+          "createFailed": "求人の作成に失敗しました。",
+          "loadFailed": "プロフィールの読み込みに失敗しました",
+          "checkInput": "入力内容を確認してください"
+        },
+        "options": {
+          "employmentTypes": {
+            "fullTimeEmployee": "正社員",
+            "contractEmployee": "契約社員",
+            "temporaryStaff": "派遣スタッフ",
+            "partTime": "パートタイム",
+            "freelanceContract": "フリーランス/業務委託",
+            "intern": "インターン"
+          },
+          "japaneseLevels": {
+            "native": "ネイティブ",
+            "n1": "N1（ビジネスレベル）",
+            "n2": "N2（日常会話レベル）",
+            "n3": "N3（基本会話レベル）",
+            "n4OrBelow": "N4以下（不問）"
+          },
+          "remoteWork": {
+            "fullyRemote": "フルリモート",
+            "hybrid": "週2〜3日出社",
+            "primarilyOffice": "原則出社（状況によりリモート可）",
+            "noRemote": "リモート不可"
+          },
+          "benefits": {
+            "fullSocialInsurance": "社会保険完備",
+            "commutingAllowance": "通勤手当",
+            "housingAllowance": "住宅手当",
+            "familyAllowance": "家族手当",
+            "certificationSupport": "資格取得支援",
+            "employeeCafeteria": "社員食堂",
+            "onsiteDaycare": "事業所内保育",
+            "refreshVacation": "リフレッシュ休暇"
+          },
+          "insurance": {
+            "healthInsurance": "健康保険",
+            "pensionInsurance": "厚生年金保険",
+            "employmentInsurance": "雇用保険",
+            "workersCompensation": "労災保険"
+          }
+        }
+      }
+    }
+  },
+  "providerAuth": {
+    "portalTitle": "求人企業ポータル",
+    "mainTitle": "優秀な人材を",
+    "mainTitleHighlight": "見つけましょう",
+    "description": "求人を掲載し、候補者との採用プロセスを管理できます。最適な人材との出会いをサポートします。",
+    "seekerText": "仕事をお探しですか？",
+    "seekerLink": "求職者はこちら",
+    "loginTab": "ログイン",
+    "registerTab": "登録",
+    "loading": "読み込み中...",
+    "features": {
+      "postJobs": {
+        "title": "求人掲載",
+        "description": "求人情報を作成し、求職者に新しい機会を提供します。"
+      },
+      "recruit": {
+        "title": "採用管理",
+        "description": "応募者の選考状況を一箇所で管理できます。"
+      }
+    },
+    "login": {
+      "title": "企業ログイン",
+      "description": "メールアドレスとパスワードで企業アカウントにアクセスします。",
+      "forgotPassword": "パスワードを忘れた方",
+      "submit": "ログイン",
+      "noAccount": "企業アカウントをお持ちでないですか？",
+      "createOne": "企業登録"
+    },
+    "register": {
+      "title": "企業アカウント作成",
+      "description": "企業情報を入力して採用活動を開始しましょう。",
+      "submit": "企業登録",
+      "hasAccount": "すでに企業アカウントをお持ちですか？",
+      "signIn": "ログイン"
+    },
+    "fields": {
+      "email": "メールアドレス",
+      "password": "パスワード",
+      "contactPerson": "担当者名",
+      "companyName": "会社名"
+    },
+    "placeholders": {
+      "contactPerson": "山田 太郎",
+      "companyName": "株式会社サンプル"
+    },
+    "validation": {
+      "contactPersonRequired": "担当者名を入力してください",
+      "contactPersonMin": "担当者名は2文字以上で入力してください",
+      "companyNameRequired": "会社名を入力してください",
+      "companyNameMin": "会社名は2文字以上で入力してください",
+      "emailRequired": "メールアドレスを入力してください",
+      "emailInvalid": "有効なメールアドレスを入力してください",
+      "passwordRequired": "パスワードを入力してください",
+      "passwordMin": "パスワードは8文字以上で入力してください"
+    },
+    "toast": {
+      "genericError": "処理中にエラーが発生しました",
+      "registrationSuccessful": "企業登録が完了しました",
+      "loginSuccessful": "ログインしました",
+      "loginFailed": "ログインに失敗しました"
+    },
+    "a11y": {
+      "switchLanguage": "言語を切り替える",
+      "showPassword": "パスワードを表示",
+      "hidePassword": "パスワードを非表示"
     }
   }
 }

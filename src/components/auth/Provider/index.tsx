@@ -4,12 +4,14 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Building2, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { useProviderAuth } from "./hook";
 
 export default function ProviderAuth() {
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("providerAuth");
 
   const {
     lang,
@@ -55,26 +57,14 @@ export default function ProviderAuth() {
   // ======================================================
 
   const content = {
-    portalTitle: lang === "ja" ? "求人企業ポータル" : "Job Provider Portal",
-
-    mainTitle: lang === "ja" ? "優秀な人材を" : "Find the right",
-
-    mainTitleHighlight:
-      lang === "ja" ? "見つけましょう" : "talent for your company",
-
-    description:
-      lang === "ja"
-        ? "求人を掲載し、候補者との採用プロセスを管理できます。最適な人材との出会いをサポートします。"
-        : "Post job opportunities and manage your recruitment process in one place. Connect with qualified candidates for your company.",
-
-    seekerText:
-      lang === "ja" ? "仕事をお探しですか？" : "Are you looking for a job?",
-
-    seekerLink: lang === "ja" ? "求職者はこちら" : "Job seeker sign up",
-
-    loginTab: lang === "ja" ? "ログイン" : "Login",
-
-    registerTab: lang === "ja" ? "企業登録" : "Register",
+    portalTitle: t("portalTitle"),
+    mainTitle: t("mainTitle"),
+    mainTitleHighlight: t("mainTitleHighlight"),
+    description: t("description"),
+    seekerText: t("seekerText"),
+    seekerLink: t("seekerLink"),
+    loginTab: t("loginTab"),
+    registerTab: t("registerTab"),
   };
 
   return (
@@ -87,6 +77,7 @@ export default function ProviderAuth() {
         <button
           type="button"
           onClick={() => handleLangChange(lang === "ja" ? "en" : "ja")}
+          aria-label={t("a11y.switchLanguage")}
           className="group relative flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-neutral-800/90 text-white shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-neutral-700/90"
         >
           <span className="text-lg font-semibold">
@@ -145,25 +136,21 @@ export default function ProviderAuth() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="rounded-2xl bg-white/10 p-4">
               <p className="text-2xl font-semibold text-white">
-                {lang === "ja" ? "求人掲載" : "Post Jobs"}
+                {t("features.postJobs.title")}
               </p>
 
               <p className="mt-2 text-sm leading-6 text-slate-300">
-                {lang === "ja"
-                  ? "求人情報を作成し、求職者に新しい機会を提供します。"
-                  : "Create job opportunities and reach qualified candidates."}
+                {t("features.postJobs.description")}
               </p>
             </div>
 
             <div className="rounded-2xl bg-white/10 p-4">
               <p className="text-2xl font-semibold text-white">
-                {lang === "ja" ? "採用管理" : "Recruit"}
+                {t("features.recruit.title")}
               </p>
 
               <p className="mt-2 text-sm leading-6 text-slate-300">
-                {lang === "ja"
-                  ? "応募者の選考状況を一箇所で管理できます。"
-                  : "Manage applicants and recruitment progress from one place."}
+                {t("features.recruit.description")}
               </p>
             </div>
           </div>
@@ -245,18 +232,16 @@ export default function ProviderAuth() {
                     className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-xl sm:p-8"
                   >
                     <h2 className="text-3xl font-semibold text-white">
-                      {lang === "ja" ? "企業ログイン" : "Provider Sign In"}
+                      {t("login.title")}
                     </h2>
 
                     <p className="mt-2 text-slate-400">
-                      {lang === "ja"
-                        ? "メールアドレスとパスワードで企業アカウントにアクセスします。"
-                        : "Access your company account using your email and password."}
+                      {t("login.description")}
                     </p>
 
                     <div className="mt-8 space-y-4">
                       <InputField
-                        label={lang === "ja" ? "メールアドレス" : "Email"}
+                        label={t("fields.email")}
                         name="email"
                         type="email"
                         value={loginData.email}
@@ -268,7 +253,7 @@ export default function ProviderAuth() {
                       />
 
                       <InputField
-                        label={lang === "ja" ? "パスワード" : "Password"}
+                        label={t("fields.password")}
                         name="password"
                         type="password"
                         value={loginData.password}
@@ -277,6 +262,8 @@ export default function ProviderAuth() {
                         error={errors.password}
                         onChange={handleLoginChange}
                         autoComplete="current-password"
+                        showPasswordLabel={t("a11y.showPassword")}
+                        hidePasswordLabel={t("a11y.hidePassword")}
                       />
 
                       {/* FORGOT PASSWORD */}
@@ -293,29 +280,25 @@ export default function ProviderAuth() {
                           }
                           className="cursor-pointer text-sm font-medium text-sky-400 transition hover:text-sky-300 hover:underline"
                         >
-                          {lang === "ja"
-                            ? "パスワードを忘れた方"
-                            : "Forgot password?"}
+                          {t("login.forgotPassword")}
                         </button>
                       </div>
 
                       <SubmitButton
                         isSubmitting={isSubmitting}
-                        lang={lang}
-                        label={lang === "ja" ? "ログイン" : "Login"}
+                        loadingLabel={t("loading")}
+                        label={t("login.submit")}
                       />
                     </div>
 
                     <p className="mt-6 text-sm text-slate-400">
-                      {lang === "ja"
-                        ? "企業アカウントをお持ちでないですか？"
-                        : "Don't have a provider account?"}{" "}
+                      {t("login.noAccount")}{" "}
                       <button
                         type="button"
                         onClick={() => setMode("register")}
                         className="cursor-pointer font-medium text-sky-400 transition hover:text-sky-300"
                       >
-                        {lang === "ja" ? "企業登録" : "Create one"}
+                        {t("login.createOne")}
                       </button>
                     </p>
                   </form>
@@ -349,26 +332,22 @@ export default function ProviderAuth() {
                     className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-xl sm:p-8"
                   >
                     <h2 className="text-3xl font-semibold text-white">
-                      {lang === "ja"
-                        ? "企業アカウント作成"
-                        : "Create Provider Account"}
+                      {t("register.title")}
                     </h2>
 
                     <p className="mt-2 text-slate-400">
-                      {lang === "ja"
-                        ? "企業情報を入力して採用活動を開始しましょう。"
-                        : "Register your company and start posting job opportunities."}
+                      {t("register.description")}
                     </p>
 
                     <div className="mt-8 space-y-4">
                       {/* CONTACT PERSON */}
 
                       <InputField
-                        label={lang === "ja" ? "担当者名" : "Contact Person"}
+                        label={t("fields.contactPerson")}
                         name="name"
                         type="text"
                         value={registerData.name}
-                        placeholder={lang === "ja" ? "山田 太郎" : "John Doe"}
+                        placeholder={t("placeholders.contactPerson")}
                         icon={User}
                         error={errors.name}
                         onChange={handleRegisterChange}
@@ -378,15 +357,11 @@ export default function ProviderAuth() {
                       {/* COMPANY */}
 
                       <InputField
-                        label={lang === "ja" ? "会社名" : "Company Name"}
+                        label={t("fields.companyName")}
                         name="companyName"
                         type="text"
                         value={registerData.companyName}
-                        placeholder={
-                          lang === "ja"
-                            ? "株式会社サンプル"
-                            : "Example Company Ltd."
-                        }
+                        placeholder={t("placeholders.companyName")}
                         icon={Building2}
                         error={errors.companyName}
                         onChange={handleRegisterChange}
@@ -396,7 +371,7 @@ export default function ProviderAuth() {
                       {/* EMAIL */}
 
                       <InputField
-                        label={lang === "ja" ? "メールアドレス" : "Email"}
+                        label={t("fields.email")}
                         name="email"
                         type="email"
                         value={registerData.email}
@@ -410,7 +385,7 @@ export default function ProviderAuth() {
                       {/* PASSWORD */}
 
                       <InputField
-                        label={lang === "ja" ? "パスワード" : "Password"}
+                        label={t("fields.password")}
                         name="password"
                         type="password"
                         value={registerData.password}
@@ -419,25 +394,25 @@ export default function ProviderAuth() {
                         error={errors.password}
                         onChange={handleRegisterChange}
                         autoComplete="new-password"
+                        showPasswordLabel={t("a11y.showPassword")}
+                        hidePasswordLabel={t("a11y.hidePassword")}
                       />
 
                       <SubmitButton
                         isSubmitting={isSubmitting}
-                        lang={lang}
-                        label={lang === "ja" ? "企業登録" : "Register Company"}
+                        loadingLabel={t("loading")}
+                        label={t("register.submit")}
                       />
                     </div>
 
                     <p className="mt-6 text-sm text-slate-400">
-                      {lang === "ja"
-                        ? "すでに企業アカウントをお持ちですか？"
-                        : "Already have a provider account?"}{" "}
+                      {t("register.hasAccount")}{" "}
                       <button
                         type="button"
                         onClick={() => setMode("login")}
                         className="cursor-pointer font-medium text-sky-400 transition hover:text-sky-300"
                       >
-                        {lang === "ja" ? "ログイン" : "Sign in"}
+                        {t("register.signIn")}
                       </button>
                     </p>
                   </form>
@@ -471,6 +446,8 @@ type InputFieldProps = {
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 
   autoComplete?: string;
+  showPasswordLabel?: string;
+  hidePasswordLabel?: string;
 };
 
 function InputField({
@@ -483,6 +460,8 @@ function InputField({
   error,
   onChange,
   autoComplete,
+  showPasswordLabel,
+  hidePasswordLabel,
 }: InputFieldProps) {
   const [showPassword, setShowPassword] = React.useState(false);
 
@@ -517,7 +496,9 @@ function InputField({
           <button
             type="button"
             onClick={() => setShowPassword((previous) => !previous)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-label={
+              showPassword ? hidePasswordLabel : showPasswordLabel
+            }
             className="shrink-0 cursor-pointer text-slate-400 transition hover:text-white"
           >
             {showPassword ? (
@@ -540,11 +521,11 @@ function InputField({
 
 function SubmitButton({
   label,
-  lang,
+  loadingLabel,
   isSubmitting,
 }: {
   label: string;
-  lang: string;
+  loadingLabel: string;
   isSubmitting: boolean;
 }) {
   return (
@@ -553,7 +534,7 @@ function SubmitButton({
       disabled={isSubmitting}
       className="w-full cursor-pointer rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-50"
     >
-      {isSubmitting ? (lang === "ja" ? "読み込み中..." : "Loading...") : label}
+      {isSubmitting ? loadingLabel : label}
     </button>
   );
 }

@@ -7,6 +7,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -59,6 +60,7 @@ const EMPTY_SUMMARY: ProviderDashboardSummary = {
 
 export const useProviderDashboard = () => {
   const router = useRouter();
+  const t = useTranslations("provider.dashboard");
 
   const { lang } = useLanguage();
 
@@ -132,23 +134,14 @@ export const useProviderDashboard = () => {
           return;
         }
 
-        setError(
-          apiError.response?.data?.message ||
-            (lang === "ja"
-              ? "ダッシュボードの読み込みに失敗しました"
-              : "Failed to load provider dashboard."),
-        );
+        setError(apiError.response?.data?.message || t("loadFailed"));
 
         return;
       }
 
-      setError(
-        lang === "ja"
-          ? "ダッシュボードの読み込みに失敗しました"
-          : "Failed to load provider dashboard.",
-      );
+      setError(t("loadFailed"));
     },
-    [lang, redirectToLogin],
+    [redirectToLogin, t],
   );
 
   // ====================================================
@@ -249,14 +242,12 @@ export const useProviderDashboard = () => {
       setRefreshVersion((previous) => previous + 1);
 
       if (success) {
-        toast.success(
-          lang === "ja" ? "最新情報に更新しました" : "Dashboard refreshed",
-        );
+        toast.success(t("refreshed"));
       }
     } finally {
       setRefreshing(false);
     }
-  }, [lang, loadSummary]);
+  }, [loadSummary, t]);
 
   // ====================================================
   // FEATURE DATA CHANGED
@@ -302,7 +293,6 @@ export const useProviderDashboard = () => {
     requestPostVacancy,
 
     handleRefresh,
-
     handleFeatureChanged,
   };
 };

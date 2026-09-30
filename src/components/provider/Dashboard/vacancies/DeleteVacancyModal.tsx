@@ -6,6 +6,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { deleteProviderVacancy } from "./api";
 
@@ -29,8 +30,8 @@ export default function DeleteVacancyModal({
   vacancy,
   onClose,
   onSuccess,
-  lang,
 }: DeleteVacancyModalProps) {
+  const t = useTranslations("provider.vacancies.deleteModal");
   const [deleting, setDeleting] = useState(false);
 
   if (!open || !vacancy) {
@@ -43,30 +44,19 @@ export default function DeleteVacancyModal({
 
       const response = await deleteProviderVacancy(vacancy.vacancyId);
 
-      toast.success(
-        response.message ||
-          (lang === "ja"
-            ? "求人を削除しました"
-            : "Vacancy deleted successfully."),
-      );
+      toast.success(response.message || t("success"));
 
       await onSuccess();
     } catch (error: unknown) {
       console.error("Delete vacancy error:", error);
 
       if (axios.isAxiosError<ProviderDashboardApiError>(error)) {
-        toast.error(
-          error.response?.data?.message || "Failed to delete vacancy.",
-        );
+        toast.error(error.response?.data?.message || t("error"));
 
         return;
       }
 
-      toast.error(
-        lang === "ja"
-          ? "求人の削除に失敗しました"
-          : "Failed to delete vacancy.",
-      );
+      toast.error(t("error"));
     } finally {
       setDeleting(false);
     }
@@ -74,16 +64,12 @@ export default function DeleteVacancyModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
-      {/* BACKDROP */}
-
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t("close")}
         className="absolute inset-0"
         onClick={deleting ? undefined : onClose}
       />
-
-      {/* DIALOG */}
 
       <div className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
         <div className="p-6">
@@ -92,27 +78,21 @@ export default function DeleteVacancyModal({
           </div>
 
           <h2 className="mt-5 text-xl font-semibold text-slate-950">
-            {lang === "ja"
-              ? "本当に削除しますか？"
-              : "Are you absolutely sure?"}
+            {t("title")}
           </h2>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            {lang === "ja"
-              ? `「${vacancy.title}」を完全に削除します。この操作は取り消せません。`
-              : `"${vacancy.title}" will be permanently deleted. This action cannot be undone.`}
+            {t("description", { title: vacancy.title })}
           </p>
 
           <div className="mt-5 rounded-xl bg-slate-50 p-4">
-            <p className="text-xs text-slate-500">Vacancy ID</p>
+            <p className="text-xs text-slate-500">{t("vacancyId")}</p>
 
             <p className="mt-1 text-sm font-semibold text-slate-800">
               {vacancy.vacancyId}
             </p>
           </div>
         </div>
-
-        {/* FOOTER */}
 
         <div className="flex justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
           <button
@@ -121,7 +101,7 @@ export default function DeleteVacancyModal({
             onClick={onClose}
             className="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {lang === "ja" ? "キャンセル" : "Cancel"}
+            {t("cancel")}
           </button>
 
           <button
@@ -132,13 +112,7 @@ export default function DeleteVacancyModal({
           >
             {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
 
-            {deleting
-              ? lang === "ja"
-                ? "削除中..."
-                : "Deleting..."
-              : lang === "ja"
-                ? "削除"
-                : "Delete"}
+            {deleting ? t("deleting") : t("delete")}
           </button>
         </div>
       </div>

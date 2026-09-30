@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, Loader2, Trash2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { PlacementRequest } from "./types";
 
@@ -23,6 +24,8 @@ export default function DeletePlacementRequestModal({
   onClose,
   onDelete,
 }: Props) {
+  const t = useTranslations("provider.placementRequests.deleteModal");
+
   if (!open || !request) {
     return null;
   }
@@ -40,10 +43,10 @@ export default function DeletePlacementRequestModal({
           </button>
         </div>
 
-        <h2 className="mt-5 text-xl font-bold">Delete Placement Request</h2>
+        <h2 className="mt-5 text-xl font-bold">{t("title")}</h2>
 
         <p className="mt-2 text-sm text-slate-500">
-          Permanently delete this placement request?
+          {t("description")}
         </p>
 
         <div className="mt-4 rounded-xl bg-slate-50 p-4">
@@ -59,7 +62,7 @@ export default function DeletePlacementRequestModal({
             onClick={onClose}
             className="rounded-xl border px-4 py-2.5"
           >
-            Cancel
+            {t("cancel")}
           </button>
 
           <button
@@ -73,7 +76,7 @@ export default function DeletePlacementRequestModal({
             ) : (
               <Trash2 className="h-4 w-4" />
             )}
-            Delete
+            {t("delete")}
           </button>
         </div>
       </div>

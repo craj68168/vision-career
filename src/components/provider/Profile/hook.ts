@@ -1,15 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import axios from "axios";
 import toast from "react-hot-toast";
 
-import { useRouter } from "next/navigation";
-
 import { useLanguage } from "@/context/LanguageContext";
 
-import { getProviderProfile, updateProviderProfile } from "./api";
+import {
+  getProviderProfile,
+  updateProviderProfile,
+} from "./api";
 
 import {
   validateProviderProfile,
@@ -41,10 +44,12 @@ const initialFormData: ProviderProfileFormData = {
 
 export const useProviderProfile = () => {
   const router = useRouter();
+  const t = useTranslations("provider.profile");
 
   const { lang } = useLanguage();
 
-  const [profile, setProfile] = useState<ProviderProfile | null>(null);
+  const [profile, setProfile] =
+    useState<ProviderProfile | null>(null);
 
   const [profileStatus, setProfileStatus] = useState({
     isComplete: false,
@@ -60,16 +65,15 @@ export const useProviderProfile = () => {
   const [formData, setFormData] =
     useState<ProviderProfileFormData>(initialFormData);
 
-  const [errors, setErrors] = useState<ProviderProfileErrors>({});
+  const [errors, setErrors] =
+    useState<ProviderProfileErrors>({});
 
   const [touched, setTouched] = useState<
     Partial<Record<keyof ProviderProfileFormData, boolean>>
   >({});
 
   const [loading, setLoading] = useState(true);
-
   const [saving, setSaving] = useState(false);
-
   const [isEditing, setIsEditing] = useState(false);
 
   // ======================================================
@@ -78,7 +82,6 @@ export const useProviderProfile = () => {
 
   const redirectToLogin = useCallback(() => {
     localStorage.removeItem("access_token");
-
     localStorage.removeItem("user_role");
 
     router.replace(lang === "ja" ? "/auth" : "/en/auth");
@@ -88,43 +91,48 @@ export const useProviderProfile = () => {
   // POPULATE
   // ======================================================
 
-  const populateProfile = useCallback((data: ProviderProfileResponse) => {
-    setProfile(data.profile);
+  const populateProfile = useCallback(
+    (data: ProviderProfileResponse) => {
+      setProfile(data.profile);
 
-    setProfileStatus({
-      isComplete: data.is_complete,
+      setProfileStatus({
+        isComplete: data.is_complete,
 
-      completionPercentage: data.completion_percentage,
+        completionPercentage: data.completion_percentage,
 
-      missingFields: data.missing_fields || [],
-    });
+        missingFields: data.missing_fields || [],
+      });
 
-    setFormData({
-      companyName: data.profile.companyName || "",
+      setFormData({
+        companyName: data.profile.companyName || "",
 
-      phone: data.profile.phone || "",
+        phone: data.profile.phone || "",
 
-      address: data.profile.address || "",
+        address: data.profile.address || "",
 
-      website: data.profile.website || "",
+        website: data.profile.website || "",
 
-      industry: data.profile.industry || "",
+        industry: data.profile.industry || "",
 
-      contact_person: data.profile.contact_person || "",
+        contact_person: data.profile.contact_person || "",
 
-      contact_person_phone: data.profile.contact_person_phone || "",
+        contact_person_phone:
+          data.profile.contact_person_phone || "",
 
-      contact_person_email: data.profile.contact_person_email || "",
+        contact_person_email:
+          data.profile.contact_person_email || "",
 
-      hiring_needs: data.profile.hiring_needs || "",
+        hiring_needs: data.profile.hiring_needs || "",
 
-      notes: data.profile.notes || "",
-    });
+        notes: data.profile.notes || "",
+      });
 
-    if (!data.is_complete) {
-      setIsEditing(true);
-    }
-  }, []);
+      if (!data.is_complete) {
+        setIsEditing(true);
+      }
+    },
+    [],
+  );
 
   // ======================================================
   // FETCH
@@ -133,7 +141,6 @@ export const useProviderProfile = () => {
   const fetchProfile = useCallback(async () => {
     try {
       const token = localStorage.getItem("access_token");
-
       const role = localStorage.getItem("user_role");
 
       if (!token || role !== "provider") {
@@ -146,7 +153,9 @@ export const useProviderProfile = () => {
       const data = await getProviderProfile();
 
       if (data.status !== "success") {
-        throw new Error(data.message || "Failed to load profile");
+        throw new Error(
+          data.message || t("toast.loadFailed"),
+        );
       }
 
       populateProfile(data);
@@ -154,25 +163,20 @@ export const useProviderProfile = () => {
       console.error("Provider profile error:", error);
 
       if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        if (error.response?.status === 401 || error.response?.status === 403) {
+        if (
+          error.response?.status === 401 ||
+          error.response?.status === 403
+        ) {
           redirectToLogin();
           return;
         }
-
-        toast.error(error.response?.data?.message || "Failed to load profile");
-
-        return;
       }
 
-      toast.error(
-        lang === "ja"
-          ? "プロフィールの読み込みに失敗しました"
-          : "Failed to load profile",
-      );
+      toast.error(t("toast.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [lang, populateProfile, redirectToLogin]);
+  }, [populateProfile, redirectToLogin, t]);
 
   useEffect(() => {
     void fetchProfile();
@@ -214,7 +218,11 @@ export const useProviderProfile = () => {
   // ======================================================
 
   const handleBlur = useCallback(
-    (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (
+      event: React.FocusEvent<
+        HTMLInputElement | HTMLTextAreaElement
+      >,
+    ) => {
       const { name, value } = event.target;
 
       const field = name as keyof ProviderProfileFormData;
@@ -225,7 +233,11 @@ export const useProviderProfile = () => {
         [field]: true,
       }));
 
-      const error = validateProviderProfileField(field, value, lang);
+      const error = validateProviderProfileField(
+        field,
+        value,
+        t,
+      );
 
       setErrors((previous) => ({
         ...previous,
@@ -233,7 +245,7 @@ export const useProviderProfile = () => {
         [field]: error,
       }));
     },
-    [lang],
+    [t],
   );
 
   // ======================================================
@@ -241,17 +253,15 @@ export const useProviderProfile = () => {
   // ======================================================
 
   const saveProfile = useCallback(async () => {
-    const validation = validateProviderProfile(formData, lang);
+    const validation = validateProviderProfile(
+      formData,
+      t,
+    );
 
     setErrors(validation.errors);
 
     if (!validation.isValid) {
-      toast.error(
-        lang === "ja"
-          ? "入力内容を確認してください"
-          : "Please check your input",
-      );
-
+      toast.error(t("toast.checkInput"));
       return;
     }
 
@@ -261,40 +271,26 @@ export const useProviderProfile = () => {
       const data = await updateProviderProfile(formData);
 
       if (data.status !== "success") {
-        throw new Error(data.message || "Failed to update profile");
+        throw new Error(
+          data.message || t("toast.updateFailed"),
+        );
       }
 
       populateProfile(data);
 
       setTouched({});
-
       setErrors({});
-
       setIsEditing(false);
 
-      toast.success(
-        lang === "ja"
-          ? "会社情報を更新しました"
-          : "Company profile updated successfully",
-      );
+      toast.success(t("toast.updated"));
     } catch (error: unknown) {
       console.error("Provider profile update:", error);
 
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        toast.error(
-          error.response?.data?.message || "Failed to update profile",
-        );
-
-        return;
-      }
-
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update profile",
-      );
+      toast.error(t("toast.updateFailed"));
     } finally {
       setSaving(false);
     }
-  }, [formData, lang, populateProfile]);
+  }, [formData, populateProfile, t]);
 
   // ======================================================
   // CANCEL
@@ -322,9 +318,11 @@ export const useProviderProfile = () => {
 
       contact_person: profile.contact_person || "",
 
-      contact_person_phone: profile.contact_person_phone || "",
+      contact_person_phone:
+        profile.contact_person_phone || "",
 
-      contact_person_email: profile.contact_person_email || "",
+      contact_person_email:
+        profile.contact_person_email || "",
 
       hiring_needs: profile.hiring_needs || "",
 
@@ -332,7 +330,9 @@ export const useProviderProfile = () => {
     });
   };
 
-  const getFieldError = (field: keyof ProviderProfileFormData) => {
+  const getFieldError = (
+    field: keyof ProviderProfileFormData,
+  ) => {
     if (touched[field] || isEditing) {
       return errors[field];
     }
@@ -341,7 +341,9 @@ export const useProviderProfile = () => {
   };
 
   const isFieldMissing = (field: string) =>
-    profileStatus.missingFields.some((item) => item.field === field);
+    profileStatus.missingFields.some(
+      (item) => item.field === field,
+    );
 
   return {
     lang,
