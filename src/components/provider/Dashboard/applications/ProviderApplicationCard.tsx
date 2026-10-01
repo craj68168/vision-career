@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useState } from "react";
 
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useTranslations } from "next-intl";
 
 import {
   Briefcase,
@@ -100,103 +101,25 @@ const formatSalary = (value?: number | null) => {
 // APPLICATION STATUS LABEL
 // ======================================================
 
-const statusLabel = (status: ProviderApplicationStatus, lang: string) => {
-  const labels: Record<
-    ProviderApplicationStatus,
-    {
-      en: string;
-
-      ja: string;
-    }
-  > = {
-    SENT_TO_PROVIDER: {
-      en: "Sent To Provider",
-
-      ja: "企業へ送信済み",
-    },
-
-    UNDER_REVIEW: {
-      en: "Under Review",
-
-      ja: "選考中",
-    },
-
-    INTERVIEW: {
-      en: "Interview",
-
-      ja: "面接",
-    },
-
-    SELECTED: {
-      en: "Selected",
-
-      ja: "選考通過",
-    },
-
-    HIRED: {
-      en: "Hired",
-
-      ja: "採用",
-    },
-
-    REJECTED: {
-      en: "Rejected",
-
-      ja: "不採用",
-    },
-  };
-
-  return lang === "ja" ? labels[status].ja : labels[status].en;
+const APPLICATION_STATUS_KEYS: Record<ProviderApplicationStatus, string> = {
+  SENT_TO_PROVIDER: "statuses.sentToProvider",
+  UNDER_REVIEW: "statuses.underReview",
+  INTERVIEW: "statuses.interview",
+  SELECTED: "statuses.selected",
+  HIRED: "statuses.hired",
+  REJECTED: "statuses.rejected",
 };
 
 // ======================================================
 // DECISION LABEL
 // ======================================================
 
-const decisionLabel = (
-  status: ProviderApplicationDecisionStatus,
-  lang: string,
-) => {
-  const labels: Record<
-    ProviderApplicationDecisionStatus,
-    {
-      en: string;
-
-      ja: string;
-    }
-  > = {
-    UNDER_REVIEW: {
-      en: "Start Review",
-
-      ja: "選考開始",
-    },
-
-    INTERVIEW: {
-      en: "Move to Interview",
-
-      ja: "面接へ進む",
-    },
-
-    SELECTED: {
-      en: "Mark Selected",
-
-      ja: "選考通過",
-    },
-
-    HIRED: {
-      en: "Mark Hired",
-
-      ja: "採用にする",
-    },
-
-    REJECTED: {
-      en: "Reject",
-
-      ja: "不採用",
-    },
-  };
-
-  return lang === "ja" ? labels[status].ja : labels[status].en;
+const DECISION_KEYS: Record<ProviderApplicationDecisionStatus, string> = {
+  UNDER_REVIEW: "actions.startReview",
+  INTERVIEW: "actions.moveToInterview",
+  SELECTED: "actions.markSelected",
+  HIRED: "actions.markHired",
+  REJECTED: "actions.reject",
 };
 
 // ======================================================
@@ -240,94 +163,23 @@ const getNextStatuses = (
 // INTERVIEW METHOD LABEL
 // ======================================================
 
-const interviewMethodLabel = (
-  method: ProviderInterviewMethod,
-  lang: string,
-) => {
-  const labels: Record<
-    ProviderInterviewMethod,
-    {
-      en: string;
-
-      ja: string;
-    }
-  > = {
-    ZOOM: {
-      en: "Zoom",
-
-      ja: "Zoom",
-    },
-
-    GOOGLE_MEET: {
-      en: "Google Meet",
-
-      ja: "Google Meet",
-    },
-
-    PHONE: {
-      en: "Phone",
-
-      ja: "電話",
-    },
-
-    FACE_TO_FACE: {
-      en: "Face-to-Face",
-
-      ja: "対面",
-    },
-
-    OTHER: {
-      en: "Other",
-
-      ja: "その他",
-    },
-  };
-
-  return lang === "ja" ? labels[method].ja : labels[method].en;
+const INTERVIEW_METHOD_KEYS: Record<ProviderInterviewMethod, string> = {
+  ZOOM: "methods.zoom",
+  GOOGLE_MEET: "methods.googleMeet",
+  PHONE: "methods.phone",
+  FACE_TO_FACE: "methods.faceToFace",
+  OTHER: "methods.other",
 };
 
 // ======================================================
 // INTERVIEW STATUS LABEL
 // ======================================================
 
-const interviewStatusLabel = (
-  status: ProviderInterviewStatus,
-  lang: string,
-) => {
-  const labels: Record<
-    ProviderInterviewStatus,
-    {
-      en: string;
-
-      ja: string;
-    }
-  > = {
-    AWAITING_LINK: {
-      en: "Awaiting Meeting Link",
-
-      ja: "リンク待ち",
-    },
-
-    CONFIRMED: {
-      en: "Confirmed",
-
-      ja: "確定",
-    },
-
-    COMPLETED: {
-      en: "Completed",
-
-      ja: "完了",
-    },
-
-    CANCELLED: {
-      en: "Cancelled",
-
-      ja: "キャンセル",
-    },
-  };
-
-  return lang === "ja" ? labels[status].ja : labels[status].en;
+const INTERVIEW_STATUS_KEYS: Record<ProviderInterviewStatus, string> = {
+  AWAITING_LINK: "interviewStatuses.awaitingLink",
+  CONFIRMED: "interviewStatuses.confirmed",
+  COMPLETED: "interviewStatuses.completed",
+  CANCELLED: "interviewStatuses.cancelled",
 };
 
 // ======================================================
@@ -335,6 +187,7 @@ const interviewStatusLabel = (
 // ======================================================
 
 export default function ProviderApplicationCard({ application, lang }: Props) {
+  const t = useTranslations("provider.applications.card");
   const [cardApplication, setCardApplication] =
     useState<ProviderApplication>(application);
 
@@ -430,9 +283,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
       toast.error(
         getErrorMessage(
           error,
-          lang === "ja"
-            ? "応募詳細の読み込みに失敗しました。"
-            : "Failed to load application details.",
+          t("toast.loadDetailsFailed"),
         ),
       );
 
@@ -466,11 +317,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
     const current = details || cardApplication;
 
     if (!current.resume_available) {
-      toast.error(
-        lang === "ja"
-          ? "この応募には履歴書がありません。"
-          : "No resume is available for this application.",
-      );
+      toast.error(t("toast.resumeUnavailable"));
 
       return;
     }
@@ -478,11 +325,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
     const previewWindow = window.open("", "_blank");
 
     if (!previewWindow) {
-      toast.error(
-        lang === "ja"
-          ? "履歴書を開くにはポップアップを許可してください。"
-          : "Please allow pop-ups to open the resume.",
-      );
+      toast.error(t("toast.allowPopups"));
 
       return;
     }
@@ -507,9 +350,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
       toast.error(
         getErrorMessage(
           error,
-          lang === "ja"
-            ? "履歴書を開けませんでした。"
-            : "Failed to open application resume.",
+          t("toast.openResumeFailed"),
         ),
       );
     } finally {
@@ -532,11 +373,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
     }
 
     if (status === "REJECTED") {
-      const confirmed = window.confirm(
-        lang === "ja"
-          ? "この応募を不採用にしますか？"
-          : "Reject this application? This will complete the application as rejected.",
-      );
+      const confirmed = window.confirm(t("confirmReject"));
 
       if (!confirmed) {
         return;
@@ -557,18 +394,12 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
 
       setCardApplication(response.data);
 
-      toast.success(
-        lang === "ja"
-          ? "応募ステータスを更新しました。"
-          : "Application status updated.",
-      );
+      toast.success(t("toast.statusUpdated"));
     } catch (error) {
       toast.error(
         getErrorMessage(
           error,
-          lang === "ja"
-            ? "応募ステータスの更新に失敗しました。"
-            : "Failed to update application status.",
+          t("toast.statusUpdateFailed"),
         ),
       );
     } finally {
@@ -638,27 +469,27 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
             </p>
           </div>
 
-          <ApplicationStatusBadge status={cardApplication.status} lang={lang} />
+          <ApplicationStatusBadge status={cardApplication.status} t={t} />
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryField
-            label={lang === "ja" ? "候補者" : "Candidate"}
+            label={t("fields.candidate")}
             value={cardApplication.applicant?.name}
           />
 
           <SummaryField
-            label={lang === "ja" ? "国籍" : "Nationality"}
+            label={t("fields.nationality")}
             value={cardApplication.applicant?.nationality}
           />
 
           <SummaryField
-            label={lang === "ja" ? "日本語" : "Japanese"}
+            label={t("fields.japanese")}
             value={cardApplication.applicant?.japanese_level}
           />
 
           <SummaryField
-            label={lang === "ja" ? "応募日" : "Applied"}
+            label={t("fields.applied")}
             value={formatDate(cardApplication.applied_at)}
           />
         </div>
@@ -671,7 +502,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
           >
             <Eye className="h-4 w-4" />
 
-            {lang === "ja" ? "詳細を見る" : "View Details"}
+            {t("viewDetails")}
           </button>
         </div>
       </article>
@@ -685,7 +516,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
           <button
             type="button"
             className="absolute inset-0"
-            aria-label="Close application details"
+            aria-label={t("closeDetails")}
             onClick={closeDetails}
           />
 
@@ -695,7 +526,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
             <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5 md:px-8">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-                  {lang === "ja" ? "応募詳細" : "Application Details"}
+                  {t("title")}
                 </p>
 
                 <h2 className="mt-1 text-2xl font-bold text-slate-950">
@@ -708,7 +539,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
               </div>
 
               <div className="flex items-center gap-3">
-                <ApplicationStatusBadge status={current.status} lang={lang} />
+                <ApplicationStatusBadge status={current.status} t={t} />
 
                 <button
                   type="button"
@@ -729,9 +560,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                     <Loader2 className="mx-auto h-8 w-8 animate-spin text-slate-400" />
 
                     <p className="mt-3 text-sm text-slate-500">
-                      {lang === "ja"
-                        ? "応募詳細を読み込み中..."
-                        : "Loading application details..."}
+                      {t("loadingDetails")}
                     </p>
                   </div>
                 </div>
@@ -741,38 +570,36 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
 
                   <DetailsSection
                     icon={<Briefcase className="h-5 w-5" />}
-                    title={lang === "ja" ? "求人情報" : "Vacancy"}
+                    title={t("sections.vacancy")}
                   >
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       <InfoField
-                        label={lang === "ja" ? "職種" : "Position"}
+                        label={t("fields.position")}
                         value={current.vacancy?.title}
                       />
 
                       <InfoField
-                        label={lang === "ja" ? "会社" : "Company"}
+                        label={t("fields.company")}
                         value={current.vacancy?.companyName}
                       />
 
                       <InfoField
-                        label={lang === "ja" ? "雇用形態" : "Employment"}
+                        label={t("fields.employment")}
                         value={current.vacancy?.employmentType}
                       />
 
                       <InfoField
-                        label={lang === "ja" ? "勤務地" : "Location"}
+                        label={t("fields.location")}
                         value={current.vacancy?.workLocation}
                       />
 
                       <InfoField
-                        label={
-                          lang === "ja" ? "日本語要件" : "Required Japanese"
-                        }
+                        label={t("fields.requiredJapanese")}
                         value={current.vacancy?.japaneseLevel}
                       />
 
                       <InfoField
-                        label={lang === "ja" ? "募集人数" : "Openings"}
+                        label={t("fields.openings")}
                         value={
                           current.vacancy?.numberOfPeople !== undefined
                             ? String(current.vacancy.numberOfPeople)
@@ -781,7 +608,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                       />
 
                       <InfoField
-                        label={lang === "ja" ? "最低給与" : "Salary Min"}
+                        label={t("fields.salaryMin")}
                         value={
                           current.vacancy?.salaryMin !== null &&
                           current.vacancy?.salaryMin !== undefined
@@ -791,7 +618,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                       />
 
                       <InfoField
-                        label={lang === "ja" ? "最高給与" : "Salary Max"}
+                        label={t("fields.salaryMax")}
                         value={
                           current.vacancy?.salaryMax !== null &&
                           current.vacancy?.salaryMax !== undefined
@@ -801,7 +628,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                       />
 
                       <InfoField
-                        label={lang === "ja" ? "応募日" : "Applied"}
+                        label={t("fields.applied")}
                         value={formatDate(current.applied_at)}
                       />
                     </div>
@@ -811,52 +638,48 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
 
                   <DetailsSection
                     icon={<UserRound className="h-5 w-5" />}
-                    title={
-                      lang === "ja" ? "候補者プロフィール" : "Candidate Profile"
-                    }
+                    title={t("sections.candidateProfile")}
                   >
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       <InfoField
-                        label={lang === "ja" ? "氏名" : "Name"}
+                        label={t("fields.name")}
                         value={current.applicant?.name}
                       />
 
                       <InfoField
-                        label={lang === "ja" ? "国籍" : "Nationality"}
+                        label={t("fields.nationality")}
                         value={current.applicant?.nationality}
                       />
 
                       <InfoField
-                        label={lang === "ja" ? "在留資格" : "Visa"}
+                        label={t("fields.visa")}
                         value={current.applicant?.visa_type}
                       />
 
                       <InfoField
-                        label={lang === "ja" ? "在留期限" : "Visa Expiry"}
+                        label={t("fields.visaExpiry")}
                         value={formatDate(current.applicant?.visa_expiry_date)}
                       />
 
                       <InfoField
-                        label={lang === "ja" ? "日本語" : "Japanese"}
+                        label={t("fields.japanese")}
                         value={current.applicant?.japanese_level}
                       />
 
                       <InfoField
-                        label={lang === "ja" ? "希望職種" : "Desired Job"}
+                        label={t("fields.desiredJob")}
                         value={current.applicant?.desired_job}
                       />
 
                       <InfoField
-                        label={
-                          lang === "ja" ? "希望勤務地" : "Desired Location"
-                        }
+                        label={t("fields.desiredLocation")}
                         value={current.applicant?.desired_location}
                       />
                     </div>
 
                     <div className="mt-5">
                       <p className="text-sm font-semibold text-slate-900">
-                        {lang === "ja" ? "スキル" : "Skills"}
+                        {t("sections.skills")}
                       </p>
 
                       {current.applicant?.skills?.length ? (
@@ -881,7 +704,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                   <div className="grid gap-6 lg:grid-cols-2">
                     <DetailsSection
                       icon={<GraduationCap className="h-5 w-5" />}
-                      title={lang === "ja" ? "学歴" : "Education"}
+                      title={t("sections.education")}
                     >
                       {current.applicant?.education?.length ? (
                         <div className="space-y-3">
@@ -919,7 +742,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
 
                     <DetailsSection
                       icon={<Briefcase className="h-5 w-5" />}
-                      title={lang === "ja" ? "職歴" : "Employment History"}
+                      title={t("sections.employmentHistory")}
                     >
                       {current.applicant?.employment_history?.length ? (
                         <div className="space-y-3">
@@ -944,9 +767,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
 
                                   {employment.end_date
                                     ? formatDate(employment.end_date)
-                                    : lang === "ja"
-                                      ? "現在"
-                                      : "Present"}
+                                    : t("present")}
                                 </p>
                               </div>
                             ),
@@ -962,22 +783,16 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
 
                   <DetailsSection
                     icon={<FileText className="h-5 w-5" />}
-                    title={
-                      lang === "ja" ? "応募時の履歴書" : "Professional Resume"
-                    }
+                    title={t("sections.resume")}
                   >
                     <div className="flex flex-col gap-4 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="font-semibold text-slate-900">
-                          {lang === "ja"
-                            ? "応募時に保存された履歴書"
-                            : "Frozen application resume"}
+                          {t("resume.title")}
                         </p>
 
                         <p className="mt-1 text-sm text-slate-500">
-                          {lang === "ja"
-                            ? "応募時点の候補者情報を保存した履歴書です。"
-                            : "This resume preserves the candidate information from the time of application."}
+                          {t("resume.description")}
                         </p>
                       </div>
 
@@ -993,13 +808,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                           <Eye className="h-4 w-4" />
                         )}
 
-                        {loadingResume
-                          ? lang === "ja"
-                            ? "開いています..."
-                            : "Opening..."
-                          : lang === "ja"
-                            ? "履歴書を見る"
-                            : "View Resume"}
+                        {loadingResume ? t("opening") : t("viewResume")}
                       </button>
                     </div>
                   </DetailsSection>
@@ -1009,7 +818,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                   {current.status === "INTERVIEW" && (
                     <DetailsSection
                       icon={<CalendarDays className="h-5 w-5" />}
-                      title={lang === "ja" ? "面接情報" : "Interview Schedule"}
+                      title={t("sections.interview")}
                     >
                       {loadingInterview ? (
                         <div className="flex min-h-28 items-center justify-center">
@@ -1021,7 +830,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                             <div>
                               <InterviewStatusBadge
                                 status={interview.status}
-                                lang={lang}
+                                t={t}
                               />
 
                               <p className="mt-3 text-sm text-slate-500">
@@ -1038,37 +847,30 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                                 >
                                   <Pencil className="h-4 w-4" />
 
-                                  {lang === "ja"
-                                    ? "面接情報を編集"
-                                    : "Edit Schedule"}
+                                  {t("editSchedule")}
                                 </button>
                               )}
                           </div>
 
                           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <InfoField
-                              label={lang === "ja" ? "面接日" : "Date"}
+                              label={t("interview.date")}
                               value={formatDate(interview.interviewDate)}
                             />
 
                             <InfoField
-                              label={lang === "ja" ? "時間" : "Time"}
+                              label={t("interview.time")}
                               value={interview.interviewTime}
                             />
 
                             <InfoField
-                              label={
-                                lang === "ja" ? "タイムゾーン" : "Timezone"
-                              }
+                              label={t("interview.timezone")}
                               value={interview.timezone}
                             />
 
                             <InfoField
-                              label={lang === "ja" ? "面接方法" : "Method"}
-                              value={interviewMethodLabel(
-                                interview.interviewMethod,
-                                lang,
-                              )}
+                              label={t("interview.method")}
+                              value={t(INTERVIEW_METHOD_KEYS[interview.interviewMethod])}
                             />
                           </div>
 
@@ -1077,9 +879,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                               <div className="flex items-center gap-2 text-sm font-semibold text-indigo-900">
                                 <Link2 className="h-4 w-4" />
 
-                                {lang === "ja"
-                                  ? "ミーティングリンク"
-                                  : "Meeting Link"}
+                                {t("interview.meetingLink")}
                               </div>
 
                               <a
@@ -1095,16 +895,14 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
 
                           {interview.status === "AWAITING_LINK" && (
                             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-700">
-                              {lang === "ja"
-                                ? "オンライン面接のリンクがまだ登録されていません。リンクを追加すると面接が確定し、候補者へ通知されます。"
-                                : "The online meeting link has not been added yet. Add the link to confirm the interview and notify the candidate."}
+                              {t("interview.awaitingLinkNotice")}
                             </div>
                           )}
 
                           {interview.notes && (
                             <div className="rounded-2xl bg-slate-50 p-4">
                               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                {lang === "ja" ? "重要事項" : "Important Notes"}
+                                {t("interview.notes")}
                               </p>
 
                               <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
@@ -1115,9 +913,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                         </div>
                       ) : (
                         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
-                          {lang === "ja"
-                            ? "面接ステータスですが、面接情報が見つかりませんでした。"
-                            : "The application is in Interview status, but no interview schedule was found."}
+                          {t("interview.notFound")}
                         </div>
                       )}
                     </DetailsSection>
@@ -1127,19 +923,17 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
 
                   <DetailsSection
                     icon={<Languages className="h-5 w-5" />}
-                    title={
-                      lang === "ja" ? "応募ステータス" : "Application Status"
-                    }
+                    title={t("sections.applicationStatus")}
                   >
                     <div className="rounded-2xl bg-slate-50 p-4">
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-xs uppercase tracking-wide text-slate-500">
-                            {lang === "ja" ? "現在の状態" : "Current Status"}
+                            {t("currentStatus")}
                           </p>
 
                           <p className="mt-1 font-semibold text-slate-900">
-                            {statusLabel(current.status, lang)}
+                            {t(APPLICATION_STATUS_KEYS[current.status])}
                           </p>
                         </div>
 
@@ -1155,9 +949,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                             >
                               <Video className="h-4 w-4" />
 
-                              {lang === "ja"
-                                ? "面接を設定"
-                                : "Schedule Interview"}
+                              {t("scheduleInterview")}
                             </button>
                           )}
 
@@ -1173,11 +965,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                                   : "rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
                               }
                             >
-                              {updatingStatus === nextStatus
-                                ? lang === "ja"
-                                  ? "更新中..."
-                                  : "Updating..."
-                                : decisionLabel(nextStatus, lang)}
+                              {updatingStatus === nextStatus ? t("updating") : t(DECISION_KEYS[nextStatus])}
                             </button>
                           ))}
                         </div>
@@ -1185,9 +973,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
 
                       {current.status === "UNDER_REVIEW" && (
                         <p className="mt-3 text-sm leading-6 text-slate-500">
-                          {lang === "ja"
-                            ? "面接へ進む場合は、面接日時と方法を設定してください。"
-                            : "To move this candidate to Interview, schedule the interview date, time, and method first."}
+                          {t("interviewRequiredNotice")}
                         </p>
                       )}
 
@@ -1195,9 +981,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                         current.status !== "UNDER_REVIEW" &&
                         current.status !== "INTERVIEW" && (
                           <p className="mt-3 text-sm text-slate-500">
-                            {lang === "ja"
-                              ? "この応募は完了しています。"
-                              : "This application has reached a final status."}
+                            {t("finalStatusNotice")}
                           </p>
                         )}
                     </div>
@@ -1214,7 +998,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                 onClick={closeDetails}
                 className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
-                {lang === "ja" ? "閉じる" : "Close"}
+                {t("close")}
               </button>
             </div>
           </div>
@@ -1319,11 +1103,11 @@ function DetailsSection({
 
 function ApplicationStatusBadge({
   status,
-  lang,
+  t,
 }: {
   status: ProviderApplicationStatus;
 
-  lang: string;
+  t: ReturnType<typeof useTranslations>;
 }) {
   let classes = "bg-slate-100 text-slate-700";
 
@@ -1355,7 +1139,7 @@ function ApplicationStatusBadge({
     <span
       className={`h-fit rounded-full px-3 py-1 text-xs font-semibold ${classes}`}
     >
-      {statusLabel(status, lang)}
+      {t(APPLICATION_STATUS_KEYS[status])}
     </span>
   );
 }
@@ -1366,11 +1150,11 @@ function ApplicationStatusBadge({
 
 function InterviewStatusBadge({
   status,
-  lang,
+  t,
 }: {
   status: ProviderInterviewStatus;
 
-  lang: string;
+  t: ReturnType<typeof useTranslations>;
 }) {
   let classes = "bg-slate-100 text-slate-700";
 
@@ -1394,7 +1178,7 @@ function InterviewStatusBadge({
     <span
       className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${classes}`}
     >
-      {interviewStatusLabel(status, lang)}
+      {t(INTERVIEW_STATUS_KEYS[status])}
     </span>
   );
 }

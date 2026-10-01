@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
 import toast from "react-hot-toast";
+import { useTranslations } from "next-intl";
 
 import { closeProviderVacancy, getProviderVacancies } from "./api";
 
@@ -21,11 +22,12 @@ type Props = {
 };
 
 export const useVacancies = ({
-  lang,
   refreshVersion,
   createSignal,
   onDataChanged,
 }: Props) => {
+  const t = useTranslations("provider.vacancies.list");
+
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
 
   const [search, setSearch] = useState("");
@@ -65,18 +67,11 @@ export const useVacancies = ({
 
       setVacancies(Array.isArray(response.data) ? response.data : []);
     } catch (error: unknown) {
-      toast.error(
-        getErrorMessage(
-          error,
-          lang === "ja"
-            ? "求人情報の読み込みに失敗しました。"
-            : "Failed to load vacancies.",
-        ),
-      );
+      toast.error(getErrorMessage(error, t("toast.loadFailed")));
     } finally {
       setLoading(false);
     }
-  }, [lang]);
+  }, [t]);
 
   useEffect(() => {
     void loadVacancies();
@@ -229,19 +224,13 @@ export const useVacancies = ({
 
   const handleCloseVacancy = async (vacancy: Vacancy) => {
     if (vacancy.status !== "published") {
-      toast.error(
-        lang === "ja"
-          ? "公開中の求人のみ終了できます"
-          : "Only published vacancies can be closed.",
-      );
+      toast.error(t("toast.onlyPublishedCanClose"));
 
       return;
     }
 
     const confirmed = window.confirm(
-      lang === "ja"
-        ? `「${vacancy.title}」の掲載を終了しますか？`
-        : `Close "${vacancy.title}"? It will no longer appear to job seekers.`,
+      t("toast.confirmClose", { title: vacancy.title }),
     );
 
     if (!confirmed) {
@@ -251,24 +240,13 @@ export const useVacancies = ({
     try {
       await closeProviderVacancy(vacancy.vacancyId);
 
-      toast.success(
-        lang === "ja"
-          ? "求人の掲載を終了しました"
-          : "Vacancy closed successfully.",
-      );
+      toast.success(t("toast.closed"));
 
       await loadVacancies();
 
       await onDataChanged();
     } catch (error: unknown) {
-      toast.error(
-        getErrorMessage(
-          error,
-          lang === "ja"
-            ? "求人の終了に失敗しました"
-            : "Failed to close vacancy.",
-        ),
-      );
+      toast.error(getErrorMessage(error, t("toast.closeFailed")));
     }
   };
 

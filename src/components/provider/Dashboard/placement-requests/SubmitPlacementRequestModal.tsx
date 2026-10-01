@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Send, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { PlacementRequest } from "./types";
 
@@ -23,6 +24,8 @@ export default function SubmitPlacementRequestModal({
   onClose,
   onSubmit,
 }: Props) {
+  const t = useTranslations("provider.placementRequests.submitModal");
+
   if (!open || !request) {
     return null;
   }
@@ -43,13 +46,13 @@ export default function SubmitPlacementRequestModal({
         </div>
 
         <h2 className="mt-5 text-xl font-bold">
-          {resubmit ? "Resubmit Placement Request" : "Submit for Review"}
+          {resubmit ? t("resubmitTitle") : t("submitTitle")}
         </h2>
 
         <p className="mt-2 text-sm leading-6 text-slate-500">
           {resubmit
-            ? "Send this updated request back to Admin for another review."
-            : "Once submitted, you cannot edit or delete this request while Admin is reviewing it."}
+            ? t("resubmitDescription")
+            : t("submitDescription")}
         </p>
 
         <div className="mt-4 rounded-xl bg-slate-50 p-4">
@@ -65,7 +68,7 @@ export default function SubmitPlacementRequestModal({
             onClick={onClose}
             className="rounded-xl border px-4 py-2.5"
           >
-            Cancel
+            {t("cancel")}
           </button>
 
           <button
@@ -80,7 +83,7 @@ export default function SubmitPlacementRequestModal({
               <Send className="h-4 w-4" />
             )}
 
-            {resubmit ? "Resubmit" : "Submit for Review"}
+            {resubmit ? t("resubmit") : t("submit")}
           </button>
         </div>
       </div>

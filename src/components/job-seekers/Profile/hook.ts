@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import axios from "axios";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
@@ -51,7 +52,11 @@ const initialFormData: ProfileFormData = {
 
 export const useJobSeekerProfile = () => {
   const { lang } = useLanguage();
+  const t = useTranslations("jobSeeker.profile");
   const router = useRouter();
+  const openInEditMode =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("edit") === "1";
 
   const [profile, setProfile] = useState<JobSeekerProfile | null>(null);
 
@@ -94,7 +99,11 @@ export const useJobSeekerProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   const populateProfile = useCallback(
-    (data: Awaited<ReturnType<typeof getJobSeekerProfile>>) => {
+    (
+      data: Awaited<ReturnType<typeof getJobSeekerProfile>>,
+      forceReadOnly = false,
+      options: { preserveDraft?: boolean } = {},
+    ) => {
       setProfile(data.profile);
 
       setProfileStatus({
@@ -103,61 +112,61 @@ export const useJobSeekerProfile = () => {
         missingFields: data.missing_fields || [],
       });
 
-      setEducation(
-        (data.education || []).map((record) => ({
-          ...record,
+      if (!options.preserveDraft) {
+        setEducation(
+          (data.education || []).map((record) => ({
+            ...record,
 
-          enrollment_date: formatDateForInput(record.enrollment_date),
+            enrollment_date: formatDateForInput(record.enrollment_date),
 
-          graduation_date: formatDateForInput(record.graduation_date),
-        })),
-      );
+            graduation_date: formatDateForInput(record.graduation_date),
+          })),
+        );
 
-      setEmploymentHistory(
-        (data.employment_history || []).map((record) => ({
-          ...record,
+        setEmploymentHistory(
+          (data.employment_history || []).map((record) => ({
+            ...record,
 
-          start_date: formatDateForInput(record.start_date),
+            start_date: formatDateForInput(record.start_date),
 
-          end_date: formatDateForInput(record.end_date),
-        })),
-      );
+            end_date: formatDateForInput(record.end_date),
+          })),
+        );
 
-      setFormData({
-        phone: data.profile.phone || "",
-        address: data.profile.address || "",
+        setFormData({
+          phone: data.profile.phone || "",
+          address: data.profile.address || "",
 
-        date_of_birth: formatDateForInput(data.profile.date_of_birth),
+          date_of_birth: formatDateForInput(data.profile.date_of_birth),
 
-        gender: data.profile.gender || "",
+          gender: data.profile.gender || "",
 
-        nationality: data.profile.nationality || "",
+          nationality: data.profile.nationality || "",
 
-        visa_type: data.profile.visa_type || "",
+          visa_type: data.profile.visa_type || "",
 
-        visa_expiry_date: formatDateForInput(data.profile.visa_expiry_date),
+          visa_expiry_date: formatDateForInput(data.profile.visa_expiry_date),
 
-        japanese_level: data.profile.japanese_level || "",
+          japanese_level: data.profile.japanese_level || "",
 
-        skills: (data.profile.skills || []).join(", "),
+          skills: (data.profile.skills || []).join(", "),
 
-        desired_job: data.profile.desired_job || "",
+          desired_job: data.profile.desired_job || "",
 
-        desired_location: data.profile.desired_location || "",
+          desired_location: data.profile.desired_location || "",
 
-        available_from: formatDateForInput(data.profile.available_from),
+          available_from: formatDateForInput(data.profile.available_from),
 
-        notes: data.profile.notes || "",
-      });
+          notes: data.profile.notes || "",
+        });
 
-      if (!data.is_complete) {
-        setIsEditing(true);
+        setIsEditing(!forceReadOnly && (!data.is_complete || openInEditMode));
       }
     },
-    [],
+    [openInEditMode],
   );
 
-  const fetchProfile = useCallback(async () => {
+  const fetchProfile = useCallback(async (forceReadOnly = false) => {
     try {
       const token = localStorage.getItem("access_token");
 
@@ -177,7 +186,7 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to load profile");
       }
 
-      populateProfile(data);
+      populateProfile(data, forceReadOnly);
     } catch (error: unknown) {
       console.error("Error fetching profile:", error);
 
@@ -473,7 +482,7 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to upload profile photo");
       }
 
-      populateProfile(data);
+      populateProfile(data, false, { preserveDraft: true });
 
       toast.success(
         lang === "ja"
@@ -542,7 +551,7 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to upload resume");
       }
 
-      populateProfile(data);
+      populateProfile(data, false, { preserveDraft: true });
 
       toast.success(
         lang === "ja"
@@ -585,30 +594,19 @@ export const useJobSeekerProfile = () => {
 
       await fetchProfile();
 
-      toast.success(
-        lang === "ja"
-          ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã‚’ä½œæˆã—ã¾ã—ãŸ"
-          : "Generated resume created successfully",
-      );
+      toast.success(t("generatedResumeCreated"));
     } catch (error: unknown) {
       console.error("Generated resume error:", error);
 
       if (axios.isAxiosError<ApiErrorResponse>(error)) {
         toast.error(
-          error.response?.data?.message ||
-            (lang === "ja"
-              ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ"
-              : "Failed to generate resume"),
+          error.response?.data?.message || t("generatedResumeCreateFailed"),
         );
 
         return;
       }
 
-      toast.error(
-        lang === "ja"
-          ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã®ä½œæˆã«å¤±æ•—ã—ã¾ã—ãŸ"
-          : "Failed to generate resume",
-      );
+      toast.error(t("generatedResumeCreateFailed"));
     } finally {
       setGeneratingResume(false);
     }
@@ -629,20 +627,13 @@ export const useJobSeekerProfile = () => {
 
       if (axios.isAxiosError<ApiErrorResponse>(error)) {
         toast.error(
-          error.response?.data?.message ||
-            (lang === "ja"
-              ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã‚’è¡¨ç¤ºã§ãã¾ã›ã‚“"
-              : "Generated resume is not available"),
+          error.response?.data?.message || t("generatedResumeUnavailable"),
         );
 
         return;
       }
 
-      toast.error(
-        lang === "ja"
-          ? "è‡ªå‹•ç”Ÿæˆå±¥æ­´æ›¸ã‚’è¡¨ç¤ºã§ãã¾ã›ã‚“"
-          : "Generated resume is not available",
-      );
+      toast.error(t("generatedResumeUnavailable"));
     } finally {
       setViewingGeneratedResume(false);
     }
@@ -724,7 +715,7 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to upload document");
       }
 
-      populateProfile(data);
+      populateProfile(data, false, { preserveDraft: true });
 
       toast.success(
         lang === "ja"
@@ -789,7 +780,7 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to remove document");
       }
 
-      populateProfile(data);
+      populateProfile(data, false, { preserveDraft: true });
 
       toast.success(
         lang === "ja" ? "書類を削除しました" : "Document removed successfully",
@@ -826,8 +817,11 @@ export const useJobSeekerProfile = () => {
     setErrors({});
     setTouched({});
     setIsEditing(false);
+    router.replace(
+      lang === "ja" ? "/job-seekers/profile" : "/en/job-seekers/profile",
+    );
 
-    await fetchProfile();
+    await fetchProfile(true);
   };
 
   const getFieldError = (field: keyof ProfileFormData) => {

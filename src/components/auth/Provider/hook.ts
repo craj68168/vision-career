@@ -5,6 +5,7 @@ import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -34,8 +35,20 @@ const initialLoginData: ProviderLoginData = {
 
 export const useProviderAuth = () => {
   const router = useRouter();
+  const t = useTranslations("providerAuth");
 
   const { lang } = useLanguage();
+
+  const validationMessages = {
+    contactPersonRequired: t("validation.contactPersonRequired"),
+    contactPersonMin: t("validation.contactPersonMin"),
+    companyNameRequired: t("validation.companyNameRequired"),
+    companyNameMin: t("validation.companyNameMin"),
+    emailRequired: t("validation.emailRequired"),
+    emailInvalid: t("validation.emailInvalid"),
+    passwordRequired: t("validation.passwordRequired"),
+    passwordMin: t("validation.passwordMin"),
+  };
 
   // ======================================================
   // MODE
@@ -67,21 +80,14 @@ export const useProviderAuth = () => {
 
   const getErrorMessage = (error: unknown) => {
     if (axios.isAxiosError<ApiErrorResponse>(error)) {
-      return (
-        error.response?.data?.message ||
-        (lang === "ja"
-          ? "処理中にエラーが発生しました"
-          : "Something went wrong")
-      );
+      return error.response?.data?.message || t("toast.genericError");
     }
 
     if (error instanceof Error) {
       return error.message;
     }
 
-    return lang === "ja"
-      ? "処理中にエラーが発生しました"
-      : "Something went wrong";
+    return t("toast.genericError");
   };
 
   // ======================================================
@@ -139,7 +145,10 @@ export const useProviderAuth = () => {
   // ======================================================
 
   const handleRegister = async () => {
-    const validationErrors = validateProviderRegister(registerData, lang);
+    const validationErrors = validateProviderRegister(
+      registerData,
+      validationMessages,
+    );
 
     setErrors(validationErrors);
 
@@ -162,12 +171,7 @@ export const useProviderAuth = () => {
 
       const response = await registerProvider(payload);
 
-      toast.success(
-        response.message ||
-          (lang === "ja"
-            ? "企業登録が完了しました"
-            : "Provider registration successful"),
-      );
+      toast.success(response.message || t("toast.registrationSuccessful"));
 
       // Reset registration form
       setRegisterData(initialRegisterData);
@@ -196,7 +200,10 @@ export const useProviderAuth = () => {
   // ======================================================
 
   const handleLogin = async () => {
-    const validationErrors = validateProviderLogin(loginData, lang);
+    const validationErrors = validateProviderLogin(
+      loginData,
+      validationMessages,
+    );
 
     setErrors(validationErrors);
 
@@ -216,7 +223,7 @@ export const useProviderAuth = () => {
       const response = await loginProvider(payload);
 
       if (!response.token) {
-        throw new Error(response.message || "Login failed");
+        throw new Error(response.message || t("toast.loginFailed"));
       }
 
       // --------------------------------------------------
@@ -231,10 +238,7 @@ export const useProviderAuth = () => {
       // Useful later for UI/dashboard.
       localStorage.setItem("provider_register_id", response.user.registerId);
 
-      toast.success(
-        response.message ||
-          (lang === "ja" ? "ログインしました" : "Login successful"),
-      );
+      toast.success(response.message || t("toast.loginSuccessful"));
 
       // Clear password from state
       setLoginData((previous) => ({

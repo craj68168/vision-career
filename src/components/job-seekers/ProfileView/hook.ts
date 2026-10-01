@@ -88,11 +88,7 @@ export const useJobSeekerProfileView = () => {
 
   const editProfile = () => {
     router.push(
-      lang === "ja" ? "/job-seekers/profile" : "/en/job-seekers/profile",
-
-      //     ? "/job-seekers/profile?edit=1"
-      // : "/en/job-seekers/profile?edit=1",
-
+      lang === "ja" ? "/job-seekers/profile?edit=1" : "/en/job-seekers/profile?edit=1",
     );
   };
 

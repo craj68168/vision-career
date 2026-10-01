@@ -1,6 +1,11 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
+  CircleAlert,
+  CircleCheck,
+  ClipboardList,
+  Clock,
   Eye,
   MapPin,
   Pencil,
@@ -11,29 +16,54 @@ import {
   Trash2,
   UserRound,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { usePlacementRequests } from "./hook";
-
 import PlacementRequestModal from "./PlacementRequestModal";
-
 import PlacementRequestDetailsModal from "./PlacementRequestDetailsModal";
-
 import EditPlacementRequestModal from "./EditPlacementRequestModal";
-
 import DeletePlacementRequestModal from "./DeletePlacementRequestModal";
-
 import SubmitPlacementRequestModal from "./SubmitPlacementRequestModal";
-
 import PlacementCandidatesModal from "./PlacementCandidatesModal";
 
 import type { PlacementRequestStatus } from "./types";
 
 type Props = {
   lang: string;
-
   refreshVersion: number;
-
   onDataChanged: () => void | Promise<void>;
+};
+
+// Shared tokens: keep in sync with vacancies.tsx / provider-dashboard.tsx
+const PANEL = "rounded-[14px] bg-white/70 ring-1 ring-black/5";
+
+const FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800/50 focus-visible:ring-offset-1";
+
+const BTN = `inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-[12px] px-3.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${FOCUS}`;
+
+const BTN_PRIMARY = `${BTN} bg-teal-800 text-white ring-1 ring-teal-800 hover:bg-teal-700`;
+
+const BTN_SECONDARY = `${BTN} bg-white/80 text-slate-700 ring-1 ring-black/10 hover:bg-white hover:text-slate-900`;
+
+const BTN_DANGER = `${BTN} bg-white/80 text-red-700 ring-1 ring-red-200 hover:bg-red-50`;
+
+const CONTROL =
+  "w-full rounded-[12px] bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-800/50 disabled:cursor-not-allowed disabled:bg-slate-900/[0.03] disabled:text-slate-500";
+
+const railFor = (status: string) => {
+  if (status === "approved") return "bg-emerald-600";
+  if (status === "pending_review" || status === "draft") return "bg-amber-600";
+  if (status === "rejected") return "bg-red-700";
+  return "bg-slate-400";
+};
+
+const labelToneFor = (status: string) => {
+  if (status === "approved") return "text-emerald-700";
+  if (status === "pending_review" || status === "draft")
+    return "text-amber-700";
+  if (status === "rejected") return "text-red-700";
+  return "text-slate-500";
 };
 
 const canEdit = (status: PlacementRequestStatus) =>
@@ -50,77 +80,45 @@ export default function PlacementRequests({
   refreshVersion,
   onDataChanged,
 }: Props) {
+  const t = useTranslations("provider.placementRequests.list");
+
   const {
     loading,
-
     refreshing,
-
     search,
-
     setSearch,
-
     filteredPlacementRequests,
-
     placementCandidateCounts,
-
     placementRequestOpen,
-
     openPlacementRequest,
-
     closePlacementRequest,
-
     handlePlacementCreated,
-
     viewPlacementRequest,
-
     openPlacementRequestView,
-
     closePlacementRequestView,
-
     editPlacementRequest,
-
     openPlacementRequestEdit,
-
     closePlacementRequestEdit,
-
     handlePlacementRequestUpdate,
-
     deletePlacementRequestTarget,
-
     openPlacementRequestDelete,
-
     closePlacementRequestDelete,
-
     handlePlacementRequestDelete,
-
     submitPlacementRequestTarget,
-
     openPlacementRequestSubmit,
-
     closePlacementRequestSubmit,
-
     handlePlacementRequestSubmit,
-
     placementActionLoading,
-
     candidateRequest,
-
     candidateRequestCandidates,
-
     openPlacementCandidates,
-
     closePlacementCandidates,
-
     candidateActionId,
-
     handlePlacementCandidateStatus,
-
     refresh,
   } = usePlacementRequests({
     lang,
-
     refreshVersion,
-
     onDataChanged,
   });
 
@@ -129,65 +127,74 @@ export default function PlacementRequests({
       <section className="mt-8">
         <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full lg:max-w-md">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+              aria-hidden="true"
+            />
 
             <input
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder={
-                lang === "ja"
-                  ? "採用依頼を検索..."
-                  : "Search placement requests..."
-              }
-              className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm outline-none transition focus:border-blue-400"
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
+              className={`${CONTROL} pl-10`}
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               disabled={refreshing}
               onClick={() => void refresh()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700"
+              className={BTN_SECONDARY}
             >
               <RefreshCw
-                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                className={`h-4 w-4 shrink-0 text-slate-500 ${refreshing ? "animate-spin" : ""}`}
+                aria-hidden="true"
               />
-
-              {lang === "ja" ? "更新" : "Refresh"}
+              {t("refresh")}
             </button>
 
             <button
               type="button"
               onClick={openPlacementRequest}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white"
+              className={BTN_PRIMARY}
             >
-              <Plus className="h-4 w-4" />
-
-              {lang === "ja" ? "新しい採用依頼" : "New Placement Request"}
+              <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {t("newPlacementRequest")}
             </button>
           </div>
         </div>
 
         {loading ? (
-          <div className="rounded-3xl border border-slate-200 bg-white py-16 text-center text-sm text-slate-500">
-            {lang === "ja"
-              ? "採用依頼を読み込み中..."
-              : "Loading placement requests..."}
+          <div
+            role="status"
+            className={`flex flex-col items-center gap-3 py-16 ${PANEL}`}
+          >
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/80 ring-1 ring-black/5">
+              <RefreshCw
+                className="h-5 w-5 animate-spin text-teal-800"
+                aria-hidden="true"
+              />
+            </div>
+            <p className="text-sm text-slate-500">{t("loading")}</p>
           </div>
         ) : filteredPlacementRequests.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-            <h3 className="text-xl font-semibold text-slate-900">
-              {lang === "ja"
-                ? "採用依頼はまだありません"
-                : "No placement requests"}
-            </h3>
+          <div
+            className={`flex flex-col items-center px-6 py-14 text-center ${PANEL}`}
+          >
+            <div
+              aria-hidden="true"
+              className="grid h-12 w-12 place-items-center rounded-2xl bg-teal-50 ring-1 ring-teal-200/70"
+            >
+              <ClipboardList className="h-5 w-5 text-teal-700" />
+            </div>
 
-            <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-              {lang === "ja"
-                ? "候補者の紹介を希望する場合は採用依頼を作成してください。"
-                : "Create a placement request when you want Admin to source candidates for your company."}
+            <h3 className="mt-4 text-base font-semibold">{t("emptyTitle")}</h3>
+
+            <p className="mx-auto mt-1.5 max-w-md text-sm text-slate-500">
+              {t("emptyDescription")}
             </p>
           </div>
         ) : (
@@ -195,140 +202,147 @@ export default function PlacementRequests({
             {filteredPlacementRequests.map((request) => {
               const candidateCount =
                 placementCandidateCounts[request.recruitId] ?? 0;
+              const status = String(request.status ?? "").toLowerCase();
 
               return (
                 <article
                   key={request.recruitId}
-                  className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+                  className={`relative overflow-hidden p-5 pl-6 transition-shadow hover:ring-black/10 sm:p-6 sm:pl-7 ${PANEL}`}
                 >
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-xs text-slate-400">
-                        {request.recruitId}
-                      </p>
+                  <span
+                    aria-hidden="true"
+                    className={`absolute inset-y-0 left-0 w-1.5 ${railFor(status)}`}
+                  />
 
-                      <h3 className="mt-1 text-lg font-semibold text-slate-900">
+                  {/* Summary */}
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="min-w-0">
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <StatusLabel value={status} />
+                        <span className="font-mono text-xs tabular-nums text-slate-500">
+                          {request.recruitId}
+                        </span>
+                      </div>
+
+                      <h3 className="break-words text-lg font-semibold leading-tight md:text-xl">
                         {request.job_title}
                       </h3>
 
                       {request.work_location && (
-                        <div className="mt-2 flex items-center gap-2 text-sm text-slate-500">
-                          <MapPin className="h-4 w-4" />
-
-                          {request.work_location}
+                        <div className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
+                          <MapPin
+                            className="h-4 w-4 shrink-0"
+                            aria-hidden="true"
+                          />
+                          <span className="min-w-0 break-words">
+                            {request.work_location}
+                          </span>
                         </div>
                       )}
                     </div>
 
-                    <StatusBadge value={request.status} />
+                    <dl className="grid shrink-0 grid-cols-2 gap-x-8 gap-y-3 md:text-right">
+                      <div>
+                        <dt className="text-xs text-slate-500">
+                          {t("fields.positions")}
+                        </dt>
+                        <dd className="mt-0.5 font-mono text-base font-medium tabular-nums">
+                          {request.number_of_positions ?? "-"}
+                        </dd>
+                      </div>
+
+                      <div>
+                        <dt className="text-xs text-slate-500">
+                          {t("fields.candidates")}
+                        </dt>
+                        <dd className="mt-0.5 font-mono text-base font-medium tabular-nums">
+                          {candidateCount}
+                        </dd>
+                      </div>
+                    </dl>
                   </div>
 
-                  <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                  {/* Details */}
+                  <dl className="mt-5 grid gap-x-6 gap-y-3 rounded-[12px] bg-slate-900/[0.03] p-4 sm:grid-cols-3">
                     <Info
-                      label={lang === "ja" ? "雇用形態" : "Employment"}
+                      label={t("fields.employment")}
                       value={request.employment_type}
                     />
-
                     <Info
-                      label={lang === "ja" ? "募集人数" : "Positions"}
-                      value={String(request.number_of_positions)}
-                    />
-
-                    <Info
-                      label={lang === "ja" ? "日本語レベル" : "Japanese"}
+                      label={t("fields.japanese")}
                       value={request.japanese_level_required}
                     />
-
                     <Info
-                      label={lang === "ja" ? "ビザ" : "Visa"}
+                      label={t("fields.visa")}
                       value={request.visa_type_required}
                     />
+                  </dl>
 
-                    <Info
-                      label={lang === "ja" ? "紹介候補者" : "Candidates"}
-                      value={String(candidateCount)}
-                    />
-                  </div>
-
-                  {request.status === "rejected" &&
-                    request.rejection_reason && (
-                      <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4">
-                        <p className="text-sm font-semibold text-red-700">
-                          {lang === "ja" ? "却下理由" : "Rejection Reason"}
-                        </p>
-
-                        <p className="mt-1 text-sm text-red-700">
-                          {request.rejection_reason}
-                        </p>
-                      </div>
-                    )}
-
-                  {request.status === "pending_review" && (
-                    <div className="mt-5 rounded-xl bg-amber-50 p-3 text-sm text-amber-700">
-                      {lang === "ja"
-                        ? "管理者による審査を待っています。"
-                        : "Waiting for Admin review."}
-                    </div>
+                  {/* Notices */}
+                  {status === "rejected" && request.rejection_reason && (
+                    <Notice
+                      tone="red"
+                      role="alert"
+                      icon={<CircleAlert />}
+                      title={t("rejectionReason")}
+                    >
+                      {request.rejection_reason}
+                    </Notice>
                   )}
 
-                  {request.status === "approved" && (
-                    <div className="mt-5 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
+                  {status === "pending_review" && (
+                    <Notice tone="amber" icon={<Clock />}>
+                      {t("pendingReviewNotice")}
+                    </Notice>
+                  )}
+
+                  {status === "approved" && (
+                    <Notice tone="emerald" icon={<CircleCheck />}>
                       {candidateCount > 0
-                        ? lang === "ja"
-                          ? `${candidateCount}名の候補者が紹介されています。`
-                          : `${candidateCount} candidate(s) have been matched by Admin.`
-                        : lang === "ja"
-                          ? "採用依頼は承認済みです。管理者からの候補者紹介を待っています。"
-                          : "Placement request approved. Waiting for Admin to match candidates."}
-                    </div>
+                        ? t("matchedNotice", { count: candidateCount })
+                        : t("approvedNotice")}
+                    </Notice>
                   )}
 
-                  <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5">
+                  {/* Actions */}
+                  <div className="mt-5 flex flex-wrap gap-2 border-t border-black/5 pt-4">
                     <button
                       type="button"
                       onClick={() => openPlacementRequestView(request)}
-                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold"
+                      className={BTN_SECONDARY}
                     >
-                      <Eye className="h-4 w-4" />
-
-                      {lang === "ja" ? "詳細" : "View"}
+                      <Eye
+                        className="h-4 w-4 shrink-0 text-slate-500"
+                        aria-hidden="true"
+                      />
+                      {t("view")}
                     </button>
-
-                    {request.status === "approved" && (
-                      <button
-                        type="button"
-                        onClick={() => openPlacementCandidates(request)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white"
-                      >
-                        <UserRound className="h-4 w-4" />
-
-                        {lang === "ja"
-                          ? `候補者 (${candidateCount})`
-                          : `Candidates (${candidateCount})`}
-                      </button>
-                    )}
 
                     {canEdit(request.status) && (
                       <button
                         type="button"
                         onClick={() => openPlacementRequestEdit(request)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white"
+                        className={BTN_SECONDARY}
                       >
-                        <Pencil className="h-4 w-4" />
-
-                        {lang === "ja" ? "編集" : "Edit"}
+                        <Pencil
+                          className="h-4 w-4 shrink-0 text-slate-500"
+                          aria-hidden="true"
+                        />
+                        {t("edit")}
                       </button>
                     )}
 
-                    {canDelete(request.status) && (
+                    {request.status === "approved" && (
                       <button
                         type="button"
-                        onClick={() => openPlacementRequestDelete(request)}
-                        className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600"
+                        onClick={() => openPlacementCandidates(request)}
+                        className={BTN_PRIMARY}
                       >
-                        <Trash2 className="h-4 w-4" />
-
-                        {lang === "ja" ? "削除" : "Delete"}
+                        <UserRound
+                          className="h-4 w-4 shrink-0"
+                          aria-hidden="true"
+                        />
+                        {t("candidatesWithCount", { count: candidateCount })}
                       </button>
                     )}
 
@@ -336,17 +350,26 @@ export default function PlacementRequests({
                       <button
                         type="button"
                         onClick={() => openPlacementRequestSubmit(request)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white"
+                        className={BTN_PRIMARY}
                       >
-                        <Send className="h-4 w-4" />
-
+                        <Send className="h-4 w-4 shrink-0" aria-hidden="true" />
                         {request.status === "rejected"
-                          ? lang === "ja"
-                            ? "再申請"
-                            : "Resubmit"
-                          : lang === "ja"
-                            ? "審査へ送信"
-                            : "Submit for Review"}
+                          ? t("resubmit")
+                          : t("submitForReview")}
+                      </button>
+                    )}
+
+                    {canDelete(request.status) && (
+                      <button
+                        type="button"
+                        onClick={() => openPlacementRequestDelete(request)}
+                        className={`${BTN_DANGER} sm:ml-auto`}
+                      >
+                        <Trash2
+                          className="h-4 w-4 shrink-0"
+                          aria-hidden="true"
+                        />
+                        {t("delete")}
                       </button>
                     )}
                   </div>
@@ -410,49 +433,59 @@ export default function PlacementRequests({
   );
 }
 
-// ======================================================
-// HELPERS
-// ======================================================
-
-function Info({
-  label,
-  value,
-}: {
-  label: string;
-
-  value?: string | null;
-}) {
+function Info({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-3">
-      <p className="text-xs text-slate-500">{label}</p>
-
-      <p className="mt-1 text-sm font-medium text-slate-800">{value || "-"}</p>
+    <div className="min-w-0">
+      <dt className="text-xs text-slate-500">{label}</dt>
+      <dd className="mt-0.5 break-words text-sm font-medium">{value || "-"}</dd>
     </div>
   );
 }
 
-function StatusBadge({ value }: { value: string }) {
-  const normalized = value.toLowerCase();
+const NOTICE_TONES = {
+  red: "bg-red-50/90 text-red-700 ring-red-200",
+  amber: "bg-amber-50/90 text-amber-700 ring-amber-200",
+  emerald: "bg-emerald-50/90 text-emerald-700 ring-emerald-200",
+} as const;
 
-  let classes = "bg-slate-100 text-slate-700";
+function Notice({
+  tone,
+  icon,
+  title,
+  role,
+  children,
+}: {
+  tone: keyof typeof NOTICE_TONES;
+  icon: ReactNode;
+  title?: string;
+  role?: "alert";
+  children: ReactNode;
+}) {
+  return (
+    <div
+      role={role}
+      className={`mt-5 flex items-start gap-3 rounded-[12px] px-4 py-3 text-sm ring-1 ${NOTICE_TONES[tone]}`}
+    >
+      <span aria-hidden="true" className="mt-0.5 shrink-0 [&>svg]:h-4 [&>svg]:w-4">
+        {icon}
+      </span>
 
-  if (normalized === "approved") {
-    classes = "bg-emerald-50 text-emerald-700";
-  }
+      <div className="min-w-0">
+        {title && <p className="font-medium">{title}</p>}
+        <p className={`break-words ${title ? "mt-0.5" : ""}`}>{children}</p>
+      </div>
+    </div>
+  );
+}
 
-  if (normalized === "pending_review" || normalized === "draft") {
-    classes = "bg-amber-50 text-amber-700";
-  }
-
-  if (normalized === "rejected") {
-    classes = "bg-red-50 text-red-700";
-  }
+function StatusLabel({ value }: { value: string }) {
+  const t = useTranslations("provider.placementRequests.list.statuses");
 
   return (
     <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${classes}`}
+      className={`text-xs font-medium uppercase tracking-[0.15em] ${labelToneFor(value)}`}
     >
-      {value.replaceAll("_", " ").toLowerCase()}
+      {t(value.replaceAll("_", ""))}
     </span>
   );
 }

@@ -180,6 +180,8 @@
       "selectJapaneseLevel": "Select Japanese level",
       "skills": "Skills",
       "skillsPlaceholder": "e.g., JavaScript, React, Customer service",
+      "addSkill": "Add skill",
+      "removeSkill": "Remove {skill}",
       "fieldRequiredForProfile": "This field is required for profile completion",
       "visaInformation": "Visa Information",
       "visaInformationDescription": "Your current visa status",
@@ -255,7 +257,1035 @@
       "placementSelected": "Selected",
       "placementPlaced": "Placed",
       "loadProfileError": "Failed to load profile",
+      "generatedResumeCreated": "Generated resume created successfully",
+      "generatedResumeCreateFailed": "Failed to generate resume",
       "generatedResumeUnavailable": "Generated resume is not available"
+    }
+  },
+  "provider": {
+    "applications": {
+      "list": {
+        "searchPlaceholder": "Search applications...",
+        "refresh": "Refresh",
+        "loading": "Loading applications...",
+        "loadFailed": "Failed to load applications.",
+        "emptyTitle": "No applications yet",
+        "emptyDescription": "Applications approved by Admin will appear here."
+      },
+      "scheduleModal": {
+        "close": "Close interview modal",
+        "editEyebrow": "Edit Interview",
+        "scheduleEyebrow": "Schedule Interview",
+        "optionalPlaceholder": "Optional when applicable",
+        "missingLinkNotice": "You may schedule without a link. The interview will remain Awaiting Link until the Provider, Admin, or Staff adds the meeting link.",
+        "notesPlaceholder": "Add interview instructions or important notes...",
+        "cancel": "Cancel",
+        "saving": "Saving...",
+        "saveChanges": "Save Changes",
+        "scheduleInterview": "Schedule Interview",
+        "fields": {
+          "interviewDate": "Interview Date",
+          "interviewTime": "Interview Time",
+          "timezone": "Timezone",
+          "interviewMethod": "Interview Method",
+          "meetingLink": "Meeting Link",
+          "notes": "Important Notes"
+        },
+        "methods": {
+          "zoom": "Zoom",
+          "googleMeet": "Google Meet",
+          "phone": "Phone",
+          "faceToFace": "Face-to-Face",
+          "other": "Other"
+        },
+        "validation": {
+          "dateRequired": "Please select the interview date.",
+          "timeRequired": "Please select the interview time.",
+          "timezoneRequired": "Timezone is required."
+        },
+        "toast": {
+          "updated": "Interview updated successfully.",
+          "scheduled": "Interview scheduled successfully.",
+          "updateFailed": "Failed to update interview.",
+          "scheduleFailed": "Failed to schedule interview."
+        }
+      },
+      "card": {
+        "statuses": {
+          "sentToProvider": "Sent To Provider",
+          "underReview": "Under Review",
+          "interview": "Interview",
+          "selected": "Selected",
+          "hired": "Hired",
+          "rejected": "Rejected"
+        },
+        "actions": {
+          "startReview": "Start Review",
+          "moveToInterview": "Move to Interview",
+          "markSelected": "Mark Selected",
+          "markHired": "Mark Hired",
+          "reject": "Reject"
+        },
+        "methods": {
+          "zoom": "Zoom",
+          "googleMeet": "Google Meet",
+          "phone": "Phone",
+          "faceToFace": "Face-to-Face",
+          "other": "Other"
+        },
+        "interviewStatuses": {
+          "awaitingLink": "Awaiting Meeting Link",
+          "confirmed": "Confirmed",
+          "completed": "Completed",
+          "cancelled": "Cancelled"
+        },
+        "confirmReject": "Reject this application? This will complete the application as rejected.",
+        "toast": {
+          "loadDetailsFailed": "Failed to load application details.",
+          "resumeUnavailable": "No resume is available for this application.",
+          "allowPopups": "Please allow pop-ups to open the resume.",
+          "openResumeFailed": "Failed to open application resume.",
+          "statusUpdated": "Application status updated.",
+          "statusUpdateFailed": "Failed to update application status."
+        },
+        "title": "Application Details",
+        "viewDetails": "View Details",
+        "closeDetails": "Close application details",
+        "loadingDetails": "Loading application details...",
+        "sections": {
+          "vacancy": "Vacancy",
+          "candidateProfile": "Candidate Profile",
+          "skills": "Skills",
+          "education": "Education",
+          "employmentHistory": "Employment History",
+          "resume": "Professional Resume",
+          "interview": "Interview Schedule",
+          "applicationStatus": "Application Status"
+        },
+        "fields": {
+          "candidate": "Candidate",
+          "nationality": "Nationality",
+          "japanese": "Japanese",
+          "applied": "Applied",
+          "position": "Position",
+          "company": "Company",
+          "employment": "Employment",
+          "location": "Location",
+          "requiredJapanese": "Required Japanese",
+          "openings": "Openings",
+          "salaryMin": "Salary Min",
+          "salaryMax": "Salary Max",
+          "name": "Name",
+          "visa": "Visa",
+          "visaExpiry": "Visa Expiry",
+          "desiredJob": "Desired Job",
+          "desiredLocation": "Desired Location"
+        },
+        "close": "Close",
+        "opening": "Opening...",
+        "viewResume": "View Resume",
+        "present": "Present",
+        "editSchedule": "Edit Schedule",
+        "currentStatus": "Current Status",
+        "scheduleInterview": "Schedule Interview",
+        "updating": "Updating...",
+        "interviewRequiredNotice": "To move this candidate to Interview, schedule the interview date, time, and method first.",
+        "finalStatusNotice": "This application has reached a final status.",
+        "resume": {
+          "title": "Frozen application resume",
+          "description": "This resume preserves the candidate information from the time of application."
+        },
+        "interview": {
+          "date": "Date",
+          "time": "Time",
+          "timezone": "Timezone",
+          "method": "Method",
+          "meetingLink": "Meeting Link",
+          "awaitingLinkNotice": "The online meeting link has not been added yet. Add the link to confirm the interview and notify the candidate.",
+          "notes": "Important Notes",
+          "notFound": "The application is in Interview status, but no interview schedule was found."
+        }
+      }
+    },
+    "profile": {
+      "saving": "Saving...",
+      "saveChanges": "Save Changes",
+      "completionPercentage": "{percentage}% complete",
+      "email": "Email",
+      "loading": "Loading company profile...",
+      "companyProfile": "Company Profile",
+      "companyInformation": "Company Information",
+      "description": "Manage your company and recruitment contact information.",
+      "dashboard": "Dashboard",
+      "editProfile": "Edit Profile",
+      "cancel": "Cancel",
+      "profileIncomplete": "Company profile incomplete",
+      "profileComplete": "Company profile complete",
+      "registeredUser": "Registered User",
+      "companyName": "Company Name",
+      "placeholders": {
+        "companyName": "Sample Co., Ltd.",
+        "phone": "03-1234-5678",
+        "address": "Tokyo",
+        "website": "https://example.com",
+        "contactPerson": "Taro Yamada",
+        "contactPhone": "090-1234-5678",
+        "contactEmail": "recruit@example.com",
+        "hiringNeeds": "We are hiring three manufacturing staff in Tokyo, starting next month.",
+        "notes": "Basic Japanese communication skills are preferred."
+      },
+      "toast": {
+        "loadFailed": "Failed to load profile",
+        "updateFailed": "Failed to update profile",
+        "checkInput": "Please check your input",
+        "updated": "Company profile updated successfully"
+      },
+      "validation": {
+        "jobTitleRequired": "Job title is required.",
+        "employmentTypeRequired": "Employment type is required.",
+        "positionsMin": "Number of positions must be a whole number of at least 1.",
+        "workLocationRequired": "Work location is required.",
+        "jobDescriptionRequired": "Job description is required.",
+        "salaryAmountInvalid": "Salary amount cannot be negative."
+      },
+      "phone": "Phone",
+      "address": "Address",
+      "website": "Website",
+      "industry": "Industry",
+      "selectIndustry": "select an industry",
+      "recruitmentContact": "Recruitment Contact",
+      "contactPerson": "Contact Person",
+      "contactPhone": "Contact Phone",
+      "contactEmail": "Contact Email",
+      "hiringInformation": "Hiring Information",
+      "hiringNeeds": "Hiring Needs",
+      "notes": "Notes",
+      "notProvided": "Not provided",
+      "industries": {
+        "itTelecommunications": "IT & Telecommunications",
+        "manufacturing": "Manufacturing",
+        "retailWholesale": "Retail & Wholesale",
+        "services": "Services",
+        "financeInsurance": "Finance & Insurance",
+        "constructionRealEstate": "Construction & Real Estate",
+        "healthcareWelfare": "Healthcare & Welfare",
+        "education": "Education",
+        "transportationLogistics": "Transportation & Logistics",
+        "hospitalityTourism": "Hospitality & Tourism",
+        "other": "Other"
+      }
+    },
+    "dashboard": {
+      "loading": "Loading provider dashboard...",
+      "title": "Provider Dashboard",
+      "description": "Manage your company profile, vacancies, applications, placement requests, and placement billing.",
+      "companyProfile": "Company Profile",
+      "refresh": "Refresh",
+      "refreshing": "Refreshing...",
+      "refreshed": "Dashboard refreshed",
+      "loadFailed": "Failed to load provider dashboard.",
+      "postVacancy": "Post Vacancy",
+      "stats": {
+        "totalVacancies": "Total Vacancies",
+        "published": "Published",
+        "pendingReview": "Pending Review",
+        "applications": "Applications",
+        "placementRequests": "Placement Requests"
+      },
+      "tabs": {
+        "vacancies": "Vacancies ({count})",
+        "applications": "Applications ({count})",
+        "placementRequests": "Placement Requests ({count})",
+        "billing": "Billing"
+      }
+    },
+    "billing": {
+      "details": {
+        "title": "Placement Invoice",
+        "invoiceSummary": "Invoice Summary",
+        "paymentPendingTitle": "Payment Pending",
+        "paymentPendingDescription": "For now, payment is confirmed manually by Admin. Online payment will be added in the next phase.",
+        "notes": "Notes",
+        "invoiceCancelled": "Invoice Cancelled",
+        "refundHistory": "Refund History",
+        "close": "Close",
+        "fields": {
+          "candidate": "Candidate",
+          "position": "Position",
+          "placementDate": "Placement Date",
+          "dueDate": "Due Date",
+          "placementFee": "Placement Fee",
+          "tax": "Tax ({rate}%)",
+          "total": "Total",
+          "amountDue": "Amount Due",
+          "paid": "Paid",
+          "refunded": "Refunded",
+          "netPaid": "Net Paid",
+          "placementRequest": "Placement Request",
+          "placementCandidate": "Placement Candidate",
+          "issuedAt": "Issued At"
+        }
+      },
+      "list": {
+        "title": "Placement Billing",
+        "description": "Review issued placement invoices, payment status, and refunds.",
+        "refresh": "Refresh",
+        "summary": {
+          "totalBilled": "Total Billed",
+          "outstanding": "Outstanding",
+          "netPaid": "Net Paid",
+          "overdue": "Overdue"
+        },
+        "searchPlaceholder": "Search invoice, candidate, position...",
+        "allStatuses": "All statuses",
+        "statuses": {
+          "issued": "Issued",
+          "paid": "Paid",
+          "partiallyRefunded": "Partially Refunded",
+          "refunded": "Refunded",
+          "cancelled": "Cancelled"
+        },
+        "table": {
+          "invoice": "Invoice",
+          "candidate": "Candidate",
+          "position": "Position",
+          "total": "Total",
+          "amountDue": "Amount Due",
+          "dueDate": "Due Date",
+          "status": "Status",
+          "action": "Action"
+        },
+        "loading": "Loading placement billings...",
+        "empty": "No issued placement invoices found.",
+        "viewInvoice": "View Invoice"
+      }
+    },
+    "placementRequests": {
+      "deleteModal": {
+        "title": "Delete Placement Request",
+        "description": "Permanently delete this placement request?",
+        "cancel": "Cancel",
+        "delete": "Delete"
+      },
+      "submitModal": {
+        "submitTitle": "Submit for Review",
+        "resubmitTitle": "Resubmit Placement Request",
+        "submitDescription": "Once submitted, you cannot edit or delete this request while Admin is reviewing it.",
+        "resubmitDescription": "Send this updated request back to Admin for another review.",
+        "cancel": "Cancel",
+        "submit": "Submit for Review",
+        "resubmit": "Resubmit"
+      },
+      "list": {
+        "searchPlaceholder": "Search placement requests...",
+        "refresh": "Refresh",
+        "newPlacementRequest": "New Placement Request",
+        "loading": "Loading placement requests...",
+        "emptyTitle": "No placement requests",
+        "emptyDescription": "Create a placement request when you want Admin to source candidates for your company.",
+        "rejectionReason": "Rejection Reason",
+        "pendingReviewNotice": "Waiting for Admin review.",
+        "matchedNotice": "{count} candidate(s) have been matched by Admin.",
+        "approvedNotice": "Placement request approved. Waiting for Admin to match candidates.",
+        "view": "View",
+        "candidatesWithCount": "Candidates ({count})",
+        "edit": "Edit",
+        "delete": "Delete",
+        "resubmit": "Resubmit",
+        "submitForReview": "Submit for Review",
+        "fields": {
+          "employment": "Employment",
+          "positions": "Positions",
+          "japanese": "Japanese",
+          "visa": "Visa",
+          "candidates": "Candidates"
+        },
+        "statuses": {
+          "draft": "Draft",
+          "pendingreview": "Pending Review",
+          "approved": "Approved",
+          "rejected": "Rejected",
+          "closed": "Closed"
+        },
+        "toast": {
+          "loadFailed": "Failed to load placement requests.",
+          "cannotEdit": "This placement request cannot be edited.",
+          "updated": "Placement request updated.",
+          "updateFailed": "Failed to update placement request.",
+          "cannotDelete": "This placement request cannot be deleted.",
+          "deleted": "Placement request deleted.",
+          "deleteFailed": "Failed to delete placement request.",
+          "cannotSubmit": "This placement request cannot be submitted.",
+          "submitted": "Placement request submitted for Admin review.",
+          "submitFailed": "Failed to submit placement request.",
+          "approvedOnlyCandidates": "Candidates are available only for approved placement requests.",
+          "refreshCandidatesFailed": "Failed to refresh matched candidates.",
+          "candidateStatusUpdated": "Candidate status updated.",
+          "candidateStatusUpdateFailed": "Failed to update candidate status."
+        }
+      },
+      "details": {
+        "close": "Close",
+        "rejectionReason": "Rejection Reason",
+        "submitted": "Submitted",
+        "reviewed": "Reviewed",
+        "fields": {
+          "jobCategory": "Job Category",
+          "employmentType": "Employment Type",
+          "numberOfPositions": "Number of Positions",
+          "workLocation": "Work Location",
+          "japaneseLevel": "Japanese Level",
+          "visaRequirement": "Visa Requirement",
+          "salaryType": "Salary Type",
+          "salaryAmount": "Salary Amount",
+          "workingHours": "Working Hours",
+          "daysOff": "Days Off",
+          "startDate": "Start Date"
+        },
+        "sections": {
+          "jobDescription": "Job Description",
+          "requirements": "Requirements"
+        }
+      },
+      "editModal": {
+        "close": "Close",
+        "title": "Edit Placement Request",
+        "selectPlaceholder": "Please select",
+        "adminRejectionReason": "Admin Rejection Reason",
+        "rejectionHelp": "Update the request, save your changes, then resubmit it for Admin review.",
+        "cancel": "Cancel",
+        "saveChanges": "Save Changes",
+        "sections": {
+          "position": "Position",
+          "candidateRequirements": "Candidate Requirements",
+          "salaryWorkConditions": "Salary & Work Conditions",
+          "jobInformation": "Job Information"
+        },
+        "fields": {
+          "jobTitle": "Job Title",
+          "jobCategory": "Job Category",
+          "employmentType": "Employment Type",
+          "numberOfPositions": "Number of Positions",
+          "workLocation": "Work Location",
+          "japaneseLevel": "Japanese Level",
+          "visaType": "Visa Type",
+          "salaryType": "Salary Type",
+          "salaryAmount": "Salary Amount",
+          "workingHours": "Working Hours",
+          "daysOff": "Days Off",
+          "startDate": "Start Date",
+          "jobDescription": "Job Description",
+          "requirements": "Requirements"
+        },
+        "validation": {
+          "jobTitleRequired": "Job title is required.",
+          "employmentTypeRequired": "Employment type is required.",
+          "positionsMin": "Number of positions must be at least 1.",
+          "workLocationRequired": "Work location is required.",
+          "jobDescriptionRequired": "Job description is required.",
+          "salaryAmountInvalid": "Salary amount cannot be negative."
+        },
+        "options": {
+          "employmentTypes": {
+            "fullTimeEmployee": "Full-time Employee",
+            "contractEmployee": "Contract Employee",
+            "temporaryStaff": "Temporary Staff",
+            "partTime": "Part-time",
+            "freelanceContract": "Freelance/Contract",
+            "intern": "Intern"
+          },
+          "japaneseLevels": {
+            "native": "Native",
+            "n1": "N1",
+            "n2": "N2",
+            "n3": "N3",
+            "n4": "N4",
+            "n5": "N5",
+            "notRequired": "Not Required"
+          },
+          "visaTypes": {
+            "engineerSpecialist": "Engineer / Specialist in Humanities / International Services",
+            "specifiedSkilledWorker": "Specified Skilled Worker",
+            "permanentResident": "Permanent Resident",
+            "spouse": "Spouse of Japanese National",
+            "longTermResident": "Long-Term Resident",
+            "student": "Student",
+            "dependent": "Dependent",
+            "anyVisa": "Any Visa"
+          },
+          "salaryTypes": {
+            "hourly": "Hourly",
+            "daily": "Daily",
+            "monthly": "Monthly",
+            "annual": "Annual"
+          }
+        }
+      },
+      "createModal": {
+        "close": "Close",
+        "closePlacementRequest": "Close placement request",
+        "headerEyebrow": "Placement Request",
+        "required": "Required",
+        "loadingCompany": "Loading company information...",
+        "companyHelp": "The company is automatically determined from the logged-in Provider account.",
+        "salaryHelp": "Example: for JPY 300,000 per month, choose Monthly and enter 300000.",
+        "startDateHelp": "Select a start date",
+        "footerNote": "The request will first be created as a draft. You can then submit it for Admin review.",
+        "reset": "Reset",
+        "creating": "Creating...",
+        "create": "Create Placement Request",
+        "intro": {
+          "badge": "Recruitment Request Form",
+          "title": "New Placement Request",
+          "description": "Tell Admin what kind of candidate your company needs. This request is used for candidate sourcing and placement support."
+        },
+        "sections": {
+          "company": "Company Information",
+          "position": "Position",
+          "jobDetails": "Job Details & Location",
+          "candidateRequirements": "Candidate Requirements",
+          "salary": "Salary",
+          "workConditions": "Work Conditions"
+        },
+        "sectionDescriptions": {
+          "position": "Describe the position and number of candidates required.",
+          "candidateRequirements": "Requirements Admin should use when sourcing candidates."
+        },
+        "fields": {
+          "companyName": "Company Name",
+          "jobTitle": "Job Title",
+          "jobCategory": "Job Category",
+          "employmentType": "Employment Type",
+          "numberOfPositions": "Number of Positions",
+          "workLocation": "Work Location",
+          "jobDescription": "Job Description",
+          "requirements": "Requirements",
+          "japaneseLevelRequired": "Japanese Level Required",
+          "visaTypeRequired": "Visa Type Required",
+          "salaryType": "Salary Type",
+          "salaryAmount": "Salary Amount",
+          "workingHours": "Working Hours",
+          "daysOff": "Days Off",
+          "startDate": "Start Date"
+        },
+        "placeholders": {
+          "companyName": "Loading company name...",
+          "jobTitle": "e.g. Software Engineer",
+          "jobCategory": "e.g. IT / Engineering",
+          "employmentType": "Select employment type",
+          "numberOfPositions": "e.g. 3",
+          "workLocation": "e.g. Shinjuku, Tokyo",
+          "jobDescription": "e.g. Develop and maintain web applications.",
+          "requirements": "e.g. Experience, education, certifications and skills",
+          "japaneseLevel": "Select Japanese level",
+          "visaType": "Select visa type",
+          "salaryType": "Select salary type",
+          "salaryAmount": "e.g. 300000",
+          "workingHours": "e.g. 9:00-18:00",
+          "daysOff": "e.g. Saturday, Sunday and public holidays"
+        },
+        "validation": {
+          "jobTitleRequired": "Job title is required.",
+          "employmentTypeRequired": "Employment type is required.",
+          "positionsMin": "Number of positions must be a whole number of at least 1.",
+          "workLocationRequired": "Work location is required.",
+          "jobDescriptionRequired": "Job description is required.",
+          "salaryAmountInvalid": "Salary amount cannot be negative."
+        },
+        "toast": {
+          "created": "Placement request created successfully.",
+          "createFailed": "Failed to create placement request.",
+          "loadFailed": "Failed to load profile",
+          "updateFailed": "Failed to update profile",
+          "checkInput": "Please check your input",
+          "updated": "Company profile updated successfully"
+        },
+        "difference": {
+          "title": "Placement Request vs Vacancy",
+          "description": "This is not a public job vacancy. It is a request for Admin to source and recommend suitable candidates directly to your company."
+        },
+        "options": {
+          "employmentTypes": {
+            "fullTimeEmployee": "Full-time Employee",
+            "contractEmployee": "Contract Employee",
+            "temporaryStaff": "Temporary Staff",
+            "partTime": "Part-time",
+            "freelanceContract": "Freelance/Contract",
+            "intern": "Intern"
+          },
+          "japaneseLevels": {
+            "native": "Native",
+            "n1": "N1",
+            "n2": "N2",
+            "n3": "N3",
+            "n4": "N4",
+            "n5": "N5",
+            "notRequired": "Not Required"
+          },
+          "visaTypes": {
+            "engineerSpecialist": "Engineer / Specialist in Humanities / International Services",
+            "specifiedSkilledWorker": "Specified Skilled Worker",
+            "permanentResident": "Permanent Resident",
+            "spouse": "Spouse of Japanese National",
+            "longTermResident": "Long-Term Resident",
+            "student": "Student",
+            "dependent": "Dependent",
+            "anyVisa": "Any Visa"
+          },
+          "salaryTypes": {
+            "hourly": "Hourly",
+            "daily": "Daily",
+            "monthly": "Monthly",
+            "annual": "Annual"
+          }
+        }
+      },
+      "interviewModal": {
+        "close": "Close",
+        "editTitle": "Edit Placement Interview",
+        "scheduleTitle": "Schedule Placement Interview",
+        "missingLinkNotice": "You can schedule without a link, but the interview will remain Awaiting Link. Add the link later to confirm the interview.",
+        "notesPlaceholder": "Example: Please join 10 minutes before the interview.",
+        "openCurrentLink": "Open Current Link",
+        "cancel": "Cancel",
+        "saving": "Saving...",
+        "updateInterview": "Update Interview",
+        "scheduleInterview": "Schedule Interview",
+        "summary": {
+          "candidate": "Candidate",
+          "workLocation": "Work Location",
+          "placementRequest": "Placement Request"
+        },
+        "fields": {
+          "interviewDate": "Interview Date",
+          "interviewTime": "Interview Time",
+          "timezone": "Timezone",
+          "interviewMethod": "Interview Method",
+          "meetingLink": "Meeting Link",
+          "notes": "Notes"
+        },
+        "methods": {
+          "phone": "Phone",
+          "faceToFace": "Face-to-Face",
+          "other": "Other"
+        }
+      },
+      "candidatesModal": {
+        "close": "Close",
+        "title": "Matched Candidates",
+        "positions": "Positions",
+        "emptyTitle": "No candidates matched yet",
+        "emptyDescription": "Candidates matched by Admin will appear here.",
+        "rejectionReason": "Rejection Reason",
+        "rejectionPlaceholder": "Enter the reason for rejecting this candidate...",
+        "cancel": "Cancel",
+        "confirmReject": "Confirm Reject",
+        "edit": "Edit",
+        "summary": {
+          "positionsRequired": "Positions Required",
+          "candidatesReceived": "Candidates Received",
+          "placed": "Placed"
+        },
+        "fields": {
+          "nationality": "Nationality",
+          "japanese": "Japanese",
+          "visa": "Visa",
+          "currentLocation": "Current Location",
+          "desiredJob": "Desired Job",
+          "desiredLocation": "Desired Location",
+          "visaExpiry": "Visa Expiry",
+          "matched": "Matched"
+        },
+        "sections": {
+          "skills": "Skills",
+          "education": "Education",
+          "employmentHistory": "Employment History"
+        },
+        "dates": {
+          "review": "Review",
+          "interview": "Interview",
+          "selected": "Selected",
+          "placed": "Placed"
+        },
+        "actions": {
+          "startReview": "Start Review",
+          "selectCandidate": "Select Candidate",
+          "markAsPlaced": "Mark as Placed",
+          "scheduleInterview": "Schedule Interview",
+          "openInterview": "Open Interview",
+          "editInterview": "Edit Interview",
+          "rejectCandidate": "Reject Candidate"
+        },
+        "toast": {
+          "loadCandidateFailed": "Failed to load candidate information.",
+          "checkInterviewFailed": "Failed to check interview information."
+        },
+        "statuses": {
+          "matched": "Matched",
+          "under_review": "Under Review",
+          "interview": "Interview",
+          "selected": "Selected",
+          "placed": "Placed",
+          "rejected": "Rejected"
+        },
+        "methods": {
+          "phone": "Phone",
+          "faceToFace": "Face-to-Face",
+          "other": "Other"
+        },
+        "interview": {
+          "schedule": "Interview Schedule",
+          "date": "Date",
+          "time": "Time",
+          "timezone": "Timezone",
+          "method": "Method",
+          "awaitingLink": "Waiting for a meeting link. Add the link to confirm the interview.",
+          "openLink": "Open Interview Link",
+          "notes": "Notes",
+          "statuses": {
+            "awaiting_link": "Awaiting Link",
+            "confirmed": "Confirmed",
+            "completed": "Completed",
+            "cancelled": "Cancelled"
+          }
+        }
+      }
+    },
+    "vacancies": {
+      "deleteModal": {
+        "title": "Are you absolutely sure?",
+        "description": "\"{title}\" will be permanently deleted. This action cannot be undone.",
+        "vacancyId": "Vacancy ID",
+        "close": "Close",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "deleting": "Deleting...",
+        "success": "Vacancy deleted successfully.",
+        "error": "Failed to delete vacancy."
+      },
+      "details": {
+        "title": "Vacancy Details",
+        "close": "Close",
+        "posted": "Posted",
+        "edit": "Edit This Vacancy",
+        "sections": {
+          "overview": "Overview",
+          "jobDescription": "Job Description",
+          "requirements": "Requirements",
+          "workConditions": "Work Conditions",
+          "benefitsInsurance": "Benefits & Insurance",
+          "applicationInformation": "Application Information",
+          "contactPerson": "Contact Person"
+        },
+        "fields": {
+          "companyName": "Company Name",
+          "companyNameKana": "Company Name Kana",
+          "jobTitle": "Job Title",
+          "jobTitleKana": "Job Title Kana",
+          "employmentType": "Employment Type",
+          "numberOfPeople": "Number of People",
+          "japaneseLevel": "Japanese Level",
+          "workLocation": "Work Location",
+          "detailedLocation": "Detailed Location",
+          "remoteWork": "Remote Work",
+          "salary": "Salary",
+          "salaryNotes": "Salary Notes",
+          "description": "Description",
+          "detailedResponsibilities": "Detailed Responsibilities",
+          "requiredSkills": "Required Skills & Experience",
+          "preferredSkills": "Preferred Skills",
+          "education": "Education",
+          "experience": "Experience",
+          "workingHours": "Working Hours",
+          "breakTime": "Break Time",
+          "overtime": "Overtime",
+          "holidays": "Holidays",
+          "trialPeriod": "Trial Period",
+          "benefits": "Benefits",
+          "socialInsurance": "Social Insurance",
+          "applicationDeadline": "Application Deadline",
+          "startDate": "Start Date",
+          "selectionProcess": "Selection Process",
+          "contactPerson": "Contact Person",
+          "contactPersonKana": "Contact Person Kana",
+          "contactEmail": "Contact Email"
+        }
+      },
+      "list": {
+        "searchPlaceholder": "Search vacancies...",
+        "refresh": "Refresh",
+        "postVacancy": "Post Vacancy",
+        "loading": "Loading vacancies...",
+        "emptyTitle": "No vacancies yet",
+        "emptyDescription": "Post your first vacancy to start recruiting.",
+        "awaitingReview": "Under review by admin",
+        "openings": "opening(s)",
+        "annualSalary": "Annual Salary",
+        "salaryUnit": "man yen",
+        "rejectionReason": "Rejection reason",
+        "view": "View",
+        "edit": "Edit",
+        "delete": "Delete",
+        "closeVacancy": "Close",
+        "statuses": {
+          "draft": "Draft",
+          "pendingReview": "Pending Review",
+          "approved": "Approved",
+          "published": "Published",
+          "rejected": "Rejected",
+          "closed": "Closed"
+        },
+        "notYetPublished": "Not published yet",
+        "acceptingApplicants": "Accepting applicants",
+        "approvedNotLive": "Approved, not live yet",
+        "notAcceptingApplicants": "Not accepting applicants",
+        "toast": {
+          "loadFailed": "Failed to load vacancies.",
+          "onlyPublishedCanClose": "Only published vacancies can be closed.",
+          "confirmClose": "Close \"{title}\"? It will no longer appear to job seekers.",
+          "closed": "Vacancy closed successfully.",
+          "closeFailed": "Failed to close vacancy."
+        }
+      },
+      "form": {
+        "close": "Close",
+        "required": "Required",
+        "selectPlaceholder": "Please select",
+        "salaryUnit": "man yen",
+        "reset": "Reset",
+        "saving": "Saving...",
+        "posting": "Posting...",
+        "saveChanges": "Save Changes",
+        "postJobVacancy": "Post Job Vacancy",
+        "footerNote": "The information submitted will be used for job posting and recruitment support purposes.",
+        "header": {
+          "editEyebrow": "Edit Vacancy",
+          "createEyebrow": "Add Vacancy"
+        },
+        "intro": {
+          "badge": "Vacancy Form",
+          "editTitle": "Edit Job Vacancy",
+          "createTitle": "Register Job Vacancy",
+          "editDescription": "Update the vacancy information below. Saving changes will send the vacancy for admin review again.",
+          "createDescription": "Please fill out the form below. The vacancy will be sent for admin review after submission."
+        },
+        "sections": {
+          "company": {
+            "title": "Company Information",
+            "description": "Basic company information"
+          },
+          "position": {
+            "title": "Position Details",
+            "description": "e.g. Software Engineer"
+          },
+          "description": {
+            "title": "Job Description",
+            "description": "Please describe the specific job responsibilities"
+          },
+          "requirements": {
+            "title": "Requirements",
+            "description": "e.g. 3+ years of JavaScript/TypeScript development experience"
+          },
+          "location": {
+            "title": "Location & Work Conditions",
+            "description": "e.g. Chiyoda-ku, Tokyo"
+          },
+          "schedule": {
+            "title": "Work Schedule & Holidays",
+            "description": "e.g. 9:00 AM - 6:00 PM"
+          },
+          "benefits": {
+            "title": "Benefits & Welfare",
+            "description": "Benefits"
+          },
+          "application": {
+            "title": "Application Information",
+            "description": "Document screening -> First interview -> Final interview -> Offer"
+          },
+          "contact": {
+            "title": "Contact Person",
+            "description": "Job-related contact information"
+          }
+        },
+        "fields": {
+          "companyName": "Company Name",
+          "companyNameKana": "Company Name (Kana)",
+          "jobTitle": "Job Title",
+          "jobTitleKana": "Job Title (Kana)",
+          "employmentType": "Employment Type",
+          "numberOfOpenings": "Number of Openings",
+          "jobDescription": "Job Description",
+          "responsibilities": "Detailed Responsibilities",
+          "requiredSkills": "Required Skills & Experience",
+          "preferredSkills": "Preferred Skills",
+          "educationRequirements": "Education Requirements",
+          "yearsOfExperience": "Years of Experience",
+          "japaneseLevel": "Japanese Level",
+          "workLocation": "Work Location",
+          "detailedLocation": "Detailed Location",
+          "remoteWorkPolicy": "Remote Work Policy",
+          "salaryNotes": "Salary Notes",
+          "salaryRange": "Annual Salary (Min) / Annual Salary (Max)",
+          "workingHours": "Working Hours",
+          "breakTime": "Break Time",
+          "overtime": "Overtime",
+          "holidays": "Holidays & Leave",
+          "benefits": "Benefits",
+          "socialInsurance": "Social Insurance",
+          "trialPeriod": "Trial Period",
+          "applicationDeadline": "Application Deadline",
+          "startDate": "Start Date",
+          "selectionProcess": "Selection Process",
+          "contactPerson": "Contact Person Name",
+          "contactPersonKana": "Contact Person Name (Kana)",
+          "emailAddress": "Email Address"
+        },
+        "placeholders": {
+          "companyName": "e.g. Sample Co., Ltd.",
+          "companyNameKana": "e.g. Kabushiki Gaisha Sample",
+          "jobTitle": "e.g. Software Engineer",
+          "jobTitleKana": "e.g. Software Enjinia",
+          "jobDescription": "Please describe the specific job responsibilities",
+          "responsibilities": "Please describe day-to-day tasks in detail",
+          "requiredSkills": "Required skills and experience",
+          "preferredSkills": "e.g. React or Next.js experience",
+          "educationRequirements": "e.g. University degree or above",
+          "yearsOfExperience": "e.g. 3+ years / Entry level welcome",
+          "workLocation": "e.g. Chiyoda-ku, Tokyo",
+          "detailedLocation": "e.g. 5-minute walk from Tokyo Station",
+          "salaryNotes": "e.g. Bonus twice a year",
+          "overtime": "About 20 hours per month",
+          "holidays": "Weekends, public holidays...",
+          "trialPeriod": "e.g. Three months",
+          "startDate": "e.g. Immediately / April 2027",
+          "selectionProcess": "Document screening -> First interview -> Final interview -> Job offer",
+          "contactPerson": "e.g. Taro Yamada",
+          "contactPersonKana": "e.g. Yamada Taro"
+        },
+        "validation": {
+          "companyNameRequired": "Company name is required.",
+          "jobTitleRequired": "Job title is required.",
+          "employmentTypeRequired": "Employment type is required.",
+          "jobDescriptionRequired": "Job description is required.",
+          "workLocationRequired": "Work location is required.",
+          "contactPersonRequired": "Contact person is required.",
+          "contactEmailRequired": "Contact email is required.",
+          "contactEmailInvalid": "Please enter a valid contact email.",
+          "salaryRangeInvalid": "Minimum salary cannot exceed maximum salary."
+        },
+        "toast": {
+          "updated": "Vacancy updated successfully.",
+          "created": "Vacancy submitted successfully.",
+          "updateFailed": "Failed to update vacancy.",
+          "createFailed": "Failed to create vacancy."
+        },
+        "options": {
+          "employmentTypes": {
+            "fullTimeEmployee": "Full-time Employee",
+            "contractEmployee": "Contract Employee",
+            "temporaryStaff": "Temporary Staff",
+            "partTime": "Part-time",
+            "freelanceContract": "Freelance/Contract",
+            "intern": "Intern"
+          },
+          "japaneseLevels": {
+            "native": "Native",
+            "n1": "N1 (Business level)",
+            "n2": "N2 (Daily conversation level)",
+            "n3": "N3 (Basic conversation level)",
+            "n4OrBelow": "N4 or below (Not required)"
+          },
+          "remoteWork": {
+            "fullyRemote": "Fully remote",
+            "hybrid": "2-3 days in office per week",
+            "primarilyOffice": "Primarily in-office (remote possible depending on situation)",
+            "noRemote": "No remote work"
+          },
+          "benefits": {
+            "fullSocialInsurance": "Full social insurance",
+            "commutingAllowance": "Commuting allowance",
+            "housingAllowance": "Housing allowance",
+            "familyAllowance": "Family allowance",
+            "certificationSupport": "Certification support",
+            "employeeCafeteria": "Employee cafeteria",
+            "onsiteDaycare": "On-site daycare",
+            "refreshVacation": "Refresh vacation"
+          },
+          "insurance": {
+            "healthInsurance": "Health insurance",
+            "pensionInsurance": "Employees' pension insurance",
+            "employmentInsurance": "Employment insurance",
+            "workersCompensation": "Workers' compensation insurance"
+          }
+        }
+      }
+    }
+  },
+  "providerAuth": {
+    "portalTitle": "Job Provider Portal",
+    "mainTitle": "Find the right",
+    "mainTitleHighlight": "talent for your company",
+    "description": "Post job opportunities and manage your recruitment process in one place. Connect with qualified candidates for your company.",
+    "seekerText": "Are you looking for a job?",
+    "seekerLink": "Job seeker sign up",
+    "loginTab": "Login",
+    "registerTab": "Register",
+    "loading": "Loading...",
+    "features": {
+      "postJobs": {
+        "title": "Post Jobs",
+        "description": "Create job opportunities and reach qualified candidates."
+      },
+      "recruit": {
+        "title": "Recruit",
+        "description": "Manage applicants and recruitment progress from one place."
+      }
+    },
+    "login": {
+      "title": "Provider Sign In",
+      "description": "Access your company account using your email and password.",
+      "forgotPassword": "Forgot password?",
+      "submit": "Login",
+      "noAccount": "Don't have a provider account?",
+      "createOne": "Create one"
+    },
+    "register": {
+      "title": "Create Provider Account",
+      "description": "Register your company and start posting job opportunities.",
+      "submit": "Register Company",
+      "hasAccount": "Already have a provider account?",
+      "signIn": "Sign in"
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "contactPerson": "Contact Person",
+      "companyName": "Company Name"
+    },
+    "placeholders": {
+      "contactPerson": "John Doe",
+      "companyName": "Example Company Ltd."
+    },
+    "validation": {
+      "contactPersonRequired": "Contact person name is required",
+      "contactPersonMin": "Contact person name must be at least 2 characters",
+      "companyNameRequired": "Company name is required",
+      "companyNameMin": "Company name must be at least 2 characters",
+      "emailRequired": "Email address is required",
+      "emailInvalid": "Please enter a valid email address",
+      "passwordRequired": "Password is required",
+      "passwordMin": "Password must be at least 8 characters"
+    },
+    "toast": {
+      "genericError": "Something went wrong",
+      "registrationSuccessful": "Provider registration successful",
+      "loginSuccessful": "Login successful",
+      "loginFailed": "Login failed"
+    },
+    "a11y": {
+      "switchLanguage": "Switch language",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
     }
   }
 }

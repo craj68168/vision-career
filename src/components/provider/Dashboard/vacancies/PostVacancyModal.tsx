@@ -1,63 +1,86 @@
 "use client";
-import { useEffect, useState, type FormEvent } from "react";
+
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+
 import axios from "axios";
 import toast from "react-hot-toast";
+
 import { Loader2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+
 import { getProviderProfile } from "../../Profile/api";
 import { createProviderVacancy, updateProviderVacancy } from "./api";
 
 import type { CreateVacancyPayload, Vacancy } from "./types";
 import { ProviderDashboardApiError } from "../types";
 
-// ======================================================
-// OPTIONS
-// ======================================================
+// Shared tokens: keep in sync with vacancies.tsx / provider-dashboard.tsx
+const PANEL = "rounded-[14px] bg-white/70 ring-1 ring-black/5";
 
-const EMPLOYMENT_TYPES = [
-  "Full-time Employee",
-  "Contract Employee",
-  "Temporary Staff",
-  "Part-time",
-  "Freelance/Contract",
-  "Intern",
+const FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800/50 focus-visible:ring-offset-1";
+
+const BTN = `inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-[12px] px-4 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${FOCUS}`;
+
+const BTN_PRIMARY = `${BTN} bg-teal-800 text-white ring-1 ring-teal-800 hover:bg-teal-700`;
+
+const BTN_SECONDARY = `${BTN} bg-white/80 text-slate-700 ring-1 ring-black/10 hover:bg-white`;
+
+const CONTROL =
+  "w-full rounded-[12px] bg-white px-3.5 py-2.5 text-sm ring-1 ring-black/10 placeholder:text-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-800/50 disabled:cursor-not-allowed disabled:bg-slate-900/[0.03] disabled:text-slate-500";
+
+type Option = {
+  value: string;
+  labelKey: string;
+};
+
+const EMPLOYMENT_TYPES: Option[] = [
+  { value: "Full-time Employee", labelKey: "fullTimeEmployee" },
+  { value: "Contract Employee", labelKey: "contractEmployee" },
+  { value: "Temporary Staff", labelKey: "temporaryStaff" },
+  { value: "Part-time", labelKey: "partTime" },
+  { value: "Freelance/Contract", labelKey: "freelanceContract" },
+  { value: "Intern", labelKey: "intern" },
 ];
 
-const JAPANESE_LEVELS = [
-  "Native",
-  "N1 (Business level)",
-  "N2 (Daily conversation level)",
-  "N3 (Basic conversation level)",
-  "N4 or below (Not required)",
+const JAPANESE_LEVELS: Option[] = [
+  { value: "Native", labelKey: "native" },
+  { value: "N1 (Business level)", labelKey: "n1" },
+  { value: "N2 (Daily conversation level)", labelKey: "n2" },
+  { value: "N3 (Basic conversation level)", labelKey: "n3" },
+  { value: "N4 or below (Not required)", labelKey: "n4OrBelow" },
 ];
 
-const REMOTE_WORK_OPTIONS = [
-  "Fully remote",
-  "2-3 days in office per week",
-  "Primarily in-office (remote possible depending on situation)",
-  "No remote work",
+const REMOTE_WORK_OPTIONS: Option[] = [
+  { value: "Fully remote", labelKey: "fullyRemote" },
+  { value: "2-3 days in office per week", labelKey: "hybrid" },
+  {
+    value: "Primarily in-office (remote possible depending on situation)",
+    labelKey: "primarilyOffice",
+  },
+  { value: "No remote work", labelKey: "noRemote" },
 ];
 
-const BENEFITS = [
-  "Full social insurance",
-  "Commuting allowance",
-  "Housing allowance",
-  "Family allowance",
-  "Certification support",
-  "Employee cafeteria",
-  "On-site daycare",
-  "Refresh vacation",
+const BENEFITS: Option[] = [
+  { value: "Full social insurance", labelKey: "fullSocialInsurance" },
+  { value: "Commuting allowance", labelKey: "commutingAllowance" },
+  { value: "Housing allowance", labelKey: "housingAllowance" },
+  { value: "Family allowance", labelKey: "familyAllowance" },
+  { value: "Certification support", labelKey: "certificationSupport" },
+  { value: "Employee cafeteria", labelKey: "employeeCafeteria" },
+  { value: "On-site daycare", labelKey: "onsiteDaycare" },
+  { value: "Refresh vacation", labelKey: "refreshVacation" },
 ];
 
-const INSURANCE = [
-  "Health insurance",
-  "Employees' pension insurance",
-  "Employment insurance",
-  "Workers' compensation insurance",
+const INSURANCE: Option[] = [
+  { value: "Health insurance", labelKey: "healthInsurance" },
+  { value: "Employees' pension insurance", labelKey: "pensionInsurance" },
+  { value: "Employment insurance", labelKey: "employmentInsurance" },
+  {
+    value: "Workers' compensation insurance",
+    labelKey: "workersCompensation",
+  },
 ];
-
-// ======================================================
-// INITIAL
-// ======================================================
 
 const createEmptyForm = (): CreateVacancyPayload => ({
   companyName: "",
@@ -113,10 +136,6 @@ const createEmptyForm = (): CreateVacancyPayload => ({
   contactEmail: "",
 });
 
-// ======================================================
-// PROPS
-// ======================================================
-
 type PostVacancyModalProps = {
   open: boolean;
 
@@ -131,9 +150,6 @@ type PostVacancyModalProps = {
   vacancy?: Vacancy | null;
 };
 
-// ======================================================
-// COMPONENT
-// ======================================================
 const vacancyToForm = (vacancy: Vacancy): CreateVacancyPayload => ({
   companyName: vacancy.companyName || "",
   companyNameKana: vacancy.companyNameKana || "",
@@ -187,42 +203,45 @@ const vacancyToForm = (vacancy: Vacancy): CreateVacancyPayload => ({
   contactPersonKana: vacancy.contactPersonKana || "",
   contactEmail: vacancy.contactEmail || "",
 });
+
 export default function PostVacancyModal({
   open,
   onClose,
   onSuccess,
-  lang,
   mode = "create",
   vacancy = null,
 }: PostVacancyModalProps) {
+  const t = useTranslations("provider.vacancies.form");
+
   const [form, setForm] = useState<CreateVacancyPayload>(createEmptyForm());
 
   const [submitting, setSubmitting] = useState(false);
 
   const [loadingProfile, setLoadingProfile] = useState(false);
   const isEditMode = mode === "edit" && Boolean(vacancy);
-  // ====================================================
-  // PREFILL COMPANY PROFILE
-  // ====================================================
+
+  // Close on Escape while open
+  useEffect(() => {
+    if (!open) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
 
   useEffect(() => {
     if (!open) {
       return;
     }
 
-    // ============================================
-    // EDIT EXISTING VACANCY
-    // ============================================
-
     if (mode === "edit" && vacancy) {
       setForm(vacancyToForm(vacancy));
 
       return;
     }
-
-    // ============================================
-    // CREATE NEW VACANCY
-    // ============================================
 
     const loadProviderProfile = async () => {
       try {
@@ -261,10 +280,6 @@ export default function PostVacancyModal({
     return null;
   }
 
-  // ====================================================
-  // CHANGE
-  // ====================================================
-
   const updateField = <K extends keyof CreateVacancyPayload>(
     field: K,
     value: CreateVacancyPayload[K],
@@ -275,10 +290,6 @@ export default function PostVacancyModal({
       [field]: value,
     }));
   };
-
-  // ====================================================
-  // CHECKBOX
-  // ====================================================
 
   const toggleArrayValue = (
     field: "benefits" | "insurance",
@@ -299,10 +310,6 @@ export default function PostVacancyModal({
       };
     });
   };
-
-  // ====================================================
-  // RESET
-  // ====================================================
 
   const resetForm = async () => {
     if (isEditMode && vacancy) {
@@ -331,55 +338,37 @@ export default function PostVacancyModal({
     }
   };
 
-  // ====================================================
-  // VALIDATION
-  // ====================================================
-
   const validate = () => {
     if (!form.companyName.trim()) {
-      return lang === "ja" ? "会社名が必要です" : "Company name is required.";
+      return t("validation.companyNameRequired");
     }
 
     if (!form.title.trim()) {
-      return lang === "ja"
-        ? "求人タイトルが必要です"
-        : "Job title is required.";
+      return t("validation.jobTitleRequired");
     }
 
     if (!form.employmentType) {
-      return lang === "ja"
-        ? "雇用形態を選択してください"
-        : "Employment type is required.";
+      return t("validation.employmentTypeRequired");
     }
 
     if (!form.jobDescription.trim()) {
-      return lang === "ja"
-        ? "仕事内容を入力してください"
-        : "Job description is required.";
+      return t("validation.jobDescriptionRequired");
     }
 
     if (!form.workLocation.trim()) {
-      return lang === "ja"
-        ? "勤務地を入力してください"
-        : "Work location is required.";
+      return t("validation.workLocationRequired");
     }
 
     if (!form.contactPerson.trim()) {
-      return lang === "ja"
-        ? "担当者名が必要です"
-        : "Contact person is required.";
+      return t("validation.contactPersonRequired");
     }
 
     if (!form.contactEmail.trim()) {
-      return lang === "ja"
-        ? "メールアドレスが必要です"
-        : "Contact email is required.";
+      return t("validation.contactEmailRequired");
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactEmail)) {
-      return lang === "ja"
-        ? "有効なメールアドレスを入力してください"
-        : "Please enter a valid contact email.";
+      return t("validation.contactEmailInvalid");
     }
 
     if (
@@ -387,17 +376,12 @@ export default function PostVacancyModal({
       form.salaryMax !== null &&
       form.salaryMin > form.salaryMax
     ) {
-      return lang === "ja"
-        ? "最低給与は最高給与以下にしてください"
-        : "Minimum salary cannot exceed maximum salary.";
+      return t("validation.salaryRangeInvalid");
     }
 
     return null;
   };
 
-  // ====================================================
-  // SUBMIT
-  // ====================================================
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -411,23 +395,14 @@ export default function PostVacancyModal({
     try {
       setSubmitting(true);
 
-      let response;
-
-      if (isEditMode && vacancy) {
-        console.log("UPDATING VACANCY:", vacancy.vacancyId);
-
-        response = await updateProviderVacancy(vacancy.vacancyId, form);
-      } else {
-        console.log("CREATING VACANCY");
-
-        response = await createProviderVacancy(form);
-      }
+      const response =
+        isEditMode && vacancy
+          ? await updateProviderVacancy(vacancy.vacancyId, form)
+          : await createProviderVacancy(form);
 
       toast.success(
         response.message ||
-          (isEditMode
-            ? "Vacancy updated successfully."
-            : "Vacancy submitted successfully."),
+          (isEditMode ? t("toast.updated") : t("toast.created")),
       );
 
       await onSuccess();
@@ -442,16 +417,14 @@ export default function PostVacancyModal({
 
         toast.error(
           error.response?.data?.message ||
-            (isEditMode
-              ? "Failed to update vacancy."
-              : "Failed to create vacancy."),
+            (isEditMode ? t("toast.updateFailed") : t("toast.createFailed")),
         );
 
         return;
       }
 
       toast.error(
-        isEditMode ? "Failed to update vacancy." : "Failed to create vacancy.",
+        isEditMode ? t("toast.updateFailed") : t("toast.createFailed"),
       );
     } finally {
       setSubmitting(false);
@@ -459,136 +432,135 @@ export default function PostVacancyModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:p-4">
-      {/* BACKDROP */}
-
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-0 sm:p-4">
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t("close")}
+        tabIndex={-1}
         onClick={onClose}
-        className="absolute inset-0"
+        className="absolute inset-0 cursor-default"
       />
 
-      {/* MODAL */}
-
-      <div className="relative z-10 h-full w-full overflow-y-auto bg-white sm:max-h-[96vh] sm:max-w-6xl sm:rounded-3xl sm:shadow-2xl">
-        {/* HEADER */}
-
-        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4 sm:px-7">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
-            {isEditMode
-              ? lang === "ja"
-                ? "求人編集"
-                : "Edit Vacancy"
-              : lang === "ja"
-                ? "求人追加"
-                : "Add Vacancy"}
-          </p>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="post-vacancy-title"
+        className="relative z-10 h-full w-full overflow-y-auto bg-[#f4f5f8] text-[#1b1c21] sm:h-auto sm:max-h-[96vh] sm:max-w-6xl sm:rounded-[14px] sm:shadow-2xl"
+      >
+        {/* Header */}
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-black/[0.06] bg-white/85 px-5 py-3.5 backdrop-blur-md sm:px-7">
+          <div className="min-w-0">
+            <p className="text-xs text-slate-500">
+              {isEditMode ? t("header.editEyebrow") : t("header.createEyebrow")}
+            </p>
+            <h2
+              id="post-vacancy-title"
+              className="truncate text-lg font-semibold leading-tight"
+            >
+              {isEditMode ? t("intro.editTitle") : t("intro.createTitle")}
+            </h2>
+          </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 transition hover:bg-slate-100"
+            aria-label={t("close")}
+            className={`${BTN} w-9 shrink-0 bg-white/80 !px-0 text-slate-600 ring-1 ring-black/10 hover:bg-white hover:text-slate-900`}
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </header>
 
-        {/* INTRO */}
-
-        <div className="border-b border-slate-200 px-5 py-7 sm:px-8">
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
-            Vacancy Form
+        {/* Intro */}
+        <div className="px-5 pt-6 sm:px-8">
+          <span className="inline-flex rounded-full bg-teal-800/5 px-3 py-1 text-xs font-medium text-teal-900 ring-1 ring-teal-800/10">
+            {t("intro.badge")}
           </span>
 
-          <h2 className="mt-4 text-3xl font-bold text-slate-950">
+          <p className="mt-3 max-w-2xl text-sm text-slate-500">
             {isEditMode
-              ? lang === "ja"
-                ? "求人情報を編集"
-                : "Edit Job Vacancy"
-              : lang === "ja"
-                ? "求人を登録"
-                : "Register Job Vacancy"}
-          </h2>
-
-          <p className="mt-2 text-sm text-slate-600">
-            {isEditMode
-              ? lang === "ja"
-                ? "求人情報を更新してください。保存後、管理者による再審査が行われます。"
-                : "Update the vacancy information below. Saving changes will send the vacancy for admin review again."
-              : lang === "ja"
-                ? "必要事項を入力してください。登録後、管理者による審査が行われます。"
-                : "Please fill out the form below. The vacancy will be sent for admin review after submission."}
+              ? t("intro.editDescription")
+              : t("intro.createDescription")}
           </p>
         </div>
 
         {loadingProfile ? (
-          <div className="flex min-h-[400px] items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+          <div
+            role="status"
+            className="flex min-h-[400px] items-center justify-center"
+          >
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/80 ring-1 ring-black/5">
+              <Loader2
+                className="h-5 w-5 animate-spin text-teal-800"
+                aria-hidden="true"
+              />
+            </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6 p-5 sm:p-8">
-            {/* ================================= */}
-            {/* COMPANY */}
-            {/* ================================= */}
-
+          <form onSubmit={handleSubmit} className="space-y-5 p-5 sm:p-8">
             <FormSection
-              title="Company Information"
-              description="Basic company information"
+              title={t("sections.company.title")}
+              description={t("sections.company.description")}
             >
               <div className="grid gap-5 md:grid-cols-2">
                 <InputField
-                  label="Company Name"
+                  label={t("fields.companyName")}
+                  requiredLabel={t("required")}
                   required
                   value={form.companyName}
                   disabled
-                  placeholder="e.g. Sample Co., Ltd."
+                  placeholder={t("placeholders.companyName")}
                   onChange={(value) => updateField("companyName", value)}
                 />
 
                 <InputField
-                  label="Company Name (Kana)"
+                  label={t("fields.companyNameKana")}
+                  requiredLabel={t("required")}
                   value={form.companyNameKana}
-                  placeholder="e.g. Kabushiki Gaisha Sample"
+                  placeholder={t("placeholders.companyNameKana")}
                   onChange={(value) => updateField("companyNameKana", value)}
                 />
               </div>
             </FormSection>
 
-            {/* ================================= */}
-            {/* POSITION */}
-            {/* ================================= */}
-
             <FormSection
-              title="Position Details"
-              description="e.g. Software Engineer"
+              title={t("sections.position.title")}
+              description={t("sections.position.description")}
             >
               <div className="grid gap-5 md:grid-cols-2">
                 <InputField
-                  label="Job Title"
+                  label={t("fields.jobTitle")}
+                  requiredLabel={t("required")}
                   required
                   value={form.title}
-                  placeholder="e.g. Software Engineer"
+                  placeholder={t("placeholders.jobTitle")}
                   onChange={(value) => updateField("title", value)}
                 />
 
                 <InputField
-                  label="Job Title (Kana)"
+                  label={t("fields.jobTitleKana")}
+                  requiredLabel={t("required")}
                   value={form.titleKana}
-                  placeholder="e.g. Software Enjinia"
+                  placeholder={t("placeholders.jobTitleKana")}
                   onChange={(value) => updateField("titleKana", value)}
                 />
 
                 <SelectField
-                  label="Employment Type"
+                  label={t("fields.employmentType")}
+                  requiredLabel={t("required")}
+                  placeholder={t("selectPlaceholder")}
                   required
                   value={form.employmentType}
                   options={EMPLOYMENT_TYPES}
+                  getOptionLabel={(option) =>
+                    t(`options.employmentTypes.${option.labelKey}`)
+                  }
                   onChange={(value) => updateField("employmentType", value)}
                 />
 
                 <InputField
-                  label="Number of Openings"
+                  label={t("fields.numberOfOpenings")}
+                  requiredLabel={t("required")}
                   type="number"
                   value={String(form.numberOfPeople)}
                   onChange={(value) =>
@@ -598,239 +570,262 @@ export default function PostVacancyModal({
               </div>
             </FormSection>
 
-            {/* ================================= */}
-            {/* DESCRIPTION */}
-            {/* ================================= */}
-
             <FormSection
-              title="Job Description"
-              description="Please describe the specific job responsibilities"
+              title={t("sections.description.title")}
+              description={t("sections.description.description")}
             >
               <div className="space-y-5">
                 <TextareaField
-                  label="Job Description"
+                  label={t("fields.jobDescription")}
+                  requiredLabel={t("required")}
                   required
                   value={form.jobDescription}
-                  placeholder="Please describe the specific job responsibilities"
+                  placeholder={t("placeholders.jobDescription")}
                   onChange={(value) => updateField("jobDescription", value)}
                 />
 
                 <TextareaField
-                  label="Detailed Responsibilities"
+                  label={t("fields.responsibilities")}
+                  requiredLabel={t("required")}
                   value={form.responsibilities}
-                  placeholder="Please describe day-to-day tasks in detail"
+                  placeholder={t("placeholders.responsibilities")}
                   onChange={(value) => updateField("responsibilities", value)}
                 />
               </div>
             </FormSection>
 
-            {/* ================================= */}
-            {/* REQUIREMENTS */}
-            {/* ================================= */}
-
             <FormSection
-              title="Requirements"
-              description="e.g. 3+ years of JavaScript/TypeScript development experience"
+              title={t("sections.requirements.title")}
+              description={t("sections.requirements.description")}
             >
               <div className="space-y-5">
                 <TextareaField
-                  label="Required Skills & Experience"
+                  label={t("fields.requiredSkills")}
+                  requiredLabel={t("required")}
                   value={form.requiredSkills}
-                  placeholder="Required skills and experience"
+                  placeholder={t("placeholders.requiredSkills")}
                   onChange={(value) => updateField("requiredSkills", value)}
                 />
 
                 <TextareaField
-                  label="Preferred Skills"
+                  label={t("fields.preferredSkills")}
+                  requiredLabel={t("required")}
                   value={form.preferredSkills}
-                  placeholder="e.g. React or Next.js experience"
+                  placeholder={t("placeholders.preferredSkills")}
                   onChange={(value) => updateField("preferredSkills", value)}
                 />
 
                 <div className="grid gap-5 md:grid-cols-2">
                   <InputField
-                    label="Education Requirements"
+                    label={t("fields.educationRequirements")}
+                    requiredLabel={t("required")}
                     value={form.requiredEducation}
-                    placeholder="e.g. University degree or above"
+                    placeholder={t("placeholders.educationRequirements")}
                     onChange={(value) =>
                       updateField("requiredEducation", value)
                     }
                   />
 
                   <InputField
-                    label="Years of Experience"
+                    label={t("fields.yearsOfExperience")}
+                    requiredLabel={t("required")}
                     value={form.requiredExperience}
-                    placeholder="e.g. 3+ years / Entry level welcome"
+                    placeholder={t("placeholders.yearsOfExperience")}
                     onChange={(value) =>
                       updateField("requiredExperience", value)
                     }
                   />
 
                   <SelectField
-                    label="Japanese Level"
+                    label={t("fields.japaneseLevel")}
+                    requiredLabel={t("required")}
+                    placeholder={t("selectPlaceholder")}
                     value={form.japaneseLevel}
                     options={JAPANESE_LEVELS}
+                    getOptionLabel={(option) =>
+                      t(`options.japaneseLevels.${option.labelKey}`)
+                    }
                     onChange={(value) => updateField("japaneseLevel", value)}
                   />
                 </div>
               </div>
             </FormSection>
 
-            {/* ================================= */}
-            {/* LOCATION / SALARY */}
-            {/* ================================= */}
-
             <FormSection
-              title="Location & Work Conditions"
-              description="e.g. Chiyoda-ku, Tokyo"
+              title={t("sections.location.title")}
+              description={t("sections.location.description")}
             >
               <div className="grid gap-5 md:grid-cols-2">
                 <InputField
-                  label="Work Location"
+                  label={t("fields.workLocation")}
+                  requiredLabel={t("required")}
                   required
                   value={form.workLocation}
-                  placeholder="e.g. Chiyoda-ku, Tokyo"
+                  placeholder={t("placeholders.workLocation")}
                   onChange={(value) => updateField("workLocation", value)}
                 />
 
                 <InputField
-                  label="Detailed Location"
+                  label={t("fields.detailedLocation")}
+                  requiredLabel={t("required")}
                   value={form.workLocationDetail}
-                  placeholder="e.g. 5-minute walk from Tokyo Station"
+                  placeholder={t("placeholders.detailedLocation")}
                   onChange={(value) => updateField("workLocationDetail", value)}
                 />
 
                 <SelectField
-                  label="Remote Work Policy"
+                  label={t("fields.remoteWorkPolicy")}
+                  requiredLabel={t("required")}
+                  placeholder={t("selectPlaceholder")}
                   value={form.remoteWork}
                   options={REMOTE_WORK_OPTIONS}
+                  getOptionLabel={(option) =>
+                    t(`options.remoteWork.${option.labelKey}`)
+                  }
                   onChange={(value) => updateField("remoteWork", value)}
                 />
 
                 <InputField
-                  label="Salary Notes"
+                  label={t("fields.salaryNotes")}
+                  requiredLabel={t("required")}
                   value={form.salaryNote}
-                  placeholder="e.g. Bonus twice a year"
+                  placeholder={t("placeholders.salaryNotes")}
                   onChange={(value) => updateField("salaryNote", value)}
                 />
               </div>
 
-              <div className="mt-5">
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Annual Salary (Min) / Annual Salary (Max)
-                </label>
+              <div
+                role="group"
+                aria-labelledby="salary-range-label"
+                className="mt-5"
+              >
+                <p
+                  id="salary-range-label"
+                  className="mb-1.5 text-sm font-medium text-slate-700"
+                >
+                  {t("fields.salaryRange")}
+                </p>
 
                 <div className="flex items-center gap-3">
                   <input
                     type="number"
+                    aria-label={t("fields.salaryRange")}
                     value={form.salaryMin ?? ""}
-                    onChange={(e) =>
+                    onChange={(event) =>
                       updateField(
                         "salaryMin",
-                        e.target.value ? Number(e.target.value) : null,
+                        event.target.value ? Number(event.target.value) : null,
                       )
                     }
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3"
+                    className={`${CONTROL} font-mono tabular-nums`}
                   />
 
-                  <span>~</span>
+                  <span aria-hidden="true" className="text-slate-500">
+                    ~
+                  </span>
 
                   <input
                     type="number"
+                    aria-label={t("fields.salaryRange")}
                     value={form.salaryMax ?? ""}
-                    onChange={(e) =>
+                    onChange={(event) =>
                       updateField(
                         "salaryMax",
-                        e.target.value ? Number(e.target.value) : null,
+                        event.target.value ? Number(event.target.value) : null,
                       )
                     }
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3"
+                    className={`${CONTROL} font-mono tabular-nums`}
                   />
 
-                  <span className="text-sm text-slate-500">万円</span>
+                  <span className="shrink-0 text-sm text-slate-500">
+                    {t("salaryUnit")}
+                  </span>
                 </div>
               </div>
             </FormSection>
 
-            {/* ================================= */}
-            {/* SCHEDULE */}
-            {/* ================================= */}
-
             <FormSection
-              title="Work Schedule & Holidays"
-              description="e.g. 9:00 AM - 6:00 PM"
+              title={t("sections.schedule.title")}
+              description={t("sections.schedule.description")}
             >
               <div className="grid gap-5 md:grid-cols-2">
                 <InputField
-                  label="Working Hours"
+                  label={t("fields.workingHours")}
+                  requiredLabel={t("required")}
                   value={form.workHours}
                   onChange={(value) => updateField("workHours", value)}
                 />
 
                 <InputField
-                  label="Break Time"
+                  label={t("fields.breakTime")}
+                  requiredLabel={t("required")}
                   value={form.breakTime}
                   onChange={(value) => updateField("breakTime", value)}
                 />
 
                 <InputField
-                  label="Overtime"
+                  label={t("fields.overtime")}
+                  requiredLabel={t("required")}
                   value={form.overtime}
-                  placeholder="About 20 hours per month"
+                  placeholder={t("placeholders.overtime")}
                   onChange={(value) => updateField("overtime", value)}
                 />
 
                 <InputField
-                  label="Holidays & Leave"
+                  label={t("fields.holidays")}
+                  requiredLabel={t("required")}
                   value={form.holidays}
-                  placeholder="Weekends, public holidays..."
+                  placeholder={t("placeholders.holidays")}
                   onChange={(value) => updateField("holidays", value)}
                 />
               </div>
             </FormSection>
 
-            {/* ================================= */}
-            {/* BENEFITS */}
-            {/* ================================= */}
-
-            <FormSection title="Benefits & Welfare" description="Benefits">
+            <FormSection
+              title={t("sections.benefits.title")}
+              description={t("sections.benefits.description")}
+            >
               <CheckboxGroup
-                label="Benefits"
+                label={t("fields.benefits")}
                 options={BENEFITS}
                 selected={form.benefits}
+                getOptionLabel={(option) =>
+                  t(`options.benefits.${option.labelKey}`)
+                }
                 onToggle={(value) => toggleArrayValue("benefits", value)}
               />
 
               <div className="mt-6">
                 <CheckboxGroup
-                  label="Social Insurance"
+                  label={t("fields.socialInsurance")}
                   options={INSURANCE}
                   selected={form.insurance}
+                  getOptionLabel={(option) =>
+                    t(`options.insurance.${option.labelKey}`)
+                  }
                   onToggle={(value) => toggleArrayValue("insurance", value)}
                 />
               </div>
 
               <div className="mt-6 max-w-md">
                 <InputField
-                  label="Trial Period"
+                  label={t("fields.trialPeriod")}
+                  requiredLabel={t("required")}
                   value={form.trialPeriod}
-                  placeholder="e.g. Three months"
+                  placeholder={t("placeholders.trialPeriod")}
                   onChange={(value) => updateField("trialPeriod", value)}
                 />
               </div>
             </FormSection>
 
-            {/* ================================= */}
-            {/* APPLICATION */}
-            {/* ================================= */}
-
             <FormSection
-              title="Application Information"
-              description="Document screening → First interview → Final interview → Offer"
+              title={t("sections.application.title")}
+              description={t("sections.application.description")}
             >
               <div className="grid gap-5 md:grid-cols-2">
                 <InputField
-                  label="Application Deadline"
+                  label={t("fields.applicationDeadline")}
+                  requiredLabel={t("required")}
                   type="date"
                   value={form.applicationDeadline}
                   onChange={(value) =>
@@ -839,50 +834,51 @@ export default function PostVacancyModal({
                 />
 
                 <InputField
-                  label="Start Date"
+                  label={t("fields.startDate")}
+                  requiredLabel={t("required")}
                   value={form.startDate}
-                  placeholder="e.g. Immediately / April 2027"
+                  placeholder={t("placeholders.startDate")}
                   onChange={(value) => updateField("startDate", value)}
                 />
               </div>
 
               <div className="mt-5">
                 <InputField
-                  label="Selection Process"
+                  label={t("fields.selectionProcess")}
+                  requiredLabel={t("required")}
                   value={form.selectionProcess}
-                  placeholder="Document screening → First interview → Final interview → Job offer"
+                  placeholder={t("placeholders.selectionProcess")}
                   onChange={(value) => updateField("selectionProcess", value)}
                 />
               </div>
             </FormSection>
 
-            {/* ================================= */}
-            {/* CONTACT */}
-            {/* ================================= */}
-
             <FormSection
-              title="Contact Person"
-              description="Job-related contact information"
+              title={t("sections.contact.title")}
+              description={t("sections.contact.description")}
             >
               <div className="grid gap-5 md:grid-cols-2">
                 <InputField
-                  label="Contact Person Name"
+                  label={t("fields.contactPerson")}
+                  requiredLabel={t("required")}
                   required
                   value={form.contactPerson}
-                  placeholder="e.g. Taro Yamada"
+                  placeholder={t("placeholders.contactPerson")}
                   onChange={(value) => updateField("contactPerson", value)}
                 />
 
                 <InputField
-                  label="Contact Person Name (Kana)"
+                  label={t("fields.contactPersonKana")}
+                  requiredLabel={t("required")}
                   value={form.contactPersonKana}
-                  placeholder="e.g. Yamada Taro"
+                  placeholder={t("placeholders.contactPersonKana")}
                   onChange={(value) => updateField("contactPersonKana", value)}
                 />
 
                 <div className="md:col-span-2">
                   <InputField
-                    label="Email Address"
+                    label={t("fields.emailAddress")}
+                    requiredLabel={t("required")}
                     type="email"
                     required
                     value={form.contactEmail}
@@ -893,52 +889,39 @@ export default function PostVacancyModal({
               </div>
             </FormSection>
 
-            {/* ================================= */}
-            {/* FOOTER */}
-            {/* ================================= */}
+            {/* Action bar (stays visible while scrolling the form) */}
+            <div className="sticky bottom-0 z-10 -mx-5 -mb-5 flex flex-col gap-3 border-t border-black/[0.06] bg-white/90 px-5 py-3 backdrop-blur-md sm:-mx-8 sm:-mb-8 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+              <p className="text-xs text-slate-500">{t("footerNote")}</p>
 
-            <div className="flex flex-col gap-4 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-slate-500">
-                The information submitted will be used for job posting and
-                recruitment support purposes.
-              </p>
-
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   type="button"
                   disabled={submitting}
                   onClick={() => void resetForm()}
-                  className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-medium"
+                  className={BTN_SECONDARY}
                 >
-                  Reset
+                  {t("reset")}
                 </button>
 
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={BTN_PRIMARY}
                 >
-                  <Loader2
-                    className={`h-4 w-4 animate-spin ${
-                      submitting ? "block" : "hidden"
-                    }`}
-                  />
+                  {submitting && (
+                    <Loader2
+                      className="h-4 w-4 shrink-0 animate-spin"
+                      aria-hidden="true"
+                    />
+                  )}
 
                   {submitting
                     ? isEditMode
-                      ? lang === "ja"
-                        ? "保存中..."
-                        : "Saving..."
-                      : lang === "ja"
-                        ? "送信中..."
-                        : "Posting..."
+                      ? t("saving")
+                      : t("posting")
                     : isEditMode
-                      ? lang === "ja"
-                        ? "変更を保存"
-                        : "Save Changes"
-                      : lang === "ja"
-                        ? "求人を掲載"
-                        : "Post Job Vacancy"}
+                      ? t("saveChanges")
+                      : t("postJobVacancy")}
                 </button>
               </div>
             </div>
@@ -949,10 +932,6 @@ export default function PostVacancyModal({
   );
 }
 
-// ======================================================
-// SECTION
-// ======================================================
-
 function FormSection({
   title,
   description,
@@ -962,12 +941,12 @@ function FormSection({
 
   description?: string;
 
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-slate-50/50 p-5 sm:p-6">
-      <div className="mb-5 border-b border-slate-200 pb-4">
-        <h3 className="text-lg font-semibold text-slate-950">{title}</h3>
+    <section className={`p-5 sm:p-6 ${PANEL}`}>
+      <div className="mb-5 border-b border-black/5 pb-4">
+        <h3 className="text-base font-semibold">{title}</h3>
 
         {description && (
           <p className="mt-1 text-xs text-slate-500">{description}</p>
@@ -979,9 +958,27 @@ function FormSection({
   );
 }
 
-// ======================================================
-// INPUT
-// ======================================================
+function FieldLabel({
+  label,
+  required,
+  requiredLabel,
+}: {
+  label: string;
+  required?: boolean;
+  requiredLabel: string;
+}) {
+  return (
+    <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700">
+      {label}
+
+      {required && (
+        <span className="text-xs font-medium text-red-700">
+          {requiredLabel}
+        </span>
+      )}
+    </span>
+  );
+}
 
 function InputField({
   label,
@@ -990,6 +987,7 @@ function InputField({
   placeholder,
   type = "text",
   required,
+  requiredLabel,
   disabled,
 }: {
   label: string;
@@ -1004,35 +1002,32 @@ function InputField({
 
   required?: boolean;
 
+  requiredLabel: string;
+
   disabled?: boolean;
 }) {
+  const isNumeric = type === "number" || type === "date";
+
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-medium text-slate-700">
-        {label}
-
-        {required && (
-          <span className="ml-2 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-red-600">
-            Required
-          </span>
-        )}
-      </span>
+      <FieldLabel
+        label={label}
+        required={required}
+        requiredLabel={requiredLabel}
+      />
 
       <input
         type={type}
         value={value}
         disabled={disabled}
         placeholder={placeholder}
+        aria-required={required || undefined}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+        className={`${CONTROL} ${isNumeric ? "font-mono tabular-nums" : ""}`}
       />
     </label>
   );
 }
-
-// ======================================================
-// TEXTAREA
-// ======================================================
 
 function TextareaField({
   label,
@@ -1040,6 +1035,7 @@ function TextareaField({
   onChange,
   placeholder,
   required,
+  requiredLabel,
 }: {
   label: string;
 
@@ -1050,33 +1046,28 @@ function TextareaField({
   placeholder?: string;
 
   required?: boolean;
+
+  requiredLabel: string;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-medium text-slate-700">
-        {label}
-
-        {required && (
-          <span className="ml-2 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-red-600">
-            Required
-          </span>
-        )}
-      </span>
+      <FieldLabel
+        label={label}
+        required={required}
+        requiredLabel={requiredLabel}
+      />
 
       <textarea
         rows={4}
         value={value}
         placeholder={placeholder}
+        aria-required={required || undefined}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+        className={`${CONTROL} resize-y leading-6`}
       />
     </label>
   );
 }
-
-// ======================================================
-// SELECT
-// ======================================================
 
 function SelectField({
   label,
@@ -1084,39 +1075,45 @@ function SelectField({
   options,
   onChange,
   required,
+  requiredLabel,
+  placeholder,
+  getOptionLabel,
 }: {
   label: string;
 
   value: string;
 
-  options: string[];
+  options: Option[];
 
   onChange: (value: string) => void;
 
   required?: boolean;
+
+  requiredLabel: string;
+
+  placeholder: string;
+
+  getOptionLabel: (option: Option) => string;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-medium text-slate-700">
-        {label}
-
-        {required && (
-          <span className="ml-2 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-red-600">
-            Required
-          </span>
-        )}
-      </span>
+      <FieldLabel
+        label={label}
+        required={required}
+        requiredLabel={requiredLabel}
+      />
 
       <select
         value={value}
+        aria-required={required || undefined}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
+        className={CONTROL}
       >
-        <option value="">Please select</option>
+        <option value="">{placeholder}</option>
 
         {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
+          <option key={option.value} value={option.value}>
+            {getOptionLabel(option)}
           </option>
         ))}
       </select>
@@ -1124,44 +1121,56 @@ function SelectField({
   );
 }
 
-// ======================================================
-// CHECKBOXES
-// ======================================================
-
 function CheckboxGroup({
   label,
   options,
   selected,
   onToggle,
+  getOptionLabel,
 }: {
   label: string;
 
-  options: string[];
+  options: Option[];
 
   selected: string[];
 
   onToggle: (value: string) => void;
+
+  getOptionLabel: (option: Option) => string;
 }) {
   return (
-    <div>
-      <p className="mb-3 text-sm font-medium text-slate-700">{label}</p>
+    <fieldset>
+      <legend className="mb-2 text-sm font-medium text-slate-700">
+        {label}
+      </legend>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {options.map((option) => (
-          <label
-            key={option}
-            className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
-          >
-            <input
-              type="checkbox"
-              checked={selected.includes(option)}
-              onChange={() => onToggle(option)}
-            />
+      <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+        {options.map((option) => {
+          const checked = selected.includes(option.value);
 
-            {option}
-          </label>
-        ))}
+          return (
+            <label
+              key={option.value}
+              className={`flex cursor-pointer items-center gap-3 rounded-[12px] px-3.5 py-2.5 text-sm ring-1 transition-colors focus-within:ring-2 focus-within:ring-teal-800/50 ${
+                checked
+                  ? "bg-teal-800/5 text-teal-900 ring-teal-800/30"
+                  : "bg-white ring-black/10 hover:bg-white/80"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => onToggle(option.value)}
+                className="h-4 w-4 shrink-0 accent-teal-800 focus:outline-none"
+              />
+
+              <span className="min-w-0 break-words">
+                {getOptionLabel(option)}
+              </span>
+            </label>
+          );
+        })}
       </div>
-    </div>
+    </fieldset>
   );
 }

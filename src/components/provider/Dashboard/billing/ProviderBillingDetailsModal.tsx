@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 import {
   CircleDollarSign,
   FileText,
@@ -7,6 +9,7 @@ import {
   RotateCcw,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type {
   ProviderPlacementBilling,
@@ -15,10 +18,34 @@ import type {
 
 type Props = {
   billing: ProviderPlacementBilling | null;
-
   lang: string;
-
   onClose: () => void;
+};
+
+// Shared tokens: keep in sync with vacancies.tsx / provider-dashboard.tsx
+const PANEL = "rounded-[14px] bg-white/70 ring-1 ring-black/5";
+
+const FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-800/50 focus-visible:ring-offset-1";
+
+const BTN = `inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-[12px] text-sm font-medium transition-colors ${FOCUS}`;
+
+// Status colours follow the same meaning as vacancies:
+// emerald = done/good, amber = waiting, red = failed/cancelled, slate = neutral.
+const RAIL: Record<ProviderPlacementBillingStatus, string> = {
+  issued: "bg-amber-600",
+  paid: "bg-emerald-600",
+  partially_refunded: "bg-teal-700",
+  refunded: "bg-slate-400",
+  cancelled: "bg-red-700",
+};
+
+const TONE: Record<ProviderPlacementBillingStatus, string> = {
+  issued: "text-amber-700",
+  paid: "text-emerald-700",
+  partially_refunded: "text-teal-700",
+  refunded: "text-slate-500",
+  cancelled: "text-red-700",
 };
 
 export default function ProviderBillingDetailsModal({
@@ -26,241 +53,288 @@ export default function ProviderBillingDetailsModal({
   lang,
   onClose,
 }: Props) {
+  const t = useTranslations("provider.billing.details");
+
+  const isOpen = Boolean(billing);
+
+  // Close on Escape while open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, onClose]);
+
   if (!billing) {
     return null;
   }
 
+  const showsPaymentBreakdown = [
+    "paid",
+    "partially_refunded",
+    "refunded",
+  ].includes(billing.status);
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-0 sm:p-4">
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t("close")}
+        tabIndex={-1}
         className="absolute inset-0 cursor-default"
         onClick={onClose}
       />
 
-      <div className="relative z-10 flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
-        <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-              {lang === "ja" ? "採用請求書" : "Placement Invoice"}
-            </p>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="billing-details-title"
+        className="relative z-10 flex max-h-dvh w-full max-w-3xl flex-col overflow-hidden bg-[#f4f5f8] text-[#1b1c21] shadow-2xl sm:max-h-[92vh] sm:rounded-[14px]"
+      >
+        {/* Header */}
+        <header className="flex items-start justify-between gap-4 border-b border-black/[0.06] bg-white/85 px-5 py-4 sm:px-6">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <BillingStatusLabel status={billing.status} />
+              <span className="text-xs text-slate-500">{t("title")}</span>
+            </div>
 
-            <h2 className="mt-1 text-2xl font-bold text-slate-950">
+            <h2
+              id="billing-details-title"
+              className="mt-1 break-all font-mono text-xl font-semibold tabular-nums leading-tight"
+            >
               {billing.billingId}
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">{billing.companyName}</p>
+            <p className="mt-0.5 text-sm text-slate-500">
+              {billing.companyName}
+            </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <BillingStatusBadge status={billing.status} />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("close")}
+            className={`${BTN} w-9 shrink-0 bg-white/80 text-slate-600 ring-1 ring-black/10 hover:bg-white hover:text-slate-900`}
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </header>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-        <div className="overflow-y-auto p-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Info
-              label={lang === "ja" ? "候補者" : "Candidate"}
-              value={billing.candidateName}
+        {/* Body */}
+        <div className="space-y-5 overflow-y-auto p-5 sm:p-6">
+          {/* Placement details */}
+          <section
+            className={`relative overflow-hidden p-5 pl-6 ${PANEL}`}
+          >
+            <span
+              aria-hidden="true"
+              className={`absolute inset-y-0 left-0 w-1.5 ${RAIL[billing.status]}`}
             />
 
-            <Info
-              label={lang === "ja" ? "職種" : "Position"}
-              value={billing.jobTitle}
-            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Info label={t("fields.candidate")} value={billing.candidateName} />
+              <Info label={t("fields.position")} value={billing.jobTitle} />
+              <Info
+                label={t("fields.placementDate")}
+                value={formatDate(billing.placementDate, lang)}
+                mono
+              />
+              <Info
+                label={t("fields.dueDate")}
+                value={formatDate(billing.dueDate, lang)}
+                mono
+              />
+            </div>
+          </section>
 
-            <Info
-              label={lang === "ja" ? "採用日" : "Placement Date"}
-              value={formatDate(billing.placementDate)}
-            />
-
-            <Info
-              label={lang === "ja" ? "支払期限" : "Due Date"}
-              value={formatDate(billing.dueDate)}
-            />
-          </div>
-
-          <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+          {/* Invoice summary */}
+          <section className={`${PANEL} p-5`}>
             <div className="flex items-center gap-2">
-              <ReceiptText className="h-5 w-5 text-indigo-600" />
-
-              <h3 className="font-bold text-slate-950">
-                {lang === "ja" ? "請求明細" : "Invoice Summary"}
-              </h3>
+              <span
+                aria-hidden="true"
+                className="grid h-8 w-8 place-items-center rounded-full bg-teal-800/5 text-teal-800/70 ring-1 ring-teal-800/10"
+              >
+                <ReceiptText className="h-4 w-4" />
+              </span>
+              <h3 className="text-base font-semibold">{t("invoiceSummary")}</h3>
             </div>
 
-            <MoneyRow
-              label={lang === "ja" ? "紹介手数料" : "Placement Fee"}
-              value={billing.placementFee}
-            />
-
-            <MoneyRow
-              label={`${lang === "ja" ? "税" : "Tax"} (${billing.taxRate}%)`}
-              value={billing.taxAmount}
-            />
-
-            <div className="my-4 border-t border-slate-200" />
-
-            <MoneyRow
-              label={lang === "ja" ? "合計" : "Total"}
-              value={billing.totalAmount}
-              strong
-            />
-
-            {billing.status === "issued" && (
+            <dl className="mt-3">
               <MoneyRow
-                label={lang === "ja" ? "未払額" : "Amount Due"}
-                value={billing.amountDue}
+                label={t("fields.placementFee")}
+                value={billing.placementFee}
+                lang={lang}
+              />
+              <MoneyRow
+                label={t("fields.tax", { rate: billing.taxRate })}
+                value={billing.taxAmount}
+                lang={lang}
+              />
+
+              <div className="my-3 border-t border-black/5" />
+
+              <MoneyRow
+                label={t("fields.total")}
+                value={billing.totalAmount}
+                lang={lang}
                 strong
               />
-            )}
 
-            {["paid", "partially_refunded", "refunded"].includes(
-              billing.status,
-            ) && (
-              <>
+              {billing.status === "issued" && (
                 <MoneyRow
-                  label={lang === "ja" ? "支払額" : "Paid"}
-                  value={billing.paidAmount}
-                />
-
-                <MoneyRow
-                  label={lang === "ja" ? "返金額" : "Refunded"}
-                  value={billing.refundedAmount}
-                />
-
-                <MoneyRow
-                  label={lang === "ja" ? "純支払額" : "Net Paid"}
-                  value={billing.netPaidAmount}
+                  label={t("fields.amountDue")}
+                  value={billing.amountDue}
+                  lang={lang}
                   strong
                 />
-              </>
-            )}
-          </div>
+              )}
 
+              {showsPaymentBreakdown && (
+                <>
+                  <MoneyRow
+                    label={t("fields.paid")}
+                    value={billing.paidAmount}
+                    lang={lang}
+                  />
+                  <MoneyRow
+                    label={t("fields.refunded")}
+                    value={billing.refundedAmount}
+                    lang={lang}
+                  />
+                  <MoneyRow
+                    label={t("fields.netPaid")}
+                    value={billing.netPaidAmount}
+                    lang={lang}
+                    strong
+                  />
+                </>
+              )}
+            </dl>
+          </section>
+
+          {/* Awaiting payment */}
           {billing.status === "issued" && (
-            <div className="mt-6 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-              <div className="flex items-start gap-3">
-                <CircleDollarSign className="mt-0.5 h-5 w-5 text-blue-600" />
-
-                <div>
-                  <p className="font-semibold text-blue-900">
-                    {lang === "ja" ? "お支払い待ち" : "Payment Pending"}
-                  </p>
-
-                  <p className="mt-1 text-sm leading-6 text-blue-700">
-                    {lang === "ja"
-                      ? "現在は管理者が支払いを確認して請求状態を更新します。オンライン決済は次の段階で追加します。"
-                      : "For now, payment is confirmed manually by Admin. Online payment will be added in the next phase."}
-                  </p>
-                </div>
+            <div className="flex items-start gap-3 rounded-[14px] bg-amber-50 px-4 py-3 ring-1 ring-amber-200">
+              <CircleDollarSign
+                className="mt-0.5 h-5 w-5 shrink-0 text-amber-700"
+                aria-hidden="true"
+              />
+              <div>
+                <p className="text-sm font-medium text-amber-800">
+                  {t("paymentPendingTitle")}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-amber-700">
+                  {t("paymentPendingDescription")}
+                </p>
               </div>
             </div>
           )}
 
-          {billing.notes && (
-            <div className="mt-6 rounded-2xl border border-slate-200 p-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                <FileText className="h-4 w-4" />
-
-                {lang === "ja" ? "備考" : "Notes"}
-              </div>
-
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
-                {billing.notes}
-              </p>
-            </div>
-          )}
-
+          {/* Cancelled */}
           {billing.status === "cancelled" && (
-            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4">
-              <p className="font-semibold text-red-800">
-                {lang === "ja" ? "請求キャンセル" : "Invoice Cancelled"}
+            <div
+              role="status"
+              className="rounded-[14px] bg-red-50 px-4 py-3 ring-1 ring-red-100"
+            >
+              <p className="text-sm font-medium text-red-700">
+                {t("invoiceCancelled")}
               </p>
-
-              <p className="mt-2 text-sm text-red-700">
+              <p className="mt-1 text-sm text-red-700">
                 {billing.cancellationReason || "-"}
               </p>
             </div>
           )}
 
-          {billing.refundHistory.length > 0 && (
-            <div className="mt-6">
-              <div className="mb-3 flex items-center gap-2">
-                <RotateCcw className="h-5 w-5 text-slate-500" />
-
-                <h3 className="font-bold text-slate-950">
-                  {lang === "ja" ? "返金履歴" : "Refund History"}
-                </h3>
+          {/* Notes */}
+          {billing.notes && (
+            <section className={`${PANEL} p-5`}>
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <FileText
+                  className="h-4 w-4 shrink-0 text-slate-500"
+                  aria-hidden="true"
+                />
+                {t("notes")}
               </div>
 
-              <div className="space-y-3">
+              <p className="mt-2 max-w-[75ch] whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">
+                {billing.notes}
+              </p>
+            </section>
+          )}
+
+          {/* Refund history */}
+          {billing.refundHistory.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-center gap-2">
+                <RotateCcw
+                  className="h-4 w-4 shrink-0 text-slate-500"
+                  aria-hidden="true"
+                />
+                <h3 className="text-base font-semibold">{t("refundHistory")}</h3>
+              </div>
+
+              <ul className="space-y-3">
                 {billing.refundHistory.map((refund) => (
-                  <div
-                    key={refund.refundId}
-                    className="rounded-2xl border border-slate-200 p-4"
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="font-semibold text-slate-900">
+                  <li key={refund.refundId} className={`${PANEL} p-4`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="break-all font-mono text-sm font-medium tabular-nums">
                           {refund.refundId}
                         </p>
-
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="mt-1 break-words text-sm text-slate-500">
                           {refund.reason}
                         </p>
                       </div>
 
-                      <p className="font-bold text-red-600">
-                        -{formatMoney(refund.amount)}
+                      <p className="shrink-0 font-mono text-base font-medium tabular-nums text-red-700">
+                        -{formatMoney(refund.amount, lang)}
                       </p>
                     </div>
 
-                    <p className="mt-3 text-xs text-slate-400">
-                      {formatDate(refund.refundedAt)}
+                    <p className="mt-2 font-mono text-xs tabular-nums text-slate-500">
+                      {formatDate(refund.refundedAt, lang)}
                     </p>
-                  </div>
+                  </li>
                 ))}
-              </div>
-            </div>
+              </ul>
+            </section>
           )}
 
-          <div className="mt-6 grid gap-3 rounded-2xl bg-slate-50 p-4 sm:grid-cols-3">
+          {/* References */}
+          <section className={`grid gap-4 p-5 sm:grid-cols-3 ${PANEL}`}>
             <Info
-              label={lang === "ja" ? "採用依頼ID" : "Placement Request"}
+              label={t("fields.placementRequest")}
               value={billing.recruitId}
+              mono
             />
-
             <Info
-              label={lang === "ja" ? "候補者配置ID" : "Placement Candidate"}
+              label={t("fields.placementCandidate")}
               value={billing.placementCandidateId}
+              mono
             />
-
             <Info
-              label={lang === "ja" ? "発行日" : "Issued At"}
-              value={formatDate(billing.issuedAt)}
+              label={t("fields.issuedAt")}
+              value={formatDate(billing.issuedAt, lang)}
+              mono
             />
-          </div>
+          </section>
         </div>
 
-        <div className="flex justify-end border-t border-slate-200 px-6 py-4">
+        {/* Footer */}
+        <footer className="flex justify-end border-t border-black/[0.06] bg-white/85 px-5 py-3 sm:px-6">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className={`${BTN} bg-white/80 px-5 text-slate-700 ring-1 ring-black/10 hover:bg-white`}
           >
-            {lang === "ja" ? "閉じる" : "Close"}
+            {t("close")}
           </button>
-        </div>
+        </footer>
       </div>
     </div>
   );
@@ -269,18 +343,21 @@ export default function ProviderBillingDetailsModal({
 function Info({
   label,
   value,
+  mono = false,
 }: {
   label: string;
-
   value?: string | null;
+  mono?: boolean;
 }) {
   return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-        {label}
-      </p>
+    <div className="min-w-0">
+      <p className="text-xs text-slate-500">{label}</p>
 
-      <p className="mt-1 break-words text-sm font-medium text-slate-900">
+      <p
+        className={`mt-1 break-words text-sm font-medium ${
+          mono ? "font-mono tabular-nums" : ""
+        }`}
+      >
         {value || "-"}
       </p>
     </div>
@@ -290,74 +367,56 @@ function Info({
 function MoneyRow({
   label,
   value,
+  lang,
   strong = false,
 }: {
   label: string;
-
   value: number;
-
+  lang: string;
   strong?: boolean;
 }) {
   return (
-    <div className="mt-3 flex items-center justify-between gap-4">
-      <span
-        className={
-          strong ? "font-semibold text-slate-950" : "text-sm text-slate-600"
-        }
+    <div className="mt-2.5 flex items-center justify-between gap-4">
+      <dt
+        className={strong ? "text-sm font-semibold" : "text-sm text-slate-600"}
       >
         {label}
-      </span>
+      </dt>
 
-      <span
-        className={
-          strong
-            ? "text-lg font-bold text-slate-950"
-            : "text-sm font-semibold text-slate-900"
-        }
+      <dd
+        className={`font-mono tabular-nums ${
+          strong ? "text-lg font-semibold" : "text-sm font-medium"
+        }`}
       >
-        {formatMoney(value)}
-      </span>
+        {formatMoney(value, lang)}
+      </dd>
     </div>
   );
 }
 
-function BillingStatusBadge({
+function BillingStatusLabel({
   status,
 }: {
   status: ProviderPlacementBillingStatus;
 }) {
-  const classes: Record<ProviderPlacementBillingStatus, string> = {
-    issued: "bg-blue-50 text-blue-700",
-
-    paid: "bg-emerald-50 text-emerald-700",
-
-    partially_refunded: "bg-amber-50 text-amber-700",
-
-    refunded: "bg-violet-50 text-violet-700",
-
-    cancelled: "bg-red-50 text-red-700",
-  };
+  const t = useTranslations("provider.billing.list.statuses");
 
   return (
     <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${classes[status]}`}
+      className={`text-xs font-medium uppercase tracking-[0.15em] ${TONE[status]}`}
     >
-      {formatStatus(status)}
+      {t(status === "partially_refunded" ? "partiallyRefunded" : status)}
     </span>
   );
 }
 
-function formatStatus(status: string) {
-  return status
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (character) => character.toUpperCase());
+function formatMoney(value: number, lang = "en") {
+  return `¥${new Intl.NumberFormat(lang === "ja" ? "ja-JP" : "en-US").format(
+    Number(value || 0),
+  )}`;
 }
 
-function formatMoney(value: number) {
-  return `¥${Number(value || 0).toLocaleString()}`;
-}
-
-function formatDate(value?: string | null) {
+function formatDate(value?: string | null, lang = "en") {
   if (!value) {
     return "-";
   }
@@ -368,11 +427,9 @@ function formatDate(value?: string | null) {
     return "-";
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(lang === "ja" ? "ja-JP" : "en-US", {
     year: "numeric",
-
     month: "short",
-
     day: "numeric",
   }).format(date);
 }
