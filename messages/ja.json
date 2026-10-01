@@ -139,6 +139,27 @@
       "methodOther": "その他",
       "salaryUnit": "万円"
     },
+    "notifications": {
+      "titles": {
+        "INTERVIEW_SCHEDULED": "面接が予定されました",
+        "INTERVIEW_CONFIRMED": "面接が確定しました",
+        "INTERVIEW_UPDATED": "面接が更新されました",
+        "INTERVIEW_CANCELLED": "面接がキャンセルされました"
+      },
+      "messages": {
+        "INTERVIEW_SCHEDULED": "{jobTitle} の面接が {date} {time}（{timezone}）に {method} で予定されました。",
+        "INTERVIEW_CONFIRMED": "{jobTitle} の面接が {date} {time}（{timezone}）に {method} で確定しました。",
+        "INTERVIEW_UPDATED": "{jobTitle} の面接情報が更新されました。最新の面接日、時間、方法をご確認ください。",
+        "INTERVIEW_CANCELLED": "{jobTitle} の面接がキャンセルされました。"
+      },
+      "methods": {
+        "ZOOM": "Zoom",
+        "GOOGLE_MEET": "Google Meet",
+        "PHONE": "電話",
+        "FACE_TO_FACE": "対面",
+        "OTHER": "その他"
+      }
+    },
     "profile": {
       "pageLabel": "求職者プロフィール",
       "dashboard": "ダッシュボード",
