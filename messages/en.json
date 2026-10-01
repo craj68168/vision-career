@@ -139,6 +139,27 @@
       "methodOther": "Other",
       "salaryUnit": "man yen"
     },
+    "notifications": {
+      "titles": {
+        "INTERVIEW_SCHEDULED": "Interview Scheduled",
+        "INTERVIEW_CONFIRMED": "Interview Confirmed",
+        "INTERVIEW_UPDATED": "Interview Updated",
+        "INTERVIEW_CANCELLED": "Interview Cancelled"
+      },
+      "messages": {
+        "INTERVIEW_SCHEDULED": "Your interview for {jobTitle} has been scheduled for {date} at {time} ({timezone}) by {method}.",
+        "INTERVIEW_CONFIRMED": "Your interview for {jobTitle} is confirmed for {date} at {time} ({timezone}) by {method}.",
+        "INTERVIEW_UPDATED": "Your interview for {jobTitle} has been updated. Please check the latest interview date, time and method.",
+        "INTERVIEW_CANCELLED": "Your interview for {jobTitle} has been cancelled."
+      },
+      "methods": {
+        "ZOOM": "Zoom",
+        "GOOGLE_MEET": "Google Meet",
+        "PHONE": "Phone",
+        "FACE_TO_FACE": "Face-to-Face",
+        "OTHER": "Other"
+      }
+    },
     "profile": {
       "pageLabel": "Job Seeker Profile",
       "dashboard": "Dashboard",

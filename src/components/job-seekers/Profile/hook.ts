@@ -102,6 +102,7 @@ export const useJobSeekerProfile = () => {
     (
       data: Awaited<ReturnType<typeof getJobSeekerProfile>>,
       forceReadOnly = false,
+      options: { preserveDraft?: boolean } = {},
     ) => {
       setProfile(data.profile);
 
@@ -111,54 +112,56 @@ export const useJobSeekerProfile = () => {
         missingFields: data.missing_fields || [],
       });
 
-      setEducation(
-        (data.education || []).map((record) => ({
-          ...record,
+      if (!options.preserveDraft) {
+        setEducation(
+          (data.education || []).map((record) => ({
+            ...record,
 
-          enrollment_date: formatDateForInput(record.enrollment_date),
+            enrollment_date: formatDateForInput(record.enrollment_date),
 
-          graduation_date: formatDateForInput(record.graduation_date),
-        })),
-      );
+            graduation_date: formatDateForInput(record.graduation_date),
+          })),
+        );
 
-      setEmploymentHistory(
-        (data.employment_history || []).map((record) => ({
-          ...record,
+        setEmploymentHistory(
+          (data.employment_history || []).map((record) => ({
+            ...record,
 
-          start_date: formatDateForInput(record.start_date),
+            start_date: formatDateForInput(record.start_date),
 
-          end_date: formatDateForInput(record.end_date),
-        })),
-      );
+            end_date: formatDateForInput(record.end_date),
+          })),
+        );
 
-      setFormData({
-        phone: data.profile.phone || "",
-        address: data.profile.address || "",
+        setFormData({
+          phone: data.profile.phone || "",
+          address: data.profile.address || "",
 
-        date_of_birth: formatDateForInput(data.profile.date_of_birth),
+          date_of_birth: formatDateForInput(data.profile.date_of_birth),
 
-        gender: data.profile.gender || "",
+          gender: data.profile.gender || "",
 
-        nationality: data.profile.nationality || "",
+          nationality: data.profile.nationality || "",
 
-        visa_type: data.profile.visa_type || "",
+          visa_type: data.profile.visa_type || "",
 
-        visa_expiry_date: formatDateForInput(data.profile.visa_expiry_date),
+          visa_expiry_date: formatDateForInput(data.profile.visa_expiry_date),
 
-        japanese_level: data.profile.japanese_level || "",
+          japanese_level: data.profile.japanese_level || "",
 
-        skills: (data.profile.skills || []).join(", "),
+          skills: (data.profile.skills || []).join(", "),
 
-        desired_job: data.profile.desired_job || "",
+          desired_job: data.profile.desired_job || "",
 
-        desired_location: data.profile.desired_location || "",
+          desired_location: data.profile.desired_location || "",
 
-        available_from: formatDateForInput(data.profile.available_from),
+          available_from: formatDateForInput(data.profile.available_from),
 
-        notes: data.profile.notes || "",
-      });
+          notes: data.profile.notes || "",
+        });
 
-      setIsEditing(!forceReadOnly && (!data.is_complete || openInEditMode));
+        setIsEditing(!forceReadOnly && (!data.is_complete || openInEditMode));
+      }
     },
     [openInEditMode],
   );
@@ -479,7 +482,7 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to upload profile photo");
       }
 
-      populateProfile(data);
+      populateProfile(data, false, { preserveDraft: true });
 
       toast.success(
         lang === "ja"
@@ -548,7 +551,7 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to upload resume");
       }
 
-      populateProfile(data);
+      populateProfile(data, false, { preserveDraft: true });
 
       toast.success(
         lang === "ja"
@@ -712,7 +715,7 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to upload document");
       }
 
-      populateProfile(data);
+      populateProfile(data, false, { preserveDraft: true });
 
       toast.success(
         lang === "ja"
@@ -777,7 +780,7 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to remove document");
       }
 
-      populateProfile(data);
+      populateProfile(data, false, { preserveDraft: true });
 
       toast.success(
         lang === "ja" ? "書類を削除しました" : "Document removed successfully",

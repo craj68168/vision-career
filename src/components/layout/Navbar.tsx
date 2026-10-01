@@ -4,6 +4,8 @@ import Link from "next/link";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useTranslations } from "next-intl";
+
 import {
   Bell,
   CalendarDays,
@@ -30,6 +32,7 @@ import {
 import type {
   ApiErrorResponse,
   SeekerNotification,
+  SeekerNotificationInterview,
 } from "@/components/job-seekers/Dashboard/types";
 
 // ======================================================
@@ -422,11 +425,10 @@ const Navbar = () => {
                   aria-controls="seeker-notifications"
                 >
                   <Bell className="h-4 w-4" />
-
                   {unreadCount > 0 && (
                     <span
                       aria-hidden
-                      className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-emerald-700 px-1 text-[10px] font-medium tabular-nums text-white ring-2 ring-white"
+                      className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-red-700 px-1 text-[10px] font-medium tabular-nums text-white ring-2 ring-white"
                     >
                       {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
@@ -584,6 +586,9 @@ function NotificationItem({
   onRead: (notification: SeekerNotification) => void | Promise<void>;
 }) {
   const interview = notification.interview;
+  const t = useTranslations("jobSeeker.notifications");
+  const title = formatNotificationTitle(notification, t);
+  const message = formatNotificationMessage(notification, t, lang);
 
   return (
     <div
@@ -615,7 +620,7 @@ function NotificationItem({
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">
               <p className={`text-[13px] font-semibold ${wrap}`}>
-                {notification.title}
+                {title}
               </p>
 
               {!notification.isRead && (
@@ -628,7 +633,7 @@ function NotificationItem({
             </div>
 
             <p className={`mt-0.5 text-xs leading-5 text-slate-600 ${wrap}`}>
-              {notification.message}
+              {message}
             </p>
 
             <p className="mt-1.5 text-[11px] text-slate-500">
@@ -646,11 +651,11 @@ function NotificationItem({
             </p>
           )}
 
-          {interview.companyName && (
+          {/* {interview.companyName && (
             <p className={`mt-0.5 text-xs text-slate-600 ${wrap}`}>
               {interview.companyName}
             </p>
-          )}
+          )} */}
 
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-600">
             {interview.interviewDate && (
@@ -724,6 +729,90 @@ function formatNotificationDate(
 
     ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
   }).format(date);
+}
+
+function formatNotificationTitle(
+  notification: SeekerNotification,
+  t: ReturnType<typeof useTranslations>,
+) {
+  const titleKeys = {
+    INTERVIEW_SCHEDULED: "titles.INTERVIEW_SCHEDULED",
+    INTERVIEW_CONFIRMED: "titles.INTERVIEW_CONFIRMED",
+    INTERVIEW_UPDATED: "titles.INTERVIEW_UPDATED",
+    INTERVIEW_CANCELLED: "titles.INTERVIEW_CANCELLED",
+  } as const;
+
+  return t(titleKeys[notification.type]) || notification.title;
+}
+
+function formatNotificationMessage(
+  notification: SeekerNotification,
+  t: ReturnType<typeof useTranslations>,
+  lang: string,
+) {
+  const messageKeys = {
+    INTERVIEW_SCHEDULED: "messages.INTERVIEW_SCHEDULED",
+    INTERVIEW_CONFIRMED: "messages.INTERVIEW_CONFIRMED",
+    INTERVIEW_UPDATED: "messages.INTERVIEW_UPDATED",
+    INTERVIEW_CANCELLED: "messages.INTERVIEW_CANCELLED",
+  } as const;
+
+  const interview = notification.interview;
+  const jobTitle = interview?.jobTitle?.trim();
+
+  if (!interview || !jobTitle) {
+    return formatLegacyNotificationMessage(notification);
+  }
+
+  return t(messageKeys[notification.type], {
+    jobTitle,
+    date: formatNotificationDate(interview.interviewDate, lang, false),
+    time: interview.interviewTime || "",
+    timezone: interview.timezone || "",
+    method: formatNotificationMethod(interview.interviewMethod, t),
+  });
+}
+
+function formatNotificationMethod(
+  method: SeekerNotificationInterview["interviewMethod"],
+  t: ReturnType<typeof useTranslations>,
+) {
+  const methodKeys = {
+    ZOOM: "methods.ZOOM",
+    GOOGLE_MEET: "methods.GOOGLE_MEET",
+    PHONE: "methods.PHONE",
+    FACE_TO_FACE: "methods.FACE_TO_FACE",
+    OTHER: "methods.OTHER",
+  } as const;
+
+  if (!method || !(method in methodKeys)) {
+    return t("methods.OTHER");
+  }
+
+  return t(methodKeys[method as keyof typeof methodKeys]);
+}
+
+function formatLegacyNotificationMessage(notification: SeekerNotification) {
+  const companyName = notification.interview?.companyName?.trim();
+  const jobTitle = notification.interview?.jobTitle?.trim();
+
+  if (!companyName) {
+    return notification.message;
+  }
+
+  let message = notification.message;
+
+  if (jobTitle) {
+    message = message.replace(
+      `for ${jobTitle} at ${companyName}`,
+      `for ${jobTitle}`,
+    );
+  }
+
+  return message
+    .replace(` at ${companyName} has`, " has")
+    .replace(` at ${companyName} is`, " is")
+    .replace(` at ${companyName}.`, ".");
 }
 
 export default Navbar;
