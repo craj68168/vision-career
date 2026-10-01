@@ -1,20 +1,15 @@
 "use client";
 
 import axios from "axios";
-
 import { useEffect, useMemo, useState } from "react";
-
 import type { ElementType, ReactNode } from "react";
-
 import { usePathname, useRouter } from "next/navigation";
-
 import toast from "react-hot-toast";
-
 import {
   Briefcase,
   Building2,
   CalendarDays,
-  ChevronDown,
+  ChevronRight,
   ClipboardList,
   CreditCard,
   FileText,
@@ -22,98 +17,73 @@ import {
   LayoutDashboard,
   Loader2,
   LogOut,
+  Menu,
   Moon,
+  Search,
   Shield,
-  ShieldCheck,
   Sun,
   UserCog,
   Users,
+  X,
 } from "lucide-react";
 
 import { getCurrentAdmin } from "@/components/auth/Admin/api";
-
 import type { AdminApiErrorResponse } from "@/components/auth/Admin/types";
-
 import { useLanguage } from "@/context/LanguageContext";
 
 import AdminApplicationsPage from "@/components/admin/Applications";
-
 import AdminInterviewsPage from "@/components/admin/Interviews";
-
 import AllVacanciesList from "@/components/admin/Vacancies";
-
-import AdminProvidersList from "../JobProviders";
-
-import AdminJobSeekersList from "../JobSeekers";
-
-import AdminPlacementRequestsPage from "../PlacementRequests";
-
-import AdminPlacementBillingsPage from "../PlacementBillings";
-
-import AdminStaffList from "../Staffs";
-
-import AdminTrainingCategories from "../Training";
-
 import AdminDashboard from "../Dashboard";
-
+import AdminProvidersList from "../JobProviders";
+import AdminJobSeekersList from "../JobSeekers";
+import AdminPlacementBillingsPage from "../PlacementBillings";
+import AdminPlacementRequestsPage from "../PlacementRequests";
 import AdminUpdateCredentialsPage from "../Security";
-
-// ======================================================
-// TYPES
-// ======================================================
+import AdminStaffList from "../Staffs";
+import AdminTrainingCategories from "../Training";
 
 interface TabConfig {
   id: string;
-
   label: {
     ja: string;
-
     en: string;
   };
-
   icon: ElementType;
-
   component: ReactNode;
+  count?: number;
 }
 
-// ======================================================
-// ADMIN PAGE
-// ======================================================
+interface TabGroup {
+  label: {
+    ja: string;
+    en: string;
+  };
+  items: TabConfig[];
+}
 
 export default function AdminPage() {
   const { lang } = useLanguage();
-
   const router = useRouter();
-
   const pathname = usePathname();
 
-  // ====================================================
-  // STATE
-  // ====================================================
-
   const [activeTab, setActiveTab] = useState("dashboard");
-
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
+  const [isDarkMode, setIsDarkMode] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      localStorage.getItem("admin-theme") === "dark",
+  );
   const [isAllowed, setIsAllowed] = useState(false);
 
-  // ====================================================
-  // THEME
-  // ====================================================
-
   useEffect(() => {
-    const savedTheme = localStorage.getItem("admin-theme");
-
-    if (savedTheme === "dark") {
-      setIsDarkMode(true);
-
+    if (isDarkMode) {
       document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
-  }, []);
+  }, [isDarkMode]);
 
   const toggleTheme = () => {
     setIsDarkMode((previous) => {
@@ -121,11 +91,9 @@ export default function AdminPage() {
 
       if (next) {
         document.documentElement.classList.add("dark");
-
         localStorage.setItem("admin-theme", "dark");
       } else {
         document.documentElement.classList.remove("dark");
-
         localStorage.setItem("admin-theme", "light");
       }
 
@@ -133,22 +101,16 @@ export default function AdminPage() {
     });
   };
 
-  // ====================================================
-  // ADMIN AUTH CHECK
-  // ====================================================
-
   useEffect(() => {
     let active = true;
 
     const checkAdminAuth = async () => {
       try {
         const token = localStorage.getItem("access_token");
-
         const role = localStorage.getItem("user_role");
 
         if (!token || role !== "admin") {
           router.replace(lang === "ja" ? "/admin-login" : "/en/admin-login");
-
           return;
         }
 
@@ -165,7 +127,6 @@ export default function AdminPage() {
         }
 
         console.error("Admin auth error:", error);
-
         setIsAllowed(false);
 
         if (axios.isAxiosError<AdminApiErrorResponse>(error)) {
@@ -174,11 +135,8 @@ export default function AdminPage() {
             error.response?.status === 403
           ) {
             localStorage.removeItem("access_token");
-
             localStorage.removeItem("user_role");
-
             router.replace(lang === "ja" ? "/admin-login" : "/en/admin-login");
-
             return;
           }
 
@@ -186,7 +144,6 @@ export default function AdminPage() {
             error.response?.data?.message ||
               "Error while checking authentication.",
           );
-
           return;
         }
 
@@ -205,10 +162,6 @@ export default function AdminPage() {
     };
   }, [lang, router]);
 
-  // ====================================================
-  // LANGUAGE
-  // ====================================================
-
   const handleLangChange = (targetLang: "en" | "ja") => {
     if (lang === targetLang) {
       return;
@@ -220,236 +173,178 @@ export default function AdminPage() {
       }
 
       router.push(`/en${pathname}`);
-
       return;
     }
 
     const newPath = pathname.replace(/^\/en/, "") || "/";
-
     router.push(newPath);
   };
 
-  // ====================================================
-  // LOGOUT
-  // ====================================================
-
   const handleLogout = () => {
     localStorage.removeItem("access_token");
-
     localStorage.removeItem("user_role");
-
-    // Old PHP token cleanup
     localStorage.removeItem("admin_token");
-
     localStorage.removeItem("admin-theme");
 
     document.documentElement.classList.remove("dark");
-
     router.replace(lang === "ja" ? "/admin-login" : "/en/admin-login");
   };
 
-  // ====================================================
-  // TAB DEFINITIONS
-  // ====================================================
-
-  const tabs = useMemo<TabConfig[]>(
+  const tabGroups = useMemo<TabGroup[]>(
     () => [
       {
-        id: "dashboard",
-
         label: {
-          ja: "ダッシュボード",
-
-          en: "Dashboard",
+          ja: "採用管理",
+          en: "Recruitment",
         },
-
-        icon: LayoutDashboard,
-
-        component: <AdminDashboard setActiveDashboardTab={setActiveTab} />,
+        items: [
+          {
+            id: "dashboard",
+            label: {
+              ja: "ダッシュボード",
+              en: "Dashboard",
+            },
+            icon: LayoutDashboard,
+            component: <AdminDashboard setActiveDashboardTab={setActiveTab} />,
+          },
+          {
+            id: "vacancies",
+            label: {
+              ja: "求人",
+              en: "Vacancies",
+            },
+            icon: Briefcase,
+            component: <AllVacanciesList />,
+          },
+          {
+            id: "applications",
+            label: {
+              ja: "応募",
+              en: "Applications",
+            },
+            icon: FileText,
+            component: <AdminApplicationsPage />,
+            count: 38,
+          },
+          {
+            id: "interviews",
+            label: {
+              ja: "面接",
+              en: "Interviews",
+            },
+            icon: CalendarDays,
+            component: <AdminInterviewsPage />,
+            count: 4,
+          },
+          {
+            id: "providers",
+            label: {
+              ja: "クライアント",
+              en: "Clients",
+            },
+            icon: Building2,
+            component: <AdminProvidersList />,
+          },
+        ],
       },
-
       {
-        id: "vacancies",
-
         label: {
-          ja: "求人",
-
-          en: "Vacancies",
+          ja: "人材",
+          en: "Talent",
         },
-
-        icon: Briefcase,
-
-        component: <AllVacanciesList />,
+        items: [
+          {
+            id: "seekers",
+            label: {
+              ja: "求職者",
+              en: "Job Seekers",
+            },
+            icon: Users,
+            component: <AdminJobSeekersList />,
+          },
+          {
+            id: "placement-requests",
+            label: {
+              ja: "採用依頼",
+              en: "Placement Requests",
+            },
+            icon: ClipboardList,
+            component: <AdminPlacementRequestsPage />,
+          },
+          {
+            id: "placement-billings",
+            label: {
+              ja: "採用請求",
+              en: "Placement Billings",
+            },
+            icon: CreditCard,
+            component: <AdminPlacementBillingsPage />,
+          },
+        ],
       },
-
       {
-        id: "applications",
-
         label: {
-          ja: "応募",
-
-          en: "Applications",
+          ja: "チーム",
+          en: "Team",
         },
-
-        icon: FileText,
-
-        component: <AdminApplicationsPage />,
-      },
-
-      {
-        id: "interviews",
-
-        label: {
-          ja: "面接",
-
-          en: "Interviews",
-        },
-
-        icon: CalendarDays,
-
-        component: <AdminInterviewsPage />,
-      },
-
-      {
-        id: "providers",
-
-        label: {
-          ja: "クライアント",
-
-          en: "Clients",
-        },
-
-        icon: Building2,
-
-        component: <AdminProvidersList />,
-      },
-
-      {
-        id: "seekers",
-
-        label: {
-          ja: "求職者",
-
-          en: "Job Seekers",
-        },
-
-        icon: Users,
-
-        component: <AdminJobSeekersList />,
-      },
-
-      {
-        id: "placement-requests",
-
-        label: {
-          ja: "採用依頼",
-
-          en: "Placement Requests",
-        },
-
-        icon: ClipboardList,
-
-        component: <AdminPlacementRequestsPage />,
-      },
-
-      {
-        id: "placement-billings",
-
-        label: {
-          ja: "採用請求",
-
-          en: "Placement Billings",
-        },
-
-        icon: CreditCard,
-
-        component: <AdminPlacementBillingsPage />,
-      },
-
-      {
-        id: "staffs",
-
-        label: {
-          ja: "スタッフ",
-
-          en: "Staff",
-        },
-
-        icon: UserCog,
-
-        component: <AdminStaffList />,
-      },
-
-      {
-        id: "training",
-
-        label: {
-          ja: "スタッフ訓練",
-
-          en: "Staff Training",
-        },
-
-        icon: GraduationCap,
-
-        component: <AdminTrainingCategories />,
-      },
-
-      {
-        id: "security",
-
-        label: {
-          ja: "セキュリティ",
-
-          en: "Security",
-        },
-
-        icon: Shield,
-
-        component: <AdminUpdateCredentialsPage />,
+        items: [
+          {
+            id: "staffs",
+            label: {
+              ja: "スタッフ",
+              en: "Staff",
+            },
+            icon: UserCog,
+            component: <AdminStaffList />,
+          },
+          {
+            id: "training",
+            label: {
+              ja: "スタッフ研修",
+              en: "Staff Training",
+            },
+            icon: GraduationCap,
+            component: <AdminTrainingCategories />,
+          },
+          {
+            id: "security",
+            label: {
+              ja: "セキュリティ",
+              en: "Security",
+            },
+            icon: Shield,
+            component: <AdminUpdateCredentialsPage />,
+          },
+        ],
       },
     ],
     [],
   );
 
-  // ====================================================
-  // ACTIVE TAB
-  // ====================================================
-
-  const activeTabConfig = tabs.find((tab) => tab.id === activeTab) || tabs[0];
-
+  const tabs = tabGroups.flatMap((group) => group.items);
+  const activeTabConfig = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
   const ActiveTabIcon = activeTabConfig.icon;
-
   const activeTabComponent = activeTabConfig.component;
-
-  // ====================================================
-  // TAB LABEL
-  // ====================================================
 
   const getTabLabel = (tab: TabConfig) => {
     return lang === "ja" ? tab.label.ja : tab.label.en;
   };
 
-  // ====================================================
-  // TAB CHANGE
-  // ====================================================
+  const getGroupLabel = (group: TabGroup) => {
+    return lang === "ja" ? group.label.ja : group.label.en;
+  };
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
-
     setIsMobileMenuOpen(false);
   };
 
-  // ====================================================
-  // AUTH LOADING
-  // ====================================================
-
   if (isCheckingAuth) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-12 w-12 animate-spin text-indigo-600 dark:text-indigo-400" />
-
-          <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
+      <div className="flex h-screen items-center justify-center bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-white">
+        <div className="rounded-lg border border-zinc-200 bg-white px-8 py-7 text-center shadow-sm dark:border-white/10 dark:bg-zinc-900">
+          <Loader2 className="mx-auto h-10 w-10 animate-spin text-emerald-600 dark:text-emerald-400" />
+          <p className="mt-4 text-sm font-medium text-zinc-600 dark:text-zinc-300">
             {lang === "ja" ? "認証を確認中..." : "Checking authentication..."}
           </p>
         </div>
@@ -457,181 +352,58 @@ export default function AdminPage() {
     );
   }
 
-  // ====================================================
-  // NOT ALLOWED
-  // ====================================================
-
   if (!isAllowed) {
     return null;
   }
 
-  // ====================================================
-  // UI
-  //
-  // translate="no" is intentional.
-  //
-  // Browser translation extensions can modify React's
-  // DOM tree and cause insertBefore/removeChild errors.
-  //
-  // The application already has its own EN / JA system.
-  // ====================================================
-
   return (
     <div
       translate="no"
-      className="flex min-h-screen w-full flex-col bg-slate-50 dark:bg-slate-900"
+      className="min-h-screen w-full bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-white"
     >
-      {/* ==================================================
-          TOP NAVIGATION
-      ================================================== */}
+      {isMobileMenuOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-zinc-950/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+          aria-label="Close navigation overlay"
+        />
+      ) : null}
 
-      <header className="sticky left-0 right-0 top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-lg dark:border-slate-700 dark:bg-slate-800/80">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            {/* BRAND */}
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600">
-                  <ShieldCheck className="h-4 w-4 text-white" />
-                </div>
-
-                <span className="text-lg font-bold text-slate-900 dark:text-white">
-                  {lang === "ja" ? "管理パネル" : "Admin Panel"}
-                </span>
-              </div>
-            </div>
-
-            {/* ACTIONS */}
-
-            <div className="flex items-center gap-2">
-              {/* LANGUAGE */}
-
-              <div className="flex items-center rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800">
-                <button
-                  type="button"
-                  onClick={() => handleLangChange("ja")}
-                  className={`cursor-pointer rounded-md px-2.5 py-1 text-xs font-medium transition ${
-                    lang === "ja"
-                      ? "bg-indigo-600 text-white"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
-                  }`}
-                >
-                  <span>JA</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleLangChange("en")}
-                  className={`cursor-pointer rounded-md px-2.5 py-1 text-xs font-medium transition ${
-                    lang === "en"
-                      ? "bg-indigo-600 text-white"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
-                  }`}
-                >
-                  <span>EN</span>
-                </button>
-              </div>
-
-              {/* THEME */}
-
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="cursor-pointer rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
-                aria-label={
-                  isDarkMode ? "Switch to light mode" : "Switch to dark mode"
-                }
-              >
-                {isDarkMode ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-              </button>
-
-              {/* LOGOUT */}
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
-              >
-                <LogOut className="h-4 w-4" />
-
-                <span className="hidden sm:inline">
-                  {lang === "ja" ? "ログアウト" : "Logout"}
-                </span>
-              </button>
-            </div>
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-zinc-200 bg-white px-3 py-4 shadow-xl shadow-zinc-950/5 transition-transform duration-200 dark:border-white/10 dark:bg-zinc-900 lg:translate-x-0 lg:shadow-none ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="mb-5 flex items-center gap-3 px-2">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-emerald-600 text-sm font-black text-white">
+            VC
           </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold">Vision Career</p>
+            <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+              {lang === "ja" ? "採用オペレーション" : "Recruitment operations"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="ml-auto grid h-9 w-9 place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white lg:hidden"
+            aria-label="Close navigation"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
-      </header>
 
-      {/* ==================================================
-          NAVIGATION TABS
-      ================================================== */}
-
-      <nav className="sticky top-16 z-40 w-full border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* DESKTOP */}
-
-          <div className="hidden items-center gap-1 overflow-x-auto py-2 lg:flex">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-
-              const isActive = activeTab === tab.id;
-
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => handleTabChange(tab.id)}
-                  className={`flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    isActive
-                      ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
-                      : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50"
-                  }`}
-                >
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                    <Icon className="h-4 w-4" />
-                  </span>
-
-                  <span>{getTabLabel(tab)}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* MOBILE */}
-
-          <div className="relative lg:hidden">
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen((previous) => !previous)}
-              className="flex w-full items-center justify-between rounded-lg px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300"
-              aria-expanded={isMobileMenuOpen}
-            >
-              <span className="flex items-center gap-2">
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                  <ActiveTabIcon className="h-4 w-4" />
-                </span>
-
-                <span>{getTabLabel(activeTabConfig)}</span>
-              </span>
-
-              <ChevronDown
-                className={`h-4 w-4 shrink-0 transition-transform ${
-                  isMobileMenuOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {isMobileMenuOpen && (
-              <div className="absolute left-0 right-0 top-full mt-1 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-                {tabs.map((tab) => {
+        <div className="flex-1 space-y-4 overflow-y-auto">
+          {tabGroups.map((group) => (
+            <div key={group.label.en}>
+              <p className="mb-2 px-2 text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-400 dark:text-zinc-500">
+                {getGroupLabel(group)}
+              </p>
+              <nav className="space-y-1" aria-label={getGroupLabel(group)}>
+                {group.items.map((tab) => {
                   const Icon = tab.icon;
-
                   const isActive = activeTab === tab.id;
 
                   return (
@@ -639,47 +411,152 @@ export default function AdminPage() {
                       key={tab.id}
                       type="button"
                       onClick={() => handleTabChange(tab.id)}
-                      className={`flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition ${
+                      className={`flex h-10 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-left text-sm font-semibold transition ${
                         isActive
-                          ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
-                          : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-700/50"
+                          ? "bg-zinc-950 text-white shadow-sm dark:bg-white dark:text-zinc-950"
+                          : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-white"
                       }`}
                     >
-                      <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                        <Icon className="h-4 w-4" />
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span className="min-w-0 flex-1 truncate">
+                        {getTabLabel(tab)}
                       </span>
-
-                      <span>{getTabLabel(tab)}</span>
+                      {tab.count ? (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                            isActive
+                              ? "bg-white/15 text-white dark:bg-zinc-950/10 dark:text-zinc-950"
+                              : "bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+                          }`}
+                        >
+                          {tab.count}
+                        </span>
+                      ) : null}
                     </button>
                   );
                 })}
-              </div>
-            )}
+              </nav>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 border-t border-zinc-200 pt-4 dark:border-white/10">
+          <div className="flex items-center gap-3 rounded-lg bg-zinc-50 p-3 dark:bg-white/5">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-sky-600 text-xs font-black text-white">
+              AD
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold">
+                {lang === "ja" ? "管理者" : "Admin"}
+              </p>
+              <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                {lang === "ja" ? "オペレーション管理" : "Operations lead"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="grid h-9 w-9 cursor-pointer place-items-center rounded-lg text-zinc-500 transition hover:bg-red-50 hover:text-red-600 dark:text-zinc-400 dark:hover:bg-red-500/10 dark:hover:text-red-300"
+              aria-label={lang === "ja" ? "ログアウト" : "Logout"}
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
-      </nav>
+      </aside>
 
-      {/* ==================================================
-          MAIN CONTENT
-      ================================================== */}
+      <div className="lg:pl-72">
+        <header className="sticky top-0 z-30 border-b border-zinc-200 bg-zinc-50/85 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/80">
+          <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="grid h-10 w-10 cursor-pointer place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 lg:hidden"
+              aria-label="Open navigation"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
 
-      <main className="mx-auto w-full flex-1 py-6">
-        <div key={activeTab} className="transition-all duration-200">
-          {activeTabComponent}
-        </div>
-      </main>
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center gap-2">
+                <ActiveTabIcon className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <h1 className="truncate text-base font-bold">
+                  {getTabLabel(activeTabConfig)}
+                </h1>
+                <ChevronRight className="hidden h-4 w-4 shrink-0 text-zinc-400 sm:block" />
+                <span className="hidden truncate text-sm text-zinc-500 dark:text-zinc-400 sm:block">
+                  {lang === "ja"
+                    ? activeTabConfig.label.en
+                    : activeTabConfig.label.ja}
+                </span>
+              </div>
+            </div>
 
-      {/* ==================================================
-          FOOTER
-      ================================================== */}
+            <label className="hidden h-10 w-64 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-400 md:flex">
+              <Search className="h-4 w-4 shrink-0" />
+              <input
+                className="min-w-0 flex-1 bg-transparent text-sm text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-white"
+                placeholder={lang === "ja" ? "管理画面を検索" : "Search admin"}
+              />
+            </label>
 
-      <footer className="border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center rounded-lg border border-zinc-200 bg-white p-1 dark:border-white/10 dark:bg-white/5">
+              <button
+                type="button"
+                onClick={() => handleLangChange("ja")}
+                className={`h-8 cursor-pointer rounded-md px-3 text-xs font-bold transition ${
+                  lang === "ja"
+                    ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950"
+                    : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/10"
+                }`}
+              >
+                JA
+              </button>
+              <button
+                type="button"
+                onClick={() => handleLangChange("en")}
+                className={`h-8 cursor-pointer rounded-md px-3 text-xs font-bold transition ${
+                  lang === "en"
+                    ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950"
+                    : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/10"
+                }`}
+              >
+                EN
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="grid h-10 w-10 cursor-pointer place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10"
+              aria-label={
+                isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+              }
+            >
+              {isDarkMode ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        </header>
+
+        <main className="w-full px-4 py-6 sm:px-6 lg:px-8">
+          <div
+            key={activeTab}
+            className="mx-auto w-full max-w-[1440px] transition-all duration-200"
+          >
+            {activeTabComponent}
+          </div>
+        </main>
+
+        <footer className="border-t border-zinc-200 bg-white dark:border-white/10 dark:bg-zinc-900">
+          <div className="px-4 py-4 text-center text-xs text-zinc-500 dark:text-zinc-400 sm:px-6 lg:px-8">
             © {new Date().getFullYear()} Vision Career. All rights reserved.
-          </p>
-        </div>
-      </footer>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
