@@ -425,7 +425,6 @@ const Navbar = () => {
                   aria-controls="seeker-notifications"
                 >
                   <Bell className="h-4 w-4" />
-
                   {unreadCount > 0 && (
                     <span
                       aria-hidden
