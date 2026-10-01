@@ -24,7 +24,11 @@ export default function AppIntlProvider({ children }: AppIntlProviderProps) {
   const locale = isEnglishPath(pathname) ? "en" : "ja";
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages[locale]}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={messages[locale]}
+      timeZone="Asia/Tokyo"
+    >
       {children}
     </NextIntlClientProvider>
   );

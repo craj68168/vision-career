@@ -70,7 +70,11 @@ export default function JobSeekerAuth() {
       };
 
   return (
-    <main className="relative flex min-h-dvh items-center justify-center bg-[#EEF3F2] px-4 py-16 sm:px-6 lg:py-10">
+    <main
+      lang={lang}
+      translate="no"
+      className="relative flex min-h-dvh items-center justify-center bg-[#EEF3F2] px-4 py-16 sm:px-6 lg:py-10"
+    >
       {/* Language switch */}
       <div
         role="group"
