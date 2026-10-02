@@ -4,6 +4,8 @@ import React, { useRef, useState } from "react";
 
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
   BookOpen,
   ChevronDown,
   ChevronLeft,
@@ -69,6 +71,23 @@ import { CategoryForm } from "./CategoryForm";
 import { Modal } from "./Modal";
 import { TopicForm } from "./TopicForm";
 import { TopicViewModal } from "./TopicViewModal";
+
+type StatusInfo = ReturnType<typeof getTrainingStatusLabel>;
+
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950";
+
+const inputClass =
+  "h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white";
+
+const selectClass =
+  "h-10 w-full cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-zinc-900 dark:text-white";
+
+const neutralButton =
+  "border-zinc-200 text-zinc-700 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10";
+
+const dangerButton =
+  "border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10";
 
 // ======================================================
 // COMPONENT
@@ -271,7 +290,7 @@ export default function AdminTrainingCategories() {
         return <Link2 className="h-5 w-5 text-cyan-500" />;
 
       default:
-        return <File className="h-5 w-5 text-slate-500" />;
+        return <File className="h-5 w-5 text-zinc-500" />;
     }
   };
 
@@ -886,8 +905,12 @@ export default function AdminTrainingCategories() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[500px] items-center justify-center">
-        <RefreshCw className="h-9 w-9 animate-spin text-indigo-600" />
+      <div className="flex min-h-[320px] items-center justify-center sm:min-h-[500px]">
+        <RefreshCw
+          role="status"
+          aria-label={lang === "ja" ? "読み込み中" : "Loading"}
+          className="h-10 w-10 animate-spin text-emerald-600 dark:text-emerald-400"
+        />
       </div>
     );
   }
@@ -898,76 +921,78 @@ export default function AdminTrainingCategories() {
 
   return (
     <>
-      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 md:px-8">
+      <div className="min-w-0 space-y-6">
         {/* HEADER */}
 
-        <div className="rounded-3xl border bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">
-                {lang === "ja"
-                  ? "トレーニングカテゴリー"
-                  : "Training Categories"}
-              </h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-white sm:text-2xl">
+              {lang === "ja" ? "トレーニングカテゴリー" : "Training Categories"}
+            </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
-                Manage training categories and their topics.
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  resetCategoryForm();
-
-                  setIsCreateCategoryModalOpen(true);
-                }}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 font-semibold text-white"
-              >
-                <Plus className="h-4 w-4" />
-                New Category
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void refetchCategories()}
-                className="inline-flex items-center gap-2 rounded-xl border px-4 py-2.5"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
-                />
-                Refresh
-              </button>
-            </div>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Manage training categories and their topics.
+            </p>
           </div>
 
-          {/* FILTERS */}
+          <div className="flex shrink-0 gap-2 sm:gap-3">
+            <button
+              type="button"
+              disabled={isFetching}
+              onClick={() => void refetchCategories()}
+              className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 sm:flex-none ${focusRing}`}
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </button>
 
-          <div className="mt-5 grid gap-3 lg:grid-cols-[1.2fr_1fr_1fr_auto]">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <button
+              type="button"
+              onClick={() => {
+                resetCategoryForm();
+
+                setIsCreateCategoryModalOpen(true);
+              }}
+              className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700 sm:flex-none ${focusRing}`}
+            >
+              <Plus className="h-4 w-4" />
+              New Category
+            </button>
+          </div>
+        </div>
+
+        {/* FILTERS */}
+
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_200px_260px]">
+            <div className="relative sm:col-span-2 xl:col-span-1">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
 
               <input
+                type="search"
                 value={search}
                 onChange={(event) => {
                   setSearch(event.target.value);
 
                   setPage(1);
                 }}
+                aria-label="Search categories"
                 placeholder="Search by category name..."
-                className="h-12 w-full rounded-xl border pl-11 pr-4 outline-none"
+                className={`${inputClass} pl-10`}
               />
             </div>
 
             <select
               value={statusFilter}
+              aria-label="Status"
               onChange={(event) => {
                 setStatusFilter(event.target.value as TrainingStatus | "");
 
                 setPage(1);
               }}
-              className="h-12 rounded-xl border px-4"
+              className={selectClass}
             >
               <option value="">All Statuses</option>
 
@@ -976,375 +1001,386 @@ export default function AdminTrainingCategories() {
               <option value="inactive">Inactive</option>
             </select>
 
-            <select
-              value={sortBy}
-              onChange={(event) => {
-                setSortBy(event.target.value as TrainingCategorySortBy);
+            <div className="flex gap-2">
+              <select
+                value={sortBy}
+                aria-label="Sort by"
+                onChange={(event) => {
+                  setSortBy(event.target.value as TrainingCategorySortBy);
 
-                setPage(1);
-              }}
-              className="h-12 rounded-xl border px-4"
-            >
-              <option value="sort_order">Sort Order</option>
+                  setPage(1);
+                }}
+                className={selectClass}
+              >
+                <option value="sort_order">Sort Order</option>
 
-              <option value="name">Category Name</option>
+                <option value="name">Category Name</option>
 
-              <option value="status">Status</option>
+                <option value="status">Status</option>
 
-              <option value="created_at">Created Date</option>
+                <option value="created_at">Created Date</option>
 
-              <option value="updated_at">Updated Date</option>
-            </select>
+                <option value="updated_at">Updated Date</option>
+              </select>
 
-            <button
-              type="button"
-              onClick={() =>
-                setSortOrder((previous) =>
-                  previous === "ASC" ? "DESC" : "ASC",
-                )
-              }
-              className="h-12 rounded-xl border px-5 text-xl"
-            >
-              {sortOrder === "ASC" ? "↑" : "↓"}
-            </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setSortOrder((previous) =>
+                    previous === "ASC" ? "DESC" : "ASC",
+                  )
+                }
+                aria-label={
+                  sortOrder === "ASC" ? "Sort ascending" : "Sort descending"
+                }
+                title={
+                  sortOrder === "ASC" ? "Sort ascending" : "Sort descending"
+                }
+                className={`grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-lg border bg-white transition dark:bg-transparent ${neutralButton} ${focusRing}`}
+              >
+                {sortOrder === "ASC" ? (
+                  <ArrowUp className="h-4 w-4" />
+                ) : (
+                  <ArrowDown className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
         {categoriesError && (
-          <div className="flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
-            <AlertTriangle className="h-5 w-5" />
+          <div
+            role="alert"
+            className="flex gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300"
+          >
+            <AlertTriangle className="h-5 w-5 shrink-0" />
 
             {categoriesError.message}
           </div>
         )}
 
-        {/* CATEGORY TABLE */}
+        {/* CATEGORIES */}
 
-        <div className="overflow-hidden rounded-3xl border bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px]">
-              <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="w-12 px-4 py-4" />
-
-                  <th className="px-4 py-4">ID</th>
-
-                  <th className="px-4 py-4">Category Name</th>
-
-                  <th className="px-4 py-4">Topics</th>
-
-                  <th className="px-4 py-4">Sort Order</th>
-
-                  <th className="px-4 py-4">Status</th>
-
-                  <th className="px-4 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {categories.map((category) => {
-                  const expanded = expandedCategories.has(category.id);
-
-                  const categoryStatusInfo = getStatusLabel(category.status);
-
-                  const topics = topicsData[category.id] ?? [];
-
-                  return (
-                    <React.Fragment key={category.id}>
-                      <tr className="border-t">
-                        <td className="px-4 py-4">
-                          <button
-                            type="button"
-                            onClick={() => void toggleCategory(category.id)}
-                          >
-                            {expanded ? (
-                              <ChevronDown className="h-4 w-4" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4" />
-                            )}
-                          </button>
-                        </td>
-
-                        <td className="px-4 py-4 font-medium">{category.id}</td>
-
-                        <td className="px-4 py-4">
-                          <div className="flex gap-2">
-                            <FolderOpen className="mt-1 h-4 w-4 text-amber-500" />
-
-                            <div>
-                              <p className="font-semibold">{category.name}</p>
-
-                              {category.description && (
-                                <p className="mt-1 text-xs text-slate-500">
-                                  {category.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="px-4 py-4">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-                            <BookOpen className="h-3.5 w-3.5" />
-
-                            {category.topics_count}
-                          </span>
-                        </td>
-
-                        <td className="px-4 py-4">{category.sort_order}</td>
-
-                        <td className="px-4 py-4">
-                          <span
-                            className={`rounded-full border px-3 py-1 text-xs font-semibold ${categoryStatusInfo.color}`}
-                          >
-                            {categoryStatusInfo.label}
-                          </span>
-                        </td>
-
-                        <td className="px-4 py-4">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => openCreateTopicModal(category)}
-                              className="inline-flex items-center gap-1 rounded-xl border px-3 py-2 text-sm"
-                            >
-                              <Plus className="h-4 w-4" />
-                              Add Topic
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => openEditCategoryModal(category)}
-                              className="inline-flex items-center gap-1 rounded-xl border px-3 py-2 text-sm"
-                            >
-                              <Pencil className="h-4 w-4" />
-                              Edit
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => openDeleteCategoryModal(category)}
-                              className="inline-flex items-center gap-1 rounded-xl border border-red-200 px-3 py-2 text-sm text-red-600"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-
-                      {/* TOPICS */}
-
-                      {expanded && (
-                        <tr>
-                          <td colSpan={7} className="bg-slate-50/70 p-4">
-                            <div className="overflow-hidden rounded-2xl border bg-white">
-                              <div className="flex items-center justify-between border-b p-4">
-                                <p className="font-semibold">
-                                  Topics ({topics.length})
-                                </p>
-
-                                <button
-                                  type="button"
-                                  onClick={() => openCreateTopicModal(category)}
-                                  className="inline-flex items-center gap-1 rounded-xl border px-3 py-2 text-sm"
-                                >
-                                  <Plus className="h-4 w-4" />
-                                  Add Topic
-                                </button>
-                              </div>
-
-                              {loadingTopics.has(category.id) ? (
-                                <div className="py-10 text-center">
-                                  <RefreshCw className="mx-auto h-6 w-6 animate-spin" />
-                                </div>
-                              ) : topicError[category.id] ? (
-                                <div className="p-5 text-red-600">
-                                  {topicError[category.id]}
-                                </div>
-                              ) : topics.length === 0 ? (
-                                <div className="py-10 text-center text-slate-500">
-                                  No topics found.
-                                </div>
-                              ) : (
-                                <table className="w-full">
-                                  <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-                                    <tr>
-                                      <th className="px-4 py-3">ID</th>
-
-                                      <th className="px-4 py-3">Title</th>
-
-                                      <th className="px-4 py-3">Files</th>
-
-                                      <th className="px-4 py-3">Sort Order</th>
-
-                                      <th className="px-4 py-3">Status</th>
-
-                                      <th className="px-4 py-3 text-right">
-                                        Actions
-                                      </th>
-                                    </tr>
-                                  </thead>
-
-                                  <tbody>
-                                    {topics.map((topic) => {
-                                      const statusInfo = getStatusLabel(
-                                        topic.status,
-                                      );
-
-                                      return (
-                                        <tr key={topic.id} className="border-t">
-                                          <td className="px-4 py-4">
-                                            {topic.id}
-                                          </td>
-
-                                          <td className="px-4 py-4">
-                                            <p className="font-semibold">
-                                              {topic.title}
-                                            </p>
-
-                                            {topic.description && (
-                                              <p className="mt-1 text-xs text-slate-500">
-                                                {topic.description}
-                                              </p>
-                                            )}
-                                          </td>
-
-                                          <td className="px-4 py-4">
-                                            {topic.files_count}
-                                          </td>
-
-                                          <td className="px-4 py-4">
-                                            {topic.sort_order}
-                                          </td>
-
-                                          <td className="px-4 py-4">
-                                            <span
-                                              className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusInfo.color}`}
-                                            >
-                                              {statusInfo.label}
-                                            </span>
-                                          </td>
-
-                                          <td className="px-4 py-4">
-                                            <div className="flex justify-end gap-2">
-                                              <button
-                                                type="button"
-                                                onClick={() =>
-                                                  openUploadFileModal(topic)
-                                                }
-                                                className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
-                                              >
-                                                <Upload className="h-4 w-4" />
-                                                Upload
-                                              </button>
-
-                                              <button
-                                                type="button"
-                                                onClick={() =>
-                                                  void openViewTopicModal(topic)
-                                                }
-                                                className="rounded-lg p-2"
-                                              >
-                                                <Eye className="h-4 w-4" />
-                                              </button>
-
-                                              <button
-                                                type="button"
-                                                onClick={() =>
-                                                  openEditTopicModal(topic)
-                                                }
-                                                className="rounded-lg p-2"
-                                              >
-                                                <Pencil className="h-4 w-4" />
-                                              </button>
-
-                                              <button
-                                                type="button"
-                                                onClick={() =>
-                                                  openDeleteTopicModal(topic)
-                                                }
-                                                className="rounded-lg p-2 text-red-500"
-                                              >
-                                                <Trash2 className="h-4 w-4" />
-                                              </button>
-                                            </div>
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
-                                  </tbody>
-                                </table>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
+        {categories.length === 0 ? (
+          <div className="rounded-lg border border-zinc-200 bg-white px-4 py-16 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-400 sm:py-20">
+            {lang === "ja"
+              ? "カテゴリーが見つかりません。"
+              : "No categories found."}
           </div>
+        ) : (
+          <>
+            {/* CARDS (below xl) */}
 
-          {/* PAGINATION */}
+            <div className="space-y-4 xl:hidden">
+              {categories.map((category) => {
+                const expanded = expandedCategories.has(category.id);
 
-          {pagination && (
-            <div className="flex items-center justify-between border-t p-4">
-              <p className="text-sm text-slate-500">
-                {pagination.total === 0
-                  ? 0
-                  : (pagination.page - 1) * pagination.limit + 1}
-                {" - "}
-                {Math.min(
-                  pagination.page * pagination.limit,
-                  pagination.total,
-                )}{" "}
-                of {pagination.total}
-              </p>
+                const categoryStatusInfo = getStatusLabel(category.status);
 
-              <div className="flex items-center gap-2">
-                <select
-                  value={limit}
-                  onChange={(event) => {
-                    setLimit(Number(event.target.value));
+                return (
+                  <article
+                    key={category.id}
+                    className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void toggleCategory(category.id)}
+                          aria-expanded={expanded}
+                          aria-label={
+                            expanded ? "Collapse topics" : "Expand topics"
+                          }
+                          className={`mt-0.5 grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/10 ${focusRing}`}
+                        >
+                          {expanded ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </button>
 
-                    setPage(1);
-                  }}
-                  className="rounded-xl border px-3 py-2"
-                >
-                  <option value={10}>10 / page</option>
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                            {category.id}
+                          </p>
 
-                  <option value={20}>20 / page</option>
+                          <h3 className="mt-1 flex items-start gap-2 break-words text-lg font-semibold text-zinc-950 dark:text-white">
+                            <FolderOpen className="mt-1 h-4 w-4 shrink-0 text-amber-500" />
 
-                  <option value={50}>50 / page</option>
-                </select>
+                            {category.name}
+                          </h3>
 
-                <button
-                  type="button"
-                  disabled={!pagination.has_prev_page}
-                  onClick={() => setPage((previous) => previous - 1)}
-                  className="rounded-xl border p-2 disabled:opacity-40"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
+                          {category.description && (
+                            <p className="mt-1 break-words text-sm text-zinc-500 dark:text-zinc-400">
+                              {category.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
 
-                <span className="rounded-xl bg-slate-100 px-3 py-2">
-                  {pagination.page}/{Math.max(pagination.total_pages, 1)}
-                </span>
+                      <span
+                        className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium ${categoryStatusInfo.color}`}
+                      >
+                        {categoryStatusInfo.label}
+                      </span>
+                    </div>
 
-                <button
-                  type="button"
-                  disabled={!pagination.has_next_page}
-                  onClick={() => setPage((previous) => previous + 1)}
-                  className="rounded-xl border p-2 disabled:opacity-40"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div className="min-w-0 rounded-lg bg-zinc-50 p-3 dark:bg-white/5">
+                        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                          Topics
+                        </p>
+
+                        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
+                          <BookOpen className="h-3.5 w-3.5" />
+
+                          {category.topics_count}
+                        </span>
+                      </div>
+
+                      <div className="min-w-0 rounded-lg bg-zinc-50 p-3 dark:bg-white/5">
+                        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                          Sort Order
+                        </p>
+
+                        <p className="mt-1 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                          {category.sort_order}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-zinc-100 pt-4 dark:border-white/10">
+                      <CategoryActions
+                        onAddTopic={() => openCreateTopicModal(category)}
+                        onEdit={() => openEditCategoryModal(category)}
+                        onDelete={() => openDeleteCategoryModal(category)}
+                      />
+                    </div>
+
+                    {expanded && (
+                      <div className="mt-4">
+                        <TopicsPanel
+                          topics={topicsData[category.id] ?? []}
+                          isLoading={loadingTopics.has(category.id)}
+                          loadError={topicError[category.id]}
+                          getStatusLabel={getStatusLabel}
+                          onAdd={() => openCreateTopicModal(category)}
+                          onUpload={openUploadFileModal}
+                          onView={(topic) => void openViewTopicModal(topic)}
+                          onEdit={openEditTopicModal}
+                          onDelete={openDeleteTopicModal}
+                        />
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+
+            {/* TABLE (xl and up) */}
+
+            <div className="hidden overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900 xl:block">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px] text-left">
+                  <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500 dark:bg-white/5 dark:text-zinc-400">
+                    <tr>
+                      <th className="w-12 px-4 py-3" />
+
+                      <th className="px-4 py-3 font-medium">ID</th>
+
+                      <th className="px-4 py-3 font-medium">Category Name</th>
+
+                      <th className="px-4 py-3 font-medium">Topics</th>
+
+                      <th className="px-4 py-3 font-medium">Sort Order</th>
+
+                      <th className="px-4 py-3 font-medium">Status</th>
+
+                      <th className="px-4 py-3 text-right font-medium">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {categories.map((category) => {
+                      const expanded = expandedCategories.has(category.id);
+
+                      const categoryStatusInfo = getStatusLabel(
+                        category.status,
+                      );
+
+                      return (
+                        <React.Fragment key={category.id}>
+                          <tr className="border-t border-zinc-100 transition hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5">
+                            <td className="px-4 py-3">
+                              <button
+                                type="button"
+                                onClick={() => void toggleCategory(category.id)}
+                                aria-expanded={expanded}
+                                aria-label={
+                                  expanded ? "Collapse topics" : "Expand topics"
+                                }
+                                className={`grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/10 ${focusRing}`}
+                              >
+                                {expanded ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4" />
+                                )}
+                              </button>
+                            </td>
+
+                            <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                              {category.id}
+                            </td>
+
+                            <td className="px-4 py-3">
+                              <div className="flex gap-2">
+                                <FolderOpen className="mt-1 h-4 w-4 shrink-0 text-amber-500" />
+
+                                <div className="min-w-0">
+                                  <p className="font-medium text-zinc-950 dark:text-white">
+                                    {category.name}
+                                  </p>
+
+                                  {category.description && (
+                                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                      {category.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="px-4 py-3">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
+                                <BookOpen className="h-3.5 w-3.5" />
+
+                                {category.topics_count}
+                              </span>
+                            </td>
+
+                            <td className="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
+                              {category.sort_order}
+                            </td>
+
+                            <td className="px-4 py-3">
+                              <span
+                                className={`inline-flex whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium ${categoryStatusInfo.color}`}
+                              >
+                                {categoryStatusInfo.label}
+                              </span>
+                            </td>
+
+                            <td className="px-4 py-3">
+                              <div className="flex justify-end gap-1.5">
+                                <CategoryActions
+                                  compact
+                                  onAddTopic={() =>
+                                    openCreateTopicModal(category)
+                                  }
+                                  onEdit={() => openEditCategoryModal(category)}
+                                  onDelete={() =>
+                                    openDeleteCategoryModal(category)
+                                  }
+                                />
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* TOPICS */}
+
+                          {expanded && (
+                            <tr>
+                              <td
+                                colSpan={7}
+                                className="bg-zinc-50/70 p-4 dark:bg-white/5"
+                              >
+                                <TopicsPanel
+                                  topics={topicsData[category.id] ?? []}
+                                  isLoading={loadingTopics.has(category.id)}
+                                  loadError={topicError[category.id]}
+                                  getStatusLabel={getStatusLabel}
+                                  onAdd={() => openCreateTopicModal(category)}
+                                  onUpload={openUploadFileModal}
+                                  onView={(topic) =>
+                                    void openViewTopicModal(topic)
+                                  }
+                                  onEdit={openEditTopicModal}
+                                  onDelete={openDeleteTopicModal}
+                                />
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
-          )}
-        </div>
+          </>
+        )}
+
+        {/* PAGINATION */}
+
+        {pagination && (
+          <div className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              {pagination.total === 0
+                ? 0
+                : (pagination.page - 1) * pagination.limit + 1}
+              {" - "}
+              {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
+              of {pagination.total}
+            </p>
+
+            <div className="flex items-center gap-2">
+              <select
+                value={limit}
+                aria-label="Rows per page"
+                onChange={(event) => {
+                  setLimit(Number(event.target.value));
+
+                  setPage(1);
+                }}
+                className="h-9 cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-zinc-900 dark:text-white"
+              >
+                <option value={10}>10 / page</option>
+
+                <option value={20}>20 / page</option>
+
+                <option value={50}>50 / page</option>
+              </select>
+
+              <button
+                type="button"
+                disabled={!pagination.has_prev_page}
+                onClick={() => setPage((previous) => previous - 1)}
+                aria-label="Previous page"
+                className={`grid h-9 w-9 cursor-pointer place-items-center rounded-lg border transition disabled:cursor-not-allowed disabled:opacity-40 ${neutralButton} ${focusRing}`}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              <span className="min-w-16 text-center text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                {pagination.page} / {Math.max(pagination.total_pages, 1)}
+              </span>
+
+              <button
+                type="button"
+                disabled={!pagination.has_next_page}
+                onClick={() => setPage((previous) => previous + 1)}
+                aria-label="Next page"
+                className={`grid h-9 w-9 cursor-pointer place-items-center rounded-lg border transition disabled:cursor-not-allowed disabled:opacity-40 ${neutralButton} ${focusRing}`}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* CREATE CATEGORY */}
@@ -1494,31 +1530,46 @@ export default function AdminTrainingCategories() {
       {/* UPLOAD */}
 
       {isUploadFileModalOpen && selectedTopic && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/50 p-4 backdrop-blur-sm">
           <button
             type="button"
-            className="absolute inset-0"
+            aria-label="Close upload dialog"
+            className="absolute inset-0 cursor-default"
             onClick={() => setIsUploadFileModalOpen(false)}
           />
 
-          <div className="relative z-10 w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="flex justify-between">
-              <div>
-                <h2 className="text-xl font-bold">Upload File</h2>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Upload File"
+            className="relative z-10 max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-lg border border-zinc-200 bg-white p-5 shadow-2xl dark:border-white/10 dark:bg-zinc-900 sm:p-6"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold text-zinc-950 dark:text-white sm:text-xl">
+                  Upload File
+                </h2>
 
-                <p className="text-sm text-slate-500">{selectedTopic.title}</p>
+                <p className="mt-1 break-words text-sm text-zinc-500 dark:text-zinc-400">
+                  {selectedTopic.title}
+                </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsUploadFileModalOpen(false)}
+                aria-label="Close"
+                className={`grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white ${focusRing}`}
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {error && (
-              <div className="mt-4 rounded-xl bg-red-50 p-3 text-red-600">
+              <div
+                role="alert"
+                className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300"
+              >
                 {error}
               </div>
             )}
@@ -1527,17 +1578,19 @@ export default function AdminTrainingCategories() {
               <input
                 value={fileTitle}
                 onChange={(event) => setFileTitle(event.target.value)}
+                aria-label="File title"
                 placeholder="File title"
-                className="h-12 w-full rounded-xl border px-4"
+                className={inputClass}
               />
 
               <input
                 ref={fileInputRef}
                 type="file"
+                aria-label="File"
                 onChange={(event) =>
                   setSelectedFile(event.target.files?.[0] ?? null)
                 }
-                className="w-full rounded-xl border p-3"
+                className={`${inputClass} h-auto py-2 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 dark:file:bg-white/10 dark:file:text-zinc-200`}
               />
 
               <input
@@ -1547,16 +1600,18 @@ export default function AdminTrainingCategories() {
                 onChange={(event) =>
                   setFileSortOrder(Number(event.target.value))
                 }
-                className="h-12 w-full rounded-xl border px-4"
+                aria-label="Sort order"
+                className={inputClass}
                 placeholder="Sort order"
               />
 
               <select
                 value={fileStatus}
+                aria-label="Status"
                 onChange={(event) =>
                   setFileStatus(event.target.value as TrainingStatus)
                 }
-                className="h-12 w-full rounded-xl border px-4"
+                className={selectClass}
               >
                 <option value="active">Active</option>
 
@@ -1568,7 +1623,7 @@ export default function AdminTrainingCategories() {
               <button
                 type="button"
                 onClick={() => setIsUploadFileModalOpen(false)}
-                className="rounded-xl border px-5 py-2.5"
+                className={`inline-flex h-10 cursor-pointer items-center justify-center rounded-lg border px-5 text-sm font-medium transition ${neutralButton} ${focusRing}`}
               >
                 Cancel
               </button>
@@ -1577,7 +1632,7 @@ export default function AdminTrainingCategories() {
                 type="button"
                 disabled={uploadFileMutation.isPending}
                 onClick={() => void handleUploadFile()}
-                className="rounded-xl bg-slate-950 px-5 py-2.5 font-semibold text-white disabled:opacity-50"
+                className={`inline-flex h-10 cursor-pointer items-center justify-center rounded-lg bg-emerald-600 px-5 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
               >
                 Upload
               </button>
@@ -1610,5 +1665,205 @@ export default function AdminTrainingCategories() {
         />
       )}
     </>
+  );
+}
+
+// ======================================================
+// CATEGORY ACTIONS
+// ======================================================
+
+function CategoryActions({
+  compact = false,
+  onAddTopic,
+  onEdit,
+  onDelete,
+}: {
+  compact?: boolean;
+  onAddTopic: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const base = compact
+    ? "inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition"
+    : "inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition sm:flex-none";
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onAddTopic}
+        aria-label="Add Topic"
+        title="Add Topic"
+        className={`${base} ${neutralButton} ${focusRing}`}
+      >
+        <Plus className="h-4 w-4" />
+        {!compact && "Add Topic"}
+      </button>
+
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label="Edit"
+        title="Edit"
+        className={`${base} ${neutralButton} ${focusRing}`}
+      >
+        <Pencil className="h-4 w-4" />
+        {!compact && "Edit"}
+      </button>
+
+      <button
+        type="button"
+        onClick={onDelete}
+        aria-label="Delete"
+        title="Delete"
+        className={`${base} ${dangerButton} ${focusRing}`}
+      >
+        <Trash2 className="h-4 w-4" />
+        {!compact && "Delete"}
+      </button>
+    </>
+  );
+}
+
+// ======================================================
+// TOPICS PANEL
+// ======================================================
+
+function TopicsPanel({
+  topics,
+  isLoading,
+  loadError,
+  getStatusLabel,
+  onAdd,
+  onUpload,
+  onView,
+  onEdit,
+  onDelete,
+}: {
+  topics: TrainingTopic[];
+  isLoading: boolean;
+  loadError?: string;
+  getStatusLabel: (status: TrainingStatus) => StatusInfo;
+  onAdd: () => void;
+  onUpload: (topic: TrainingTopic) => void;
+  onView: (topic: TrainingTopic) => void;
+  onEdit: (topic: TrainingTopic) => void;
+  onDelete: (topic: TrainingTopic) => void;
+}) {
+  const iconButton = `grid h-9 w-9 cursor-pointer place-items-center rounded-lg border transition ${focusRing}`;
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-white/10 dark:bg-zinc-900">
+      <div className="flex items-center justify-between gap-3 border-b border-zinc-200 px-4 py-3 dark:border-white/10">
+        <p className="text-sm font-semibold text-zinc-950 dark:text-white">
+          Topics ({topics.length})
+        </p>
+
+        <button
+          type="button"
+          onClick={onAdd}
+          className={`inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition ${neutralButton} ${focusRing}`}
+        >
+          <Plus className="h-4 w-4" />
+          Add Topic
+        </button>
+      </div>
+
+      {isLoading ? (
+        <div role="status" className="py-10 text-center">
+          <RefreshCw className="mx-auto h-6 w-6 animate-spin text-emerald-600 dark:text-emerald-400" />
+        </div>
+      ) : loadError ? (
+        <div className="p-5 text-sm text-red-600 dark:text-red-300">
+          {loadError}
+        </div>
+      ) : topics.length === 0 ? (
+        <div className="py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">
+          No topics found.
+        </div>
+      ) : (
+        <ul className="divide-y divide-zinc-100 dark:divide-white/10">
+          {topics.map((topic) => {
+            const statusInfo = getStatusLabel(topic.status);
+
+            return (
+              <li
+                key={topic.id}
+                className="flex flex-col gap-3 px-4 py-4 transition hover:bg-zinc-50 dark:hover:bg-white/5 md:flex-row md:items-start md:justify-between"
+              >
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                    {topic.id}
+                  </p>
+
+                  <p className="mt-1 break-words font-medium text-zinc-950 dark:text-white">
+                    {topic.title}
+                  </p>
+
+                  {topic.description && (
+                    <p className="mt-1 break-words text-xs text-zinc-500 dark:text-zinc-400">
+                      {topic.description}
+                    </p>
+                  )}
+
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    <span>Files: {topic.files_count}</span>
+
+                    <span>Sort: {topic.sort_order}</span>
+
+                    <span
+                      className={`inline-flex whitespace-nowrap rounded-full border px-2.5 py-0.5 font-medium ${statusInfo.color}`}
+                    >
+                      {statusInfo.label}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => onUpload(topic)}
+                    className={`inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-emerald-200 px-3 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-400/30 dark:text-emerald-300 dark:hover:bg-emerald-400/10 ${focusRing}`}
+                  >
+                    <Upload className="h-4 w-4" />
+                    Upload
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onView(topic)}
+                    aria-label="View"
+                    title="View"
+                    className={`${iconButton} ${neutralButton}`}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onEdit(topic)}
+                    aria-label="Edit"
+                    title="Edit"
+                    className={`${iconButton} ${neutralButton}`}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onDelete(topic)}
+                    aria-label="Delete"
+                    title="Delete"
+                    className={`${iconButton} ${dangerButton}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }

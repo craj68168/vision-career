@@ -28,6 +28,9 @@ import RejectVacancyModal from "./RejectVacancyModal";
 
 import type { VacancyStaffScreeningStatus, VacancyStatus } from "./types";
 
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950";
+
 // ======================================================
 // SUMMARY CARD
 // ======================================================
@@ -44,15 +47,19 @@ function SummaryCard({
   icon: typeof Briefcase;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-5">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-zinc-500 dark:text-zinc-400">
+            {label}
+          </p>
 
-          <p className="mt-2 text-3xl font-bold text-slate-950">{value}</p>
+          <p className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
+            {value}
+          </p>
         </div>
 
-        <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600">
+        <div className="shrink-0 rounded-lg bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
           <Icon className="h-5 w-5" />
         </div>
       </div>
@@ -97,13 +104,13 @@ function getScreeningLabel(status: VacancyStaffScreeningStatus, lang: string) {
 function getScreeningClass(status: VacancyStaffScreeningStatus) {
   switch (status) {
     case "SCREENED":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300";
 
     case "NEEDS_ATTENTION":
-      return "border-red-200 bg-red-50 text-red-700";
+      return "border-red-200 bg-red-50 text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300";
 
     default:
-      return "border-slate-200 bg-slate-100 text-slate-600";
+      return "border-zinc-200 bg-zinc-100 text-zinc-600 dark:border-white/10 dark:bg-white/10 dark:text-zinc-300";
   }
 }
 
@@ -199,23 +206,27 @@ export default function AdminVacancies() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[500px] items-center justify-center">
-        <RefreshCw className="h-10 w-10 animate-spin text-indigo-600" />
+      <div className="flex min-h-[320px] items-center justify-center sm:min-h-[500px]">
+        <RefreshCw
+          role="status"
+          aria-label={lang === "ja" ? "読み込み中" : "Loading"}
+          className="h-10 w-10 animate-spin text-emerald-600 dark:text-emerald-400"
+        />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 md:px-8">
+    <div className="min-w-0 space-y-6">
       {/* HEADER */}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-950">
+        <div className="min-w-0">
+          <h2 className="text-xl font-semibold text-zinc-950 dark:text-white sm:text-2xl">
             {lang === "ja" ? "求人管理" : "Vacancies"}
-          </h1>
+          </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             {lang === "ja"
               ? "企業から提出された求人を審査・承認・公開します。"
               : "Review Staff screening, approve, publish and manage Provider vacancies."}
@@ -226,7 +237,7 @@ export default function AdminVacancies() {
           type="button"
           disabled={isFetching}
           onClick={() => void refetch()}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          className={`inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 ${focusRing}`}
         >
           <RefreshCw
             className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
@@ -238,7 +249,7 @@ export default function AdminVacancies() {
 
       {/* SUMMARY */}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
           label={lang === "ja" ? "総求人" : "Total Vacancies"}
           value={summary?.total || 0}
@@ -266,37 +277,48 @@ export default function AdminVacancies() {
 
       {/* FILTER */}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {filters.map((filter) => (
-              <button
-                key={filter.value}
-                type="button"
-                onClick={() => setStatusFilter(filter.value)}
-                className={`cursor-pointer rounded-xl px-3 py-2 text-xs font-semibold transition ${
-                  statusFilter === filter.value
-                    ? "bg-slate-950 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-label={lang === "ja" ? "ステータス" : "Status filter"}
+          >
+            {filters.map((filter) => {
+              const isActive = statusFilter === filter.value;
+
+              return (
+                <button
+                  key={filter.value}
+                  type="button"
+                  onClick={() => setStatusFilter(filter.value)}
+                  aria-pressed={isActive}
+                  className={`h-9 cursor-pointer rounded-lg px-3 text-xs font-medium transition ${focusRing} ${
+                    isActive
+                      ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950"
+                      : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
           </div>
 
           <div className="relative w-full xl:max-w-sm">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
 
             <input
+              type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
+              aria-label={lang === "ja" ? "求人を検索" : "Search vacancies"}
               placeholder={
                 lang === "ja"
                   ? "求人、企業、勤務地を検索..."
                   : "Search vacancy, company, location..."
               }
-              className="w-full rounded-xl border border-slate-200 py-2.5 pl-11 pr-4 text-sm outline-none focus:border-indigo-400"
+              className="h-10 w-full rounded-lg border border-zinc-200 bg-white pl-10 pr-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white"
             />
           </div>
         </div>
@@ -305,39 +327,39 @@ export default function AdminVacancies() {
       {/* CARDS */}
 
       {vacancies.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white py-20 text-center">
-          <p className="text-slate-500">
+        <div className="rounded-lg border border-zinc-200 bg-white px-4 py-16 text-center dark:border-white/10 dark:bg-zinc-900 sm:py-20">
+          <p className="text-zinc-500 dark:text-zinc-400">
             {lang === "ja" ? "求人がありません。" : "No vacancies found."}
           </p>
         </div>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 sm:gap-5 xl:grid-cols-2 2xl:grid-cols-3">
           {vacancies.map((vacancy) => (
             <article
               key={vacancy.vacancyId}
-              className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              className="flex min-w-0 flex-col rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-5"
             >
               {/* TOP */}
 
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start justify-between gap-3 sm:gap-4">
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-indigo-500">
+                  <p className="truncate text-xs font-medium text-emerald-600 dark:text-emerald-400">
                     {vacancy.vacancyId}
                   </p>
 
-                  <h2 className="mt-1 text-xl font-bold text-slate-950">
+                  <h3 className="mt-1 break-words text-lg font-semibold text-zinc-950 dark:text-white sm:text-xl">
                     {vacancy.title}
-                  </h2>
+                  </h3>
 
                   {vacancy.titleKana && (
-                    <p className="mt-1 text-sm text-slate-400">
+                    <p className="mt-1 break-words text-sm text-zinc-400 dark:text-zinc-500">
                       {vacancy.titleKana}
                     </p>
                   )}
                 </div>
 
                 <span
-                  className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${getVacancyStatusClass(
+                  className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium ${getVacancyStatusClass(
                     vacancy.status,
                   )}`}
                 >
@@ -347,19 +369,19 @@ export default function AdminVacancies() {
 
               {/* COMPANY */}
 
-              <p className="mt-4 font-medium text-slate-700">
+              <p className="mt-4 font-medium text-zinc-700 dark:text-zinc-200">
                 {vacancy.companyName}
               </p>
 
               {/* STAFF SCREENING */}
 
-              <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 p-3">
-                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-zinc-50 p-3 dark:bg-white/5">
+                <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                   {lang === "ja" ? "スタッフ確認" : "Staff Screening"}
                 </span>
 
                 <span
-                  className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${getScreeningClass(
+                  className={`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium ${getScreeningClass(
                     vacancy.staffScreening.status,
                   )}`}
                 >
@@ -370,15 +392,15 @@ export default function AdminVacancies() {
               {/* ATTENTION NOTE */}
 
               {vacancy.staffScreening.status === "NEEDS_ATTENTION" && (
-                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3">
-                  <p className="text-xs font-semibold text-red-700">
+                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-400/20 dark:bg-red-400/10">
+                  <p className="text-xs font-medium text-red-700 dark:text-red-300">
                     {lang === "ja"
                       ? "スタッフ確認が必要です"
                       : "Staff Needs Attention"}
                   </p>
 
                   {vacancy.staffScreening.note && (
-                    <p className="mt-1 line-clamp-2 text-sm text-red-600">
+                    <p className="mt-1 line-clamp-2 text-sm text-red-600 dark:text-red-300/90">
                       {vacancy.staffScreening.note}
                     </p>
                   )}
@@ -412,7 +434,7 @@ export default function AdminVacancies() {
                 />
               </div>
 
-              <p className="mt-4 text-xs text-slate-400">
+              <p className="mt-4 text-xs text-zinc-400 dark:text-zinc-500">
                 {lang === "ja" ? "作成日: " : "Created: "}
 
                 {formatVacancyDate(vacancy.createdAt, lang)}
@@ -421,12 +443,12 @@ export default function AdminVacancies() {
               {/* ADMIN REJECTION */}
 
               {vacancy.rejectionReason && (
-                <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-3">
-                  <p className="text-xs font-semibold text-red-700">
+                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-400/20 dark:bg-red-400/10">
+                  <p className="text-xs font-medium text-red-700 dark:text-red-300">
                     {lang === "ja" ? "却下理由" : "Rejection Reason"}
                   </p>
 
-                  <p className="mt-1 text-sm text-red-600">
+                  <p className="mt-1 break-words text-sm text-red-600 dark:text-red-300/90">
                     {vacancy.rejectionReason}
                   </p>
                 </div>
@@ -434,11 +456,11 @@ export default function AdminVacancies() {
 
               {/* ACTIONS */}
 
-              <div className="mt-auto flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-5">
+              <div className="mt-auto flex flex-wrap justify-end gap-2 border-t border-zinc-100 pt-5 dark:border-white/10">
                 <button
                   type="button"
                   onClick={() => openDetails(vacancy.vacancyId)}
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 sm:flex-none ${focusRing}`}
                 >
                   <Eye className="h-4 w-4" />
 
@@ -450,7 +472,7 @@ export default function AdminVacancies() {
                     <button
                       type="button"
                       onClick={() => openReject(vacancy)}
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+                      className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-red-200 px-4 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 sm:flex-none ${focusRing}`}
                     >
                       <XCircle className="h-4 w-4" />
 
@@ -461,7 +483,7 @@ export default function AdminVacancies() {
                       type="button"
                       disabled={isApproving}
                       onClick={() => approveVacancy(vacancy.vacancyId)}
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                      className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none ${focusRing}`}
                     >
                       <CheckCircle2 className="h-4 w-4" />
 
@@ -475,7 +497,7 @@ export default function AdminVacancies() {
                     type="button"
                     disabled={isPublishing}
                     onClick={() => publishVacancy(vacancy.vacancyId)}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                    className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none ${focusRing}`}
                   >
                     <Send className="h-4 w-4" />
 
@@ -488,7 +510,7 @@ export default function AdminVacancies() {
                     type="button"
                     disabled={isClosing}
                     onClick={() => closeVacancy(vacancy.vacancyId)}
-                    className="cursor-pointer rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+                    className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center rounded-lg bg-amber-600 px-4 text-sm font-medium text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none ${focusRing}`}
                   >
                     {lang === "ja" ? "終了" : "Close"}
                   </button>
@@ -542,12 +564,12 @@ function CardField({
   value: string | null | undefined;
 }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <div className="min-w-0 rounded-lg bg-zinc-50 p-3 dark:bg-white/5">
+      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
         {label}
       </p>
 
-      <p className="mt-1 break-words text-sm font-medium text-slate-900">
+      <p className="mt-1 break-words text-sm font-medium text-zinc-900 dark:text-zinc-100">
         {value || "-"}
       </p>
     </div>
