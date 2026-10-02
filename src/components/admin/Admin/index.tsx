@@ -80,6 +80,20 @@ export default function AdminPage() {
   );
   const [isAllowed, setIsAllowed] = useState(false);
 
+  // Desktop sidebar collapse (remembered across reloads).
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      localStorage.getItem("admin-sidebar-collapsed") === "true",
+  );
+
+  // Tracks the lg breakpoint so one button can drive both behaviors.
+  const [isDesktop, setIsDesktop] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 1024px)").matches,
+  );
+
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
@@ -110,11 +124,13 @@ export default function AdminPage() {
     };
   }, [isMobileMenuOpen]);
 
-  // Reset the drawer if the viewport grows to desktop while it is open.
+  // Track the desktop breakpoint and reset the drawer when it grows to desktop.
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1024px)");
 
     const handleChange = (event: MediaQueryListEvent) => {
+      setIsDesktop(event.matches);
+
       if (event.matches) {
         setIsMobileMenuOpen(false);
       }
@@ -138,6 +154,18 @@ export default function AdminPage() {
 
       return next;
     });
+  };
+
+  // Desktop: collapse / expand the sidebar. Mobile: open / close the drawer.
+  const toggleSidebar = () => {
+    if (isDesktop) {
+      const next = !isSidebarCollapsed;
+      setIsSidebarCollapsed(next);
+      localStorage.setItem("admin-sidebar-collapsed", String(next));
+      return;
+    }
+
+    setIsMobileMenuOpen((previous) => !previous);
   };
 
   useEffect(() => {
@@ -413,10 +441,14 @@ export default function AdminPage() {
 
       <aside
         id="admin-sidebar"
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-zinc-200 bg-white px-3 py-4 shadow-xl shadow-zinc-950/5 transition-[transform,visibility] duration-200 motion-reduce:transition-none dark:border-white/10 dark:bg-zinc-900 lg:translate-x-0 lg:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-zinc-200 bg-white px-3 py-4 shadow-xl shadow-zinc-950/5 transition-[transform,visibility] duration-200 motion-reduce:transition-none dark:border-white/10 dark:bg-zinc-900 lg:shadow-none ${
           isMobileMenuOpen
             ? "translate-x-0"
             : "-translate-x-full max-lg:invisible"
+        } ${
+          isSidebarCollapsed
+            ? "lg:-translate-x-full lg:invisible"
+            : "lg:translate-x-0"
         }`}
       >
         <div className="mb-5 flex items-center gap-3 px-2">
@@ -510,15 +542,21 @@ export default function AdminPage() {
         </div>
       </aside>
 
-      <div className="flex min-h-screen min-w-0 flex-col lg:pl-72">
+      <div
+        className={`flex min-h-screen min-w-0 flex-col transition-[padding] duration-200 motion-reduce:transition-none ${
+          isSidebarCollapsed ? "lg:pl-0" : "lg:pl-72"
+        }`}
+      >
         <header className="sticky top-0 z-30 border-b border-zinc-200 bg-zinc-50/85 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/80">
           <div className="flex h-16 items-center gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
             <button
               type="button"
-              onClick={() => setIsMobileMenuOpen(true)}
-              className={`grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 lg:hidden ${focusRing}`}
-              aria-label="Open navigation"
-              aria-expanded={isMobileMenuOpen}
+              onClick={toggleSidebar}
+              className={`grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-lg border border-zinc-200 bg-white text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 ${focusRing}`}
+              aria-label={
+                lang === "ja" ? "サイドバーを切り替え" : "Toggle sidebar"
+              }
+              aria-expanded={isDesktop ? !isSidebarCollapsed : isMobileMenuOpen}
               aria-controls="admin-sidebar"
             >
               <Menu className="h-4 w-4" />
