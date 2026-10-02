@@ -128,8 +128,8 @@
       "statusCancelled": "Cancelled",
       "applicationStatusPendingAdminApproval": "Pending admin approval",
       "applicationStatusAdminRejected": "Rejected by admin",
-      "applicationStatusSentToProvider": "Sent to provider",
-      "applicationStatusUnderReview": "Under review",
+      "applicationStatusSentToProvider": "Application sent to company",
+      "applicationStatusUnderReview": "Application under company review",
       "applicationStatusInterview": "Interview",
       "applicationStatusSelected": "Selected",
       "applicationStatusHired": "Hired",
@@ -333,8 +333,8 @@
       },
       "card": {
         "statuses": {
-          "sentToProvider": "Sent To Provider",
-          "underReview": "Under Review",
+          "sentToProvider": "New Application",
+          "underReview": "Under  Review",
           "interview": "Interview",
           "selected": "Selected",
           "hired": "Hired",
