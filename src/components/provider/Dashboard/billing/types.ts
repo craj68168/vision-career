@@ -5,6 +5,10 @@ export type ProviderPlacementBillingStatus =
   | "refunded"
   | "cancelled";
 
+// ======================================================
+// REFUND
+// ======================================================
+
 export type ProviderBillingRefund = {
   refundId: string;
 
@@ -15,8 +19,72 @@ export type ProviderBillingRefund = {
   refundedAt?: string | null;
 };
 
+// ======================================================
+// INVOICE SNAPSHOT
+//
+// This data is frozen by the backend when the billing
+// is issued.
+//
+// Later company/profile/bank changes therefore do not
+// change an already-issued invoice.
+// ======================================================
+
+export type ProviderInvoiceIssuer = {
+  name: string;
+
+  postalCode: string;
+
+  address: string;
+
+  phone: string;
+
+  email: string;
+
+  registrationNumber: string;
+};
+
+export type ProviderInvoiceRecipient = {
+  companyName: string;
+
+  address: string;
+
+  contactPerson: string;
+};
+
+export type ProviderInvoiceBank = {
+  bankName: string;
+
+  branchName: string;
+
+  accountType: string;
+
+  accountNumber: string;
+
+  accountHolder: string;
+};
+
+export type ProviderInvoiceSnapshot = {
+  issuer: ProviderInvoiceIssuer;
+
+  recipient: ProviderInvoiceRecipient;
+
+  bank: ProviderInvoiceBank;
+
+  serviceDescription: string;
+
+  quantity: number;
+};
+
+// ======================================================
+// BILLING
+// ======================================================
+
 export type ProviderPlacementBilling = {
   billingId: string;
+
+  invoiceNumber?: string | null;
+
+  invoiceSnapshot?: ProviderInvoiceSnapshot | null;
 
   placementCandidateId: string;
 
@@ -71,6 +139,10 @@ export type ProviderPlacementBilling = {
   updatedAt?: string | null;
 };
 
+// ======================================================
+// SUMMARY
+// ======================================================
+
 export type ProviderPlacementBillingSummary = {
   total: number;
 
@@ -96,6 +168,10 @@ export type ProviderPlacementBillingSummary = {
 
   overdueTotal: number;
 };
+
+// ======================================================
+// API RESPONSES
+// ======================================================
 
 export type ProviderPlacementBillingListResponse = {
   success: boolean;
