@@ -12,17 +12,28 @@ import {
   Shield,
   User,
 } from "lucide-react";
-
 import { useState } from "react";
+import type { ComponentType } from "react";
 
 import { useLanguage } from "@/context/LanguageContext";
 
 import { useAdminSecurity } from "./hook";
-
 import type { AdminSecurityValidationErrors } from "./types";
 
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950";
+
+const inputBase =
+  "h-10 w-full rounded-lg border bg-white pl-10 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/5 dark:text-white";
+
+const inputNormal =
+  "border-zinc-200 focus:border-emerald-500 focus:ring-emerald-500/20 dark:border-white/10";
+
+const inputInvalid =
+  "border-red-300 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500/40";
+
 // ======================================================
-// COMPONENT
+// MAIN COMPONENT
 // ======================================================
 
 export default function AdminUpdateCredentialsPage() {
@@ -30,17 +41,11 @@ export default function AdminUpdateCredentialsPage() {
 
   const {
     admin,
-
     isLoading,
-
     isSaving,
-
     errorMessage,
-
     successMessage,
-
     saveCredentials,
-
     clearMessages,
   } = useAdminSecurity();
 
@@ -49,13 +54,9 @@ export default function AdminUpdateCredentialsPage() {
   //
   // null = use current username from Admin API
   // string = locally edited username
-  //
-  // This avoids copying server/query state into local
-  // state through useEffect.
   // ====================================================
 
   const [usernameInput, setUsernameInput] = useState<string | null>(null);
-
   const username = usernameInput ?? admin?.username ?? "";
 
   // ====================================================
@@ -63,24 +64,12 @@ export default function AdminUpdateCredentialsPage() {
   // ====================================================
 
   const [currentPassword, setCurrentPassword] = useState("");
-
   const [newPassword, setNewPassword] = useState("");
-
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
-  // ====================================================
-  // PASSWORD VISIBILITY
-  // ====================================================
-
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-
   const [showNewPassword, setShowNewPassword] = useState(false);
-
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
-
-  // ====================================================
-  // VALIDATION
-  // ====================================================
 
   const [validationErrors, setValidationErrors] =
     useState<AdminSecurityValidationErrors>({});
@@ -91,12 +80,7 @@ export default function AdminUpdateCredentialsPage() {
 
   const validateForm = () => {
     const errors: AdminSecurityValidationErrors = {};
-
     const normalizedUsername = username.trim();
-
-    // ==================================================
-    // USERNAME
-    // ==================================================
 
     if (!normalizedUsername) {
       errors.username =
@@ -108,20 +92,12 @@ export default function AdminUpdateCredentialsPage() {
           : "Username must be at least 3 characters.";
     }
 
-    // ==================================================
-    // CURRENT PASSWORD
-    // ==================================================
-
     if (!currentPassword) {
       errors.currentPassword =
         lang === "ja"
           ? "現在のパスワードは必須です"
           : "Current password is required.";
     }
-
-    // ==================================================
-    // NEW PASSWORD
-    // ==================================================
 
     if (!newPassword) {
       errors.newPassword =
@@ -134,10 +110,6 @@ export default function AdminUpdateCredentialsPage() {
           ? "新しいパスワードは8文字以上である必要があります"
           : "New password must be at least 8 characters.";
     }
-
-    // ==================================================
-    // CONFIRM PASSWORD
-    // ==================================================
 
     if (!confirmNewPassword) {
       errors.confirmNewPassword =
@@ -152,6 +124,21 @@ export default function AdminUpdateCredentialsPage() {
     setValidationErrors(errors);
 
     return Object.keys(errors).length === 0;
+  };
+
+  // ====================================================
+  // RESET LOCAL FORM
+  // ====================================================
+
+  const resetFields = () => {
+    setUsernameInput(null);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmNewPassword("");
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmNewPassword(false);
+    setValidationErrors({});
   };
 
   // ====================================================
@@ -171,9 +158,7 @@ export default function AdminUpdateCredentialsPage() {
 
     const success = await saveCredentials({
       username: username.trim(),
-
       currentPassword,
-
       newPassword,
     });
 
@@ -181,62 +166,13 @@ export default function AdminUpdateCredentialsPage() {
       return;
     }
 
-    // ==================================================
-    // RETURN USERNAME TO API VALUE
-    //
-    // After the hook updates/refetches Admin data,
-    // username automatically reflects admin.username.
-    // ==================================================
-
-    setUsernameInput(null);
-
-    // ==================================================
-    // CLEAR PASSWORD FIELDS
-    // ==================================================
-
-    setCurrentPassword("");
-
-    setNewPassword("");
-
-    setConfirmNewPassword("");
-
-    setShowCurrentPassword(false);
-
-    setShowNewPassword(false);
-
-    setShowConfirmNewPassword(false);
-
-    setValidationErrors({});
+    resetFields();
   };
-
-  // ====================================================
-  // RESET / CANCEL
-  // ====================================================
 
   const handleReset = () => {
-    // Fall back to admin.username again.
-    setUsernameInput(null);
-
-    setCurrentPassword("");
-
-    setNewPassword("");
-
-    setConfirmNewPassword("");
-
-    setShowCurrentPassword(false);
-
-    setShowNewPassword(false);
-
-    setShowConfirmNewPassword(false);
-
-    setValidationErrors({});
-
+    resetFields();
     clearMessages();
   };
-
-  // ====================================================
-  // CLEAR FIELD ERROR
-  // ====================================================
 
   const clearValidationError = (field: keyof AdminSecurityValidationErrors) => {
     if (!validationErrors[field]) {
@@ -245,7 +181,6 @@ export default function AdminUpdateCredentialsPage() {
 
     setValidationErrors((previous) => ({
       ...previous,
-
       [field]: undefined,
     }));
   };
@@ -256,11 +191,11 @@ export default function AdminUpdateCredentialsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[500px] items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-10 w-10 animate-spin text-indigo-600" />
+      <div className="flex min-h-[320px] items-center justify-center sm:min-h-[500px]">
+        <div role="status" className="text-center">
+          <Loader2 className="mx-auto h-10 w-10 animate-spin text-emerald-600 dark:text-emerald-400" />
 
-          <p className="mt-4 text-sm text-slate-500">
+          <p className="mt-4 text-sm font-medium text-zinc-600 dark:text-zinc-300">
             {lang === "ja" ? "読み込み中..." : "Loading..."}
           </p>
         </div>
@@ -268,96 +203,97 @@ export default function AdminUpdateCredentialsPage() {
     );
   }
 
-  // ====================================================
-  // UI
-  // ====================================================
+  const notices =
+    lang === "ja"
+      ? [
+          "変更には現在のパスワードによる本人確認が必要です",
+          "新しいパスワードは8文字以上で設定してください",
+          "パスワード変更後、以前の管理者トークンは無効になります",
+          "現在のブラウザには新しい認証トークンが自動的に設定されます",
+        ]
+      : [
+          "Your current password is required for verification.",
+          "Your new password must contain at least 8 characters.",
+          "Previous Admin sessions become invalid after changing the password.",
+          "This browser automatically receives a new authentication token.",
+        ];
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 md:px-8">
-      {/* ==================================================
+    <div className="min-w-0 space-y-6">
+      {/* =================================================
           HEADER
-      ================================================== */}
+      ================================================= */}
 
-      <div className="mb-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-900/30">
-            <Shield className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-          </div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-xl font-semibold text-zinc-950 dark:text-white sm:text-2xl">
+            {lang === "ja" ? "認証情報の更新" : "Update Credentials"}
+          </h2>
 
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-              {lang === "ja" ? "認証情報の更新" : "Update Credentials"}
-            </h1>
-
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              {lang === "ja"
-                ? "管理者のユーザー名とパスワードを変更します"
-                : "Change your Admin username and password."}
-            </p>
-          </div>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            {lang === "ja"
+              ? "管理者のユーザー名とパスワードを変更します。"
+              : "Change your Admin username and password."}
+          </p>
         </div>
       </div>
 
-      {/* ==================================================
-          FORM
-      ================================================== */}
+      <div className="grid items-start gap-6 xl:grid-cols-3">
+        {/* ===============================================
+            FORM
+        ================================================ */}
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        {/* ==================================================
-            ERROR
-        ================================================== */}
+        <section className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-5 xl:col-span-2">
+          {/* ERROR */}
 
-        {errorMessage && (
-          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-            <div className="flex items-start gap-2">
+          {errorMessage && (
+            <div
+              role="alert"
+              className="mb-5 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300"
+            >
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
 
-              <span>{errorMessage}</span>
+              <span className="min-w-0 break-words">{errorMessage}</span>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ==================================================
-            SUCCESS
-        ================================================== */}
+          {/* SUCCESS */}
 
-        {successMessage && (
-          <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
-            <div className="flex items-start gap-2">
+          {successMessage && (
+            <div
+              role="status"
+              className="mb-5 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300"
+            >
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
 
-              <span>{successMessage}</span>
+              <span className="min-w-0 break-words">{successMessage}</span>
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="space-y-6">
-          {/* ==================================================
-              USERNAME
-          ================================================== */}
+          <div className="space-y-5">
+            {/* USERNAME */}
 
-          <div>
-            <label
-              htmlFor="username"
-              className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+            <Field
+              id="username"
+              label={lang === "ja" ? "新しいユーザー名" : "New Username"}
+              icon={User}
+              error={validationErrors.username}
+              hint={
+                lang === "ja"
+                  ? "3文字以上で入力してください"
+                  : "Must be at least 3 characters."
+              }
             >
-              {lang === "ja" ? "新しいユーザー名" : "New Username"}
-            </label>
-
-            <div className="relative">
-              <User className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-
               <input
                 id="username"
                 type="text"
                 value={username}
                 disabled={isSaving}
                 autoComplete="username"
+                aria-invalid={Boolean(validationErrors.username)}
                 onChange={(event) => {
                   setUsernameInput(event.target.value);
-
                   clearMessages();
-
                   clearValidationError("username");
                 }}
                 placeholder={
@@ -365,55 +301,36 @@ export default function AdminUpdateCredentialsPage() {
                     ? "新しいユーザー名を入力"
                     : "Enter new username"
                 }
-                className={`w-full rounded-2xl border bg-slate-50 py-3 pl-12 pr-4 text-sm text-slate-900 outline-none transition focus:bg-white disabled:opacity-50 dark:bg-slate-900 dark:text-white ${
-                  validationErrors.username
-                    ? "border-red-300 focus:border-red-400"
-                    : "border-slate-200 focus:border-indigo-400 dark:border-slate-700"
+                className={`${inputBase} pr-4 ${
+                  validationErrors.username ? inputInvalid : inputNormal
                 }`}
               />
-            </div>
+            </Field>
 
-            {validationErrors.username && (
-              <p className="mt-2 text-xs text-red-600">
-                {validationErrors.username}
-              </p>
-            )}
+            {/* CURRENT PASSWORD */}
 
-            <p className="mt-2 text-xs text-slate-500">
-              {lang === "ja"
-                ? "3文字以上で入力してください"
-                : "Must be at least 3 characters."}
-            </p>
-          </div>
-
-          {/* ==================================================
-              CURRENT PASSWORD
-          ================================================== */}
-
-          <div>
-            <label
-              htmlFor="currentPassword"
-              className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+            <Field
+              id="currentPassword"
+              label={lang === "ja" ? "現在のパスワード" : "Current Password"}
+              required
+              icon={Key}
+              error={validationErrors.currentPassword}
+              hint={
+                lang === "ja"
+                  ? "本人確認のため現在のパスワードを入力してください"
+                  : "Enter your current password for verification."
+              }
             >
-              {lang === "ja" ? "現在のパスワード" : "Current Password"}
-
-              <span className="ml-1 text-red-500">*</span>
-            </label>
-
-            <div className="relative">
-              <Key className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-
               <input
                 id="currentPassword"
                 type={showCurrentPassword ? "text" : "password"}
                 value={currentPassword}
                 disabled={isSaving}
                 autoComplete="current-password"
+                aria-invalid={Boolean(validationErrors.currentPassword)}
                 onChange={(event) => {
                   setCurrentPassword(event.target.value);
-
                   clearMessages();
-
                   clearValidationError("currentPassword");
                 }}
                 placeholder={
@@ -421,84 +338,57 @@ export default function AdminUpdateCredentialsPage() {
                     ? "現在のパスワードを入力"
                     : "Enter current password"
                 }
-                className={`w-full rounded-2xl border bg-slate-50 py-3 pl-12 pr-12 text-sm text-slate-900 outline-none transition focus:bg-white disabled:opacity-50 dark:bg-slate-900 dark:text-white ${
-                  validationErrors.currentPassword
-                    ? "border-red-300 focus:border-red-400"
-                    : "border-slate-200 focus:border-indigo-400 dark:border-slate-700"
+                className={`${inputBase} pr-12 ${
+                  validationErrors.currentPassword ? inputInvalid : inputNormal
                 }`}
               />
 
-              <button
-                type="button"
+              <VisibilityToggle
+                lang={lang}
+                visible={showCurrentPassword}
                 disabled={isSaving}
-                onClick={() => setShowCurrentPassword((previous) => !previous)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 disabled:opacity-50"
-              >
-                {showCurrentPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
+                onToggle={() => setShowCurrentPassword((previous) => !previous)}
+              />
+            </Field>
+
+            {/* DIVIDER */}
+
+            <div className="relative py-1">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-zinc-200 dark:border-white/10" />
+              </div>
+
+              <div className="relative flex justify-center">
+                <span className="bg-white px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400 dark:bg-zinc-900 dark:text-zinc-500">
+                  {lang === "ja" ? "新しいパスワード" : "New Password"}
+                </span>
+              </div>
             </div>
 
-            {validationErrors.currentPassword && (
-              <p className="mt-2 text-xs text-red-600">
-                {validationErrors.currentPassword}
-              </p>
-            )}
+            {/* NEW PASSWORD */}
 
-            <p className="mt-2 text-xs text-slate-500">
-              {lang === "ja"
-                ? "本人確認のため現在のパスワードを入力してください"
-                : "Enter your current password for verification."}
-            </p>
-          </div>
-
-          {/* ==================================================
-              DIVIDER
-          ================================================== */}
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200 dark:border-slate-700" />
-            </div>
-
-            <div className="relative flex justify-center">
-              <span className="bg-white px-3 text-xs font-medium text-slate-500 dark:bg-slate-800">
-                {lang === "ja" ? "新しいパスワード" : "NEW PASSWORD"}
-              </span>
-            </div>
-          </div>
-
-          {/* ==================================================
-              NEW PASSWORD
-          ================================================== */}
-
-          <div>
-            <label
-              htmlFor="newPassword"
-              className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+            <Field
+              id="newPassword"
+              label={lang === "ja" ? "新しいパスワード" : "New Password"}
+              required
+              icon={Lock}
+              error={validationErrors.newPassword}
+              hint={
+                lang === "ja"
+                  ? "8文字以上で入力してください"
+                  : "Must be at least 8 characters."
+              }
             >
-              {lang === "ja" ? "新しいパスワード" : "New Password"}
-
-              <span className="ml-1 text-red-500">*</span>
-            </label>
-
-            <div className="relative">
-              <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-
               <input
                 id="newPassword"
                 type={showNewPassword ? "text" : "password"}
                 value={newPassword}
                 disabled={isSaving}
                 autoComplete="new-password"
+                aria-invalid={Boolean(validationErrors.newPassword)}
                 onChange={(event) => {
                   setNewPassword(event.target.value);
-
                   clearMessages();
-
                   clearValidationError("newPassword");
                 }}
                 placeholder={
@@ -506,70 +396,42 @@ export default function AdminUpdateCredentialsPage() {
                     ? "新しいパスワードを入力"
                     : "Enter new password"
                 }
-                className={`w-full rounded-2xl border bg-slate-50 py-3 pl-12 pr-12 text-sm text-slate-900 outline-none transition focus:bg-white disabled:opacity-50 dark:bg-slate-900 dark:text-white ${
-                  validationErrors.newPassword
-                    ? "border-red-300 focus:border-red-400"
-                    : "border-slate-200 focus:border-indigo-400 dark:border-slate-700"
+                className={`${inputBase} pr-12 ${
+                  validationErrors.newPassword ? inputInvalid : inputNormal
                 }`}
               />
 
-              <button
-                type="button"
+              <VisibilityToggle
+                lang={lang}
+                visible={showNewPassword}
                 disabled={isSaving}
-                onClick={() => setShowNewPassword((previous) => !previous)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 disabled:opacity-50"
-              >
-                {showNewPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
+                onToggle={() => setShowNewPassword((previous) => !previous)}
+              />
+            </Field>
 
-            {validationErrors.newPassword && (
-              <p className="mt-2 text-xs text-red-600">
-                {validationErrors.newPassword}
-              </p>
-            )}
+            {/* CONFIRM PASSWORD */}
 
-            <p className="mt-2 text-xs text-slate-500">
-              {lang === "ja"
-                ? "8文字以上で入力してください"
-                : "Must be at least 8 characters."}
-            </p>
-          </div>
-
-          {/* ==================================================
-              CONFIRM PASSWORD
-          ================================================== */}
-
-          <div>
-            <label
-              htmlFor="confirmNewPassword"
-              className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+            <Field
+              id="confirmNewPassword"
+              label={
+                lang === "ja"
+                  ? "新しいパスワード（確認）"
+                  : "Confirm New Password"
+              }
+              required
+              icon={Lock}
+              error={validationErrors.confirmNewPassword}
             >
-              {lang === "ja"
-                ? "新しいパスワード（確認）"
-                : "Confirm New Password"}
-
-              <span className="ml-1 text-red-500">*</span>
-            </label>
-
-            <div className="relative">
-              <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-
               <input
                 id="confirmNewPassword"
                 type={showConfirmNewPassword ? "text" : "password"}
                 value={confirmNewPassword}
                 disabled={isSaving}
                 autoComplete="new-password"
+                aria-invalid={Boolean(validationErrors.confirmNewPassword)}
                 onChange={(event) => {
                   setConfirmNewPassword(event.target.value);
-
                   clearMessages();
-
                   clearValidationError("confirmNewPassword");
                 }}
                 placeholder={
@@ -577,115 +439,182 @@ export default function AdminUpdateCredentialsPage() {
                     ? "新しいパスワードを再入力"
                     : "Re-enter new password"
                 }
-                className={`w-full rounded-2xl border bg-slate-50 py-3 pl-12 pr-12 text-sm text-slate-900 outline-none transition focus:bg-white disabled:opacity-50 dark:bg-slate-900 dark:text-white ${
+                className={`${inputBase} pr-12 ${
                   validationErrors.confirmNewPassword
-                    ? "border-red-300 focus:border-red-400"
-                    : "border-slate-200 focus:border-indigo-400 dark:border-slate-700"
+                    ? inputInvalid
+                    : inputNormal
                 }`}
               />
 
-              <button
-                type="button"
+              <VisibilityToggle
+                lang={lang}
+                visible={showConfirmNewPassword}
                 disabled={isSaving}
-                onClick={() =>
+                onToggle={() =>
                   setShowConfirmNewPassword((previous) => !previous)
                 }
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 disabled:opacity-50"
-              >
-                {showConfirmNewPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
+              />
+            </Field>
+          </div>
+
+          {/* ACTIONS */}
+
+          <div className="mt-6 flex flex-wrap justify-end gap-2 border-t border-zinc-100 pt-4 dark:border-white/10">
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={handleReset}
+              className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 sm:flex-none ${focusRing}`}
+            >
+              {lang === "ja" ? "キャンセル" : "Cancel"}
+            </button>
+
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={() => void handleSave()}
+              className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none ${focusRing}`}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+
+                  {lang === "ja" ? "保存中..." : "Saving..."}
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+
+                  {lang === "ja" ? "更新を保存" : "Save Changes"}
+                </>
+              )}
+            </button>
+          </div>
+        </section>
+
+        {/* ===============================================
+            SECURITY NOTICE
+        ================================================ */}
+
+        <aside className="min-w-0 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-400/20 dark:bg-amber-400/10 sm:p-5">
+          <div className="flex items-start gap-3">
+            <div className="shrink-0 rounded-lg bg-amber-100 p-3 text-amber-600 dark:bg-amber-400/10 dark:text-amber-300">
+              <Shield className="h-5 w-5" />
             </div>
 
-            {validationErrors.confirmNewPassword && (
-              <p className="mt-2 text-xs text-red-600">
-                {validationErrors.confirmNewPassword}
-              </p>
-            )}
+            <div className="min-w-0">
+              <h3 className="font-semibold text-amber-800 dark:text-amber-300">
+                {lang === "ja" ? "セキュリティ注意事項" : "Security Notice"}
+              </h3>
+
+              <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs text-amber-700 marker:text-amber-400 dark:text-amber-300/90">
+                {notices.map((notice) => (
+                  <li key={notice} className="break-words">
+                    {notice}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </div>
-
-        {/* ==================================================
-            ACTIONS
-        ================================================== */}
-
-        <div className="mt-8 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={handleReset}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-          >
-            {lang === "ja" ? "キャンセル" : "Cancel"}
-          </button>
-
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={() => void handleSave()}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-indigo-600"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-
-                {lang === "ja" ? "保存中..." : "Saving..."}
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-
-                {lang === "ja" ? "更新を保存" : "Save Changes"}
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* ==================================================
-          SECURITY NOTICE
-      ================================================== */}
-
-      <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-        <div className="flex items-start gap-3">
-          <Shield className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
-
-          <div>
-            <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-              {lang === "ja" ? "セキュリティ注意事項" : "Security Notice"}
-            </p>
-
-            <ul className="mt-1 space-y-1 text-xs text-amber-700 dark:text-amber-400">
-              <li>
-                {lang === "ja"
-                  ? "• 変更には現在のパスワードによる本人確認が必要です"
-                  : "• Your current password is required for verification."}
-              </li>
-
-              <li>
-                {lang === "ja"
-                  ? "• 新しいパスワードは8文字以上で設定してください"
-                  : "• Your new password must contain at least 8 characters."}
-              </li>
-
-              <li>
-                {lang === "ja"
-                  ? "• パスワード変更後、以前の管理者トークンは無効になります"
-                  : "• Previous Admin sessions become invalid after changing the password."}
-              </li>
-
-              <li>
-                {lang === "ja"
-                  ? "• 現在のブラウザには新しい認証トークンが自動的に設定されます"
-                  : "• This browser automatically receives a new authentication token."}
-              </li>
-            </ul>
-          </div>
-        </div>
+        </aside>
       </div>
     </div>
+  );
+}
+
+// ======================================================
+// FIELD
+// ======================================================
+
+function Field({
+  id,
+  label,
+  required = false,
+  icon: Icon,
+  error,
+  hint,
+  children,
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  icon: ComponentType<{ className?: string }>;
+  error?: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-w-0">
+      <label
+        htmlFor={id}
+        className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+      >
+        {label}
+
+        {required && (
+          <span className="ml-1 text-red-500 dark:text-red-400">*</span>
+        )}
+      </label>
+
+      <div className="relative">
+        <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+
+        {children}
+      </div>
+
+      {error && (
+        <p
+          role="alert"
+          className="mt-1.5 text-xs text-red-600 dark:text-red-300"
+        >
+          {error}
+        </p>
+      )}
+
+      {hint && (
+        <p className="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ======================================================
+// VISIBILITY TOGGLE
+// ======================================================
+
+function VisibilityToggle({
+  lang,
+  visible,
+  disabled,
+  onToggle,
+}: {
+  lang: string;
+  visible: boolean;
+  disabled: boolean;
+  onToggle: () => void;
+}) {
+  const label =
+    lang === "ja"
+      ? visible
+        ? "パスワードを隠す"
+        : "パスワードを表示"
+      : visible
+        ? "Hide password"
+        : "Show password";
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onToggle}
+      aria-label={label}
+      title={label}
+      aria-pressed={visible}
+      className={`absolute right-1.5 top-1/2 grid h-7 w-7 -translate-y-1/2 cursor-pointer place-items-center rounded-md text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-white/10 dark:hover:text-zinc-200 ${focusRing}`}
+    >
+      {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+    </button>
   );
 }
