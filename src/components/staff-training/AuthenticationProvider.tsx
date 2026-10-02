@@ -1,59 +1,85 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useLanguage } from "@/context/LanguageContext";
 import { Loader2 } from "lucide-react";
 
 export default function AuthenticationProvider({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isAllowed, setIsAllowed] = useState(false);
+
   const router = useRouter();
   const { lang } = useLanguage();
+  const t = useTranslations("staff.authentication");
+
+  const loginPath = lang === "ja" ? "/staff-login" : "/en/staff-login";
 
   useEffect(() => {
-    const token = localStorage.getItem("staff_token");
+    const controller = new AbortController();
 
-    if (!token) {
-      router.replace(lang === "ja" ? "/staff-login" : "/en/staff-login");
-      return;
-    }
     const checkAuth = async () => {
+      setIsCheckingAuth(true);
+      setIsAllowed(false);
+
       try {
+        const token = localStorage.getItem("staff_token");
+
+        if (!token) {
+          router.replace(loginPath);
+          return;
+        }
+
         const res = await fetch("https://vision-career.co.jp/profile.php", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          signal: controller.signal,
         });
 
-        if (!res.ok && res.status === 401) {
-          localStorage.removeItem("staff_token");
-          router.replace(lang === "ja" ? "/staff-login" : "/en/staff-login");
+        if (controller.signal.aborted) return;
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.removeItem("staff_token");
+          }
+
+          router.replace(loginPath);
           return;
         }
 
         setIsAllowed(true);
-      } catch (error) {
-        localStorage.removeItem("staff_token");
-        router.replace(lang === "ja" ? "/staff-login" : "/en/staff-login");
+      } catch {
+        if (controller.signal.aborted) return;
+
+        router.replace(loginPath);
       } finally {
-        setIsCheckingAuth(false);
+        if (!controller.signal.aborted) {
+          setIsCheckingAuth(false);
+        }
       }
     };
 
-    checkAuth();
-  }, []);
+    void checkAuth();
+
+    return () => controller.abort();
+  }, [router, loginPath]);
 
   if (isCheckingAuth) {
     return (
-      <div className="fixed inset-0 bg-white z-100 min-h-screen flex items-center justify-center gap-1">
-        <Loader2 className="animate-spin" />
-        <p>Checking Authentication...</p>
+      <div
+        role="status"
+        aria-live="polite"
+        className="fixed inset-0 z-[100] flex min-h-screen items-center justify-center gap-2 bg-white"
+      >
+        <Loader2 className="animate-spin" aria-hidden="true" />
+        <p>{t("checking")}</p>
       </div>
     );
   }

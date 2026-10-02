@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 import { getProviderPlacementBillings } from "./api";
 
@@ -12,19 +12,21 @@ import type {
   ProviderPlacementBillingStatus,
 } from "./types";
 
-// ======================================================
-// PROPS
-// ======================================================
-
 type Props = {
   refreshVersion: number;
 };
 
-// ======================================================
-// PROVIDER BILLING HOOK
-// ======================================================
+const STATUS_TRANSLATION_KEYS = {
+  issued: "issued",
+  paid: "paid",
+  partially_refunded: "partiallyRefunded",
+  refunded: "refunded",
+  cancelled: "cancelled",
+} as const satisfies Record<ProviderPlacementBillingStatus, string>;
 
 export const useProviderBilling = ({ refreshVersion }: Props) => {
+  const tStatus = useTranslations("provider.billing.list.statuses");
+
   const [search, setSearch] = useState("");
 
   const [statusFilter, setStatusFilter] = useState<
@@ -34,38 +36,23 @@ export const useProviderBilling = ({ refreshVersion }: Props) => {
   const [viewingBilling, setViewingBilling] =
     useState<ProviderPlacementBilling | null>(null);
 
-  // ======================================================
   // BILLINGS QUERY
-  // ======================================================
-
   const billingsQuery = useQuery<ProviderPlacementBillingListResponse>({
     queryKey: ["provider-placement-billings", refreshVersion],
-
     queryFn: () => getProviderPlacementBillings(),
-
     staleTime: 30_000,
-
     refetchOnWindowFocus: false,
-
     retry: 1,
   });
 
-  // ======================================================
-  // DATA
-  // ======================================================
-
-  const billings: ProviderPlacementBilling[] = billingsQuery.data?.data ?? [];
-
   const summary = billingsQuery.data?.summary;
 
-  // ======================================================
   // FILTERING
-  // ======================================================
-
   const filteredBillings = useMemo(() => {
+    const billings = billingsQuery.data?.data ?? [];
     const keyword = search.trim().toLowerCase();
 
-    return billings.filter((billing: ProviderPlacementBilling) => {
+    return billings.filter((billing) => {
       if (statusFilter !== "ALL" && billing.status !== statusFilter) {
         return false;
       }
@@ -73,6 +60,10 @@ export const useProviderBilling = ({ refreshVersion }: Props) => {
       if (!keyword) {
         return true;
       }
+
+      const translatedStatus = tStatus(
+        STATUS_TRANSLATION_KEYS[billing.status],
+      );
 
       const haystack = [
         billing.billingId,
@@ -82,6 +73,7 @@ export const useProviderBilling = ({ refreshVersion }: Props) => {
         billing.candidateName,
         billing.jobTitle,
         billing.status,
+        translatedStatus,
       ]
         .filter(Boolean)
         .join(" ")
@@ -89,11 +81,7 @@ export const useProviderBilling = ({ refreshVersion }: Props) => {
 
       return haystack.includes(keyword);
     });
-  }, [billings, search, statusFilter]);
-
-  // ======================================================
-  // RETURN
-  // ======================================================
+  }, [billingsQuery.data?.data, search, statusFilter, tStatus]);
 
   return {
     search,
@@ -106,9 +94,7 @@ export const useProviderBilling = ({ refreshVersion }: Props) => {
     setViewingBilling,
 
     billingsQuery,
-
     summary,
-
     filteredBillings,
   };
 };

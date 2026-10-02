@@ -22,7 +22,7 @@ import type {
   StaffTrainingFile,
   StaffTrainingTopic,
 } from "./types";
-
+import { useLanguage } from "@/context/LanguageContext";
 // ======================================================
 // HOOK
 // ======================================================
@@ -31,7 +31,7 @@ export const useStaffTraining = () => {
   // ====================================================
   // FILTERS
   // ====================================================
-
+const { lang } = useLanguage();
   const [search, setSearch] = useState("");
 
   const debouncedSearch = useDebounced(search, 400);
@@ -98,17 +98,41 @@ export const useStaffTraining = () => {
   // ERROR HELPER
   // ====================================================
 
-  const getErrorMessage = (error: unknown) => {
-    if (axios.isAxiosError<StaffTrainingApiError>(error)) {
-      return error.response?.data?.message || "Something went wrong.";
+const getErrorMessage = (error: unknown) => {
+  const isJapanese = lang === "ja";
+
+  if (axios.isAxiosError<StaffTrainingApiError>(error)) {
+    const status = error.response?.status;
+
+    if (status === 401) {
+      return isJapanese
+        ? "セッションの有効期限が切れました。再度ログインしてください。"
+        : "Your session has expired. Please log in again.";
     }
 
-    if (error instanceof Error) {
-      return error.message;
+    if (status === 403) {
+      return isJapanese
+        ? "この操作を行う権限がありません。"
+        : "You do not have permission to perform this action.";
     }
 
-    return "Something went wrong.";
-  };
+    if (status === 404) {
+      return isJapanese
+        ? "指定された研修データが見つかりません。"
+        : "The requested training resource was not found.";
+    }
+
+    if (!error.response) {
+      return isJapanese
+        ? "サーバーに接続できません。接続状況を確認して再度お試しください。"
+        : "Unable to connect to the server. Check your connection and try again.";
+    }
+  }
+
+  return isJapanese
+    ? "エラーが発生しました。再度お試しください。"
+    : "Something went wrong. Please try again.";
+};
 
   // ====================================================
   // LOAD TOPICS

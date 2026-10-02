@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import {
   CalendarDays,
   ExternalLink,
@@ -13,6 +15,8 @@ import {
   X,
 } from "lucide-react";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 import {
   formatStaffTrainingDate,
   formatStaffTrainingFileSize,
@@ -21,32 +25,46 @@ import {
 
 import type { StaffTrainingFile, StaffTrainingTopic } from "./types";
 
-// ======================================================
-// PROPS
-// ======================================================
-
 type Props = {
   topic: StaffTrainingTopic | null;
-
   onClose: () => void;
-
   onOpenFile: (file: StaffTrainingFile) => void;
 };
 
-// ======================================================
-// COMPONENT
-// ======================================================
+const translations = {
+  ja: {
+    close: "閉じる",
+    trainingTopic: "研修トピック",
+    description: "説明",
+    category: "カテゴリー",
+    files: "ファイル",
+    updated: "更新日",
+    trainingMaterials: "研修教材",
+    noFiles: "このトピックには研修ファイルが添付されていません。",
+    open: "開く",
+  },
+  en: {
+    close: "Close",
+    trainingTopic: "Training Topic",
+    description: "Description",
+    category: "Category",
+    files: "Files",
+    updated: "Updated",
+    trainingMaterials: "Training Materials",
+    noFiles: "No training files are attached to this topic.",
+    open: "Open",
+  },
+};
 
 export default function TopicDetailsModal({
   topic,
-
   onClose,
-
   onOpenFile,
 }: Props) {
-  if (!topic) {
-    return null;
-  }
+  const { lang } = useLanguage();
+  const t = translations[lang === "ja" ? "ja" : "en"];
+
+  if (!topic) return null;
 
   const files = topic.files ?? [];
 
@@ -56,16 +74,20 @@ export default function TopicDetailsModal({
         type="button"
         className="absolute inset-0"
         onClick={onClose}
-        aria-label="Close"
+        aria-label={t.close}
       />
 
-      <div className="relative z-10 max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={topic.title}
+        className="relative z-10 max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white shadow-2xl"
+      >
         {/* HEADER */}
-
         <header className="flex items-start justify-between border-b border-slate-200 p-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-              Training Topic
+              {t.trainingTopic}
             </p>
 
             <h2 className="mt-1 text-2xl font-bold text-slate-950">
@@ -80,6 +102,8 @@ export default function TopicDetailsModal({
           <button
             type="button"
             onClick={onClose}
+            aria-label={t.close}
+            title={t.close}
             className="rounded-full p-2 hover:bg-slate-100"
           >
             <X className="h-5 w-5" />
@@ -88,10 +112,9 @@ export default function TopicDetailsModal({
 
         <div className="space-y-6 p-6">
           {/* DESCRIPTION */}
-
           {topic.description && (
             <section className="rounded-2xl border border-slate-200 p-5">
-              <h3 className="font-semibold">Description</h3>
+              <h3 className="font-semibold">{t.description}</h3>
 
               <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
                 {topic.description}
@@ -100,38 +123,36 @@ export default function TopicDetailsModal({
           )}
 
           {/* INFO */}
-
           <div className="grid gap-4 sm:grid-cols-3">
             <InfoBox
               icon={<FolderOpen className="h-4 w-4" />}
-              label="Category"
+              label={t.category}
               value={topic.categoryName || topic.categoryId}
             />
 
             <InfoBox
               icon={<FileText className="h-4 w-4" />}
-              label="Files"
+              label={t.files}
               value={String(topic.filesCount)}
             />
 
             <InfoBox
               icon={<CalendarDays className="h-4 w-4" />}
-              label="Updated"
-              value={formatStaffTrainingDate(topic.updatedAt)}
+              label={t.updated}
+              value={formatStaffTrainingDate(topic.updatedAt, lang)}
             />
           </div>
 
           {/* FILES */}
-
           <section>
-            <h3 className="text-lg font-bold">Training Materials</h3>
+            <h3 className="text-lg font-bold">{t.trainingMaterials}</h3>
 
             {files.length === 0 ? (
               <div className="mt-4 rounded-2xl border border-dashed border-slate-300 p-10 text-center">
                 <File className="mx-auto h-10 w-10 text-slate-300" />
 
                 <p className="mt-3 text-sm text-slate-500">
-                  No training files are attached to this topic.
+                  {t.noFiles}
                 </p>
               </div>
             ) : (
@@ -157,14 +178,16 @@ export default function TopicDetailsModal({
 
                         <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-400">
                           <span>
-                            {getStaffTrainingFileTypeLabel(file.fileType)}
+                            {getStaffTrainingFileTypeLabel(file.fileType, lang)}
                           </span>
 
                           <span>
                             {formatStaffTrainingFileSize(file.fileSize)}
                           </span>
 
-                          <span>{formatStaffTrainingDate(file.createdAt)}</span>
+                          <span>
+                            {formatStaffTrainingDate(file.createdAt, lang)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -175,7 +198,7 @@ export default function TopicDetailsModal({
                       className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white"
                     >
                       <ExternalLink className="h-4 w-4" />
-                      Open
+                      {t.open}
                     </button>
                   </div>
                 ))}
@@ -188,21 +211,13 @@ export default function TopicDetailsModal({
   );
 }
 
-// ======================================================
-// INFO BOX
-// ======================================================
-
 function InfoBox({
   icon,
-
   label,
-
   value,
 }: {
-  icon: React.ReactNode;
-
+  icon: ReactNode;
   label: string;
-
   value: string;
 }) {
   return (
@@ -215,37 +230,29 @@ function InfoBox({
             {label}
           </p>
 
-          <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
+          <p className="mt-1 text-sm font-semibold text-slate-900">
+            {value}
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-// ======================================================
-// FILE ICON
-// ======================================================
-
 function FileTypeIcon({ type }: { type: StaffTrainingFile["fileType"] }) {
   switch (type) {
     case "pdf":
       return <FileText className="h-6 w-6 text-red-500" />;
-
     case "video":
       return <Video className="h-6 w-6 text-purple-500" />;
-
     case "image":
       return <Image className="h-6 w-6 text-blue-500" />;
-
     case "excel":
       return <FileSpreadsheet className="h-6 w-6 text-emerald-600" />;
-
     case "ppt":
       return <Presentation className="h-6 w-6 text-orange-500" />;
-
     case "doc":
       return <FileText className="h-6 w-6 text-blue-600" />;
-
     default:
       return <File className="h-6 w-6 text-slate-500" />;
   }
