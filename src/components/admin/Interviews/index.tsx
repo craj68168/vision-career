@@ -3,7 +3,6 @@
 import {
   CalendarDays,
   CheckCircle2,
-  Clock3,
   Eye,
   Link2,
   Pencil,
@@ -27,6 +26,12 @@ import type {
   AdminInterviewStatus,
   AdminInterviewStatusFilter,
 } from "./types";
+
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950";
+
+const selectClass =
+  "h-10 w-full cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-zinc-900 dark:text-white";
 
 // ======================================================
 // COMPONENT
@@ -75,8 +80,12 @@ export default function AdminInterviewsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[500px] items-center justify-center">
-        <RefreshCw className="h-10 w-10 animate-spin text-indigo-600" />
+      <div className="flex min-h-[320px] items-center justify-center sm:min-h-[500px]">
+        <RefreshCw
+          role="status"
+          aria-label={lang === "ja" ? "読み込み中" : "Loading"}
+          className="h-10 w-10 animate-spin text-emerald-600 dark:text-emerald-400"
+        />
       </div>
     );
   }
@@ -168,16 +177,16 @@ export default function AdminInterviewsPage() {
   // ==================================================
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 md:px-8">
+    <div className="min-w-0 space-y-6">
       {/* HEADER */}
 
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-950">
+        <div className="min-w-0">
+          <h2 className="text-xl font-semibold text-zinc-950 dark:text-white sm:text-2xl">
             {lang === "ja" ? "面接管理" : "Interviews"}
-          </h1>
+          </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             {lang === "ja"
               ? "企業と候補者の面接スケジュールを確認・調整します。"
               : "View and coordinate interview schedules between Providers and candidates."}
@@ -188,7 +197,7 @@ export default function AdminInterviewsPage() {
           type="button"
           disabled={isFetching}
           onClick={() => void refetch()}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          className={`inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 ${focusRing}`}
         >
           <RefreshCw
             className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
@@ -200,7 +209,7 @@ export default function AdminInterviewsPage() {
 
       {/* SUMMARY */}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
         <SummaryCard
           label={lang === "ja" ? "総面接数" : "Total"}
           value={summary?.total || 0}
@@ -234,29 +243,32 @@ export default function AdminInterviewsPage() {
 
       {/* FILTERS */}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="relative sm:col-span-2 xl:col-span-1">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
 
             <input
+              type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
+              aria-label={lang === "ja" ? "面接を検索" : "Search interviews"}
               placeholder={
                 lang === "ja"
                   ? "候補者、企業、求人、面接IDを検索..."
                   : "Search candidate, company, vacancy, interview ID..."
               }
-              className="w-full rounded-xl border border-slate-200 py-2.5 pl-11 pr-4 text-sm outline-none focus:border-indigo-400"
+              className="h-10 w-full rounded-lg border border-zinc-200 bg-white pl-10 pr-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white"
             />
           </div>
 
           <select
             value={statusFilter}
+            aria-label={lang === "ja" ? "ステータス" : "Status"}
             onChange={(event) =>
               setStatusFilter(event.target.value as AdminInterviewStatusFilter)
             }
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-indigo-400"
+            className={selectClass}
           >
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -267,10 +279,11 @@ export default function AdminInterviewsPage() {
 
           <select
             value={methodFilter}
+            aria-label={lang === "ja" ? "面接方法" : "Method"}
             onChange={(event) =>
               setMethodFilter(event.target.value as AdminInterviewMethodFilter)
             }
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-indigo-400"
+            className={selectClass}
           >
             {methodOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -284,15 +297,15 @@ export default function AdminInterviewsPage() {
       {/* LIST */}
 
       {interviews.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white py-20 text-center">
-          <CalendarDays className="mx-auto h-10 w-10 text-slate-300" />
+        <div className="rounded-lg border border-zinc-200 bg-white px-4 py-16 text-center dark:border-white/10 dark:bg-zinc-900 sm:py-20">
+          <CalendarDays className="mx-auto h-10 w-10 text-zinc-300 dark:text-zinc-600" />
 
-          <p className="mt-4 text-slate-500">
+          <p className="mt-4 text-zinc-500 dark:text-zinc-400">
             {lang === "ja" ? "面接がありません。" : "No interviews found."}
           </p>
         </div>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid gap-4 sm:gap-5 xl:grid-cols-2">
           {interviews.map((interview) => {
             const canEdit =
               interview.applicationStatus === "INTERVIEW" &&
@@ -302,19 +315,19 @@ export default function AdminInterviewsPage() {
             return (
               <article
                 key={interview.interviewId}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-5"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold text-indigo-500">
+                <div className="flex items-start justify-between gap-3 sm:gap-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-medium text-emerald-600 dark:text-emerald-400">
                       {interview.interviewId}
                     </p>
 
-                    <h2 className="mt-1 text-xl font-bold text-slate-950">
+                    <h3 className="mt-1 truncate text-lg font-semibold text-zinc-950 dark:text-white sm:text-xl">
                       {interview.candidate?.name || "-"}
-                    </h2>
+                    </h3>
 
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                       {interview.vacancy?.title || "-"}
                     </p>
                   </div>
@@ -358,18 +371,18 @@ export default function AdminInterviewsPage() {
                 </div>
 
                 {interview.status === "AWAITING_LINK" && (
-                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+                  <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300">
                     {lang === "ja"
                       ? "オンライン面接リンクの追加が必要です。"
                       : "This online interview is waiting for a meeting link."}
                   </div>
                 )}
 
-                <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+                <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-zinc-100 pt-4 dark:border-white/10">
                   <button
                     type="button"
                     onClick={() => openDetails(interview.interviewId)}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 sm:flex-none ${focusRing}`}
                   >
                     <Eye className="h-4 w-4" />
 
@@ -380,7 +393,7 @@ export default function AdminInterviewsPage() {
                     <button
                       type="button"
                       onClick={() => openEdit(interview)}
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                      className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700 sm:flex-none ${focusRing}`}
                     >
                       <Pencil className="h-4 w-4" />
 
@@ -436,15 +449,19 @@ function SummaryCard({
   }>;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
+    <div className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-zinc-500 dark:text-zinc-400">
+            {label}
+          </p>
 
-          <p className="mt-2 text-3xl font-bold text-slate-950">{value}</p>
+          <p className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
+            {value}
+          </p>
         </div>
 
-        <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600">
+        <div className="shrink-0 rounded-lg bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
           <Icon className="h-5 w-5" />
         </div>
       </div>
@@ -465,12 +482,14 @@ function CardField({
   value?: string | null;
 }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <div className="min-w-0 rounded-lg bg-zinc-50 p-3 dark:bg-white/5">
+      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
         {label}
       </p>
 
-      <p className="mt-1 text-sm font-medium text-slate-900">{value || "-"}</p>
+      <p className="mt-1 break-words text-sm font-medium text-zinc-900 dark:text-zinc-100">
+        {value || "-"}
+      </p>
     </div>
   );
 }
@@ -486,34 +505,39 @@ function InterviewStatusBadge({
   status: AdminInterviewStatus;
   lang: string;
 }) {
-  let className = "border-slate-200 bg-slate-50 text-slate-700";
+  let className =
+    "border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-white/10 dark:bg-white/10 dark:text-zinc-300";
 
   let label: string = status;
 
   switch (status) {
     case "AWAITING_LINK":
-      className = "border-amber-200 bg-amber-50 text-amber-700";
+      className =
+        "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300";
 
       label = lang === "ja" ? "リンク待ち" : "Awaiting Link";
 
       break;
 
     case "CONFIRMED":
-      className = "border-emerald-200 bg-emerald-50 text-emerald-700";
+      className =
+        "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300";
 
       label = lang === "ja" ? "確定" : "Confirmed";
 
       break;
 
     case "COMPLETED":
-      className = "border-blue-200 bg-blue-50 text-blue-700";
+      className =
+        "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-300";
 
       label = lang === "ja" ? "完了" : "Completed";
 
       break;
 
     case "CANCELLED":
-      className = "border-red-200 bg-red-50 text-red-700";
+      className =
+        "border-red-200 bg-red-50 text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300";
 
       label = lang === "ja" ? "キャンセル" : "Cancelled";
 
@@ -522,7 +546,7 @@ function InterviewStatusBadge({
 
   return (
     <span
-      className={`h-fit rounded-full border px-3 py-1 text-xs font-semibold ${className}`}
+      className={`h-fit shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium ${className}`}
     >
       {label}
     </span>

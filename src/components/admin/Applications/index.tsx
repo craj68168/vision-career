@@ -21,6 +21,9 @@ import ApplicationDetails from "./ApplicationDetails";
 import RejectApplicationModal from "./RejectApplicationModal";
 import type { ApplicationStatus } from "./types";
 
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950";
+
 export default function AdminApplications() {
   const { lang } = useLanguage();
 
@@ -50,8 +53,12 @@ export default function AdminApplications() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[500px] items-center justify-center">
-        <RefreshCw className="h-10 w-10 animate-spin text-indigo-600" />
+      <div className="flex min-h-[320px] items-center justify-center sm:min-h-[500px]">
+        <RefreshCw
+          role="status"
+          aria-label={lang === "ja" ? "読み込み中" : "Loading"}
+          className="h-10 w-10 animate-spin text-emerald-600 dark:text-emerald-400"
+        />
       </div>
     );
   }
@@ -107,16 +114,16 @@ export default function AdminApplications() {
   ];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 md:px-8">
+    <div className="min-w-0 space-y-6">
       {/* HEADER */}
 
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-950">
+        <div className="min-w-0">
+          <h2 className="text-xl font-semibold text-zinc-950 dark:text-white sm:text-2xl">
             {lang === "ja" ? "応募管理" : "Applications"}
-          </h1>
+          </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             {lang === "ja"
               ? "応募を確認し、企業へ送信する前に審査します。"
               : "Review applications before they are sent to Providers."}
@@ -127,7 +134,7 @@ export default function AdminApplications() {
           type="button"
           disabled={isFetching}
           onClick={() => void refetch()}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          className={`inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 ${focusRing}`}
         >
           <RefreshCw
             className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
@@ -139,7 +146,7 @@ export default function AdminApplications() {
 
       {/* SUMMARY */}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
           label={lang === "ja" ? "総応募数" : "Applications"}
           value={summary?.total || 0}
@@ -167,37 +174,50 @@ export default function AdminApplications() {
 
       {/* FILTER */}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {filters.map((filter) => (
-              <button
-                key={filter.value}
-                type="button"
-                onClick={() => setStatusFilter(filter.value)}
-                className={`cursor-pointer rounded-xl px-3 py-2 text-xs font-semibold transition ${
-                  statusFilter === filter.value
-                    ? "bg-slate-950 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-label={lang === "ja" ? "ステータス" : "Status filter"}
+          >
+            {filters.map((filter) => {
+              const isActive = statusFilter === filter.value;
+
+              return (
+                <button
+                  key={filter.value}
+                  type="button"
+                  onClick={() => setStatusFilter(filter.value)}
+                  aria-pressed={isActive}
+                  className={`h-9 cursor-pointer rounded-lg px-3 text-xs font-medium transition ${focusRing} ${
+                    isActive
+                      ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950"
+                      : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
           </div>
 
           <div className="relative w-full xl:max-w-sm">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
 
             <input
+              type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
+              aria-label={
+                lang === "ja" ? "応募を検索" : "Search applications"
+              }
               placeholder={
                 lang === "ja"
                   ? "応募者、求人、企業を検索..."
                   : "Search applicant, vacancy, company..."
               }
-              className="w-full rounded-xl border border-slate-200 py-2.5 pl-11 pr-4 text-sm outline-none focus:border-indigo-400"
+              className="h-10 w-full rounded-lg border border-zinc-200 bg-white pl-10 pr-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white"
             />
           </div>
         </div>
@@ -206,38 +226,38 @@ export default function AdminApplications() {
       {/* APPLICATIONS */}
 
       {applications.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white py-20 text-center">
-          <p className="text-slate-500">
+        <div className="rounded-lg border border-zinc-200 bg-white px-4 py-16 text-center dark:border-white/10 dark:bg-zinc-900 sm:py-20">
+          <p className="text-zinc-500 dark:text-zinc-400">
             {lang === "ja" ? "応募がありません。" : "No applications found."}
           </p>
         </div>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid gap-4 sm:gap-5 xl:grid-cols-2">
           {applications.map((application) => {
             const pending = application.status === "PENDING_ADMIN_APPROVAL";
 
             return (
               <article
                 key={application.applicationId}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-5"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold text-indigo-500">
+                <div className="flex items-start justify-between gap-3 sm:gap-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-medium text-emerald-600 dark:text-emerald-400">
                       {application.applicationId}
                     </p>
 
-                    <h2 className="mt-1 text-xl font-bold text-slate-950">
+                    <h3 className="mt-1 truncate text-lg font-semibold text-zinc-950 dark:text-white sm:text-xl">
                       {application.candidate.name}
-                    </h2>
+                    </h3>
 
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                       {application.vacancy.title}
                     </p>
                   </div>
 
                   <span
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold ${getApplicationStatusClass(
+                    className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium ${getApplicationStatusClass(
                       application.status,
                     )}`}
                   >
@@ -267,11 +287,11 @@ export default function AdminApplications() {
                   />
                 </div>
 
-                <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+                <div className="mt-5 flex flex-wrap justify-end gap-2 border-t border-zinc-100 pt-4 dark:border-white/10">
                   <button
                     type="button"
                     onClick={() => openDetails(application.applicationId)}
-                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 sm:flex-none ${focusRing}`}
                   >
                     <Eye className="h-4 w-4" />
 
@@ -283,7 +303,7 @@ export default function AdminApplications() {
                       <button
                         type="button"
                         onClick={() => openReject(application)}
-                        className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
+                        className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-red-200 px-4 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 sm:flex-none ${focusRing}`}
                       >
                         <XCircle className="h-4 w-4" />
 
@@ -296,7 +316,7 @@ export default function AdminApplications() {
                         onClick={() =>
                           approveApplication(application.applicationId)
                         }
-                        className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                        className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none ${focusRing}`}
                       >
                         <CheckCircle2 className="h-4 w-4" />
 
@@ -350,15 +370,19 @@ function SummaryCard({
   }>;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
+    <div className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-zinc-500 dark:text-zinc-400">
+            {label}
+          </p>
 
-          <p className="mt-2 text-3xl font-bold text-slate-950">{value}</p>
+          <p className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
+            {value}
+          </p>
         </div>
 
-        <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600">
+        <div className="shrink-0 rounded-lg bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
           <Icon className="h-5 w-5" />
         </div>
       </div>
@@ -368,12 +392,14 @@ function SummaryCard({
 
 function CardField({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <div className="min-w-0 rounded-lg bg-zinc-50 p-3 dark:bg-white/5">
+      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
         {label}
       </p>
 
-      <p className="mt-1 text-sm font-medium text-slate-900">{value || "-"}</p>
+      <p className="mt-1 break-words text-sm font-medium text-zinc-900 dark:text-zinc-100">
+        {value || "-"}
+      </p>
     </div>
   );
 }
