@@ -11,13 +11,6 @@ import type { ProviderPlacementBilling } from "./types";
 
 // ======================================================
 // JAPANESE FONT
-//
-// Put this file in:
-//
-// public/fonts/NotoSansJP-Regular.ttf
-//
-// We register the same file for normal and bold so only
-// one font file is necessary.
 // ======================================================
 
 Font.register({
@@ -455,13 +448,35 @@ const styles = StyleSheet.create({
 
     fontWeight: 700,
 
-    marginBottom: 5,
+    marginBottom: 6,
   },
 
   notesText: {
     fontSize: 8,
 
-    lineHeight: 1.6,
+    lineHeight: 1.7,
+
+    color: "#475569",
+
+    marginBottom: 3,
+  },
+
+  customNotesLabel: {
+    marginTop: 5,
+
+    marginBottom: 3,
+
+    fontSize: 7.5,
+
+    fontWeight: 700,
+
+    color: "#64748b",
+  },
+
+  customNotesText: {
+    fontSize: 8,
+
+    lineHeight: 1.7,
 
     color: "#475569",
   },
@@ -619,8 +634,9 @@ export default function PlacementInvoicePDF({ billing }: Props) {
               </Text>
             ) : null}
 
-            {/* Temporary demo stamp.
-                Later we will replace this with your real stamp image. */}
+            {/* ============================================= */}
+            {/* TEMPORARY DEMO STAMP */}
+            {/* ============================================= */}
 
             <View style={styles.demoStamp}>
               <View style={styles.demoStampInner}>
@@ -631,7 +647,7 @@ export default function PlacementInvoicePDF({ billing }: Props) {
         </View>
 
         {/* ================================================= */}
-        {/* DETAILS */}
+        {/* INVOICE ITEMS */}
         {/* ================================================= */}
 
         <View style={styles.table}>
@@ -700,7 +716,7 @@ export default function PlacementInvoicePDF({ billing }: Props) {
         </View>
 
         {/* ================================================= */}
-        {/* PAYMENT */}
+        {/* PAYMENT INFORMATION */}
         {/* ================================================= */}
 
         <View style={styles.paymentBox}>
@@ -748,13 +764,25 @@ export default function PlacementInvoicePDF({ billing }: Props) {
         {/* NOTES */}
         {/* ================================================= */}
 
-        {billing.notes ? (
-          <View style={styles.notesBox}>
-            <Text style={styles.notesTitle}>備考</Text>
+        <View style={styles.notesBox}>
+          <Text style={styles.notesTitle}>備考</Text>
 
-            <Text style={styles.notesText}>{billing.notes}</Text>
-          </View>
-        ) : null}
+          <Text style={styles.notesText}>
+            ・振込手数料は貴社にてご負担くださいますようお願いいたします。
+          </Text>
+
+          <Text style={styles.notesText}>
+            ・お振込の際は請求書番号をご確認ください。
+          </Text>
+
+          {billing.notes ? (
+            <>
+              <Text style={styles.customNotesLabel}>追加備考</Text>
+
+              <Text style={styles.customNotesText}>{billing.notes}</Text>
+            </>
+          ) : null}
+        </View>
 
         {/* ================================================= */}
         {/* FOOTER */}
@@ -772,7 +800,14 @@ export default function PlacementInvoicePDF({ billing }: Props) {
 // BANK ITEM
 // ======================================================
 
-function BankItem({ label, value }: { label: string; value: string }) {
+function BankItem({
+  label,
+  value,
+}: {
+  label: string;
+
+  value: string;
+}) {
   return (
     <View style={styles.bankItem}>
       <Text style={styles.bankLabel}>{label}</Text>
@@ -783,7 +818,7 @@ function BankItem({ label, value }: { label: string; value: string }) {
 }
 
 // ======================================================
-// FORMAT YEN
+// YEN
 // ======================================================
 
 function formatYen(value: number) {
@@ -791,7 +826,7 @@ function formatYen(value: number) {
 }
 
 // ======================================================
-// TAX RATE
+// TAX
 // ======================================================
 
 function formatTaxRate(value: number) {
@@ -802,8 +837,6 @@ function formatTaxRate(value: number) {
 
 // ======================================================
 // JAPAN DATE
-//
-// Always display invoice dates using Japan timezone.
 // ======================================================
 
 function formatJapanDate(value?: string | null) {

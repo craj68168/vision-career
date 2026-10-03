@@ -6,6 +6,60 @@ export type PlacementBillingStatus =
   | "refunded"
   | "cancelled";
 
+// ======================================================
+// INVOICE
+// ======================================================
+
+export type PlacementInvoiceIssuer = {
+  name: string;
+
+  postalCode: string;
+
+  address: string;
+
+  phone: string;
+
+  email: string;
+
+  registrationNumber: string;
+};
+
+export type PlacementInvoiceRecipient = {
+  companyName: string;
+
+  address: string;
+
+  contactPerson: string;
+};
+
+export type PlacementInvoiceBank = {
+  bankName: string;
+
+  branchName: string;
+
+  accountType: string;
+
+  accountNumber: string;
+
+  accountHolder: string;
+};
+
+export type PlacementInvoiceSnapshot = {
+  issuer: PlacementInvoiceIssuer;
+
+  recipient: PlacementInvoiceRecipient;
+
+  bank: PlacementInvoiceBank;
+
+  serviceDescription: string;
+
+  quantity: number;
+};
+
+// ======================================================
+// AUDIT
+// ======================================================
+
 export type BillingAuditEntry = {
   _id?: string;
 
@@ -28,6 +82,10 @@ export type BillingAuditEntry = {
   created_at: string;
 };
 
+// ======================================================
+// REFUND
+// ======================================================
+
 export type BillingRefund = {
   _id?: string;
 
@@ -44,8 +102,16 @@ export type BillingRefund = {
   refunded_at: string;
 };
 
+// ======================================================
+// BILLING
+// ======================================================
+
 export type PlacementBilling = {
   billingId: string;
+
+  invoiceNumber?: string | null;
+
+  invoiceSnapshot?: PlacementInvoiceSnapshot | null;
 
   placementCandidateId: string;
 
@@ -102,6 +168,10 @@ export type PlacementBilling = {
   updatedAt: string;
 };
 
+// ======================================================
+// SUMMARY
+// ======================================================
+
 export type PlacementBillingSummary = {
   total: number;
 
@@ -126,6 +196,10 @@ export type PlacementBillingSummary = {
   outstandingTotal: number;
 };
 
+// ======================================================
+// API RESPONSES
+// ======================================================
+
 export type PlacementBillingListResponse = {
   success: boolean;
 
@@ -145,6 +219,10 @@ export type PlacementBillingResponse = {
 
   data: PlacementBilling;
 };
+
+// ======================================================
+// PAYLOADS
+// ======================================================
 
 export type UpdatePlacementBillingPayload = {
   placementFee: number;
