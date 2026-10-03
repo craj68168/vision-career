@@ -58,17 +58,27 @@ export const usePlacementBillings = () => {
   // ERROR MESSAGE
   // ====================================================
   const getErrorMessage = (error: unknown) => {
-    if (!axios.isAxiosError<ApiErrorResponse>(error)) return t("messages.generic");
+    if (!axios.isAxiosError<ApiErrorResponse>(error))
+      return t("messages.generic");
     if (!error.response) return t("messages.network");
     switch (error.response.status) {
       case 400:
-      case 422: return t("messages.invalid");
-      case 401: return t("messages.unauthorized");
-      case 403: return t("messages.forbidden");
-      case 404: return t("messages.notFound");
-      case 409: return t("messages.conflict");
-      case 429: return t("messages.rateLimit");
-      default: return t(error.response.status >= 500 ? "messages.server" : "messages.generic");
+      case 422:
+        return t("messages.invalid");
+      case 401:
+        return t("messages.unauthorized");
+      case 403:
+        return t("messages.forbidden");
+      case 404:
+        return t("messages.notFound");
+      case 409:
+        return t("messages.conflict");
+      case 429:
+        return t("messages.rateLimit");
+      default:
+        return t(
+          error.response.status >= 500 ? "messages.server" : "messages.generic",
+        );
     }
   };
   // ====================================================
@@ -210,6 +220,7 @@ export const usePlacementBillings = () => {
         return true;
       }
       const searchableText = [
+        billing.invoiceNumber,
         billing.billingId,
         billing.companyName,
         billing.candidateName,
@@ -217,7 +228,6 @@ export const usePlacementBillings = () => {
         billing.recruitId,
         billing.placementCandidateId,
         billing.status,
-        t(`statuses.${billing.status}`),
       ]
         .filter(Boolean)
         .join(" ")
