@@ -228,6 +228,7 @@ export const usePlacementBillings = () => {
         billing.recruitId,
         billing.placementCandidateId,
         billing.status,
+        t(`statuses.${billing.status}`),
       ]
         .filter(Boolean)
         .join(" ")
