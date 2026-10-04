@@ -1,5 +1,5 @@
 "use client";
-
+import { useTranslations, useFormatter } from "next-intl";
 import {
   Eye,
   KeyRound,
@@ -8,80 +8,65 @@ import {
   RefreshCw,
   Search,
 } from "lucide-react";
-
 import StaffDetailsModal from "./StaffDetailsModal";
 import StaffFormModal from "./StaffFormModal";
 import ResetPasswordModal from "./ResetPasswordModal";
-
 import { useStaffHook } from "./hook";
-
 import type { StaffStatus } from "./types";
-
 type StaffItem = ReturnType<typeof useStaffHook>["staff"][number];
-
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950";
-
-const formatLastLogin = (value?: string | null) =>
-  value ? new Date(value).toLocaleString() : "Never";
-
 // ======================================================
 // STAFF PAGE
 // ======================================================
-
 export default function StaffPage() {
+  const t = useTranslations("adminStaff");
+  const format = useFormatter();
+  const formatLastLogin = (value?: string | null) => {
+    if (!value) return t("never");
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    return format.dateTime(date, { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+  };
   const {
     staff,
     summary,
     permissionOptions,
-
     search,
     setSearch,
-
     statusFilter,
     setStatusFilter,
-
     viewingStaff,
     setViewingStaff,
-
     editingStaff,
     setEditingStaff,
-
     createModalOpen,
     setCreateModalOpen,
-
     resetPasswordStaff,
     setResetPasswordStaff,
-
     isLoading,
     isFetching,
     isSaving,
-
     refresh,
-
     submitCreateStaff,
     submitUpdateStaff,
     submitResetPassword,
   } = useStaffHook();
-
   return (
     <>
       <div className="min-w-0 space-y-6">
         {/* ================================================= */}
         {/* HEADER */}
         {/* ================================================= */}
-
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <h2 className="text-xl font-semibold text-zinc-950 dark:text-white sm:text-2xl">
-              Staff
+              {t("title")}
             </h2>
-
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              Manage internal Staff accounts, permissions and account status.
+              {t("description")}
             </p>
           </div>
-
           <div className="flex shrink-0 gap-2 sm:gap-3">
             <button
               type="button"
@@ -92,93 +77,76 @@ export default function StaffPage() {
               <RefreshCw
                 className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
               />
-              Refresh
+              {t("refresh")}
             </button>
-
             <button
               type="button"
               onClick={() => setCreateModalOpen(true)}
               className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700 sm:flex-none ${focusRing}`}
             >
               <Plus className="h-4 w-4" />
-              New Staff
+              {t("newStaff")}
             </button>
           </div>
         </div>
-
         {/* ================================================= */}
         {/* SUMMARY */}
         {/* ================================================= */}
-
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-          <SummaryCard label="Total Staff" value={summary?.total ?? 0} />
-
-          <SummaryCard label="Active" value={summary?.active ?? 0} />
-
-          <SummaryCard label="Inactive" value={summary?.inactive ?? 0} />
-
-          <SummaryCard label="Suspended" value={summary?.suspended ?? 0} />
+          <SummaryCard label={t("totalStaff")} value={summary?.total ?? 0} />
+          <SummaryCard label={t("active")} value={summary?.active ?? 0} />
+          <SummaryCard label={t("inactive")} value={summary?.inactive ?? 0} />
+          <SummaryCard label={t("suspended")} value={summary?.suspended ?? 0} />
         </div>
-
         {/* ================================================= */}
         {/* FILTERS */}
         {/* ================================================= */}
-
         <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900">
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-
               <input
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                aria-label="Search staff"
-                placeholder="Search staff name, email or ID..."
+                aria-label={t("searchLabel")}
+                placeholder={t("searchPlaceholder")}
                 className="h-10 w-full rounded-lg border border-zinc-200 bg-white pl-10 pr-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white"
               />
             </div>
-
             <select
               value={statusFilter}
-              aria-label="Status"
+              aria-label={t("status")}
               onChange={(event) =>
                 setStatusFilter(event.target.value as "ALL" | StaffStatus)
               }
               className="h-10 w-full cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-zinc-900 dark:text-white"
             >
-              <option value="ALL">All Statuses</option>
-
-              <option value="active">Active</option>
-
-              <option value="inactive">Inactive</option>
-
-              <option value="suspended">Suspended</option>
+              <option value="ALL">{t("allStatuses")}</option>
+              <option value="active">{t("active")}</option>
+              <option value="inactive">{t("inactive")}</option>
+              <option value="suspended">{t("suspended")}</option>
             </select>
           </div>
         </div>
-
         {/* ================================================= */}
         {/* LIST */}
         {/* ================================================= */}
-
         {isLoading ? (
           <div
             role="status"
             className="rounded-lg border border-zinc-200 bg-white px-4 py-16 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-400 sm:py-20"
           >
             <RefreshCw className="mx-auto h-8 w-8 animate-spin text-emerald-600 dark:text-emerald-400" />
-
-            <p className="mt-3">Loading Staff...</p>
+            <p className="mt-3">{t("loading")}</p>
           </div>
         ) : staff.length === 0 ? (
           <div className="rounded-lg border border-zinc-200 bg-white px-4 py-16 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-400 sm:py-20">
-            No Staff accounts found.
+            {t("empty")}
           </div>
         ) : (
           <>
             {/* CARDS (below xl) */}
-
             <div className="grid gap-4 sm:gap-5 md:grid-cols-2 xl:hidden">
               {staff.map((item) => (
                 <article
@@ -190,35 +158,28 @@ export default function StaffPage() {
                       <p className="truncate text-xs font-medium text-emerald-600 dark:text-emerald-400">
                         {item.staffId}
                       </p>
-
                       <h3 className="mt-1 break-words text-lg font-semibold text-zinc-950 dark:text-white">
                         {item.name}
                       </h3>
-
                       <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
-                        Staff
+                        {t("title")}
                       </p>
                     </div>
-
                     <StatusBadge status={item.status} />
                   </div>
-
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div className="sm:col-span-2">
-                      <CardField label="Email" value={item.email} />
+                      <CardField label={t("email")} value={item.email} />
                     </div>
-
                     <CardField
-                      label="Permissions"
-                      value={`${item.permissions.length} permission(s)`}
+                      label={t("permissionsTitle")}
+                      value={t("permissionCount", { count: item.permissions.length })}
                     />
-
                     <CardField
-                      label="Last Login"
+                      label={t("lastLogin")}
                       value={formatLastLogin(item.lastLoginAt)}
                     />
                   </div>
-
                   <div className="mt-auto pt-5">
                     <div className="flex flex-wrap justify-end gap-2 border-t border-zinc-100 pt-4 dark:border-white/10">
                       <StaffActions
@@ -231,32 +192,23 @@ export default function StaffPage() {
                 </article>
               ))}
             </div>
-
             {/* TABLE (xl and up) */}
-
             <div className="hidden overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900 xl:block">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-left">
                   <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500 dark:bg-white/5 dark:text-zinc-400">
                     <tr>
-                      <th className="px-4 py-3 font-medium">Staff ID</th>
-
-                      <th className="px-4 py-3 font-medium">Name</th>
-
-                      <th className="px-4 py-3 font-medium">Email</th>
-
-                      <th className="px-4 py-3 font-medium">Status</th>
-
-                      <th className="px-4 py-3 font-medium">Permissions</th>
-
-                      <th className="px-4 py-3 font-medium">Last Login</th>
-
+                      <th className="px-4 py-3 font-medium">{t("staffId")}</th>
+                      <th className="px-4 py-3 font-medium">{t("name")}</th>
+                      <th className="px-4 py-3 font-medium">{t("email")}</th>
+                      <th className="px-4 py-3 font-medium">{t("status")}</th>
+                      <th className="px-4 py-3 font-medium">{t("permissionsTitle")}</th>
+                      <th className="px-4 py-3 font-medium">{t("lastLogin")}</th>
                       <th className="px-4 py-3 text-right font-medium">
-                        Actions
+                        {t("actions")}
                       </th>
                     </tr>
                   </thead>
-
                   <tbody className="divide-y divide-zinc-100 dark:divide-white/10">
                     {staff.map((item) => (
                       <tr
@@ -266,35 +218,28 @@ export default function StaffPage() {
                         <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-zinc-500 dark:text-zinc-400">
                           {item.staffId}
                         </td>
-
                         <td className="px-4 py-3">
                           <p className="font-medium text-zinc-950 dark:text-white">
                             {item.name}
                           </p>
-
                           <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
-                            Staff
+                            {t("title")}
                           </p>
                         </td>
-
                         <td className="break-all px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
                           {item.email}
                         </td>
-
                         <td className="px-4 py-3">
                           <StatusBadge status={item.status} />
                         </td>
-
                         <td className="px-4 py-3">
                           <span className="inline-flex whitespace-nowrap rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
-                            {item.permissions.length} permission(s)
+                            {t("permissionCount", { count: item.permissions.length })}
                           </span>
                         </td>
-
                         <td className="px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
                           {formatLastLogin(item.lastLoginAt)}
                         </td>
-
                         <td className="px-4 py-3">
                           <div className="flex justify-end gap-1.5">
                             <StaffActions
@@ -314,11 +259,9 @@ export default function StaffPage() {
           </>
         )}
       </div>
-
       {/* ================================================= */}
       {/* CREATE */}
       {/* ================================================= */}
-
       <StaffFormModal
         open={createModalOpen}
         mode="create"
@@ -327,11 +270,9 @@ export default function StaffPage() {
         onClose={() => setCreateModalOpen(false)}
         onCreate={submitCreateStaff}
       />
-
       {/* ================================================= */}
       {/* EDIT */}
       {/* ================================================= */}
-
       <StaffFormModal
         open={Boolean(editingStaff)}
         mode="edit"
@@ -341,30 +282,24 @@ export default function StaffPage() {
         onClose={() => setEditingStaff(null)}
         onUpdate={submitUpdateStaff}
       />
-
       {/* ================================================= */}
       {/* DETAILS */}
       {/* ================================================= */}
-
       <StaffDetailsModal
         staff={viewingStaff}
         onClose={() => setViewingStaff(null)}
         onEdit={(selectedStaff) => {
           setViewingStaff(null);
-
           setEditingStaff(selectedStaff);
         }}
         onResetPassword={(selectedStaff) => {
           setViewingStaff(null);
-
           setResetPasswordStaff(selectedStaff);
         }}
       />
-
       {/* ================================================= */}
       {/* RESET PASSWORD */}
       {/* ================================================= */}
-
       <ResetPasswordModal
         staff={resetPasswordStaff}
         loading={isSaving}
@@ -374,11 +309,9 @@ export default function StaffPage() {
     </>
   );
 }
-
 // ======================================================
 // ACTIONS
 // ======================================================
-
 function StaffActions({
   compact = false,
   onView,
@@ -390,64 +323,57 @@ function StaffActions({
   onEdit: () => void;
   onPassword: () => void;
 }) {
+  const t = useTranslations("adminStaff");
   const base = compact
     ? "inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition"
     : "inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition sm:flex-none";
-
   const neutral =
     "border-zinc-200 text-zinc-700 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10";
-
   const primary =
     "border-emerald-600 bg-emerald-600 text-white hover:border-emerald-700 hover:bg-emerald-700";
-
   return (
     <>
       <button
         type="button"
         onClick={onView}
-        aria-label="View"
-        title="View"
+        aria-label={t("view")}
+        title={t("view")}
         className={`${base} ${neutral} ${focusRing}`}
       >
         <Eye className="h-4 w-4" />
-        {!compact && "View"}
+        {!compact && t("view")}
       </button>
-
       <button
         type="button"
         onClick={onEdit}
-        aria-label="Edit"
-        title="Edit"
+        aria-label={t("edit")}
+        title={t("edit")}
         className={`${base} ${primary} ${focusRing}`}
       >
         <Pencil className="h-4 w-4" />
-        {!compact && "Edit"}
+        {!compact && t("edit")}
       </button>
-
       <button
         type="button"
         onClick={onPassword}
-        aria-label="Reset password"
-        title="Reset password"
+        aria-label={t("resetPassword")}
+        title={t("resetPassword")}
         className={`${base} ${neutral} ${focusRing}`}
       >
         <KeyRound className="h-4 w-4" />
-        {!compact && "Password"}
+        {!compact && t("password")}
       </button>
     </>
   );
 }
-
 // ======================================================
 // CARD FIELD
 // ======================================================
-
 function CardField({
   label,
   value,
 }: {
   label: string;
-
   value?: string | null;
 }) {
   return (
@@ -455,24 +381,20 @@ function CardField({
       <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
         {label}
       </p>
-
       <p className="mt-1 break-words text-sm font-medium text-zinc-900 dark:text-zinc-100">
         {value || "-"}
       </p>
     </div>
   );
 }
-
 // ======================================================
 // SUMMARY CARD
 // ======================================================
-
 function SummaryCard({
   label,
   value,
 }: {
   label: string;
-
   value: number;
 }) {
   return (
@@ -480,41 +402,28 @@ function SummaryCard({
       <p className="truncate text-sm font-medium text-zinc-500 dark:text-zinc-400">
         {label}
       </p>
-
       <p className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
         {value}
       </p>
     </div>
   );
 }
-
 // ======================================================
 // STATUS
 // ======================================================
-
 function StatusBadge({ status }: { status: StaffStatus }) {
+  const t = useTranslations("adminStaff");
   const styles: Record<StaffStatus, string> = {
     active:
       "bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
-
     inactive: "bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-300",
-
     suspended: "bg-red-50 text-red-600 dark:bg-red-400/10 dark:text-red-300",
   };
-
-  const labels: Record<StaffStatus, string> = {
-    active: "Active",
-
-    inactive: "Inactive",
-
-    suspended: "Suspended",
-  };
-
   return (
     <span
       className={`inline-flex shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium ${styles[status]}`}
     >
-      {labels[status]}
+      {t(`statuses.${status}`)}
     </span>
   );
 }

@@ -1,9 +1,7 @@
 "use client";
-
+import { useTranslations } from "next-intl";
 import { useState } from "react";
-
 import { Check, X } from "lucide-react";
-
 import type {
   CreateStaffPayload,
   Staff,
@@ -11,64 +9,19 @@ import type {
   StaffStatus,
   UpdateStaffPayload,
 } from "./types";
-
 type Props = {
   open: boolean;
-
   mode: "create" | "edit";
-
   staff?: Staff | null;
-
   permissions: StaffPermission[];
-
   loading: boolean;
-
   onClose: () => void;
-
   onCreate?: (payload: CreateStaffPayload) => void;
-
   onUpdate?: (staffId: string, payload: UpdateStaffPayload) => void;
 };
-
-const permissionLabels: Record<StaffPermission, string> = {
-  "dashboard:view": "Dashboard - View",
-
-  "vacancies:view": "Vacancies - View",
-
-  "vacancies:review": "Vacancies - Review",
-
-  "applications:view": "Applications - View",
-
-  "applications:review": "Applications - Review",
-
-  "providers:view": "Clients - View",
-
-  "providers:manage": "Clients - Manage",
-
-  "seekers:view": "Job Seekers - View",
-
-  "seekers:manage": "Job Seekers - Manage",
-
-  "placement_requests:view": "Placement Requests - View",
-
-  "placement_requests:review": "Placement Requests - Review",
-
-  "placement_requests:manage_candidates":
-    "Placement Requests - Manage Candidates",
-
-  "billing:view": "Billing - View",
-
-  "billing:manage": "Billing - Manage",
-
-  "training:view": "Training - View",
-
-  "training:manage": "Training - Manage",
-};
-
 // ======================================================
 // ROOT
 // ======================================================
-
 export default function StaffFormModal({
   open,
   mode,
@@ -82,9 +35,7 @@ export default function StaffFormModal({
   if (!open) {
     return null;
   }
-
   const modalKey = mode === "edit" && staff ? staff.staffId : "create";
-
   return (
     <StaffForm
       key={modalKey}
@@ -98,11 +49,9 @@ export default function StaffFormModal({
     />
   );
 }
-
 // ======================================================
 // FORM
 // ======================================================
-
 function StaffForm({
   mode,
   staff,
@@ -112,181 +61,134 @@ function StaffForm({
   onCreate,
   onUpdate,
 }: Omit<Props, "open">) {
+  const t = useTranslations("adminStaff");
   const [name, setName] = useState(staff?.name ?? "");
-
   const [email, setEmail] = useState(staff?.email ?? "");
-
   const [phone, setPhone] = useState(staff?.phone ?? "");
-
   const [password, setPassword] = useState("");
-
   const [status, setStatus] = useState<StaffStatus>(staff?.status ?? "active");
-
   const [selectedPermissions, setSelectedPermissions] = useState<
     StaffPermission[]
   >(staff?.permissions ?? []);
-
-  const [error, setError] = useState("");
-
+  const [error, setError] = useState<"" | "nameRequired" | "emailRequired" | "passwordMinLength">("");
   // ====================================================
   // TOGGLE PERMISSION
   // ====================================================
-
   const togglePermission = (permission: StaffPermission) => {
     setSelectedPermissions((current) => {
       if (current.includes(permission)) {
         return current.filter((item) => item !== permission);
       }
-
       return [...current, permission];
     });
   };
-
   // ====================================================
   // SELECT ALL
   // ====================================================
-
   const selectAll = () => {
     setSelectedPermissions(permissions);
   };
-
   const clearAll = () => {
     setSelectedPermissions([]);
   };
-
   // ====================================================
   // SUBMIT
   // ====================================================
-
   const handleSubmit = () => {
     setError("");
-
     if (!name.trim()) {
-      setError("Name is required.");
-
+      setError("nameRequired");
       return;
     }
-
     if (!email.trim()) {
-      setError("Email is required.");
-
+      setError("emailRequired");
       return;
     }
-
     if (mode === "create" && password.length < 8) {
-      setError("Password must be at least 8 characters.");
-
+      setError("passwordMinLength");
       return;
     }
-
     if (mode === "create") {
       onCreate?.({
         name: name.trim(),
-
         email: email.trim().toLowerCase(),
-
         phone: phone.trim(),
-
         password,
-
         status,
-
         permissions: selectedPermissions,
       });
-
       return;
     }
-
     if (!staff) {
       return;
     }
-
     onUpdate?.(staff.staffId, {
       name: name.trim(),
-
       email: email.trim().toLowerCase(),
-
       phone: phone.trim(),
-
       status,
-
       permissions: selectedPermissions,
     });
   };
-
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/50 p-4">
-      <button type="button" className="absolute inset-0" onClick={onClose} />
-
+      <button type="button" aria-label={t("close")} className="absolute inset-0" onClick={onClose} />
       <div className="relative z-10 max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
         {/* HEADER */}
-
         <div className="flex items-start justify-between border-b border-slate-200 p-6">
           <div>
             <p className="text-xs font-semibold uppercase text-indigo-600">
-              Staff Management
+              {t("staffManagement")}
             </p>
-
             <h2 className="mt-1 text-2xl font-bold text-slate-950">
-              {mode === "create" ? "Create Staff" : "Edit Staff"}
+              {mode === "create" ? t("createStaff") : t("editStaff")}
             </h2>
-
             {staff && (
               <p className="mt-1 text-sm text-slate-500">{staff.staffId}</p>
             )}
           </div>
-
           <button
             type="button"
             onClick={onClose}
+            aria-label={t("close")}
             className="rounded-lg p-2 hover:bg-slate-100"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-
         {/* BODY */}
-
         <div className="space-y-6 p-6">
           {error && (
             <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
-              {error}
+              {t(error)}
             </div>
           )}
-
           {/* BASIC INFO */}
-
           <section>
             <h3 className="font-semibold text-slate-950">
-              Account Information
+              {t("accountInformation")}
             </h3>
-
             <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <Field label="Name" value={name} onChange={setName} />
-
+              <Field label={t("name")} value={name} onChange={setName} />
               <Field
-                label="Email"
+                label={t("email")}
                 type="email"
                 value={email}
                 onChange={setEmail}
               />
-
-              <Field label="Phone" value={phone} onChange={setPhone} />
-
+              <Field label={t("phone")} value={phone} onChange={setPhone} />
               {mode === "create" && (
                 <Field
-                  label="Initial Password"
+                  label={t("initialPassword")}
                   type="password"
                   value={password}
                   onChange={setPassword}
                 />
               )}
-
               <label className="block">
                 <span className="text-sm font-semibold text-slate-800">
-                  Status
+                  {t("status")}
                 </span>
-
                 <select
                   value={status}
                   onChange={(event) =>
@@ -294,51 +196,42 @@ function StaffForm({
                   }
                   className="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-white px-4 outline-none focus:border-indigo-500"
                 >
-                  <option value="active">Active</option>
-
-                  <option value="inactive">Inactive</option>
-
-                  <option value="suspended">Suspended</option>
+                  <option value="active">{t("active")}</option>
+                  <option value="inactive">{t("inactive")}</option>
+                  <option value="suspended">{t("suspended")}</option>
                 </select>
               </label>
             </div>
           </section>
-
           {/* PERMISSIONS */}
-
           <section>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="font-semibold text-slate-950">Permissions</h3>
-
+                <h3 className="font-semibold text-slate-950">{t("permissionsTitle")}</h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Select which Admin functions this Staff member can use.
+                  {t("permissionsDescription")}
                 </p>
               </div>
-
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={selectAll}
                   className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                 >
-                  Select All
+                  {t("selectAll")}
                 </button>
-
                 <button
                   type="button"
                   onClick={clearAll}
                   className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                 >
-                  Clear
+                  {t("clear")}
                 </button>
               </div>
             </div>
-
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {permissions.map((permission) => {
                 const selected = selectedPermissions.includes(permission);
-
                 return (
                   <button
                     key={permission}
@@ -351,9 +244,8 @@ function StaffForm({
                     }`}
                   >
                     <span className="text-sm font-medium">
-                      {permissionLabels[permission]}
+                      {t(`permissions.${permission}`)}
                     </span>
-
                     <span
                       className={`flex h-6 w-6 items-center justify-center rounded-md ${
                         selected
@@ -369,18 +261,16 @@ function StaffForm({
             </div>
           </section>
         </div>
-
         {/* FOOTER */}
-
         <div className="flex justify-end gap-3 border-t border-slate-200 p-6">
           <button
             type="button"
             onClick={onClose}
+            aria-label={t("close")}
             className="rounded-xl border border-slate-200 px-5 py-2.5"
           >
-            Cancel
+            {t("cancel")}
           </button>
-
           <button
             type="button"
             disabled={loading}
@@ -388,21 +278,19 @@ function StaffForm({
             className="rounded-xl bg-slate-950 px-5 py-2.5 font-semibold text-white disabled:opacity-50"
           >
             {loading
-              ? "Saving..."
+              ? t("saving")
               : mode === "create"
-                ? "Create Staff"
-                : "Save Changes"}
+                ? t("createStaff")
+                : t("saveChanges")}
           </button>
         </div>
       </div>
     </div>
   );
 }
-
 // ======================================================
 // FIELD
 // ======================================================
-
 function Field({
   label,
   value,
@@ -410,17 +298,13 @@ function Field({
   onChange,
 }: {
   label: string;
-
   value: string;
-
   type?: string;
-
   onChange: (value: string) => void;
 }) {
   return (
     <label className="block">
       <span className="text-sm font-semibold text-slate-800">{label}</span>
-
       <input
         type={type}
         value={value}
