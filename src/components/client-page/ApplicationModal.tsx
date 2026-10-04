@@ -21,19 +21,8 @@ import {
   Award,
 } from "lucide-react";
 import { useState } from "react";
-import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
-
-// Dynamically import PDF components to avoid SSR issues
-const PDFDownloadLink = dynamic(
-  () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
-  { ssr: false },
-);
-
-const PDFViewer = dynamic(
-  () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
-  { ssr: false },
-);
+import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 
 // Import the ResumePDF component
 import ResumePDF from "./resume";

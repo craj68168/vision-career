@@ -16,6 +16,7 @@ import {
 import type {
   ApiError,
   PlacementRequest,
+  PlacementRequestScreeningStatus,
   PlacementRequestStatus,
 } from "./types";
 // ======================================================
@@ -30,6 +31,9 @@ export function useAdminPlacementRequests() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "ALL" | PlacementRequestStatus
+  >("ALL");
+  const [screeningFilter, setScreeningFilter] = useState<
+    "ALL" | PlacementRequestScreeningStatus
   >("ALL");
   // ====================================================
   // VIEW REQUEST
@@ -89,6 +93,12 @@ export function useAdminPlacementRequests() {
       if (statusFilter !== "ALL" && request.status !== statusFilter) {
         return false;
       }
+      if (
+        screeningFilter !== "ALL" &&
+        request.staffScreening.status !== screeningFilter
+      ) {
+        return false;
+      }
       if (!keyword) {
         return true;
       }
@@ -105,7 +115,7 @@ export function useAdminPlacementRequests() {
         .toLowerCase()
         .includes(keyword);
     });
-  }, [listQuery.data, search, statusFilter]);
+  }, [listQuery.data, search, screeningFilter, statusFilter]);
   // ====================================================
   // ERROR HELPER
   // ====================================================
@@ -246,6 +256,8 @@ export function useAdminPlacementRequests() {
     setSearch,
     statusFilter,
     setStatusFilter,
+    screeningFilter,
+    setScreeningFilter,
     // VIEW
     viewingRequest: detailQuery.data?.data,
     viewingId,
