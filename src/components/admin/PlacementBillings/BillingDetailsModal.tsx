@@ -15,14 +15,36 @@ export default function BillingDetailsModal({ billing, onClose }: Props) {
   const money = (value: number) => format.number(value, { style: "currency", currency: "JPY", maximumFractionDigits: 0 });
   const formatJapanDate = (value?: string | null) => dateValue(value, false);
   const formatJapanDateTime = (value?: string | null) => dateValue(value, true);
-  const dateValue = (value: string | null | undefined, withTime: boolean) => {
-    if (!value) return "-";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "-";
-    const options: Intl.DateTimeFormatOptions = { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" };
-    if (withTime) Object.assign(options, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
-    return format.dateTime(date, options);
-  };
+ const dateValue = (
+  value: string | null | undefined,
+  withTime: boolean,
+): string => {
+  if (!value) return "-";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "-";
+
+  if (withTime) {
+    return format.dateTime(date, {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+  }
+
+  return format.dateTime(date, {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+};
   if (!billing) {
     return null;
   }
