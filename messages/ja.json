@@ -1725,7 +1725,9 @@
       "billing:view": "請求：閲覧",
       "billing:manage": "請求：管理",
       "training:view": "研修：閲覧",
-      "training:manage": "研修：管理"
+      "training:manage": "研修：管理",
+      "interviews:view": "面接：閲覧",
+      "interviews:manage": "面接：管理"
     },
     "messages": {
       "generic": "エラーが発生しました。もう一度お試しください。",
