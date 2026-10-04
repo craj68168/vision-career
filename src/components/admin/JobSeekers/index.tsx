@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType } from "react";
 import {
   CheckCircle2,
   ChevronLeft,
@@ -39,114 +40,10 @@ const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950";
 
 const selectClass =
-  "h-10 w-full cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-zinc-900 dark:text-white";
+  "h-9 w-full cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-zinc-900 dark:text-white";
 
 // ======================================================
-// ACCOUNT BADGE
-// ======================================================
-
-const accountBadge = (status: AccountStatus) => {
-  switch (status) {
-    case "active":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300";
-
-    case "suspended":
-      return "border-red-200 bg-red-50 text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300";
-
-    default:
-      return "border-zinc-200 bg-zinc-100 text-zinc-600 dark:border-white/10 dark:bg-white/10 dark:text-zinc-300";
-  }
-};
-
-// ======================================================
-// APPROVAL BADGE
-// ======================================================
-
-const approvalBadge = (status: ApprovalStatus) => {
-  switch (status) {
-    case "approved":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300";
-
-    case "rejected":
-      return "border-red-200 bg-red-50 text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300";
-
-    default:
-      return "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300";
-  }
-};
-
-// ======================================================
-// PLACEMENT LABEL
-// ======================================================
-
-const placementLabel = (status: PlacementStatus) => {
-  switch (status) {
-    case "matching":
-      return "Matching";
-
-    case "interview":
-      return "Interview";
-
-    case "selected":
-      return "Selected";
-
-    case "placed":
-      return "Placed";
-
-    default:
-      return "Unplaced";
-  }
-};
-
-// ======================================================
-// STAFF SCREENING BADGE
-// ======================================================
-
-const screeningBadge = (status: SeekerScreeningStatus) => {
-  switch (status) {
-    case "SCREENED":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300";
-
-    case "NEEDS_ATTENTION":
-      return "border-red-200 bg-red-50 text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300";
-
-    default:
-      return "border-zinc-200 bg-zinc-100 text-zinc-600 dark:border-white/10 dark:bg-white/10 dark:text-zinc-300";
-  }
-};
-
-// ======================================================
-// STAFF SCREENING LABEL
-// ======================================================
-
-const screeningLabel = (status: SeekerScreeningStatus, lang: string) => {
-  if (lang === "ja") {
-    switch (status) {
-      case "SCREENED":
-        return "確認済み";
-
-      case "NEEDS_ATTENTION":
-        return "要確認";
-
-      default:
-        return "未確認";
-    }
-  }
-
-  switch (status) {
-    case "SCREENED":
-      return "Screened";
-
-    case "NEEDS_ATTENTION":
-      return "Needs Attention";
-
-    default:
-      return "Not Screened";
-  }
-};
-
-// ======================================================
-// MAIN COMPONENT
+// COMPONENT
 // ======================================================
 
 export default function JobSeekers() {
@@ -154,6 +51,7 @@ export default function JobSeekers() {
 
   const {
     seekers,
+
     summary,
 
     search,
@@ -207,6 +105,83 @@ export default function JobSeekers() {
     handleRefresh,
   } = useAdminJobSeekers();
 
+  // ==================================================
+  // FILTERS
+  // ==================================================
+
+  const approvalOptions: Array<{ value: "" | ApprovalStatus; label: string }> =
+    [
+      {
+        value: "",
+        label: lang === "ja" ? "すべての承認状態" : "All approvals",
+      },
+      {
+        value: "pending",
+        label: lang === "ja" ? "承認待ち" : "Pending approval",
+      },
+      { value: "approved", label: lang === "ja" ? "承認済み" : "Approved" },
+      { value: "rejected", label: lang === "ja" ? "却下" : "Rejected" },
+    ];
+
+  const accountOptions: Array<{ value: "" | AccountStatus; label: string }> = [
+    {
+      value: "",
+      label:
+        lang === "ja" ? "すべてのアカウント状態" : "All account statuses",
+    },
+    { value: "active", label: lang === "ja" ? "有効" : "Active" },
+    { value: "inactive", label: lang === "ja" ? "無効" : "Inactive" },
+    { value: "suspended", label: lang === "ja" ? "停止中" : "Suspended" },
+  ];
+
+  const placementOptions: Array<{
+    value: "" | PlacementStatus;
+    label: string;
+  }> = [
+    {
+      value: "",
+      label: lang === "ja" ? "すべての配置状態" : "All placement statuses",
+    },
+    { value: "unplaced", label: lang === "ja" ? "未配置" : "Unplaced" },
+    {
+      value: "matching",
+      label: lang === "ja" ? "マッチング中" : "Matching",
+    },
+    { value: "interview", label: lang === "ja" ? "面接" : "Interview" },
+    { value: "selected", label: lang === "ja" ? "選考済み" : "Selected" },
+    { value: "placed", label: lang === "ja" ? "配置済み" : "Placed" },
+  ];
+
+  const hasActiveFilters =
+    Boolean(search) ||
+    approvalStatus !== "" ||
+    accountStatus !== "" ||
+    placementStatus !== "";
+
+  // Summary cards are mutually exclusive: each one replaces the other
+  // filters, so a card click never combines into an empty result.
+  const showAll = () => {
+    setApprovalStatus("");
+    setAccountStatus("");
+    setPlacementStatus("");
+  };
+
+  const filterByAccount = (status: AccountStatus) => {
+    setApprovalStatus("");
+    setPlacementStatus("");
+    setAccountStatus(status);
+  };
+
+  const filterByApproval = (status: ApprovalStatus) => {
+    setAccountStatus("");
+    setPlacementStatus("");
+    setApprovalStatus(status);
+  };
+
+  // ==================================================
+  // ACTIONS
+  // ==================================================
+
   const handleReview = (seeker: Seeker) => {
     setActionError(null);
     setApprovalSeeker(seeker);
@@ -217,30 +192,32 @@ export default function JobSeekers() {
     setDeletingSeeker(seeker);
   };
 
-  return (
-    <div className="min-w-0 space-y-6">
-      {/* =================================================
-          HEADER
-      ================================================= */}
+  // ==================================================
+  // UI
+  // ==================================================
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+  return (
+    <div className="min-w-0 space-y-4">
+      {/* HEADER */}
+
+      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
         <div className="min-w-0">
           <h2 className="text-xl font-semibold text-zinc-950 dark:text-white sm:text-2xl">
             {lang === "ja" ? "求職者" : "Job Seekers"}
           </h2>
 
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
             {lang === "ja"
               ? "登録された求職者、スタッフ確認、承認、アカウント状況、応募状況を管理します。"
               : "Manage registered Job Seekers, Staff screening, approvals, account status and recruitment progress."}
           </p>
         </div>
 
-        <div className="flex shrink-0 gap-2 sm:gap-3">
+        <div className="flex shrink-0 gap-2">
           <button
             type="button"
             onClick={() => void handleRefresh()}
-            className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 md:flex-none ${focusRing}`}
+            className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 md:flex-none ${focusRing}`}
           >
             <RefreshCw className="h-4 w-4" />
 
@@ -253,7 +230,7 @@ export default function JobSeekers() {
               setActionError(null);
               setCreateOpen(true);
             }}
-            className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700 md:flex-none ${focusRing}`}
+            className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white transition hover:bg-emerald-700 md:flex-none ${focusRing}`}
           >
             <Plus className="h-4 w-4" />
 
@@ -262,52 +239,60 @@ export default function JobSeekers() {
         </div>
       </div>
 
-      {/* =================================================
-          SUMMARY
-      ================================================= */}
+      {/* SUMMARY (clickable: each card applies its own filter) */}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
         <SummaryCard
           label={lang === "ja" ? "求職者合計" : "Total Job Seekers"}
           value={summary.total}
           icon={UserRound}
+          isActive={
+            approvalStatus === "" &&
+            accountStatus === "" &&
+            placementStatus === ""
+          }
+          onClick={showAll}
         />
 
         <SummaryCard
           label={lang === "ja" ? "有効" : "Active"}
           value={summary.active}
           icon={UserCheck}
+          isActive={accountStatus === "active"}
+          onClick={() => filterByAccount("active")}
         />
 
         <SummaryCard
           label={lang === "ja" ? "無効" : "Inactive"}
           value={summary.inactive}
           icon={UserX}
+          isActive={accountStatus === "inactive"}
+          onClick={() => filterByAccount("inactive")}
         />
 
         <SummaryCard
           label={lang === "ja" ? "停止中" : "Suspended"}
           value={summary.suspended}
           icon={ShieldAlert}
+          isActive={accountStatus === "suspended"}
+          onClick={() => filterByAccount("suspended")}
         />
 
         <SummaryCard
           label={lang === "ja" ? "承認待ち" : "Pending Approval"}
           value={summary.approval.pending}
           icon={CheckCircle2}
+          isActive={approvalStatus === "pending"}
+          onClick={() => filterByApproval("pending")}
         />
       </div>
 
-      {/* =================================================
-          FILTERS
-      ================================================= */}
+      {/* FILTERS */}
 
-      <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900">
-        <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-[minmax(0,1fr)_180px_180px_180px]">
-          {/* SEARCH */}
-
+      <div className="rounded-lg border border-zinc-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-zinc-900">
+        <div className="grid gap-2.5 sm:grid-cols-3 xl:grid-cols-[minmax(0,1fr)_180px_180px_180px]">
           <div className="relative sm:col-span-3 xl:col-span-1">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
 
             <input
               type="search"
@@ -319,11 +304,9 @@ export default function JobSeekers() {
                   ? "名前、メール、求職者IDで検索..."
                   : "Search name, email, seeker ID..."
               }
-              className="h-10 w-full rounded-lg border border-zinc-200 bg-white pl-10 pr-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white"
+              className="h-9 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white"
             />
           </div>
-
-          {/* APPROVAL */}
 
           <select
             value={approvalStatus}
@@ -333,24 +316,12 @@ export default function JobSeekers() {
             }
             className={selectClass}
           >
-            <option value="">
-              {lang === "ja" ? "すべての承認状態" : "All approvals"}
-            </option>
-
-            <option value="pending">
-              {lang === "ja" ? "承認待ち" : "Pending approval"}
-            </option>
-
-            <option value="approved">
-              {lang === "ja" ? "承認済み" : "Approved"}
-            </option>
-
-            <option value="rejected">
-              {lang === "ja" ? "却下" : "Rejected"}
-            </option>
+            {approvalOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
-
-          {/* ACCOUNT */}
 
           <select
             value={accountStatus}
@@ -360,24 +331,12 @@ export default function JobSeekers() {
             }
             className={selectClass}
           >
-            <option value="">
-              {lang === "ja"
-                ? "すべてのアカウント状態"
-                : "All account statuses"}
-            </option>
-
-            <option value="active">{lang === "ja" ? "有効" : "Active"}</option>
-
-            <option value="inactive">
-              {lang === "ja" ? "無効" : "Inactive"}
-            </option>
-
-            <option value="suspended">
-              {lang === "ja" ? "停止中" : "Suspended"}
-            </option>
+            {accountOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
-
-          {/* PLACEMENT */}
 
           <select
             value={placementStatus}
@@ -387,54 +346,32 @@ export default function JobSeekers() {
             }
             className={selectClass}
           >
-            <option value="">
-              {lang === "ja" ? "すべての配置状態" : "All placement statuses"}
-            </option>
-
-            <option value="unplaced">
-              {lang === "ja" ? "未配置" : "Unplaced"}
-            </option>
-
-            <option value="matching">
-              {lang === "ja" ? "マッチング中" : "Matching"}
-            </option>
-
-            <option value="interview">
-              {lang === "ja" ? "面接" : "Interview"}
-            </option>
-
-            <option value="selected">
-              {lang === "ja" ? "選考済み" : "Selected"}
-            </option>
-
-            <option value="placed">
-              {lang === "ja" ? "配置済み" : "Placed"}
-            </option>
+            {placementOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
 
-      {/* =================================================
-          ERROR
-      ================================================= */}
+      {/* ERROR */}
 
       {error && (
         <div
           role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300"
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300"
         >
           {error}
         </div>
       )}
 
-      {/* =================================================
-          LIST
-      ================================================= */}
+      {/* LIST */}
 
       {isLoading ? (
         <div
           role="status"
-          className="rounded-lg border border-zinc-200 bg-white px-4 py-16 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-400"
+          className="rounded-lg border border-zinc-200 bg-white px-4 py-12 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-400 sm:py-16"
         >
           <RefreshCw className="mx-auto h-8 w-8 animate-spin text-emerald-600 dark:text-emerald-400" />
 
@@ -443,112 +380,122 @@ export default function JobSeekers() {
           </p>
         </div>
       ) : seekers.length === 0 ? (
-        <div className="rounded-lg border border-zinc-200 bg-white px-4 py-16 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-400 sm:py-20">
-          {lang === "ja" ? "求職者が見つかりません。" : "No job seekers found."}
+        <div className="rounded-lg border border-zinc-200 bg-white px-4 py-10 text-center dark:border-white/10 dark:bg-zinc-900 sm:py-14">
+          <UserRound className="mx-auto h-9 w-9 text-zinc-300 dark:text-zinc-600" />
+
+          <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
+            {lang === "ja"
+              ? "求職者が見つかりません。"
+              : "No job seekers found."}
+          </p>
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={() => {
+                showAll();
+                setSearch("");
+              }}
+              className={`mt-4 inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 ${focusRing}`}
+            >
+              {lang === "ja" ? "フィルターをクリア" : "Clear filters"}
+            </button>
+          )}
         </div>
       ) : (
         <>
           {/* CARDS (below xl) */}
 
-          <div className="grid gap-4 sm:gap-5 md:grid-cols-2 xl:hidden">
+          <div className="grid gap-3 md:grid-cols-2 xl:hidden">
             {seekers.map((seeker) => (
               <article
                 key={seeker.seeker_id}
-                className="flex min-w-0 flex-col rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-5"
+                className="flex min-w-0 flex-col rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                      {seeker.seeker_id}
-                    </p>
-
-                    <h3 className="mt-1 break-words text-lg font-semibold text-zinc-950 dark:text-white">
+                    <h3 className="break-words text-base font-semibold text-zinc-950 dark:text-white">
                       {seeker.name}
                     </h3>
 
                     {seeker.nationality && (
-                      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                      <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-300">
                         {seeker.nationality}
                       </p>
                     )}
+
+                    <p className="mt-0.5 truncate text-xs text-zinc-400 dark:text-zinc-500">
+                      {seeker.seeker_id}
+                    </p>
                   </div>
 
-                  <span
-                    className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${approvalBadge(
-                      seeker.approval_status,
-                    )}`}
-                  >
-                    {seeker.approval_status}
-                  </span>
+                  <ApprovalBadge status={seeker.approval_status} lang={lang} />
                 </div>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <CardField label="Email" value={seeker.email} />
+                <dl className="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-2 rounded-md bg-zinc-50 p-2.5 dark:bg-white/5">
+                  <div className="col-span-2">
+                    <CardField
+                      label={lang === "ja" ? "メール" : "Email"}
+                      value={seeker.email}
+                    />
                   </div>
 
-                  <div className="min-w-0 rounded-lg bg-zinc-50 p-3 dark:bg-white/5">
-                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  <div className="min-w-0">
+                    <dt className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
                       {lang === "ja" ? "アカウント" : "Account"}
-                    </p>
+                    </dt>
 
-                    <span
-                      className={`mt-1 inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${accountBadge(
-                        seeker.account_status,
-                      )}`}
-                    >
-                      {seeker.account_status}
-                    </span>
+                    <dd className="mt-0.5">
+                      <AccountBadge
+                        status={seeker.account_status}
+                        lang={lang}
+                      />
+                    </dd>
                   </div>
 
                   <CardField
                     label={lang === "ja" ? "配置" : "Placement"}
-                    value={placementLabel(seeker.placement_status)}
+                    value={getPlacementLabel(seeker.placement_status, lang)}
                   />
 
                   <CardField
                     label={lang === "ja" ? "応募数" : "Applications"}
                     value={String(seeker.applications_count)}
                   />
-                </div>
+                </dl>
 
-                <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-zinc-50 p-3 dark:bg-white/5">
-                  <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                <div className="mt-2.5 flex items-center justify-between gap-3">
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
                     {lang === "ja" ? "スタッフ確認" : "Screening"}
                   </span>
 
-                  <span
-                    className={`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium ${screeningBadge(
-                      seeker.staffScreening.status,
-                    )}`}
-                  >
-                    {screeningLabel(seeker.staffScreening.status, lang)}
-                  </span>
+                  <ScreeningBadge
+                    status={seeker.staffScreening.status}
+                    lang={lang}
+                  />
                 </div>
 
                 {seeker.staffScreening.status === "NEEDS_ATTENTION" &&
                   seeker.staffScreening.note && (
-                    <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-400/20 dark:bg-red-400/10">
+                    <div className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 dark:border-red-400/20 dark:bg-red-400/10">
                       <p className="line-clamp-2 break-words text-sm text-red-600 dark:text-red-300/90">
                         {seeker.staffScreening.note}
                       </p>
                     </div>
                   )}
 
-                <div className="mt-auto pt-5">
-                  <div className="flex flex-wrap justify-end gap-2 border-t border-zinc-100 pt-4 dark:border-white/10">
-                    <SeekerActions
-                      lang={lang}
-                      showReview={seeker.approval_status === "pending"}
-                      needsAttention={
-                        seeker.staffScreening.status === "NEEDS_ATTENTION"
-                      }
-                      onReview={() => handleReview(seeker)}
-                      onView={() => void openView(seeker)}
-                      onEdit={() => void openEdit(seeker)}
-                      onDelete={() => handleRequestDelete(seeker)}
-                    />
-                  </div>
+                <div className="mt-auto flex flex-wrap justify-end gap-2 pt-2.5">
+                  <SeekerActions
+                    lang={lang}
+                    showReview={seeker.approval_status === "pending"}
+                    needsAttention={
+                      seeker.staffScreening.status === "NEEDS_ATTENTION"
+                    }
+                    onReview={() => handleReview(seeker)}
+                    onView={() => void openView(seeker)}
+                    onEdit={() => void openEdit(seeker)}
+                    onDelete={() => handleRequestDelete(seeker)}
+                  />
                 </div>
               </article>
             ))}
@@ -559,37 +506,39 @@ export default function JobSeekers() {
           <div className="hidden overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900 xl:block">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1100px] text-left">
-                <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500 dark:bg-white/5 dark:text-zinc-400">
+                <thead className="bg-zinc-50 text-xs text-zinc-500 dark:bg-white/5 dark:text-zinc-400">
                   <tr>
-                    <th className="px-4 py-3 font-medium">ID</th>
+                    <th className="px-4 py-2 font-medium">ID</th>
 
-                    <th className="px-4 py-3 font-medium">
+                    <th className="px-4 py-2 font-medium">
                       {lang === "ja" ? "氏名" : "Name"}
                     </th>
 
-                    <th className="px-4 py-3 font-medium">Email</th>
+                    <th className="px-4 py-2 font-medium">
+                      {lang === "ja" ? "メール" : "Email"}
+                    </th>
 
-                    <th className="px-4 py-3 font-medium">
+                    <th className="px-4 py-2 font-medium">
                       {lang === "ja" ? "承認" : "Approval"}
                     </th>
 
-                    <th className="px-4 py-3 font-medium">
+                    <th className="px-4 py-2 font-medium">
                       {lang === "ja" ? "アカウント" : "Account"}
                     </th>
 
-                    <th className="px-4 py-3 font-medium">
+                    <th className="px-4 py-2 font-medium">
                       {lang === "ja" ? "配置" : "Placement"}
                     </th>
 
-                    <th className="px-4 py-3 font-medium">
+                    <th className="px-4 py-2 font-medium">
                       {lang === "ja" ? "スタッフ確認" : "Screening"}
                     </th>
 
-                    <th className="px-4 py-3 text-center font-medium">
+                    <th className="px-4 py-2 text-center font-medium">
                       {lang === "ja" ? "応募数" : "Applications"}
                     </th>
 
-                    <th className="px-4 py-3 text-right font-medium">
+                    <th className="px-4 py-2 text-right font-medium">
                       {lang === "ja" ? "操作" : "Actions"}
                     </th>
                   </tr>
@@ -601,90 +550,66 @@ export default function JobSeekers() {
                       key={seeker.seeker_id}
                       className="transition hover:bg-zinc-50 dark:hover:bg-white/5"
                     >
-                      {/* ID */}
-
-                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                      <td className="whitespace-nowrap px-4 py-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
                         {seeker.seeker_id}
                       </td>
 
-                      {/* NAME */}
-
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-zinc-950 dark:text-white">
+                      <td className="px-4 py-2">
+                        <p className="font-medium text-zinc-950 dark:text-white">
                           {seeker.name}
-                        </div>
+                        </p>
 
                         {seeker.nationality && (
-                          <div className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
                             {seeker.nationality}
-                          </div>
+                          </p>
                         )}
                       </td>
 
-                      {/* EMAIL */}
-
-                      <td className="break-all px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
+                      <td className="break-all px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300">
                         {seeker.email}
                       </td>
 
-                      {/* APPROVAL */}
-
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${approvalBadge(
-                            seeker.approval_status,
-                          )}`}
-                        >
-                          {seeker.approval_status}
-                        </span>
+                      <td className="px-4 py-2">
+                        <ApprovalBadge
+                          status={seeker.approval_status}
+                          lang={lang}
+                        />
                       </td>
 
-                      {/* ACCOUNT */}
-
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${accountBadge(
-                            seeker.account_status,
-                          )}`}
-                        >
-                          {seeker.account_status}
-                        </span>
+                      <td className="px-4 py-2">
+                        <AccountBadge
+                          status={seeker.account_status}
+                          lang={lang}
+                        />
                       </td>
 
-                      {/* PLACEMENT */}
-
-                      <td className="px-4 py-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        {placementLabel(seeker.placement_status)}
+                      <td className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                        {getPlacementLabel(seeker.placement_status, lang)}
                       </td>
 
-                      {/* STAFF SCREENING */}
-
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium ${screeningBadge(
-                            seeker.staffScreening.status,
-                          )}`}
-                        >
-                          {screeningLabel(seeker.staffScreening.status, lang)}
-                        </span>
+                      <td className="px-4 py-2">
+                        <ScreeningBadge
+                          status={seeker.staffScreening.status}
+                          lang={lang}
+                        />
 
                         {seeker.staffScreening.status === "NEEDS_ATTENTION" &&
                           seeker.staffScreening.note && (
-                            <p className="mt-1 max-w-[190px] truncate text-xs text-red-500 dark:text-red-300">
+                            <p
+                              title={seeker.staffScreening.note}
+                              className="mt-1 max-w-[190px] truncate text-xs text-red-500 dark:text-red-300"
+                            >
                               {seeker.staffScreening.note}
                             </p>
                           )}
                       </td>
 
-                      {/* APPLICATIONS */}
-
-                      <td className="px-4 py-3 text-center text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      <td className="px-4 py-2 text-center text-sm font-medium text-zinc-900 dark:text-zinc-100">
                         {seeker.applications_count}
                       </td>
 
-                      {/* ACTIONS */}
-
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2">
                         <div className="flex justify-end gap-1.5">
                           <SeekerActions
                             compact
@@ -710,11 +635,9 @@ export default function JobSeekers() {
         </>
       )}
 
-      {/* =================================================
-          PAGINATION
-      ================================================= */}
+      {/* PAGINATION */}
 
-      <div className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <div className="flex flex-col gap-2.5 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           {totalRecords} {lang === "ja" ? "件" : "record(s)"}
         </p>
@@ -759,9 +682,7 @@ export default function JobSeekers() {
         </div>
       </div>
 
-      {/* =================================================
-          CREATE MODAL
-      ================================================= */}
+      {/* CREATE */}
 
       {createOpen && (
         <CreateModal
@@ -776,9 +697,7 @@ export default function JobSeekers() {
         />
       )}
 
-      {/* =================================================
-          VIEW MODAL
-      ================================================= */}
+      {/* VIEW */}
 
       {viewingSeeker && (
         <ViewModal
@@ -797,9 +716,7 @@ export default function JobSeekers() {
         />
       )}
 
-      {/* =================================================
-          EDIT MODAL
-      ================================================= */}
+      {/* EDIT */}
 
       {editingSeeker && (
         <EditModal
@@ -815,9 +732,7 @@ export default function JobSeekers() {
         />
       )}
 
-      {/* =================================================
-          APPROVAL MODAL
-      ================================================= */}
+      {/* APPROVAL */}
 
       {approvalSeeker && (
         <ApprovalModal
@@ -833,9 +748,7 @@ export default function JobSeekers() {
         />
       )}
 
-      {/* =================================================
-          DELETE MODAL
-      ================================================= */}
+      {/* DELETE */}
 
       {deletingSeeker && (
         <DeleteModal
@@ -850,6 +763,79 @@ export default function JobSeekers() {
           onDelete={() => void handleDelete()}
         />
       )}
+    </div>
+  );
+}
+
+// ======================================================
+// SUMMARY CARD
+// ======================================================
+
+function SummaryCard({
+  label,
+  value,
+  icon: Icon,
+  isActive,
+  onClick,
+}: {
+  label: string;
+  value: number;
+  icon: ComponentType<{
+    className?: string;
+  }>;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={isActive}
+      className={`min-w-0 cursor-pointer rounded-lg border bg-white p-3 text-left shadow-sm transition hover:border-emerald-500/50 hover:shadow-md dark:bg-zinc-900 ${focusRing} ${
+        isActive
+          ? "border-emerald-500 ring-2 ring-emerald-500/20"
+          : "border-zinc-200 dark:border-white/10"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
+          <Icon className="h-4 w-4" />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            {label}
+          </p>
+
+          <p className="mt-0.5 text-xl font-semibold leading-tight text-zinc-950 dark:text-white">
+            {value}
+          </p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ======================================================
+// CARD FIELD
+// ======================================================
+
+function CardField({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | null;
+}) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+        {label}
+      </dt>
+
+      <dd className="mt-0.5 break-words text-sm font-medium text-zinc-900 dark:text-zinc-100">
+        {value || "-"}
+      </dd>
     </div>
   );
 }
@@ -877,9 +863,18 @@ function SeekerActions({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const reviewLabel = lang === "ja" ? "審査" : "Review";
+  const viewLabel = lang === "ja" ? "詳細" : "View";
+  const editLabel = lang === "ja" ? "編集" : "Edit";
+  const deleteLabel = lang === "ja" ? "削除" : "Delete";
+
   const base = compact
-    ? "inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition"
-    : "inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition sm:flex-none";
+    ? "inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border transition"
+    : "inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition sm:flex-none";
+
+  const reviewBase = compact
+    ? "inline-flex h-8 cursor-pointer items-center justify-center rounded-lg border px-3 text-xs font-medium transition"
+    : base;
 
   const neutral =
     "border-zinc-200 text-zinc-700 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10";
@@ -887,14 +882,9 @@ function SeekerActions({
   const danger =
     "border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10";
 
-  const reviewClass = needsAttention
+  const review = needsAttention
     ? danger
     : "border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-400/30 dark:text-emerald-300 dark:hover:bg-emerald-400/10";
-
-  const labels =
-    lang === "ja"
-      ? { review: "審査", view: "詳細", edit: "編集", delete: "削除" }
-      : { review: "Review", view: "View", edit: "Edit", delete: "Delete" };
 
   return (
     <>
@@ -902,109 +892,199 @@ function SeekerActions({
         <button
           type="button"
           onClick={onReview}
-          className={`${
-            compact
-              ? "inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border px-3 text-xs font-medium transition"
-              : base
-          } ${reviewClass} ${focusRing}`}
+          className={`${reviewBase} ${review} ${focusRing}`}
         >
-          {labels.review}
+          {reviewLabel}
         </button>
       )}
 
       <button
         type="button"
         onClick={onView}
-        aria-label={labels.view}
-        title={labels.view}
+        aria-label={viewLabel}
+        title={viewLabel}
         className={`${base} ${neutral} ${focusRing}`}
       >
         <Eye className="h-4 w-4" />
-        {!compact && labels.view}
+
+        {!compact && viewLabel}
       </button>
 
       <button
         type="button"
         onClick={onEdit}
-        aria-label={labels.edit}
-        title={labels.edit}
+        aria-label={editLabel}
+        title={editLabel}
         className={`${base} ${neutral} ${focusRing}`}
       >
         <Edit3 className="h-4 w-4" />
-        {!compact && labels.edit}
+
+        {!compact && editLabel}
       </button>
 
       <button
         type="button"
         onClick={onDelete}
-        aria-label={labels.delete}
-        title={labels.delete}
+        aria-label={deleteLabel}
+        title={deleteLabel}
         className={`${base} ${danger} ${focusRing}`}
       >
         <Trash2 className="h-4 w-4" />
-        {!compact && labels.delete}
+
+        {!compact && deleteLabel}
       </button>
     </>
   );
 }
 
 // ======================================================
-// CARD FIELD
+// APPROVAL
 // ======================================================
 
-function CardField({
-  label,
-  value,
+function ApprovalBadge({
+  status,
+  lang,
 }: {
-  label: string;
-
-  value?: string | null;
+  status: ApprovalStatus;
+  lang: string;
 }) {
-  return (
-    <div className="min-w-0 rounded-lg bg-zinc-50 p-3 dark:bg-white/5">
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-        {label}
-      </p>
+  let className =
+    "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300";
 
-      <p className="mt-1 break-words text-sm font-medium text-zinc-900 dark:text-zinc-100">
-        {value || "-"}
-      </p>
-    </div>
+  let label = lang === "ja" ? "承認待ち" : "Pending";
+
+  switch (status) {
+    case "approved":
+      className =
+        "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300";
+
+      label = lang === "ja" ? "承認済み" : "Approved";
+
+      break;
+
+    case "rejected":
+      className =
+        "border-red-200 bg-red-50 text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300";
+
+      label = lang === "ja" ? "却下" : "Rejected";
+
+      break;
+  }
+
+  return (
+    <span
+      className={`inline-flex h-fit shrink-0 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${className}`}
+    >
+      {label}
+    </span>
   );
 }
 
 // ======================================================
-// SUMMARY CARD
+// ACCOUNT
 // ======================================================
 
-function SummaryCard({
-  label,
-  value,
-  icon: Icon,
+function AccountBadge({
+  status,
+  lang,
 }: {
-  label: string;
-
-  value: number;
-
-  icon: typeof UserRound;
+  status: AccountStatus;
+  lang: string;
 }) {
+  let className =
+    "border-zinc-200 bg-zinc-100 text-zinc-600 dark:border-white/10 dark:bg-white/10 dark:text-zinc-300";
+
+  let label = lang === "ja" ? "無効" : "Inactive";
+
+  switch (status) {
+    case "active":
+      className =
+        "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300";
+
+      label = lang === "ja" ? "有効" : "Active";
+
+      break;
+
+    case "suspended":
+      className =
+        "border-red-200 bg-red-50 text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300";
+
+      label = lang === "ja" ? "停止中" : "Suspended";
+
+      break;
+  }
+
   return (
-    <div className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            {label}
-          </p>
-
-          <p className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white">
-            {value}
-          </p>
-        </div>
-
-        <div className="shrink-0 rounded-lg bg-emerald-50 p-3 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
-          <Icon className="h-5 w-5" />
-        </div>
-      </div>
-    </div>
+    <span
+      className={`inline-flex h-fit shrink-0 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${className}`}
+    >
+      {label}
+    </span>
   );
+}
+
+// ======================================================
+// STAFF SCREENING
+// ======================================================
+
+function ScreeningBadge({
+  status,
+  lang,
+}: {
+  status: SeekerScreeningStatus;
+  lang: string;
+}) {
+  let className =
+    "border-zinc-200 bg-zinc-100 text-zinc-600 dark:border-white/10 dark:bg-white/10 dark:text-zinc-300";
+
+  let label = lang === "ja" ? "未確認" : "Not Screened";
+
+  switch (status) {
+    case "SCREENED":
+      className =
+        "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300";
+
+      label = lang === "ja" ? "確認済み" : "Screened";
+
+      break;
+
+    case "NEEDS_ATTENTION":
+      className =
+        "border-red-200 bg-red-50 text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300";
+
+      label = lang === "ja" ? "要確認" : "Needs Attention";
+
+      break;
+  }
+
+  return (
+    <span
+      className={`inline-flex h-fit shrink-0 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${className}`}
+    >
+      {label}
+    </span>
+  );
+}
+
+// ======================================================
+// PLACEMENT
+// ======================================================
+
+function getPlacementLabel(status: PlacementStatus, lang: string) {
+  switch (status) {
+    case "matching":
+      return lang === "ja" ? "マッチング中" : "Matching";
+
+    case "interview":
+      return lang === "ja" ? "面接" : "Interview";
+
+    case "selected":
+      return lang === "ja" ? "選考済み" : "Selected";
+
+    case "placed":
+      return lang === "ja" ? "配置済み" : "Placed";
+
+    default:
+      return lang === "ja" ? "未配置" : "Unplaced";
+  }
 }

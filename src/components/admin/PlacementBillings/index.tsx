@@ -1,10 +1,14 @@
 "use client";
+import type { ComponentType } from "react";
 import { useState } from "react";
 import { useTranslations, useFormatter } from "next-intl";
 import BillingActionModal from "./BillingActionModal";
 import {
   CheckCircle2,
+  CircleDollarSign,
+  Clock3,
   Eye,
+  FileText,
   Pencil,
   RefreshCw,
   RotateCcw,
@@ -17,6 +21,12 @@ import BillingEditModal from "./BillingEditModal";
 import RefundBillingModal from "./RefundBillingModal";
 import { usePlacementBillings } from "./hook";
 import type { PlacementBilling, PlacementBillingStatus } from "./types";
+
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950";
+
+const selectClass =
+  "h-9 w-full cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-zinc-900 dark:text-white";
 // ======================================================
 // COMPONENT
 // ======================================================
@@ -78,18 +88,21 @@ export default function PlacementBillings() {
   const handleCancelBilling = (billingId: string) => setAction({ type: "cancel", billingId });
   const handleIssueBilling = (billingId: string) => setAction({ type: "issue", billingId });
   const handleMarkPaid = (billingId: string) => setAction({ type: "paid", billingId });
+  const setStatusSummary = (status: "ALL" | PlacementBillingStatus) => {
+    setStatusFilter(status);
+  };
   return (
     <>
-      <div className="mx-auto max-w-7xl space-y-6 px-6 py-10">
+      <div className="min-w-0 space-y-4">
         {/* ================================================= */}
         {/* HEADER */}
         {/* ================================================= */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-950">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="min-w-0">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-white sm:text-2xl">
               {t("title")}
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               {t("description")}
             </p>
           </div>
@@ -97,7 +110,7 @@ export default function PlacementBillings() {
             type="button"
             disabled={isFetching}
             onClick={() => void refresh()}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium transition hover:bg-slate-50 disabled:opacity-50"
+            className={`inline-flex h-9 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 ${focusRing}`}
           >
             <RefreshCw
               className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
@@ -108,40 +121,74 @@ export default function PlacementBillings() {
         {/* ================================================= */}
         {/* STATUS SUMMARY */}
         {/* ================================================= */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <SummaryCard label={t("totalBillings")} value={summary?.total ?? 0} />
-          <SummaryCard label={t("draft")} value={summary?.draft ?? 0} />
-          <SummaryCard label={t("issued")} value={summary?.issued ?? 0} />
-          <SummaryCard label={t("paid")} value={summary?.paid ?? 0} />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+          <SummaryCard
+            label={t("totalBillings")}
+            value={summary?.total ?? 0}
+            icon={FileText}
+            isActive={statusFilter === "ALL"}
+            onClick={() => setStatusSummary("ALL")}
+          />
+          <SummaryCard
+            label={t("draft")}
+            value={summary?.draft ?? 0}
+            icon={Pencil}
+            isActive={statusFilter === "draft"}
+            onClick={() => setStatusSummary("draft")}
+          />
+          <SummaryCard
+            label={t("issued")}
+            value={summary?.issued ?? 0}
+            icon={Send}
+            isActive={statusFilter === "issued"}
+            onClick={() => setStatusSummary("issued")}
+          />
+          <SummaryCard
+            label={t("paid")}
+            value={summary?.paid ?? 0}
+            icon={CheckCircle2}
+            isActive={statusFilter === "paid"}
+            onClick={() => setStatusSummary("paid")}
+          />
           <SummaryCard
             label={t("partiallyRefunded")}
             value={summary?.partiallyRefunded ?? 0}
+            icon={RotateCcw}
+            isActive={statusFilter === "partially_refunded"}
+            onClick={() => setStatusSummary("partially_refunded")}
           />
-          <SummaryCard label={t("refunded")} value={summary?.refunded ?? 0} />
+          <SummaryCard
+            label={t("refunded")}
+            value={summary?.refunded ?? 0}
+            icon={XCircle}
+            isActive={statusFilter === "refunded"}
+            onClick={() => setStatusSummary("refunded")}
+          />
         </div>
         {/* ================================================= */}
         {/* FINANCIAL SUMMARY */}
         {/* ================================================= */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <MoneyCard label={t("totalBilled")} value={summary?.billedTotal ?? 0} />
-          <MoneyCard label={t("netPaid")} value={summary?.paidTotal ?? 0} />
-          <MoneyCard label={t("refunded")} value={summary?.refundedTotal ?? 0} />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <MoneyCard label={t("totalBilled")} value={summary?.billedTotal ?? 0} icon={CircleDollarSign} />
+          <MoneyCard label={t("netPaid")} value={summary?.paidTotal ?? 0} icon={CheckCircle2} />
+          <MoneyCard label={t("refunded")} value={summary?.refundedTotal ?? 0} icon={RotateCcw} />
           <MoneyCard
             label={t("outstanding")}
             value={summary?.outstandingTotal ?? 0}
+            icon={Clock3}
           />
         </div>
         {/* ================================================= */}
         {/* SEARCH / FILTER */}
         {/* ================================================= */}
-        <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_220px]">
+        <div className="grid gap-2.5 rounded-lg border border-zinc-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-zinc-900 md:grid-cols-[1fr_220px]">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder={t("searchPlaceholder")} aria-label={t("searchPlaceholder")}
-              className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm outline-none transition focus:border-indigo-400"
+              className="h-9 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white"
             />
           </div>
           <select
@@ -152,7 +199,7 @@ export default function PlacementBillings() {
                 event.target.value as "ALL" | PlacementBillingStatus,
               )
             }
-            className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none"
+            className={selectClass}
           >
             <option value="ALL">{t("allStatuses")}</option>
             <option value="draft">{t("draft")}</option>
@@ -166,23 +213,23 @@ export default function PlacementBillings() {
         {/* ================================================= */}
         {/* BILLING TABLE */}
         {/* ================================================= */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1200px]">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+            <table className="w-full min-w-[1200px] text-left">
+              <thead className="bg-zinc-50 text-xs text-zinc-500 dark:bg-white/5 dark:text-zinc-400">
                 <tr>
-                  <th className="px-5 py-4">{t("invoice")}</th>
-                  <th className="px-5 py-4">{t("company")}</th>
-                  <th className="px-5 py-4">{t("candidate")}</th>
-                  <th className="px-5 py-4">{t("position")}</th>
-                  <th className="px-5 py-4">{t("amount")}</th>
-                  <th className="px-5 py-4">{t("netPaid")}</th>
-                  <th className="px-5 py-4">{t("status")}</th>
-                  <th className="px-5 py-4">{t("dueDate")}</th>
-                  <th className="px-5 py-4 text-right">{t("actions")}</th>
+                  <th className="px-4 py-2 font-medium">{t("invoice")}</th>
+                  <th className="px-4 py-2 font-medium">{t("company")}</th>
+                  <th className="px-4 py-2 font-medium">{t("candidate")}</th>
+                  <th className="px-4 py-2 font-medium">{t("position")}</th>
+                  <th className="px-4 py-2 font-medium">{t("amount")}</th>
+                  <th className="px-4 py-2 font-medium">{t("netPaid")}</th>
+                  <th className="px-4 py-2 font-medium">{t("status")}</th>
+                  <th className="px-4 py-2 font-medium">{t("dueDate")}</th>
+                  <th className="px-4 py-2 text-right font-medium">{t("actions")}</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-zinc-100 dark:divide-white/10">
                 {/* ========================================= */}
                 {/* LOADING */}
                 {/* ========================================= */}
@@ -190,7 +237,7 @@ export default function PlacementBillings() {
                   <tr>
                     <td
                       colSpan={9}
-                      className="py-20 text-center text-sm text-slate-500"
+                      className="py-14 text-center text-sm text-zinc-500 dark:text-zinc-400"
                     >
                       {t("loading")}
                     </td>
@@ -203,7 +250,7 @@ export default function PlacementBillings() {
                   <tr>
                     <td
                       colSpan={9}
-                      className="py-20 text-center text-sm text-slate-500"
+                      className="py-14 text-center text-sm text-zinc-500 dark:text-zinc-400"
                     >
                       {t("empty")}
                     </td>
@@ -234,59 +281,59 @@ export default function PlacementBillings() {
                     return (
                       <tr
                         key={billing.billingId}
-                        className="border-t border-slate-100 align-middle"
+                        className="align-middle transition hover:bg-zinc-50 dark:hover:bg-white/5"
                       >
                         {/* =============================== */}
                         {/* INVOICE */}
                         {/* =============================== */}
-                        <td className="px-5 py-4">
-                          <p className="font-mono font-semibold text-slate-950">
+                        <td className="px-4 py-2">
+                          <p className="font-mono text-sm font-semibold text-zinc-950 dark:text-white">
                             {billing.invoiceNumber || billing.billingId}
                           </p>
                           {billing.invoiceNumber && (
-                            <p className="mt-1 font-mono text-xs text-slate-500">
+                            <p className="mt-0.5 font-mono text-xs text-zinc-500 dark:text-zinc-400">
                               {billing.billingId}
                             </p>
                           )}
-                          <p className="mt-1 font-mono text-xs text-slate-400">
+                          <p className="mt-0.5 font-mono text-xs text-zinc-400 dark:text-zinc-500">
                             {billing.recruitId}
                           </p>
                         </td>
                         {/* =============================== */}
                         {/* COMPANY */}
                         {/* =============================== */}
-                        <td className="px-5 py-4">{billing.companyName}</td>
+                        <td className="px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300">{billing.companyName}</td>
                         {/* =============================== */}
                         {/* CANDIDATE */}
                         {/* =============================== */}
-                        <td className="px-5 py-4 font-medium">
+                        <td className="px-4 py-2 text-sm font-medium text-zinc-950 dark:text-white">
                           {billing.candidateName}
                         </td>
                         {/* =============================== */}
                         {/* POSITION */}
                         {/* =============================== */}
-                        <td className="max-w-[220px] px-5 py-4">
+                        <td className="max-w-[220px] px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300">
                           {billing.jobTitle}
                         </td>
                         {/* =============================== */}
                         {/* ORIGINAL TOTAL */}
                         {/* =============================== */}
-                        <td className="px-5 py-4 font-semibold">
+                        <td className="px-4 py-2 text-sm font-semibold text-zinc-950 dark:text-white">
                           {money(billing.totalAmount)}
                         </td>
                         {/* =============================== */}
                         {/* NET PAID */}
                         {/* =============================== */}
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-2 text-sm">
                           {["paid", "partially_refunded", "refunded"].includes(
                             billing.status,
                           ) ? (
                             <div>
-                              <p className="font-semibold text-slate-950">
+                              <p className="font-semibold text-zinc-950 dark:text-white">
                                 {money(effectiveNetPaid)}
                               </p>
                               {refundedAmount > 0 && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-0.5 text-xs text-red-500 dark:text-red-300">
                                   {t("refundedAmountInline", { amount: money(refundedAmount) })}
                                 </p>
                               )}
@@ -298,24 +345,24 @@ export default function PlacementBillings() {
                         {/* =============================== */}
                         {/* STATUS */}
                         {/* =============================== */}
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-2">
                           <StatusBadge status={billing.status} />
                         </td>
                         {/* =============================== */}
                         {/* DUE DATE - JAPAN TIME */}
                         {/* =============================== */}
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300">
                           {formatJapanDate(billing.dueDate)}
                         </td>
                         {/* =============================== */}
                         {/* ACTIONS */}
                         {/* =============================== */}
-                        <td className="px-5 py-4">
-                          <div className="flex justify-end gap-2">
+                        <td className="px-4 py-2">
+                          <div className="flex justify-end gap-1.5">
                             <button
                               type="button"
                               onClick={() => setViewingBilling(billing)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50"
+                              className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-zinc-200 px-3 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 ${focusRing}`}
                             >
                               <Eye className="h-4 w-4" />
                               {t("view")}
@@ -326,7 +373,7 @@ export default function PlacementBillings() {
                                   type="button"
                                   disabled={isSaving}
                                   onClick={() => setEditingBilling(billing)}
-                                  className="inline-flex items-center gap-1.5 rounded-lg bg-slate-950 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-50"
+                                  className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-zinc-950 px-3 text-xs font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 ${focusRing}`}
                                 >
                                   <Pencil className="h-4 w-4" />
                                   {t("edit")}
@@ -337,7 +384,7 @@ export default function PlacementBillings() {
                                   onClick={() =>
                                     handleIssueBilling(billing.billingId)
                                   }
-                                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-50"
+                                  className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
                                 >
                                   <Send className="h-4 w-4" />
                                   {t("issue")}
@@ -348,7 +395,7 @@ export default function PlacementBillings() {
                                   onClick={() =>
                                     handleCancelBilling(billing.billingId)
                                   }
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                                  className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 ${focusRing}`}
                                 >
                                   <XCircle className="h-4 w-4" />
                                   {t("cancel")}
@@ -363,7 +410,7 @@ export default function PlacementBillings() {
                                   onClick={() =>
                                     handleMarkPaid(billing.billingId)
                                   }
-                                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                                  className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
                                 >
                                   <CheckCircle2 className="h-4 w-4" />
                                   {t("markPaid")}
@@ -374,7 +421,7 @@ export default function PlacementBillings() {
                                   onClick={() =>
                                     handleCancelBilling(billing.billingId)
                                   }
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                                  className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 ${focusRing}`}
                                 >
                                   <XCircle className="h-4 w-4" />
                                   {t("cancel")}
@@ -389,7 +436,7 @@ export default function PlacementBillings() {
                                   type="button"
                                   disabled={isSaving}
                                   onClick={() => openRefundModal(billing)}
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                                  className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 ${focusRing}`}
                                 >
                                   <RotateCcw className="h-4 w-4" />
                                   {billing.status === "partially_refunded"
@@ -445,15 +492,37 @@ export default function PlacementBillings() {
 function SummaryCard({
   label,
   value,
+  icon: Icon,
+  isActive,
+  onClick,
 }: {
   label: string;
   value: number;
+  icon: ComponentType<{ className?: string }>;
+  isActive: boolean;
+  onClick: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className="mt-2 text-3xl font-bold text-slate-950">{value}</p>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={isActive}
+      className={`min-w-0 cursor-pointer rounded-lg border bg-white p-3 text-left shadow-sm transition hover:border-emerald-500/50 hover:shadow-md dark:bg-zinc-900 ${focusRing} ${
+        isActive
+          ? "border-emerald-500 ring-2 ring-emerald-500/20"
+          : "border-zinc-200 dark:border-white/10"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-xs font-medium text-zinc-500 dark:text-zinc-400">{label}</p>
+          <p className="mt-0.5 text-xl font-semibold leading-tight text-zinc-950 dark:text-white">{value}</p>
+        </div>
+      </div>
+    </button>
   );
 }
 // ======================================================
@@ -462,17 +531,26 @@ function SummaryCard({
 function MoneyCard({
   label,
   value,
+  icon: Icon,
 }: {
   label: string;
   value: number;
+  icon: ComponentType<{ className?: string }>;
 }) {
   const format = useFormatter();
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-slate-950">
-        {format.number(value, { style: "currency", currency: "JPY", maximumFractionDigits: 0 })}
-      </p>
+    <div className="min-w-0 rounded-lg border border-zinc-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-zinc-900">
+      <div className="flex items-center gap-3">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-xs font-medium text-zinc-500 dark:text-zinc-400">{label}</p>
+          <p className="mt-0.5 truncate text-lg font-semibold leading-tight text-zinc-950 dark:text-white">
+            {format.number(value, { style: "currency", currency: "JPY", maximumFractionDigits: 0 })}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -482,16 +560,16 @@ function MoneyCard({
 function StatusBadge({ status }: { status: PlacementBillingStatus }) {
   const t = useTranslations("adminPlacementBillings");
   const classes: Record<PlacementBillingStatus, string> = {
-    draft: "bg-slate-100 text-slate-700",
-    issued: "bg-blue-50 text-blue-700",
-    paid: "bg-emerald-50 text-emerald-700",
-    partially_refunded: "bg-amber-50 text-amber-700",
-    refunded: "bg-red-50 text-red-700",
-    cancelled: "bg-slate-100 text-slate-500",
+    draft: "border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-white/10 dark:bg-white/10 dark:text-zinc-300",
+    issued: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-300",
+    paid: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300",
+    partially_refunded: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300",
+    refunded: "border-red-200 bg-red-50 text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300",
+    cancelled: "border-zinc-200 bg-zinc-100 text-zinc-500 dark:border-white/10 dark:bg-white/10 dark:text-zinc-400",
   };
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${classes[status]}`}
+      className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${classes[status]}`}
     >
       {t(`statuses.${status}`)}
     </span>

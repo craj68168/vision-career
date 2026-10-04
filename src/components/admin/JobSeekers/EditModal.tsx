@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, Save, X } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, type ReactNode, useState } from "react";
 
 import type {
   AccountStatus,
@@ -9,6 +9,12 @@ import type {
   EditSeekerPayload,
   PlacementStatus,
 } from "./types";
+
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950";
+
+const fieldClass =
+  "w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-white";
 
 type Props = {
   lang: string;
@@ -36,13 +42,20 @@ const dateValue = (value?: string | null) => {
   return value.slice(0, 10);
 };
 
+// ======================================================
+// COMPONENT
+// ======================================================
+
 export default function EditModal({
+  lang,
   seeker,
   isSaving,
   error,
   onClose,
   onSubmit,
 }: Props) {
+  const ja = lang === "ja";
+
   const [form, setForm] = useState({
     name: seeker.name || "",
 
@@ -137,215 +150,237 @@ export default function EditModal({
     }));
   };
 
-  return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 p-4">
-      <div className="w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Edit Job Seeker
-            </p>
+  const accountOptions: [string, string][] = [
+    ["active", ja ? "有効" : "Active"],
+    ["inactive", ja ? "無効" : "Inactive"],
+    ["suspended", ja ? "停止中" : "Suspended"],
+  ];
 
-            <h2 className="mt-1 text-xl font-bold">{seeker.name}</h2>
+  const placementOptions: [string, string][] = [
+    ["unplaced", ja ? "未配置" : "Unplaced"],
+    ["matching", ja ? "マッチング中" : "Matching"],
+    ["interview", ja ? "面接" : "Interview"],
+    ["selected", ja ? "選考済み" : "Selected"],
+    ["placed", ja ? "配置済み" : "Placed"],
+  ];
+
+  // ==================================================
+  // UI
+  // ==================================================
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-seeker-title"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-zinc-950/50 p-4 backdrop-blur-sm"
+    >
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label={ja ? "閉じる" : "Close"}
+        className="absolute inset-0 cursor-default"
+        onClick={() => !isSaving && onClose()}
+      />
+
+      <div className="relative z-10 flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-white/10 dark:bg-zinc-900">
+        {/* HEADER */}
+
+        <div className="flex items-start justify-between gap-3 border-b border-zinc-200 px-4 py-4 dark:border-white/10 sm:px-5">
+          <div className="min-w-0">
+            <h2
+              id="edit-seeker-title"
+              className="text-lg font-semibold text-zinc-950 dark:text-white"
+            >
+              {ja ? "求職者を編集" : "Edit Job Seeker"}
+            </h2>
+
+            <p className="mt-0.5 truncate text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              {seeker.name} · {seeker.seeker_id}
+            </p>
           </div>
 
           <button
             type="button"
             disabled={isSaving}
             onClick={onClose}
-            className="rounded-full p-2 hover:bg-slate-100"
+            aria-label={ja ? "閉じる" : "Close"}
+            className={`grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-white/10 ${focusRing}`}
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="max-h-[82vh] overflow-y-auto p-6"
-        >
-          {error && (
-            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
+        {/* FORM */}
 
-          <Section title="Basic Information">
-            <div className="grid gap-4 md:grid-cols-2">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
+            {error && (
+              <div
+                role="alert"
+                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300"
+              >
+                {error}
+              </div>
+            )}
+
+            <Section title={ja ? "基本情報" : "Basic Information"}>
               <Input
-                label="Name"
+                label={ja ? "氏名" : "Name"}
                 value={form.name}
                 onChange={(value) => update("name", value)}
               />
 
               <Input
-                label="Email"
+                label={ja ? "メール" : "Email"}
                 type="email"
                 value={form.email}
                 onChange={(value) => update("email", value)}
               />
 
               <Input
-                label="Phone"
+                label={ja ? "電話番号" : "Phone"}
                 value={form.phone}
                 onChange={(value) => update("phone", value)}
               />
 
               <Input
-                label="Current Location"
+                label={ja ? "現在地" : "Current Location"}
                 value={form.current_location}
                 onChange={(value) => update("current_location", value)}
               />
 
               <Input
-                label="Address"
+                label={ja ? "住所" : "Address"}
                 value={form.address}
                 onChange={(value) => update("address", value)}
               />
 
               <Input
-                label="Date of Birth"
+                label={ja ? "生年月日" : "Date of Birth"}
                 type="date"
                 value={form.date_of_birth}
                 onChange={(value) => update("date_of_birth", value)}
               />
 
               <Input
-                label="Gender"
+                label={ja ? "性別" : "Gender"}
                 value={form.gender}
                 onChange={(value) => update("gender", value)}
               />
 
               <Input
-                label="Nationality"
+                label={ja ? "国籍" : "Nationality"}
                 value={form.nationality}
                 onChange={(value) => update("nationality", value)}
               />
-            </div>
-          </Section>
+            </Section>
 
-          <Section title="Visa & Language">
-            <div className="grid gap-4 md:grid-cols-2">
+            <Section title={ja ? "在留資格・語学" : "Visa & Language"}>
               <Input
-                label="Visa Type"
+                label={ja ? "在留資格" : "Visa Type"}
                 value={form.visa_type}
                 onChange={(value) => update("visa_type", value)}
               />
 
               <Input
-                label="Visa Expiry Date"
+                label={ja ? "在留期限" : "Visa Expiry Date"}
                 type="date"
                 value={form.visa_expiry_date}
                 onChange={(value) => update("visa_expiry_date", value)}
               />
 
               <Input
-                label="Japanese Level"
+                label={ja ? "日本語レベル" : "Japanese Level"}
                 value={form.japanese_level}
                 onChange={(value) => update("japanese_level", value)}
               />
 
               <Input
-                label="Skills"
+                label={ja ? "スキル" : "Skills"}
                 value={form.skills}
                 placeholder="React, JavaScript, Japanese"
                 onChange={(value) => update("skills", value)}
               />
-            </div>
-          </Section>
+            </Section>
 
-          <Section title="Job Preferences">
-            <div className="grid gap-4 md:grid-cols-2">
+            <Section title={ja ? "希望条件" : "Job Preferences"}>
               <Input
-                label="Desired Job"
+                label={ja ? "希望職種" : "Desired Job"}
                 value={form.desired_job}
                 onChange={(value) => update("desired_job", value)}
               />
 
               <Input
-                label="Desired Location"
+                label={ja ? "希望勤務地" : "Desired Location"}
                 value={form.desired_location}
                 onChange={(value) => update("desired_location", value)}
               />
 
               <Input
-                label="Available From"
+                label={ja ? "勤務可能日" : "Available From"}
                 type="date"
                 value={form.available_from}
                 onChange={(value) => update("available_from", value)}
               />
-            </div>
-          </Section>
+            </Section>
 
-          <Section title="Admin Status">
-            <div className="grid gap-4 md:grid-cols-2">
+            <Section title={ja ? "管理者ステータス" : "Admin Status"}>
               <Select
-                label="Account Status"
+                label={ja ? "アカウント状態" : "Account Status"}
                 value={form.account_status}
-                onChange={(value) =>
-                  setForm((current) => ({
-                    ...current,
-
-                    account_status: value as AccountStatus,
-                  }))
-                }
-                options={[
-                  ["active", "Active"],
-                  ["inactive", "Inactive"],
-                  ["suspended", "Suspended"],
-                ]}
+                options={accountOptions}
+                onChange={(value) => update("account_status", value)}
               />
 
               <Select
-                label="Placement Status"
+                label={ja ? "配置状態" : "Placement Status"}
                 value={form.placement_status}
-                onChange={(value) =>
-                  setForm((current) => ({
-                    ...current,
-
-                    placement_status: value as PlacementStatus,
-                  }))
-                }
-                options={[
-                  ["unplaced", "Unplaced"],
-                  ["matching", "Matching"],
-                  ["interview", "Interview"],
-                  ["selected", "Selected"],
-                  ["placed", "Placed"],
-                ]}
+                options={placementOptions}
+                onChange={(value) => update("placement_status", value)}
               />
-            </div>
-          </Section>
+            </Section>
 
-          <Section title="Notes">
-            <textarea
-              value={form.notes}
-              onChange={(event) => update("notes", event.target.value)}
-              rows={4}
-              className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:border-slate-400"
-            />
-          </Section>
+            <section className="rounded-lg border border-zinc-200 p-4 dark:border-white/10">
+              <label className="block">
+                <span className="mb-2.5 block text-sm font-semibold text-zinc-950 dark:text-white">
+                  {ja ? "メモ" : "Notes"}
+                </span>
 
-          <div className="flex justify-end gap-3 border-t border-slate-200 pt-5">
+                <textarea
+                  value={form.notes}
+                  onChange={(event) => update("notes", event.target.value)}
+                  rows={3}
+                  className={`${fieldClass} py-2`}
+                />
+              </label>
+            </section>
+          </div>
+
+          {/* FOOTER */}
+
+          <div className="flex flex-wrap justify-end gap-2 border-t border-zinc-200 px-4 py-3 dark:border-white/10 sm:px-5">
             <button
               type="button"
               disabled={isSaving}
               onClick={onClose}
-              className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
+              className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 sm:flex-none ${focusRing}`}
             >
-              Cancel
+              {ja ? "キャンセル" : "Cancel"}
             </button>
 
             <button
               type="submit"
               disabled={isSaving}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+              className={`inline-flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none ${focusRing}`}
             >
               {isSaving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              Save Changes
+
+              {ja ? "変更を保存" : "Save Changes"}
             </button>
           </div>
         </form>
@@ -354,21 +389,25 @@ export default function EditModal({
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mb-6 rounded-2xl border border-slate-200 p-5">
-      <h3 className="mb-4 font-semibold text-slate-900">{title}</h3>
+// ======================================================
+// SECTION
+// ======================================================
 
-      {children}
-    </div>
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="rounded-lg border border-zinc-200 p-4 dark:border-white/10">
+      <h3 className="mb-2.5 text-sm font-semibold text-zinc-950 dark:text-white">
+        {title}
+      </h3>
+
+      <div className="grid gap-3 md:grid-cols-2">{children}</div>
+    </section>
   );
 }
+
+// ======================================================
+// INPUT
+// ======================================================
 
 function Input({
   label,
@@ -384,19 +423,25 @@ function Input({
   onChange: (value: string) => void;
 }) {
   return (
-    <label>
-      <span className="mb-2 block text-sm font-medium">{label}</span>
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+        {label}
+      </span>
 
       <input
         type={type}
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-slate-400"
+        className={`${fieldClass} h-10`}
       />
     </label>
   );
 }
+
+// ======================================================
+// SELECT
+// ======================================================
 
 function Select({
   label,
@@ -410,13 +455,15 @@ function Select({
   onChange: (value: string) => void;
 }) {
   return (
-    <label>
-      <span className="mb-2 block text-sm font-medium">{label}</span>
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+        {label}
+      </span>
 
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm"
+        className={`${fieldClass} h-10 cursor-pointer dark:bg-zinc-900`}
       >
         {options.map(([key, text]) => (
           <option key={key} value={key}>
