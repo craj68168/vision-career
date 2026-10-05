@@ -44,17 +44,36 @@ type MenuItem = {
 // ======================================================
 // STAFF MENU
 // ======================================================
+//
+// AUTOMATIC:
+// Dashboard
+// Staff Training
+// Security
+//
+// These three modules are available to every
+// authenticated active Staff account.
+//
+// All other modules depend on assigned permissions.
+// ======================================================
 
 const menuItems: MenuItem[] = [
+  // ====================================================
+  // DASHBOARD
+  //
+  // Automatic access.
+  // ====================================================
+
   {
     label: "Dashboard",
-
-    permission: "dashboard:view",
 
     href: "/staff",
 
     icon: LayoutDashboard,
   },
+
+  // ====================================================
+  // VACANCIES
+  // ====================================================
 
   {
     label: "Vacancies",
@@ -66,6 +85,10 @@ const menuItems: MenuItem[] = [
     icon: BriefcaseBusiness,
   },
 
+  // ====================================================
+  // APPLICATIONS
+  // ====================================================
+
   {
     label: "Applications",
 
@@ -75,6 +98,10 @@ const menuItems: MenuItem[] = [
 
     icon: FileText,
   },
+
+  // ====================================================
+  // CLIENTS / PROVIDERS
+  // ====================================================
 
   {
     label: "Clients",
@@ -86,6 +113,10 @@ const menuItems: MenuItem[] = [
     icon: Building2,
   },
 
+  // ====================================================
+  // JOB SEEKERS
+  // ====================================================
+
   {
     label: "Job Seekers",
 
@@ -95,6 +126,10 @@ const menuItems: MenuItem[] = [
 
     icon: Users,
   },
+
+  // ====================================================
+  // PLACEMENT REQUESTS
+  // ====================================================
 
   {
     label: "Placement Requests",
@@ -106,6 +141,10 @@ const menuItems: MenuItem[] = [
     icon: ClipboardCheck,
   },
 
+  // ====================================================
+  // PLACEMENT CANDIDATES
+  // ====================================================
+
   {
     label: "Placement Candidates",
 
@@ -115,6 +154,10 @@ const menuItems: MenuItem[] = [
 
     icon: UserRoundSearch,
   },
+
+  // ====================================================
+  // PLACEMENT BILLINGS
+  // ====================================================
 
   {
     label: "Placement Billings",
@@ -126,10 +169,14 @@ const menuItems: MenuItem[] = [
     icon: CreditCard,
   },
 
+  // ====================================================
+  // STAFF TRAINING
+  //
+  // Automatic access.
+  // ====================================================
+
   {
     label: "Staff Training",
-
-    permission: "training:view",
 
     href: "/staff/training",
 
@@ -139,8 +186,8 @@ const menuItems: MenuItem[] = [
   // ====================================================
   // SECURITY
   //
-  // No permission required.
-  // Every authenticated Staff user can manage
+  // Automatic access.
+  // Every authenticated active Staff user can manage
   // their own password.
   // ====================================================
 
@@ -167,8 +214,6 @@ export default function StaffDashboard() {
 
     isLoading,
 
-    hasDashboardPermission,
-
     logout,
   } = useStaffDashboard();
 
@@ -192,6 +237,9 @@ export default function StaffDashboard() {
 
   // ====================================================
   // NO STAFF
+  //
+  // StaffRouteGuard / auth handling will redirect an
+  // invalid Staff session.
   // ====================================================
 
   if (!staff) {
@@ -202,7 +250,20 @@ export default function StaffDashboard() {
   // PERMISSION-CONTROLLED MENU
   //
   // Items without permission are always visible.
-  // Example: Security.
+  //
+  // Automatic:
+  // Dashboard
+  // Staff Training
+  // Security
+  //
+  // Assigned:
+  // Vacancies
+  // Applications
+  // Clients
+  // Job Seekers
+  // Placement Requests
+  // Placement Candidates
+  // Placement Billings
   // ====================================================
 
   const visibleMenu = menuItems.filter((item) => {
@@ -233,6 +294,10 @@ export default function StaffDashboard() {
 
   const securityHref = `${prefix}/staff/security`;
 
+  // ====================================================
+  // RENDER
+  // ====================================================
+
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
       {/* ================================================= */}
@@ -248,16 +313,16 @@ export default function StaffDashboard() {
 
             <p className="mt-1 text-xs text-slate-500">
               {staff.name}
-
               {" • "}
-
               {staff.staffId}
             </p>
           </div>
 
           <button
             type="button"
-            onClick={logout}
+            onClick={() => {
+              void logout();
+            }}
             className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
           >
             <LogOut className="h-4 w-4" />
@@ -304,6 +369,7 @@ export default function StaffDashboard() {
 
       <main className="mx-auto max-w-7xl px-6 py-10">
         {/* PAGE HEADER */}
+
         <div className="mb-7">
           <h2 className="text-3xl font-bold text-slate-950">Dashboard</h2>
 
@@ -311,6 +377,11 @@ export default function StaffDashboard() {
             Welcome back, {staff.name}.
           </p>
         </div>
+
+        {/* ================================================= */}
+        {/* SECURITY */}
+        {/* ================================================= */}
+
         <div className="mb-6">
           <DashboardActionCard
             title="Security"
@@ -319,120 +390,108 @@ export default function StaffDashboard() {
             icon={ShieldCheck}
           />
         </div>
+
         {/* ================================================= */}
-        {/* NO DASHBOARD PERMISSION */}
+        {/* DASHBOARD SUMMARY */}
+        {/* Dashboard is automatic for every active Staff. */}
         {/* ================================================= */}
-        {!hasDashboardPermission ? (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
-            <p className="font-semibold text-amber-800">
-              Dashboard access is not enabled for your Staff account.
-            </p>
 
-            <p className="mt-1 text-sm text-amber-700">
-              You can continue using the modules assigned to you by an
-              Administrator.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {/* ================================================= */}
-            {/* JOB SEEKERS */}
-            {/* ================================================= */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {/* ================================================= */}
+          {/* JOB SEEKERS */}
+          {/* ================================================= */}
 
-            <SummaryCard
-              title="Job Seekers"
-              value={summary?.jobSeekers.total ?? 0}
-              icon={Users}
-            />
+          <SummaryCard
+            title="Job Seekers"
+            value={summary?.jobSeekers.total ?? 0}
+            icon={Users}
+          />
 
-            {/* ================================================= */}
-            {/* JOB PROVIDERS */}
-            {/* ================================================= */}
+          {/* ================================================= */}
+          {/* JOB PROVIDERS */}
+          {/* ================================================= */}
 
-            <SummaryCard
-              title="Job Providers"
-              value={summary?.providers.total ?? 0}
-              icon={Building2}
-            />
+          <SummaryCard
+            title="Job Providers"
+            value={summary?.providers.total ?? 0}
+            icon={Building2}
+          />
 
-            {/* ================================================= */}
-            {/* VACANCIES */}
-            {/* ================================================= */}
+          {/* ================================================= */}
+          {/* VACANCIES */}
+          {/* ================================================= */}
 
-            <SummaryCard
-              title="Vacancies"
-              value={summary?.vacancies.total ?? 0}
-              note={`Published: ${summary?.vacancies.published ?? 0}`}
-              icon={BriefcaseBusiness}
-            />
+          <SummaryCard
+            title="Vacancies"
+            value={summary?.vacancies.total ?? 0}
+            note={`Published: ${summary?.vacancies.published ?? 0}`}
+            icon={BriefcaseBusiness}
+          />
 
-            {/* ================================================= */}
-            {/* APPLICATIONS */}
-            {/* ================================================= */}
+          {/* ================================================= */}
+          {/* APPLICATIONS */}
+          {/* ================================================= */}
 
-            <SummaryCard
-              title="Applications"
-              value={summary?.applications.total ?? 0}
-              note={`Pending: ${
-                summary?.applications.pendingAdminApproval ?? 0
-              }`}
-              icon={FileText}
-            />
+          <SummaryCard
+            title="Applications"
+            value={summary?.applications.total ?? 0}
+            note={`Pending: ${summary?.applications.pendingAdminApproval ?? 0}`}
+            icon={FileText}
+          />
 
-            {/* ================================================= */}
-            {/* PENDING VACANCIES */}
-            {/* ================================================= */}
+          {/* ================================================= */}
+          {/* PENDING VACANCIES */}
+          {/* ================================================= */}
 
-            <SummaryCard
-              title="Pending Vacancy Reviews"
-              value={summary?.vacancies.pendingReview ?? 0}
-              icon={ClipboardCheck}
-            />
+          <SummaryCard
+            title="Pending Vacancy Reviews"
+            value={summary?.vacancies.pendingReview ?? 0}
+            icon={ClipboardCheck}
+          />
 
-            {/* ================================================= */}
-            {/* PENDING APPLICATIONS */}
-            {/* ================================================= */}
+          {/* ================================================= */}
+          {/* PENDING APPLICATIONS */}
+          {/* ================================================= */}
 
-            <SummaryCard
-              title="Pending Applications"
-              value={summary?.applications.pendingAdminApproval ?? 0}
-              icon={Users}
-            />
+          <SummaryCard
+            title="Pending Applications"
+            value={summary?.applications.pendingAdminApproval ?? 0}
+            icon={Users}
+          />
 
-            {/* ================================================= */}
-            {/* PROVIDER PROCESS */}
-            {/* ================================================= */}
+          {/* ================================================= */}
+          {/* PROVIDER PROCESS */}
+          {/* ================================================= */}
 
-            <SummaryCard
-              title="Provider Process"
-              value={summary?.applications.providerProcess ?? 0}
-              icon={Send}
-            />
+          <SummaryCard
+            title="Provider Process"
+            value={summary?.applications.providerProcess ?? 0}
+            icon={Send}
+          />
 
-            {/* ================================================= */}
-            {/* PLACEMENT REQUESTS */}
-            {/* ================================================= */}
+          {/* ================================================= */}
+          {/* PLACEMENT REQUESTS */}
+          {/* ================================================= */}
 
-            <SummaryCard
-              title="Placement Requests"
-              value={summary?.placementRequests.total ?? 0}
-              icon={ClipboardCheck}
-            />
+          <SummaryCard
+            title="Placement Requests"
+            value={summary?.placementRequests.total ?? 0}
+            icon={ClipboardCheck}
+          />
 
-            {/* ================================================= */}
-            {/* PLACEMENT CANDIDATES */}
-            {/* ================================================= */}
+          {/* ================================================= */}
+          {/* PLACEMENT CANDIDATES */}
+          {/* ================================================= */}
 
-            <SummaryCard
-              title="Placement Candidates"
-              value={summary?.placementCandidates?.total ?? 0}
-              note={`Needs Attention: ${
-                summary?.placementCandidates?.needsAttention ?? 0
-              }`}
-              icon={UserRoundSearch}
-            />
-          </div>
-        )}
+          <SummaryCard
+            title="Placement Candidates"
+            value={summary?.placementCandidates?.total ?? 0}
+            note={`Needs Attention: ${
+              summary?.placementCandidates?.needsAttention ?? 0
+            }`}
+            icon={UserRoundSearch}
+          />
+        </div>
       </main>
     </div>
   );
