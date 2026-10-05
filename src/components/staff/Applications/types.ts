@@ -13,6 +13,10 @@ export type StaffScreeningStatus =
   | "SCREENED"
   | "NEEDS_ATTENTION";
 
+// ======================================================
+// EDUCATION
+// ======================================================
+
 export type StaffApplicationEducation = {
   enrollment_date?: string | null;
 
@@ -25,6 +29,10 @@ export type StaffApplicationEducation = {
   major?: string | null;
 };
 
+// ======================================================
+// EMPLOYMENT
+// ======================================================
+
 export type StaffEmploymentHistory = {
   start_date?: string | null;
 
@@ -34,6 +42,10 @@ export type StaffEmploymentHistory = {
 
   company_name?: string | null;
 };
+
+// ======================================================
+// APPLICANT
+// ======================================================
 
 export type StaffApplicationApplicant = {
   name?: string | null;
@@ -59,6 +71,10 @@ export type StaffApplicationApplicant = {
   resumeAvailable: boolean;
 };
 
+// ======================================================
+// VACANCY
+// ======================================================
+
 export type StaffApplicationVacancy = {
   vacancyId: string;
 
@@ -77,6 +93,10 @@ export type StaffApplicationVacancy = {
   status: string;
 };
 
+// ======================================================
+// SCREENING
+// ======================================================
+
 export type StaffApplicationScreening = {
   status: StaffScreeningStatus;
 
@@ -86,6 +106,10 @@ export type StaffApplicationScreening = {
 
   screenedAt?: string | null;
 };
+
+// ======================================================
+// APPLICATION
+// ======================================================
 
 export type StaffApplication = {
   applicationId: string;
@@ -111,6 +135,10 @@ export type StaffApplication = {
   vacancy?: StaffApplicationVacancy | null;
 };
 
+// ======================================================
+// SUMMARY
+// ======================================================
+
 export type StaffApplicationSummary = {
   total: number;
 
@@ -122,6 +150,10 @@ export type StaffApplicationSummary = {
 
   needsAttention: number;
 };
+
+// ======================================================
+// LIST RESPONSE
+// ======================================================
 
 export type StaffApplicationListResponse = {
   success: boolean;
@@ -135,6 +167,10 @@ export type StaffApplicationListResponse = {
   message?: string;
 };
 
+// ======================================================
+// APPLICATION RESPONSE
+// ======================================================
+
 export type StaffApplicationResponse = {
   success: boolean;
 
@@ -143,11 +179,39 @@ export type StaffApplicationResponse = {
   data: StaffApplication;
 };
 
+// ======================================================
+// ACTION RESPONSE
+// ======================================================
+
+export type StaffApplicationActionResponse = {
+  success: boolean;
+
+  message: string;
+
+  data?: StaffApplication;
+};
+
+// ======================================================
+// SCREENING PAYLOAD
+// ======================================================
+
 export type ScreenApplicationPayload = {
   screeningStatus: "SCREENED" | "NEEDS_ATTENTION";
 
   note: string;
 };
+
+// ======================================================
+// REJECTION
+// ======================================================
+
+export type RejectStaffApplicationPayload = {
+  reason: string;
+};
+
+// ======================================================
+// API ERROR
+// ======================================================
 
 export type ApiErrorResponse = {
   success?: boolean;

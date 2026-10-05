@@ -2,13 +2,19 @@ import type { StaffApplicationStatus, StaffScreeningStatus } from "./types";
 
 // ======================================================
 // APPLICATION STATUS LABEL
+//
+// Kept for compatibility with any existing component
+// that still uses the helper directly.
+//
+// New translated Staff Application components use
+// next-intl instead.
 // ======================================================
 
 export const getApplicationStatusLabel = (status: StaffApplicationStatus) => {
   const labels: Record<StaffApplicationStatus, string> = {
-    PENDING_ADMIN_APPROVAL: "Pending Admin Approval",
+    PENDING_ADMIN_APPROVAL: "Pending Approval",
 
-    ADMIN_REJECTED: "Admin Rejected",
+    ADMIN_REJECTED: "Rejected Before Provider Review",
 
     SENT_TO_PROVIDER: "Sent to Provider",
 
@@ -57,7 +63,7 @@ export const getApplicationStatusClass = (status: StaffApplicationStatus) => {
 };
 
 // ======================================================
-// SCREENING
+// SCREENING LABEL
 // ======================================================
 
 export const getScreeningLabel = (status: StaffScreeningStatus) => {
@@ -71,6 +77,10 @@ export const getScreeningLabel = (status: StaffScreeningStatus) => {
 
   return labels[status];
 };
+
+// ======================================================
+// SCREENING CLASS
+// ======================================================
 
 export const getScreeningClass = (status: StaffScreeningStatus) => {
   switch (status) {
@@ -89,21 +99,15 @@ export const getScreeningClass = (status: StaffScreeningStatus) => {
 // DATE
 // ======================================================
 
-export const formatDate = (value?: string | null) => {
-  if (!value) {
-    return "-";
+const resolveLocale = (locale?: string) => {
+  if (locale?.toLowerCase().startsWith("ja")) {
+    return "ja-JP";
   }
 
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  return date.toLocaleDateString();
+  return "en-US";
 };
 
-export const formatDateTime = (value?: string | null) => {
+export const formatDate = (value?: string | null, locale?: string) => {
   if (!value) {
     return "-";
   }
@@ -114,5 +118,28 @@ export const formatDateTime = (value?: string | null) => {
     return "-";
   }
 
-  return date.toLocaleString();
+  return date.toLocaleDateString(resolveLocale(locale), {
+    timeZone: "Asia/Tokyo",
+  });
+};
+
+export const formatDateTime = (value?: string | null, locale?: string) => {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleString(resolveLocale(locale), {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };

@@ -1,7 +1,9 @@
 import axiosInstance from "@/services/axiosInstance";
 
 import type {
+  RejectStaffApplicationPayload,
   ScreenApplicationPayload,
+  StaffApplicationActionResponse,
   StaffApplicationListResponse,
   StaffApplicationResponse,
 } from "./types";
@@ -33,15 +35,6 @@ export const getStaffApplicationById = async (applicationId: string) => {
 // ======================================================
 // GET FROZEN APPLICATION RESUME
 // ======================================================
-//
-// GET
-// /api/staff/applications/:applicationId/resume
-//
-// Backend permission:
-// applications:view
-//
-// Returns PDF as Blob.
-// ======================================================
 
 export const getStaffApplicationResume = async (
   applicationId: string,
@@ -66,6 +59,40 @@ export const screenStaffApplication = async (
 ) => {
   const response = await axiosInstance.patch<StaffApplicationResponse>(
     `/staff/applications/${applicationId}/screen`,
+    payload,
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// APPROVE APPLICATION
+//
+// PENDING_ADMIN_APPROVAL -> SENT_TO_PROVIDER
+// ======================================================
+
+export const approveStaffApplication = async (
+  applicationId: string,
+): Promise<StaffApplicationActionResponse> => {
+  const response = await axiosInstance.patch<StaffApplicationActionResponse>(
+    `/staff/applications/${applicationId}/approve`,
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// REJECT APPLICATION
+//
+// PENDING_ADMIN_APPROVAL -> ADMIN_REJECTED
+// ======================================================
+
+export const rejectStaffApplication = async (
+  applicationId: string,
+  payload: RejectStaffApplicationPayload,
+): Promise<StaffApplicationActionResponse> => {
+  const response = await axiosInstance.patch<StaffApplicationActionResponse>(
+    `/staff/applications/${applicationId}/reject`,
     payload,
   );
 
