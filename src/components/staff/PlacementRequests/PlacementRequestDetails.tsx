@@ -13,15 +13,20 @@ import {
 } from "./helper";
 
 import type { StaffPlacementRequest } from "./types";
+import { useTranslations } from "next-intl";
 
 type Props = {
   request: StaffPlacementRequest | undefined;
 
   canReview: boolean;
 
+  canApprove: boolean;
+
   onClose: () => void;
 
   onScreen: (request: StaffPlacementRequest) => void;
+
+  onDecision: (request: StaffPlacementRequest) => void;
 };
 
 export default function PlacementRequestDetails({
@@ -29,12 +34,17 @@ export default function PlacementRequestDetails({
   canReview,
   onClose,
   onScreen,
+  canApprove,
+  onDecision,
 }: Props) {
+  const t = useTranslations("staffPlacementRequests");
   if (!request) {
     return null;
   }
 
   const canScreen = canReview && request.status === "pending_review";
+
+  const canMakeDecision = canApprove && request.status === "pending_review";
 
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
@@ -82,7 +92,7 @@ export default function PlacementRequestDetails({
             <section>
               <h3 className="mb-4 text-lg font-bold">Provider Information</h3>
 
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                 <Field label="Company" value={request.companyName} />
 
                 <Field label="Provider" value={request.providerName} />
@@ -96,7 +106,7 @@ export default function PlacementRequestDetails({
             <section>
               <h3 className="mb-4 text-lg font-bold">Job Information</h3>
 
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                 <Field label="Job Title" value={request.jobTitle} />
 
                 <Field label="Category" value={request.jobCategory} />
@@ -140,7 +150,7 @@ export default function PlacementRequestDetails({
             <section>
               <h3 className="mb-4 text-lg font-bold">Work Conditions</h3>
 
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                 <Field
                   label="Salary"
                   value={formatSalary(request.salaryAmount, request.salaryType)}
@@ -157,15 +167,29 @@ export default function PlacementRequestDetails({
             <section>
               <h3 className="mb-4 text-lg font-bold">Request Timeline</h3>
 
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                 <Field
                   label="Submitted At"
                   value={formatDateTime(request.submittedAt)}
                 />
 
                 <Field
-                  label="Admin Reviewed At"
+                  label="Reviewed At"
                   value={formatDateTime(request.reviewedAt)}
+                />
+                <Field
+                  label="Reviewed By"
+                  value={
+                    request.reviewedById
+                      ? `${
+                          request.reviewedByRole === "staff"
+                            ? "Staff"
+                            : request.reviewedByRole === "admin"
+                              ? "Admin"
+                              : "Reviewer"
+                        } • ${request.reviewedById}`
+                      : "-"
+                  }
                 />
 
                 <Field
@@ -206,7 +230,7 @@ export default function PlacementRequestDetails({
 
                   <p className="text-sm text-emerald-700">
                     Staff screening has been completed. The request is ready for
-                    Admin review.
+                    a final decision.
                   </p>
                 </div>
               )}
@@ -216,8 +240,8 @@ export default function PlacementRequestDetails({
                   <AlertTriangle className="h-5 w-5 shrink-0 text-red-600" />
 
                   <p className="text-sm text-red-700">
-                    Staff marked this placement request as needing Admin
-                    attention.
+                    Staff marked this placement request as needing additional
+                    attention before a final decision.
                   </p>
                 </div>
               )}
@@ -255,8 +279,8 @@ export default function PlacementRequestDetails({
               )}
 
               <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
-                Staff screening is advisory. Final approval or rejection remains
-                with Admin.
+                Staff screening is separate from the final decision. Approval or
+                rejection requires the appropriate permission.
               </div>
             </section>
 
@@ -265,7 +289,7 @@ export default function PlacementRequestDetails({
             {request.rejectionReason && (
               <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
                 <p className="text-xs font-semibold uppercase text-red-600">
-                  Admin Rejection Reason
+                  Rejection Reason
                 </p>
 
                 <p className="mt-2 whitespace-pre-wrap text-sm text-red-700">
@@ -296,6 +320,16 @@ export default function PlacementRequestDetails({
               {request.staffScreening.status === "NOT_SCREENED"
                 ? "Screen Request"
                 : "Edit Screening"}
+            </button>
+          )}
+
+          {canMakeDecision && (
+            <button
+              type="button"
+              onClick={() => onDecision(request)}
+              className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white hover:bg-emerald-700"
+            >
+              {t("reviewDecision")}
             </button>
           )}
         </div>

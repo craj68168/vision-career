@@ -17,6 +17,7 @@ export type StaffPermission =
   | "placement_requests:view"
   | "placement_requests:review"
   | "placement_requests:manage_candidates"
+  | "placement_requests:approval"
   | "billing:view"
   | "billing:manage"
   | "training:manage";

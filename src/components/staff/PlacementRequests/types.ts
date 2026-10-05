@@ -77,6 +77,9 @@ export type StaffPlacementRequest = {
   submittedAt?: string | null;
 
   reviewedAt?: string | null;
+  reviewedByRole?: "admin" | "staff" | null;
+
+  reviewedById?: string | null;
 
   staffScreening: PlacementRequestStaffScreening;
 
@@ -137,6 +140,14 @@ export type ScreenPlacementRequestPayload = {
   screeningStatus: "SCREENED" | "NEEDS_ATTENTION";
 
   note: string;
+};
+
+// ======================================================
+// REJECT PAYLOAD
+// ======================================================
+
+export type RejectStaffPlacementRequestPayload = {
+  reason: string;
 };
 
 // ======================================================

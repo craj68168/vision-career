@@ -146,7 +146,7 @@ function ScreenForm({
 
               <p className="mt-1 text-sm text-slate-500">
                 Placement request information has been checked and is ready for
-                Admin review.
+                a final decision.
               </p>
             </button>
 
@@ -166,8 +166,7 @@ function ScreenForm({
               <p className="mt-3 font-semibold">Needs Attention</p>
 
               <p className="mt-1 text-sm text-slate-500">
-                Something should be verified before Admin makes the final
-                decision.
+                Something should be verified before a final decision is made.
               </p>
             </button>
           </div>
@@ -187,7 +186,7 @@ function ScreenForm({
 
           <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
             Staff screening does not approve or reject the placement request.
-            Final approval remains with Admin.
+            Screening and approval or rejection are separate permissions.
           </div>
         </div>
 
