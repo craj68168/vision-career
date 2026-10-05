@@ -316,7 +316,7 @@ export default function AdminInterviewsPage() {
             return (
               <article
                 key={interview.interviewId}
-                className="flex min-w-0 flex-col rounded-lg border border-zinc-200 bg-white p-4 shadow-sm"
+                className="flex min-w-0 flex-col rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900"
               >
                 {/* Candidate + status */}
 
@@ -329,16 +329,16 @@ export default function AdminInterviewsPage() {
                   </span>
 
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-base font-semibold leading-snug text-zinc-950">
+                    <h3 className="truncate text-base font-semibold leading-snug text-zinc-950 dark:text-zinc-50">
                       {interview.candidate?.name || "-"}
                     </h3>
 
-                    <p className="mt-0.5 truncate text-sm text-zinc-600">
+                    <p className="mt-0.5 truncate text-sm text-zinc-600 dark:text-zinc-300">
                       {interview.vacancy?.title || "-"}
                     </p>
 
                     {companyName && (
-                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-500">
+                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
                         <Building2 className="h-3.5 w-3.5 shrink-0" />
 
                         <span className="truncate">{companyName}</span>
@@ -352,7 +352,7 @@ export default function AdminInterviewsPage() {
                 {/* Schedule */}
 
                 <dl className="mt-3 flex flex-wrap gap-2 text-sm font-medium">
-                  <div className="inline-flex items-center gap-1.5 rounded-md bg-sky-50 px-2.5 py-1 text-sky-800">
+                  <div className="inline-flex items-center gap-1.5 rounded-md bg-sky-50 px-2.5 py-1 text-sky-800 dark:bg-sky-400/10 dark:text-sky-300">
                     <dt className="sr-only">
                       {lang === "ja" ? "面接日" : "Date"}
                     </dt>
@@ -365,7 +365,7 @@ export default function AdminInterviewsPage() {
                     <dd>{formatDate(interview.interviewDate, lang)}</dd>
                   </div>
 
-                  <div className="inline-flex items-center gap-1.5 rounded-md bg-violet-50 px-2.5 py-1 text-violet-800">
+                  <div className="inline-flex items-center gap-1.5 rounded-md bg-violet-50 px-2.5 py-1 text-violet-800 dark:bg-violet-400/10 dark:text-violet-300">
                     <dt className="sr-only">
                       {lang === "ja" ? "時間" : "Time"}
                     </dt>
@@ -382,7 +382,7 @@ export default function AdminInterviewsPage() {
                     </dd>
                   </div>
 
-                  <div className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2.5 py-1 text-emerald-800">
+                  <div className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2.5 py-1 text-emerald-800 dark:bg-emerald-400/10 dark:text-emerald-300">
                     <dt className="sr-only">
                       {lang === "ja" ? "方法" : "Method"}
                     </dt>
@@ -399,7 +399,7 @@ export default function AdminInterviewsPage() {
                 {interview.status === "AWAITING_LINK" && (
                   <div
                     role="status"
-                    className="mt-3 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700"
+                    className="mt-3 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300"
                   >
                     <Link2 className="h-3.5 w-3.5 shrink-0" />
 
@@ -412,7 +412,7 @@ export default function AdminInterviewsPage() {
                 {/* Footer: references + actions */}
 
                 <div className="mt-auto pt-3">
-                  <div className="flex flex-col gap-2 border-t border-zinc-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-2 border-t border-zinc-100 pt-3 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
                     <p className="min-w-0 truncate text-xs text-zinc-400">
                       <span title={interview.interviewId}>
                         {lang === "ja" ? "面接" : "Interview"}{" "}
@@ -431,7 +431,7 @@ export default function AdminInterviewsPage() {
                       <button
                         type="button"
                         onClick={() => openDetails(interview.interviewId)}
-                        className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-zinc-200 px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 sm:flex-none ${focusRing}`}
+                        className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-zinc-200 px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 sm:flex-none ${focusRing}`}
                       >
                         <Eye className="h-4 w-4" />
 

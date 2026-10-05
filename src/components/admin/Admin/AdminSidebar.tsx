@@ -68,6 +68,8 @@ export default function AdminSidebar({
           bg-white px-3 py-4
           shadow-xl shadow-zinc-950/5
 
+          dark:border-zinc-800 dark:bg-zinc-950
+
           transition-[transform,visibility] duration-200
           motion-reduce:transition-none
 
@@ -150,6 +152,8 @@ export default function AdminSidebar({
                 className="
                   truncate
                   text-xs leading-relaxed text-zinc-500
+
+                  dark:text-zinc-400
                 "
               >
                 {lang === "ja"
@@ -169,6 +173,9 @@ export default function AdminSidebar({
               text-zinc-500 transition
 
               hover:bg-zinc-100 hover:text-zinc-950
+
+              dark:text-zinc-400
+              dark:hover:bg-zinc-800 dark:hover:text-zinc-50
 
               lg:hidden
 
@@ -204,6 +211,8 @@ export default function AdminSidebar({
                   tracking-[0.16em] text-zinc-400
 
                   sm:text-xs
+
+                  dark:text-zinc-500
                 "
               >
                 {getGroupLabel(group)}
@@ -239,11 +248,16 @@ export default function AdminSidebar({
                             ? `
                                 bg-zinc-950 text-white
                                 shadow-sm
+
+                                  dark:bg-zinc-100 dark:text-zinc-950
                               `
                             : `
                                 text-zinc-600
 
                                 hover:bg-zinc-100 hover:text-zinc-950
+
+                                dark:text-zinc-300
+                                dark:hover:bg-zinc-800 dark:hover:text-zinc-50
                               `
                         }
                       `}
@@ -279,6 +293,8 @@ export default function AdminSidebar({
                                   `
                                 : `
                                     bg-emerald-50 text-emerald-700
+
+                                    dark:bg-emerald-950 dark:text-emerald-300
                                   `
                             }
                           `}
@@ -299,12 +315,16 @@ export default function AdminSidebar({
           className="
             mt-4 shrink-0
             border-t border-zinc-200 pt-4
+
+            dark:border-zinc-800
           "
         >
           <div
             className="
               flex items-center
               gap-2 rounded-lg bg-zinc-50 p-2
+
+              dark:bg-zinc-900
 
               sm:gap-3 sm:p-3
             "
@@ -333,6 +353,8 @@ export default function AdminSidebar({
                 className="
                   break-words
                   text-xs leading-relaxed text-zinc-500
+
+                  dark:text-zinc-400
                 "
               >
                 {lang === "ja" ? "オペレーション管理" : "Operations lead"}
@@ -351,6 +373,9 @@ export default function AdminSidebar({
                 hover:bg-red-50 hover:text-red-600
 
                 ${focusRing}
+
+                dark:text-zinc-400
+                dark:hover:bg-red-950 dark:hover:text-red-400
               `}
             >
               <LogOut
