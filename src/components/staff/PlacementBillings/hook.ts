@@ -6,6 +6,8 @@ import axios from "axios";
 
 import toast from "react-hot-toast";
 
+import { useTranslations } from "next-intl";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -25,31 +27,17 @@ import type {
 } from "./types";
 
 // ======================================================
-// ERROR
-// ======================================================
-
-const getErrorMessage = (
-  error: unknown,
-
-  fallback: string,
-) => {
-  if (axios.isAxiosError<BillingApiError>(error)) {
-    return error.response?.data?.message || fallback;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallback;
-};
-
-// ======================================================
 // HOOK
 // ======================================================
 
 export const useStaffPlacementBillings = () => {
+  const t = useTranslations("staffPlacementBillings");
+
   const queryClient = useQueryClient();
+
+  // ====================================================
+  // FILTERS
+  // ====================================================
 
   const [search, setSearch] = useState("");
 
@@ -57,9 +45,21 @@ export const useStaffPlacementBillings = () => {
     "ALL" | PlacementBillingStatus
   >("ALL");
 
+  // ====================================================
+  // MODALS
+  // ====================================================
+
   const [viewingBillingId, setViewingBillingId] = useState<string | null>(null);
 
   const [editingBilling, setEditingBilling] = useState<PlacementBilling | null>(
+    null,
+  );
+
+  const [issuingBilling, setIssuingBilling] = useState<PlacementBilling | null>(
+    null,
+  );
+
+  const [payingBilling, setPayingBilling] = useState<PlacementBilling | null>(
     null,
   );
 
@@ -116,6 +116,26 @@ export const useStaffPlacementBillings = () => {
   });
 
   // ====================================================
+  // ERROR
+  // ====================================================
+
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (axios.isAxiosError<BillingApiError>(error)) {
+      if (!error.response) {
+        return t("messages.network");
+      }
+
+      return error.response.data?.message || fallback;
+    }
+
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return fallback;
+  };
+
+  // ====================================================
   // FILTER
   // ====================================================
 
@@ -135,19 +155,13 @@ export const useStaffPlacementBillings = () => {
 
       return [
         billing.billingId,
-
+        billing.invoiceNumber,
         billing.companyName,
-
         billing.candidateName,
-
         billing.jobTitle,
-
         billing.recruitId,
-
         billing.placementCandidateId,
-
         billing.providerId,
-
         billing.status,
       ]
         .filter(Boolean)
@@ -195,8 +209,8 @@ export const useStaffPlacementBillings = () => {
       payload: UpdatePlacementBillingPayload;
     }) => updateStaffPlacementBilling(billingId, payload),
 
-    onSuccess: async (response) => {
-      toast.success(response.message || "Billing updated.");
+    onSuccess: async () => {
+      toast.success(t("messages.updated"));
 
       setEditingBilling(null);
 
@@ -204,13 +218,7 @@ export const useStaffPlacementBillings = () => {
     },
 
     onError: (error: unknown) => {
-      toast.error(
-        getErrorMessage(
-          error,
-
-          "Failed to update billing.",
-        ),
-      );
+      toast.error(getErrorMessage(error, t("messages.updateFailed")));
     },
   });
 
@@ -221,44 +229,36 @@ export const useStaffPlacementBillings = () => {
   const issueMutation = useMutation({
     mutationFn: issueStaffPlacementBilling,
 
-    onSuccess: async (response) => {
-      toast.success(response.message || "Billing issued.");
+    onSuccess: async () => {
+      toast.success(t("messages.issued"));
+
+      setIssuingBilling(null);
 
       await invalidate();
     },
 
     onError: (error: unknown) => {
-      toast.error(
-        getErrorMessage(
-          error,
-
-          "Failed to issue billing.",
-        ),
-      );
+      toast.error(getErrorMessage(error, t("messages.issueFailed")));
     },
   });
 
   // ====================================================
-  // PAID
+  // MARK PAID
   // ====================================================
 
   const paidMutation = useMutation({
     mutationFn: markStaffPlacementBillingPaid,
 
-    onSuccess: async (response) => {
-      toast.success(response.message || "Billing marked as paid.");
+    onSuccess: async () => {
+      toast.success(t("messages.markedPaid"));
+
+      setPayingBilling(null);
 
       await invalidate();
     },
 
     onError: (error: unknown) => {
-      toast.error(
-        getErrorMessage(
-          error,
-
-          "Failed to mark billing as paid.",
-        ),
-      );
+      toast.error(getErrorMessage(error, t("messages.paidFailed")));
     },
   });
 
@@ -271,14 +271,20 @@ export const useStaffPlacementBillings = () => {
 
     summary: listQuery.data?.summary,
 
+    // FILTERS
+
     search,
     setSearch,
 
     statusFilter,
     setStatusFilter,
 
+    // PERMISSIONS
+
     canView,
     canManage,
+
+    // DETAILS
 
     viewingBillingId,
 
@@ -286,8 +292,22 @@ export const useStaffPlacementBillings = () => {
 
     setViewingBillingId,
 
+    // EDIT
+
     editingBilling,
     setEditingBilling,
+
+    // ISSUE
+
+    issuingBilling,
+    setIssuingBilling,
+
+    // PAYMENT
+
+    payingBilling,
+    setPayingBilling,
+
+    // STATE
 
     isLoading: staffQuery.isLoading || listQuery.isLoading,
 
@@ -295,24 +315,29 @@ export const useStaffPlacementBillings = () => {
 
     isDetailsLoading: detailQuery.isLoading,
 
+    isUpdating: updateMutation.isPending,
+
+    isIssuing: issueMutation.isPending,
+
+    isMarkingPaid: paidMutation.isPending,
+
     isSaving:
       updateMutation.isPending ||
       issueMutation.isPending ||
       paidMutation.isPending,
 
     error: listQuery.error
-      ? getErrorMessage(
-          listQuery.error,
-
-          "Failed to load placement billings.",
-        )
+      ? getErrorMessage(listQuery.error, t("messages.loadFailed"))
       : null,
+
+    // REFRESH
 
     refresh: () => listQuery.refetch(),
 
+    // ACTIONS
+
     updateBilling: (
       billingId: string,
-
       payload: UpdatePlacementBillingPayload,
     ) =>
       updateMutation.mutate({

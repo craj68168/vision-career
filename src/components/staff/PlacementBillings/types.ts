@@ -59,6 +59,8 @@ export type BillingRefund = {
 export type PlacementBilling = {
   billingId: string;
 
+  invoiceNumber?: string | null;
+
   placementCandidateId: string;
 
   recruitId: string;

@@ -1,4 +1,215 @@
 {
+  "staffPlacementBillings": {
+    "title": "人材紹介請求",
+    "description": "採用・就業が決まった候補者の人材紹介請求を確認・管理します。",
+    "refresh": "更新",
+
+    "permissionDenied": "人材紹介請求を閲覧する権限がありません。",
+    "viewOnlyNotice": "このアカウントは請求情報の閲覧のみ可能です。請求内容の作成・編集、請求書の発行、入金確認を行うには「請求管理：作成・発行・入金確認」権限が必要です。",
+
+    "summary": {
+      "total": "合計",
+      "draft": "下書き",
+      "issued": "発行済み",
+      "paid": "入金済み",
+      "partialRefund": "一部返金",
+      "refunded": "返金済み",
+      "cancelled": "取消済み",
+      "totalBilled": "請求総額",
+      "netPaid": "返金後入金額",
+      "refundedTotal": "返金総額",
+      "outstanding": "未入金額"
+    },
+
+    "searchPlaceholder": "請求番号、企業名、候補者名、職種で検索...",
+
+    "allStatuses": "すべてのステータス",
+
+    "filters": {
+      "allStatuses": "すべてのステータス"
+    },
+
+    "statuses": {
+      "draft": "下書き",
+      "issued": "発行済み",
+      "paid": "入金済み",
+      "partially_refunded": "一部返金",
+      "refunded": "返金済み",
+      "cancelled": "取消済み"
+    },
+
+    "table": {
+      "billing": "請求",
+      "company": "企業",
+      "candidate": "候補者",
+      "position": "職種",
+      "total": "合計金額",
+      "netPaid": "返金後入金額",
+      "status": "ステータス",
+      "dueDate": "支払期限",
+      "actions": "操作"
+    },
+
+    "actions": {
+      "view": "詳細",
+      "edit": "編集",
+      "issue": "発行",
+      "markPaid": "入金確認"
+    },
+
+    "loading": "人材紹介請求を読み込み中...",
+    "empty": "人材紹介請求が見つかりません。",
+
+    "details": {
+      "loading": "請求情報を読み込み中...",
+      "eyebrow": "人材紹介請求",
+      "close": "閉じる",
+
+      "placement": "紹介・就業情報",
+      "candidate": "候補者",
+      "position": "職種",
+      "recruitId": "紹介依頼ID",
+      "candidateId": "候補者ID",
+      "providerId": "企業ID",
+      "placementDate": "就業日",
+
+      "billing": "請求情報",
+      "placementFee": "人材紹介手数料",
+      "taxWithRate": "消費税（{rate}%）",
+      "totalAmount": "請求合計",
+      "dueDate": "支払期限",
+
+      "payment": "入金情報",
+      "paid": "入金額",
+      "refunded": "返金額",
+      "netPaid": "返金後入金額",
+
+      "billingNotes": "請求メモ",
+      "cancellationReason": "取消理由",
+
+      "refundHistory": "返金履歴",
+      "noRefunds": "返金履歴はありません。",
+
+      "auditHistory": "操作履歴",
+      "noAuditHistory": "操作履歴はありません。"
+    },
+
+    "editModal": {
+      "eyebrow": "スタッフ請求管理",
+      "title": "下書き請求を編集",
+
+      "company": "企業",
+      "candidate": "候補者",
+
+      "placementFee": "人材紹介手数料",
+      "taxRate": "消費税率（%）",
+      "dueDate": "支払期限",
+      "notes": "メモ",
+
+      "subtotal": "小計",
+      "tax": "消費税",
+      "total": "合計",
+
+      "cancel": "キャンセル",
+      "saving": "保存中...",
+      "save": "請求内容を保存"
+    },
+
+    "issueModal": {
+      "eyebrow": "請求書発行",
+      "title": "人材紹介請求を発行",
+      "close": "閉じる",
+
+      "description": "請求書を発行する前に、請求内容をご確認ください。",
+
+      "company": "企業",
+      "candidate": "候補者",
+
+      "total": "請求合計",
+      "totalAmount": "請求合計額",
+
+      "dueDate": "支払期限",
+
+      "invoiceTitle": "請求書情報が作成・確定されます",
+      "invoiceNotice": "請求を発行すると、顧客向けの請求書番号が作成され、この請求書の発行元、請求先、銀行振込先情報が確定されます。",
+
+      "permissionNotice": "請求の発行は「請求管理：作成・発行・入金確認」権限を持つスタッフのみ実行できる会計操作です。",
+
+      "warning": "請求を発行すると、顧客向け請求書が作成され、この請求書に使用する発行者情報、請求先情報、振込先情報が確定・保存されます。",
+
+      "invalidTitle": "この請求はまだ発行できません",
+      "feeRequired": "請求を発行する前に人材紹介手数料を設定してください。",
+      "dueDateRequired": "請求を発行する前に支払期限を設定してください。",
+
+      "cancel": "キャンセル",
+      "issuing": "発行中...",
+      "confirm": "請求書を発行"
+    },
+
+    "paidModal": {
+      "eyebrow": "入金確認",
+      "title": "入金を確認",
+      "close": "閉じる",
+
+      "description": "この請求の全額が入金されていることを確認してください。",
+
+      "company": "企業",
+      "candidate": "候補者",
+      "billingId": "請求ID",
+      "invoiceNumber": "請求書番号",
+
+      "total": "入金確認金額",
+      "totalAmount": "請求合計額",
+
+      "paymentTitle": "全額入金を確認",
+      "paymentNotice": "この操作を実行すると、請求金額の全額を入金済みとして記録し、請求ステータスを「入金済み」に変更します。",
+
+      "permissionNotice": "銀行振込などの入金を実際に確認した後でのみ、この操作を実行してください。",
+
+      "warning": "この操作を行うと、この請求は全額入金済みとして記録されます。銀行振込または入金を確認してから実行してください。",
+
+      "cancel": "キャンセル",
+      "saving": "確認中...",
+      "confirm": "入金を確認"
+    },
+
+    "auditActions": {
+      "CREATED": "作成",
+      "UPDATED": "更新",
+      "ISSUED": "発行",
+      "MARKED_PAID": "入金確認",
+      "CANCELLED": "取消",
+      "REFUND_PROCESSED": "返金処理"
+    },
+
+    "actorTypes": {
+      "system": "システム",
+      "admin": "管理者",
+      "staff": "スタッフ"
+    },
+
+    "messages": {
+      "network": "サーバーに接続できません。接続状況をご確認のうえ、もう一度お試しください。",
+      "invalid": "処理できませんでした。入力内容をご確認ください。",
+      "unauthorized": "セッションの有効期限が切れました。再度ログインしてください。",
+      "forbidden": "この請求操作を行う権限がありません。",
+      "notFound": "指定された人材紹介請求が見つかりません。",
+      "conflict": "請求ステータスが変更されているため、この操作を実行できません。",
+      "rateLimit": "リクエストが多すぎます。しばらくしてからお試しください。",
+      "server": "サーバーエラーが発生しました。しばらくしてからお試しください。",
+
+      "updated": "人材紹介請求を更新しました。",
+      "updateFailed": "人材紹介請求を更新できませんでした。",
+
+      "issued": "人材紹介請求書を発行しました。",
+      "issueFailed": "人材紹介請求書を発行できませんでした。",
+
+      "paid": "人材紹介請求を入金済みにしました。",
+      "paidFailed": "人材紹介請求を入金済みにできませんでした。",
+
+      "loadFailed": "人材紹介請求を読み込めませんでした。"
+    }
+  },
   "staffPlacementCandidates": {
     "title": "紹介候補者",
     "description": "管理者がマッチングした候補者を確認し、企業側の選考状況を把握します。",

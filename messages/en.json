@@ -1,4 +1,215 @@
 {
+  "staffPlacementBillings": {
+    "title": "Placement Billings",
+    "description": "View and manage billing generated from successful placements.",
+    "refresh": "Refresh",
+
+    "permissionDenied": "You do not have permission to view placement billings.",
+    "viewOnlyNotice": "Your account has billing view access only. Preparing, issuing and confirming payments requires the Billing - Prepare / Issue / Confirm Payment permission.",
+
+    "summary": {
+      "total": "Total",
+      "draft": "Draft",
+      "issued": "Issued",
+      "paid": "Paid",
+      "partialRefund": "Partial Refund",
+      "refunded": "Refunded",
+      "cancelled": "Cancelled",
+      "totalBilled": "Total Billed",
+      "netPaid": "Net Paid",
+      "refundedTotal": "Refunded",
+      "outstanding": "Outstanding"
+    },
+
+    "searchPlaceholder": "Search billing, company, candidate or position...",
+
+    "allStatuses": "All Statuses",
+
+    "filters": {
+      "allStatuses": "All Statuses"
+    },
+
+    "statuses": {
+      "draft": "Draft",
+      "issued": "Issued",
+      "paid": "Paid",
+      "partially_refunded": "Partially Refunded",
+      "refunded": "Refunded",
+      "cancelled": "Cancelled"
+    },
+
+    "table": {
+      "billing": "Billing",
+      "company": "Company",
+      "candidate": "Candidate",
+      "position": "Position",
+      "total": "Total",
+      "netPaid": "Net Paid",
+      "status": "Status",
+      "dueDate": "Due Date",
+      "actions": "Actions"
+    },
+
+    "actions": {
+      "view": "View",
+      "edit": "Edit",
+      "issue": "Issue",
+      "markPaid": "Mark Paid"
+    },
+
+    "loading": "Loading placement billings...",
+    "empty": "No placement billings found.",
+
+    "details": {
+      "loading": "Loading billing...",
+      "eyebrow": "Placement Billing",
+      "close": "Close",
+
+      "placement": "Placement",
+      "candidate": "Candidate",
+      "position": "Position",
+      "recruitId": "Recruit ID",
+      "candidateId": "Candidate ID",
+      "providerId": "Provider ID",
+      "placementDate": "Placement Date",
+
+      "billing": "Billing",
+      "placementFee": "Placement Fee",
+      "taxWithRate": "Tax ({rate}%)",
+      "totalAmount": "Total Amount",
+      "dueDate": "Due Date",
+
+      "payment": "Payment",
+      "paid": "Paid",
+      "refunded": "Refunded",
+      "netPaid": "Net Paid",
+
+      "billingNotes": "Billing Notes",
+      "cancellationReason": "Cancellation Reason",
+
+      "refundHistory": "Refund History",
+      "noRefunds": "No refunds recorded.",
+
+      "auditHistory": "Audit History",
+      "noAuditHistory": "No audit history recorded."
+    },
+
+    "editModal": {
+      "eyebrow": "Staff Billing",
+      "title": "Edit Draft Billing",
+
+      "company": "Company",
+      "candidate": "Candidate",
+
+      "placementFee": "Placement Fee",
+      "taxRate": "Tax Rate (%)",
+      "dueDate": "Due Date",
+      "notes": "Notes",
+
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "total": "Total",
+
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save Billing"
+    },
+
+    "issueModal": {
+      "eyebrow": "Issue Billing",
+      "title": "Issue Placement Billing",
+      "close": "Close",
+
+      "description": "Review the billing information before issuing the invoice.",
+
+      "company": "Company",
+      "candidate": "Candidate",
+
+      "total": "Total Amount",
+      "totalAmount": "Total Amount",
+
+      "dueDate": "Payment Due Date",
+
+      "invoiceTitle": "Invoice will be created and frozen",
+      "invoiceNotice": "Issuing this billing creates the customer-facing invoice number and freezes the issuer, recipient and bank-transfer information for this invoice.",
+
+      "permissionNotice": "Issuing a billing is a financial action available only to Staff with Billing - Prepare / Issue / Confirm Payment permission.",
+
+      "warning": "Issuing this billing creates the customer-facing invoice and freezes the issuer, recipient and bank-transfer information for this invoice.",
+
+      "invalidTitle": "Billing is not ready to issue",
+      "feeRequired": "Set the placement fee before issuing this billing.",
+      "dueDateRequired": "Set the payment due date before issuing this billing.",
+
+      "cancel": "Cancel",
+      "issuing": "Issuing...",
+      "confirm": "Issue Billing"
+    },
+
+    "paidModal": {
+      "eyebrow": "Payment Confirmation",
+      "title": "Confirm Payment",
+      "close": "Close",
+
+      "description": "Confirm that the full amount for this billing has been received.",
+
+      "company": "Company",
+      "candidate": "Candidate",
+      "billingId": "Billing ID",
+      "invoiceNumber": "Invoice Number",
+
+      "total": "Payment Amount",
+      "totalAmount": "Total Amount",
+
+      "paymentTitle": "Confirm full payment",
+      "paymentNotice": "This action records the full invoice amount as received and changes the billing status to Paid.",
+
+      "permissionNotice": "Only confirm payment after the bank transfer or other approved payment has actually been verified.",
+
+      "warning": "This action records the billing as fully paid. Confirm the bank transfer or payment before continuing.",
+
+      "cancel": "Cancel",
+      "saving": "Confirming...",
+      "confirm": "Confirm Payment"
+    },
+
+    "auditActions": {
+      "CREATED": "Created",
+      "UPDATED": "Updated",
+      "ISSUED": "Issued",
+      "MARKED_PAID": "Marked Paid",
+      "CANCELLED": "Cancelled",
+      "REFUND_PROCESSED": "Refund Processed"
+    },
+
+    "actorTypes": {
+      "system": "System",
+      "admin": "Admin",
+      "staff": "Staff"
+    },
+
+    "messages": {
+      "network": "Unable to connect to the server. Check your connection and try again.",
+      "invalid": "The request could not be processed. Please check the information and try again.",
+      "unauthorized": "Your session has expired. Please sign in again.",
+      "forbidden": "You do not have permission to perform this billing action.",
+      "notFound": "The placement billing could not be found.",
+      "conflict": "This action cannot be performed because the billing status has changed.",
+      "rateLimit": "Too many requests. Please try again later.",
+      "server": "A server error occurred. Please try again later.",
+
+      "updated": "Placement billing updated.",
+      "updateFailed": "Failed to update placement billing.",
+
+      "issued": "Placement billing issued successfully.",
+      "issueFailed": "Failed to issue placement billing.",
+
+      "paid": "Placement billing marked as paid.",
+      "paidFailed": "Failed to mark placement billing as paid.",
+
+      "loadFailed": "Failed to load placement billings."
+    }
+  },
   "staffPlacementCandidates": {
     "title": "Placement Candidates",
     "description": "Review candidates matched by Admin and monitor their Provider hiring progress.",
