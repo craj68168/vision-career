@@ -2,9 +2,15 @@
 
 import { useState } from "react";
 
-import { AlertTriangle, CheckCircle2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+
+import { AlertTriangle, CheckCircle2, Loader2, X } from "lucide-react";
 
 import type { ReviewCandidatePayload, StaffPlacementCandidate } from "./types";
+
+// ======================================================
+// PROPS
+// ======================================================
 
 type Props = {
   candidate: StaffPlacementCandidate | null;
@@ -15,7 +21,6 @@ type Props = {
 
   onSubmit: (
     placementCandidateId: string,
-
     payload: ReviewCandidatePayload,
   ) => void;
 };
@@ -63,10 +68,11 @@ function ReviewForm({
 
   onSubmit: (
     placementCandidateId: string,
-
     payload: ReviewCandidatePayload,
   ) => void;
 }) {
+  const t = useTranslations("staffPlacementCandidates");
+
   const [status, setStatus] = useState<"REVIEWED" | "NEEDS_ATTENTION">(
     candidate.staffReview.status === "NEEDS_ATTENTION"
       ? "NEEDS_ATTENTION"
@@ -77,37 +83,55 @@ function ReviewForm({
 
   const [error, setError] = useState("");
 
+  const isEditing = candidate.staffReview.status !== "NOT_REVIEWED";
+
+  // ====================================================
+  // SUBMIT
+  // ====================================================
+
   const submit = () => {
     setError("");
 
-    if (status === "NEEDS_ATTENTION" && !note.trim()) {
-      setError("Please explain what requires attention.");
+    const normalizedNote = note.trim();
+
+    if (status === "NEEDS_ATTENTION" && !normalizedNote) {
+      setError(t("reviewModal.noteRequired"));
 
       return;
     }
 
-    onSubmit(
-      candidate.placementCandidateId,
+    if (normalizedNote.length > 2000) {
+      setError(t("reviewModal.noteTooLong"));
 
-      {
-        reviewStatus: status,
+      return;
+    }
 
-        note: note.trim(),
-      },
-    );
+    onSubmit(candidate.placementCandidateId, {
+      reviewStatus: status,
+
+      note: normalizedNote,
+    });
   };
 
   return (
     <div className="fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-      <button type="button" className="absolute inset-0" onClick={onClose} />
+      <button
+        type="button"
+        className="absolute inset-0"
+        disabled={isSaving}
+        onClick={onClose}
+        aria-label={t("reviewModal.close")}
+      />
 
       <div className="relative z-10 w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+        {/* ================================================= */}
         {/* HEADER */}
+        {/* ================================================= */}
 
         <div className="flex items-start justify-between border-b border-slate-200 p-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-              Staff Candidate Review
+              {t("reviewModal.eyebrow")}
             </p>
 
             <h2 className="mt-1 text-2xl font-bold">
@@ -123,13 +147,16 @@ function ReviewForm({
             type="button"
             disabled={isSaving}
             onClick={onClose}
-            className="rounded-full p-2 hover:bg-slate-100 disabled:opacity-50"
+            aria-label={t("reviewModal.close")}
+            className="rounded-full p-2 transition hover:bg-slate-100 disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
+        {/* ================================================= */}
         {/* BODY */}
+        {/* ================================================= */}
 
         <div className="space-y-5 p-6">
           <div className="rounded-2xl bg-slate-50 p-4">
@@ -142,80 +169,96 @@ function ReviewForm({
             </p>
           </div>
 
+          {isEditing && (
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-sm text-indigo-700">
+              {t("reviewModal.editNotice")}
+            </div>
+          )}
+
           {error && (
             <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               {error}
             </div>
           )}
 
+          {/* ================================================= */}
           {/* OPTIONS */}
+          {/* ================================================= */}
 
           <div className="grid gap-3 sm:grid-cols-2">
             <button
               type="button"
+              disabled={isSaving}
               onClick={() => setStatus("REVIEWED")}
-              className={`rounded-2xl border p-4 text-left ${
+              className={`rounded-2xl border p-4 text-left transition disabled:opacity-50 ${
                 status === "REVIEWED"
                   ? "border-emerald-300 bg-emerald-50"
-                  : "border-slate-200"
+                  : "border-slate-200 hover:bg-slate-50"
               }`}
             >
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
 
-              <p className="mt-3 font-semibold">Reviewed</p>
+              <p className="mt-3 font-semibold">{t("reviewModal.reviewed")}</p>
 
-              <p className="mt-1 text-sm text-slate-500">
-                Candidate information has been checked and no immediate issue
-                requires attention.
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                {t("reviewModal.reviewedDescription")}
               </p>
             </button>
 
             <button
               type="button"
+              disabled={isSaving}
               onClick={() => setStatus("NEEDS_ATTENTION")}
-              className={`rounded-2xl border p-4 text-left ${
+              className={`rounded-2xl border p-4 text-left transition disabled:opacity-50 ${
                 status === "NEEDS_ATTENTION"
                   ? "border-red-300 bg-red-50"
-                  : "border-slate-200"
+                  : "border-slate-200 hover:bg-slate-50"
               }`}
             >
               <AlertTriangle className="h-5 w-5 text-red-600" />
 
-              <p className="mt-3 font-semibold">Needs Attention</p>
+              <p className="mt-3 font-semibold">
+                {t("reviewModal.needsAttention")}
+              </p>
 
-              <p className="mt-1 text-sm text-slate-500">
-                Candidate or placement information requires internal attention.
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                {t("reviewModal.needsAttentionDescription")}
               </p>
             </button>
           </div>
 
+          {/* ================================================= */}
           {/* NOTE */}
+          {/* ================================================= */}
 
           <label className="block">
-            <span className="text-sm font-semibold">Staff Review Note</span>
+            <span className="text-sm font-semibold">
+              {t("reviewModal.note")}
+            </span>
 
             <textarea
               rows={5}
               maxLength={2000}
+              disabled={isSaving}
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              placeholder="Enter Staff review notes..."
-              className="mt-2 w-full resize-none rounded-xl border border-slate-200 p-4 outline-none focus:border-indigo-500"
+              placeholder={t("reviewModal.notePlaceholder")}
+              className="mt-2 w-full resize-none rounded-xl border border-slate-200 p-4 outline-none focus:border-indigo-500 disabled:opacity-50"
             />
 
             <p className="mt-1 text-right text-xs text-slate-400">
-              {note.length}/2000
+              {note.length} / 2000
             </p>
           </label>
 
-          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
-            {` This Staff review does not change the Provider's candidate pipeline
-            status. Interview, selection, placement and rejection remain
-            Provider actions.`}
+          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-700">
+            {t("reviewModal.pipelineNotice")}
           </div>
         </div>
 
+        {/* ================================================= */}
         {/* FOOTER */}
+        {/* ================================================= */}
 
         <div className="flex justify-end gap-3 border-t border-slate-200 p-6">
           <button
@@ -224,16 +267,18 @@ function ReviewForm({
             onClick={onClose}
             className="rounded-xl border border-slate-200 px-5 py-2.5 disabled:opacity-50"
           >
-            Cancel
+            {t("reviewModal.cancel")}
           </button>
 
           <button
             type="button"
             disabled={isSaving}
             onClick={submit}
-            className="rounded-xl bg-slate-950 px-5 py-2.5 font-semibold text-white disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
           >
-            {isSaving ? "Saving..." : "Save Review"}
+            {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+
+            {isSaving ? t("reviewModal.saving") : t("reviewModal.save")}
           </button>
         </div>
       </div>

@@ -6,6 +6,8 @@ import axios from "axios";
 
 import toast from "react-hot-toast";
 
+import { useTranslations } from "next-intl";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -23,30 +25,12 @@ import type {
 } from "./types";
 
 // ======================================================
-// ERROR
-// ======================================================
-
-const getErrorMessage = (
-  error: unknown,
-
-  fallback: string,
-) => {
-  if (axios.isAxiosError<CandidateApiError>(error)) {
-    return error.response?.data?.message || fallback;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallback;
-};
-
-// ======================================================
 // HOOK
 // ======================================================
 
 export function useStaffPlacementCandidates() {
+  const t = useTranslations("staffPlacementCandidates");
+
   const queryClient = useQueryClient();
 
   // ====================================================
@@ -71,6 +55,54 @@ export function useStaffPlacementCandidates() {
 
   const [reviewingCandidate, setReviewingCandidate] =
     useState<StaffPlacementCandidate | null>(null);
+
+  // ====================================================
+  // ERROR
+  // ====================================================
+
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (axios.isAxiosError<CandidateApiError>(error)) {
+      if (!error.response) {
+        return t("messages.network");
+      }
+
+      switch (error.response.status) {
+        case 400:
+        case 422:
+          return t("messages.invalid");
+
+        case 401:
+          return t("messages.unauthorized");
+
+        case 403:
+          return t("messages.forbidden");
+
+        case 404:
+          return t("messages.notFound");
+
+        case 409:
+          return t("messages.conflict");
+
+        case 429:
+          return t("messages.rateLimit");
+
+        case 500:
+        case 502:
+        case 503:
+        case 504:
+          return t("messages.server");
+
+        default:
+          return error.response.data?.message || fallback;
+      }
+    }
+
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return fallback;
+  };
 
   // ====================================================
   // LIST
@@ -174,7 +206,11 @@ export function useStaffPlacementCandidates() {
     }) => reviewStaffPlacementCandidate(placementCandidateId, payload),
 
     onSuccess: async (response) => {
-      toast.success(response.message || "Candidate review saved.");
+      if (response.data.staffReview.status === "NEEDS_ATTENTION") {
+        toast.success(t("messages.attentionSaved"));
+      } else {
+        toast.success(t("messages.reviewSaved"));
+      }
 
       setReviewingCandidate(null);
 
@@ -198,15 +234,13 @@ export function useStaffPlacementCandidates() {
     },
 
     onError: (error: unknown) => {
-      toast.error(
-        getErrorMessage(
-          error,
-
-          "Failed to save candidate review.",
-        ),
-      );
+      toast.error(getErrorMessage(error, t("messages.reviewFailed")));
     },
   });
+
+  // ====================================================
+  // RETURN
+  // ====================================================
 
   return {
     // DATA
@@ -244,12 +278,10 @@ export function useStaffPlacementCandidates() {
 
     submitReview: (
       placementCandidateId: string,
-
       payload: ReviewCandidatePayload,
     ) => {
       reviewMutation.mutate({
         placementCandidateId,
-
         payload,
       });
     },
@@ -263,11 +295,7 @@ export function useStaffPlacementCandidates() {
     isDetailsLoading: detailQuery.isLoading,
 
     error: listQuery.error
-      ? getErrorMessage(
-          listQuery.error,
-
-          "Failed to load placement candidates.",
-        )
+      ? getErrorMessage(listQuery.error, t("messages.loadFailed"))
       : null,
 
     // REFRESH
