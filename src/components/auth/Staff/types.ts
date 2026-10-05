@@ -1,19 +1,39 @@
 export type StaffPermission =
+  // Legacy automatic permissions.
   | "dashboard:view"
+  | "training:view"
+
+  // Vacancies.
   | "vacancies:view"
   | "vacancies:review"
+
+  // Applications.
   | "applications:view"
   | "applications:review"
+
+  // Interviews.
+  | "interviews:view"
+  | "interviews:manage"
+
+  // Providers.
   | "providers:view"
   | "providers:manage"
+
+  // Job Seekers.
   | "seekers:view"
   | "seekers:manage"
+  | "seekers:approval"
+
+  // Placement.
   | "placement_requests:view"
   | "placement_requests:review"
   | "placement_requests:manage_candidates"
+
+  // Billing.
   | "billing:view"
   | "billing:manage"
-  | "training:view"
+
+  // Training management.
   | "training:manage";
 
 export type StaffUser = {

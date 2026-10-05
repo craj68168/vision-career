@@ -1,4 +1,191 @@
 {
+  "staffJobSeekers": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "refresh": "Refresh",
+    "view": "View",
+    "download": "Download",
+    "downloading": "Downloading...",
+
+    "page": {
+      "title": "Job Seekers",
+      "description": "Review Job Seeker profiles, screening results and registration decisions."
+    },
+
+    "summary": {
+      "total": "Total",
+      "pendingApproval": "Pending Approval",
+      "notScreened": "Not Screened",
+      "screened": "Screened",
+      "needsAttention": "Needs Attention"
+    },
+
+    "filters": {
+      "search": "Search seeker, email, ID...",
+      "allApprovals": "All approvals",
+      "allAccounts": "All accounts",
+      "allPlacement": "All placement",
+      "allScreening": "All screening"
+    },
+
+    "statuses": {
+      "approval": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "account": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "suspended": "Suspended"
+      },
+      "placement": {
+        "unplaced": "Unplaced",
+        "matching": "Matching",
+        "interview": "Interview",
+        "selected": "Selected",
+        "placed": "Placed"
+      },
+      "screening": {
+        "notScreened": "Not Screened",
+        "screened": "Screened",
+        "needsAttention": "Needs Attention"
+      }
+    },
+
+    "table": {
+      "id": "ID",
+      "jobSeeker": "Job Seeker",
+      "approval": "Approval",
+      "account": "Account",
+      "placement": "Placement",
+      "screening": "Screening",
+      "applications": "Applications",
+      "actions": "Actions",
+      "loading": "Loading Job Seekers...",
+      "empty": "No Job Seekers found.",
+      "screen": "Screen",
+      "editScreening": "Edit Screening",
+      "approveReject": "Approve / Reject"
+    },
+
+    "pagination": {
+      "records": "{count} record(s)",
+      "perPage": "{count} / page"
+    },
+
+    "permissions": {
+      "viewOnly": "Your Staff account has view-only Job Seeker access.",
+      "screenOnly": "Your Staff account can screen Job Seekers, but registration approval permission has not been assigned.",
+      "approvalOnly": "Your Staff account can approve or reject registrations, but screening permission has not been assigned."
+    },
+
+    "screeningModal": {
+      "eyebrow": "Staff Screening",
+      "title": "Screen Job Seeker",
+      "screened": "Screened",
+      "screenedDescription": "The profile has been reviewed and is ready for a registration decision.",
+      "needsAttention": "Needs Attention",
+      "needsAttentionDescription": "Something in this registration requires additional verification.",
+      "note": "Screening Note",
+      "notePlaceholder": "Enter screening notes...",
+      "noteRequired": "Please explain what requires attention.",
+      "permissionNotice": "Screening does not approve or reject the Job Seeker. Registration approval is controlled separately by the Job Seeker approval permission.",
+      "saveScreening": "Save Screening"
+    },
+
+    "approvalModal": {
+      "eyebrow": "Registration Decision",
+      "title": "Review Job Seeker",
+      "approve": "Approve",
+      "approveDescription": "Approve the registration and activate the account.",
+      "reject": "Reject",
+      "rejectDescription": "Reject the registration and keep the account inactive.",
+      "rejectionReason": "Rejection Reason",
+      "rejectionPlaceholder": "Explain why this registration is being rejected...",
+      "reasonRequired": "A rejection reason is required.",
+      "reasonTooLong": "The rejection reason cannot exceed 2000 characters.",
+      "permissionNotice": "This decision is available because your Staff account has the Job Seeker approval permission.",
+      "approveSeeker": "Approve Job Seeker",
+      "rejectSeeker": "Reject Job Seeker"
+    },
+
+    "approvalHistory": {
+      "sectionTitle": "Registration Decision",
+      "currentDecision": "Current Decision",
+      "reviewerType": "Reviewer Type",
+      "reviewer": "Reviewed By",
+      "reviewerId": "Reviewer ID",
+      "reviewedAt": "Reviewed At",
+      "reason": "Reason",
+      "history": "Decision History",
+      "noHistory": "No registration decision has been recorded yet.",
+      "pendingMessage": "This registration is still waiting for an approval decision.",
+      "admin": "Admin",
+      "staff": "Staff"
+    },
+
+    "details": {
+      "jobSeeker": "Job Seeker",
+      "profileInformation": "Profile Information",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "currentLocation": "Current Location",
+      "nationality": "Nationality",
+      "dateOfBirth": "Date of Birth",
+      "visaType": "Visa Type",
+      "visaExpiry": "Visa Expiry",
+      "japaneseLevel": "Japanese Level",
+      "desiredJob": "Desired Job",
+      "desiredLocation": "Desired Location",
+      "applications": "Applications",
+      "education": "Education",
+      "employmentHistory": "Employment History",
+      "resume": "Resume / CV",
+      "resumeDescription": "Job Seeker resume or generated resume",
+      "uploadedResume": "Uploaded Resume",
+      "generatedResume": "Generated Resume",
+      "noResume": "No resume uploaded.",
+      "additionalDocuments": "Additional Documents",
+      "additionalDocumentsDescription": "Passport, residence card, certificates and other supporting documents.",
+      "noAdditionalDocuments": "No additional documents uploaded.",
+      "skills": "Skills",
+      "currentStatus": "Current Status",
+      "approval": "Approval",
+      "account": "Account",
+      "placement": "Placement",
+      "staffScreening": "Staff Screening",
+      "notScreenedMessage": "This Job Seeker has not been screened by Staff yet.",
+      "screenedMessage": "Staff screening has been completed and the registration is ready for a decision.",
+      "needsAttentionMessage": "Staff marked this registration as requiring additional attention.",
+      "screenedBy": "Screened By",
+      "screenedAt": "Screened At",
+      "screeningNote": "Screening Note",
+      "screeningNotice": "Staff screening and registration approval are separate actions. Staff with the Job Seeker approval permission can approve or reject the registration.",
+      "downloadResume": "Download Resume",
+      "noInformation": "No information available."
+    },
+
+    "messages": {
+      "screeningSaved": "Job Seeker screening saved.",
+      "screeningFailed": "Failed to save screening.",
+      "approved": "Job Seeker approved successfully.",
+      "rejected": "Job Seeker rejected successfully.",
+      "approvalFailed": "Failed to update Job Seeker approval.",
+      "loadFailed": "Failed to load Job Seeker.",
+      "resumeFailed": "Failed to download resume.",
+      "network": "Unable to connect to the server.",
+      "invalid": "Please check the entered information.",
+      "unauthorized": "Your session has expired. Please log in again.",
+      "forbidden": "You do not have permission to perform this action.",
+      "notFound": "The requested Job Seeker could not be found.",
+      "conflict": "This operation cannot be completed because the Job Seeker status has changed.",
+      "rateLimit": "Too many requests. Please try again shortly.",
+      "server": "A server error occurred. Please try again."
+    }
+  },
   "jobSeeker": {
     "auth": {
       "portalTitle": "Job Seeker Portal",
@@ -1706,21 +1893,22 @@
       "suspended": "Suspended"
     },
     "permissions": {
-      "dashboard:view": "Dashboard - View",
       "vacancies:view": "Vacancies - View",
       "vacancies:review": "Vacancies - Review",
       "applications:view": "Applications - View",
       "applications:review": "Applications - Review",
+      "interviews:view": "Interviews - View",
+      "interviews:manage": "Interviews - Manage",
       "providers:view": "Clients - View",
       "providers:manage": "Clients - Manage",
       "seekers:view": "Job seekers - View",
-      "seekers:manage": "Job seekers - Manage",
+      "seekers:manage": "Job seekers - Screening",
+      "seekers:approval": "Job seekers - Approve / Reject",
       "placement_requests:view": "Placement requests - View",
       "placement_requests:review": "Placement requests - Review",
       "placement_requests:manage_candidates": "Placement requests - Manage candidates",
       "billing:view": "Billing - View",
       "billing:manage": "Billing - Manage",
-      "training:view": "Training - View",
       "training:manage": "Training - Manage"
     },
     "messages": {

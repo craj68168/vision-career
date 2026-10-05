@@ -4,16 +4,22 @@ import { useEffect } from "react";
 
 import { usePathname, useRouter } from "next/navigation";
 
-import { getCurrentStaff, getStaffDashboard } from "./api";
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { getCurrentStaff, getStaffDashboard } from "./api";
 
 export const useStaffDashboard = () => {
   const router = useRouter();
+
   const queryClient = useQueryClient();
+
   const pathname = usePathname();
 
   const isEnglish = pathname.startsWith("/en/");
+
+  // ====================================================
+  // CURRENT STAFF
+  // ====================================================
 
   const staffQuery = useQuery({
     queryKey: ["current-staff"],
@@ -23,15 +29,18 @@ export const useStaffDashboard = () => {
     retry: false,
   });
 
-  const hasDashboardPermission =
-    staffQuery.data?.data.permissions.includes("dashboard:view") ?? false;
+  // ====================================================
+  // DASHBOARD
+  //
+  // Dashboard is automatic for every authenticated Staff.
+  // ====================================================
 
   const dashboardQuery = useQuery({
     queryKey: ["staff-dashboard"],
 
     queryFn: getStaffDashboard,
 
-    enabled: staffQuery.isSuccess && hasDashboardPermission,
+    enabled: staffQuery.isSuccess,
 
     retry: false,
   });
@@ -101,6 +110,10 @@ export const useStaffDashboard = () => {
       queryKey: ["staff-placement-billings"],
     });
 
+    queryClient.removeQueries({
+      queryKey: ["staff-training-categories"],
+    });
+
     router.replace(isEnglish ? "/en/staff-login" : "/staff-login");
   };
 
@@ -109,11 +122,7 @@ export const useStaffDashboard = () => {
 
     summary: dashboardQuery.data?.data.summary,
 
-    isLoading:
-      staffQuery.isLoading ||
-      (hasDashboardPermission && dashboardQuery.isLoading),
-
-    hasDashboardPermission,
+    isLoading: staffQuery.isLoading || dashboardQuery.isLoading,
 
     logout,
   };

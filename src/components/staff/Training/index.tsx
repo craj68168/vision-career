@@ -15,106 +15,187 @@ import {
 } from "lucide-react";
 
 import { useLanguage } from "@/context/LanguageContext";
+
 import { useStaffTraining } from "./hook";
+
 import TopicDetailsModal from "./TopicDetailsModal";
+
+// ======================================================
+// TRANSLATIONS
+// ======================================================
 
 const translations = {
   ja: {
     title: "スタッフ研修",
+
     subtitle: "研修カテゴリー、トピック、学習教材を閲覧できます。",
+
     refresh: "更新",
+
     search: "研修カテゴリーを検索...",
+
     loading: "研修データを読み込み中...",
+
     loadError: "スタッフ研修を読み込めませんでした。",
-    permissionHelp: "このスタッフアカウントに必要な権限があるか確認してください：",
+
+    errorHelp:
+      "ページを更新しても問題が続く場合は、管理者にお問い合わせください。",
+
     noCategories: "利用可能な研修カテゴリーはありません。",
+
     noCategoriesHelp: "管理者が作成した有効な研修がここに表示されます。",
+
     topics: "トピック",
+
     files: "ファイル",
+
     topicsLoading: "トピックを読み込み中...",
+
     topicsError: "トピックを読み込めませんでした。再度お試しください。",
+
     noTopics: "このカテゴリーには有効なトピックがありません。",
+
     viewTraining: "研修を表示",
+
     perPage: "件 / ページ",
+
     previous: "前のページ",
+
     next: "次のページ",
+
     pageSize: "1ページの表示件数",
   },
+
   en: {
     title: "Staff Training",
+
     subtitle: "Browse training categories, topics and learning materials.",
+
     refresh: "Refresh",
+
     search: "Search training categories...",
+
     loading: "Loading training data...",
+
     loadError: "Unable to load Staff Training.",
-    permissionHelp: "Make sure this Staff account has the required permission:",
+
+    errorHelp:
+      "If the problem continues after refreshing the page, contact an administrator.",
+
     noCategories: "No training categories available.",
+
     noCategoriesHelp: "Active training created by Admin will appear here.",
+
     topics: "Topics",
+
     files: "Files",
+
     topicsLoading: "Loading topics...",
+
     topicsError: "Unable to load topics. Please try again.",
+
     noTopics: "No active topics are available in this category.",
+
     viewTraining: "View Training",
+
     perPage: "/ page",
+
     previous: "Previous page",
+
     next: "Next page",
+
     pageSize: "Items per page",
   },
 };
 
+// ======================================================
+// STAFF TRAINING
+// ======================================================
+
 export default function StaffTraining() {
   const { lang } = useLanguage();
+
   const isJapanese = lang === "ja";
+
   const t = translations[isJapanese ? "ja" : "en"];
 
   const {
     categories,
+
     pagination,
+
     search,
+
     setSearch,
+
     page,
+
     setPage,
+
     limit,
+
     setLimit,
+
     expandedCategories,
+
     topicsData,
+
     loadingTopics,
+
     topicErrors,
+
     toggleCategory,
+
     selectedTopic,
+
     openTopic,
+
     closeTopic,
+
     openFile,
+
     isTopicDetailsLoading,
+
     isLoading,
+
     isFetching,
+
     error,
+
     refresh,
   } = useStaffTraining();
+
+  // ====================================================
+  // MATERIAL COUNT
+  // ====================================================
 
   const materialCount = (count: number) =>
     isJapanese
       ? `${count}件の研修教材`
       : `${count} training material${count === 1 ? "" : "s"}`;
 
+  // ====================================================
+  // PAGINATION TEXT
+  // ====================================================
+
   const paginationText = () => {
-    if (!pagination) return "";
+    if (!pagination) {
+      return "";
+    }
 
     const start =
-      pagination.total === 0
-        ? 0
-        : (pagination.page - 1) * pagination.limit + 1;
+      pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1;
 
-    const end = Math.min(
-      pagination.page * pagination.limit,
-      pagination.total,
-    );
+    const end = Math.min(pagination.page * pagination.limit, pagination.total);
 
     return isJapanese
       ? `全${pagination.total}件中 ${start}〜${end}件を表示`
       : `${start} - ${end} of ${pagination.total}`;
   };
+
+  // ====================================================
+  // INITIAL LOADING
+  // ====================================================
 
   if (isLoading) {
     return (
@@ -127,15 +208,23 @@ export default function StaffTraining() {
           className="h-9 w-9 animate-spin text-indigo-600"
           aria-hidden="true"
         />
+
         <span className="sr-only">{t.loading}</span>
       </div>
     );
   }
 
+  // ====================================================
+  // PAGE
+  // ====================================================
+
   return (
     <>
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 md:px-8">
-        {/* HEADER */}
+        {/* ==================================================
+            HEADER
+        ================================================== */}
+
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-4">
@@ -144,12 +233,9 @@ export default function StaffTraining() {
               </div>
 
               <div>
-                <h1 className="text-2xl font-bold text-slate-950">
-                  {t.title}
-                </h1>
-                <p className="mt-1 text-sm text-slate-500">
-                  {t.subtitle}
-                </p>
+                <h1 className="text-2xl font-bold text-slate-950">{t.title}</h1>
+
+                <p className="mt-1 text-sm text-slate-500">{t.subtitle}</p>
               </div>
             </div>
 
@@ -162,11 +248,15 @@ export default function StaffTraining() {
               <RefreshCw
                 className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
               />
+
               {t.refresh}
             </button>
           </div>
 
-          {/* SEARCH */}
+          {/* ==================================================
+              SEARCH
+          ================================================== */}
+
           <div className="relative mt-6">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
@@ -180,18 +270,25 @@ export default function StaffTraining() {
           </div>
         </div>
 
-        {/* ERROR */}
+        {/* ==================================================
+            ERROR
+        ================================================== */}
+
         {error && (
           <div
             role="alert"
             className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
           >
-            {t.loadError} {t.permissionHelp}{" "}
-            <strong>training:view</strong>
+            <p className="font-semibold">{t.loadError}</p>
+
+            <p className="mt-1">{t.errorHelp}</p>
           </div>
         )}
 
-        {/* CATEGORIES */}
+        {/* ==================================================
+            CATEGORIES
+        ================================================== */}
+
         <div className="space-y-4">
           {categories.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white py-16 text-center">
@@ -200,6 +297,7 @@ export default function StaffTraining() {
               <p className="mt-3 font-semibold text-slate-700">
                 {t.noCategories}
               </p>
+
               <p className="mt-1 text-sm text-slate-400">
                 {t.noCategoriesHelp}
               </p>
@@ -207,7 +305,9 @@ export default function StaffTraining() {
           ) : (
             categories.map((category) => {
               const expanded = expandedCategories.has(category.categoryId);
+
               const topics = topicsData[category.categoryId] ?? [];
+
               const loading = loadingTopics.has(category.categoryId);
 
               return (
@@ -215,7 +315,10 @@ export default function StaffTraining() {
                   key={category.categoryId}
                   className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
                 >
-                  {/* CATEGORY */}
+                  {/* ==========================================
+                      CATEGORY
+                  ========================================== */}
+
                   <button
                     type="button"
                     aria-expanded={expanded}
@@ -259,7 +362,10 @@ export default function StaffTraining() {
                     )}
                   </button>
 
-                  {/* TOPICS */}
+                  {/* ==========================================
+                      TOPICS
+                  ========================================== */}
+
                   {expanded && (
                     <div className="border-t border-slate-200 bg-slate-50/60 p-4">
                       {loading ? (
@@ -268,6 +374,7 @@ export default function StaffTraining() {
                             className="mx-auto h-6 w-6 animate-spin text-indigo-600"
                             aria-hidden="true"
                           />
+
                           <span className="sr-only">{t.topicsLoading}</span>
                         </div>
                       ) : topicErrors[category.categoryId] ? (
@@ -317,6 +424,7 @@ export default function StaffTraining() {
                                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
                               >
                                 <Eye className="h-4 w-4" />
+
                                 {t.viewTraining}
                               </button>
                             </div>
@@ -331,7 +439,10 @@ export default function StaffTraining() {
           )}
         </div>
 
-        {/* PAGINATION */}
+        {/* ==================================================
+            PAGINATION
+        ================================================== */}
+
         {pagination && (
           <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-500">{paginationText()}</p>
@@ -379,6 +490,10 @@ export default function StaffTraining() {
           </div>
         )}
       </div>
+
+      {/* ==================================================
+          TOPIC DETAILS
+      ================================================== */}
 
       <TopicDetailsModal
         topic={selectedTopic}

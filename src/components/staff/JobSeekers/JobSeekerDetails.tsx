@@ -1,5 +1,7 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
+
 import {
   AlertTriangle,
   Briefcase,
@@ -17,25 +19,20 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  formatDate,
-  getAccountClass,
-  getApprovalClass,
-  getPlacementLabel,
-  getScreeningClass,
-  getScreeningLabel,
-} from "./helper";
+import { useFormatter, useTranslations } from "next-intl";
+
+import ApprovalHistorySection from "./ApprovalHistorySection";
+
+import { getAccountClass, getApprovalClass, getScreeningClass } from "./helper";
 
 import type { SeekerDocument, StaffSeeker } from "./types";
-
-// ======================================================
-// PROPS
-// ======================================================
 
 type Props = {
   seeker: StaffSeeker | null;
 
   canManage: boolean;
+
+  canApprove: boolean;
 
   isDownloading: boolean;
 
@@ -43,24 +40,22 @@ type Props = {
 
   onScreen: (seeker: StaffSeeker) => void;
 
+  onApprove: (seeker: StaffSeeker) => void;
+
   onDownloadResume: (seeker: StaffSeeker) => void;
 };
 
 // ======================================================
-// BACKEND BASE URL
-//
-// Used only for old /uploads/... records.
-//
-// New Supabase files already arrive as complete signed
-// HTTPS URLs.
+// BACKEND URL
 // ======================================================
 
-const backendBaseUrl =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ||
-  "http://localhost:5000";
+const configuredApiUrl =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+const backendBaseUrl = configuredApiUrl.replace(/\/api\/?$/, "");
 
 // ======================================================
-// TEXT
+// HELPERS
 // ======================================================
 
 const text = (value: string | number | null | undefined) => {
@@ -70,19 +65,6 @@ const text = (value: string | number | null | undefined) => {
 
   return String(value);
 };
-
-// ======================================================
-// FILE URL
-//
-// Supports:
-//
-// NEW:
-// https://...supabase.co/...
-//
-// LEGACY:
-// /uploads/file.pdf
-// /private_uploads/file.pdf
-// ======================================================
 
 const getFileUrl = (value?: string | null) => {
   if (!value) {
@@ -95,10 +77,6 @@ const getFileUrl = (value?: string | null) => {
 
   return `${backendBaseUrl}${value.startsWith("/") ? value : `/${value}`}`;
 };
-
-// ======================================================
-// CLEAN FILE NAME
-// ======================================================
 
 const getFileName = (value?: string | null) => {
   if (!value) {
@@ -118,14 +96,6 @@ const getFileName = (value?: string | null) => {
 
     const decoded = decodeURIComponent(rawName);
 
-    // Remove UUID prefix:
-    //
-    // 9c3b7193-21f1-4a50-a664-e4ef7b8b05d1-file.pdf
-    //
-    // becomes:
-    //
-    // file.pdf
-
     return decoded.replace(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/i,
       "",
@@ -134,10 +104,6 @@ const getFileName = (value?: string | null) => {
     return "File";
   }
 };
-
-// ======================================================
-// DOCUMENT TYPE LABEL
-// ======================================================
 
 const getDocumentTypeLabel = (value?: string | null) => {
   if (!value) {
@@ -150,22 +116,30 @@ const getDocumentTypeLabel = (value?: string | null) => {
 };
 
 // ======================================================
-// JOB SEEKER DETAILS
+// COMPONENT
 // ======================================================
 
 export default function JobSeekerDetails({
   seeker,
   canManage,
+  canApprove,
   isDownloading,
   onClose,
   onScreen,
+  onApprove,
   onDownloadResume,
 }: Props) {
+  const t = useTranslations("staffJobSeekers");
+
+  const format = useFormatter();
+
   if (!seeker) {
     return null;
   }
 
   const canScreen = canManage && seeker.approval_status === "pending";
+
+  const canDecide = canApprove && seeker.approval_status === "pending";
 
   const profilePhotoUrl = getFileUrl(seeker.profile_photo);
 
@@ -173,28 +147,74 @@ export default function JobSeekerDetails({
     seeker.resume_file || seeker.generated_resume_file,
   );
 
+  const formatDate = (value?: string | null) => {
+    if (!value) {
+      return "-";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "-";
+    }
+
+    return format.dateTime(date, {
+      timeZone: "Asia/Tokyo",
+
+      year: "numeric",
+
+      month: "2-digit",
+
+      day: "2-digit",
+    });
+  };
+
+  const approvalLabel =
+    seeker.approval_status === "approved"
+      ? t("statuses.approval.approved")
+      : seeker.approval_status === "rejected"
+        ? t("statuses.approval.rejected")
+        : t("statuses.approval.pending");
+
+  const accountLabel =
+    seeker.account_status === "active"
+      ? t("statuses.account.active")
+      : seeker.account_status === "suspended"
+        ? t("statuses.account.suspended")
+        : t("statuses.account.inactive");
+
+  const placementLabel =
+    seeker.placement_status === "matching"
+      ? t("statuses.placement.matching")
+      : seeker.placement_status === "interview"
+        ? t("statuses.placement.interview")
+        : seeker.placement_status === "selected"
+          ? t("statuses.placement.selected")
+          : seeker.placement_status === "placed"
+            ? t("statuses.placement.placed")
+            : t("statuses.placement.unplaced");
+
+  const screeningLabel =
+    seeker.staffScreening.status === "SCREENED"
+      ? t("statuses.screening.screened")
+      : seeker.staffScreening.status === "NEEDS_ATTENTION"
+        ? t("statuses.screening.needsAttention")
+        : t("statuses.screening.notScreened");
+
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/50 p-4">
-      {/* BACKDROP */}
-
       <button
         type="button"
         className="absolute inset-0"
         onClick={onClose}
-        aria-label="Close Job Seeker details"
+        aria-label={t("close")}
       />
 
-      {/* MODAL */}
-
       <div className="relative z-10 flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
-        {/* ==================================================
-            HEADER
-        ================================================== */}
+        {/* HEADER */}
 
         <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
           <div className="flex items-center gap-4">
-            {/* PROFILE PHOTO */}
-
             {profilePhotoUrl ? (
               <div
                 className="h-16 w-16 shrink-0 rounded-2xl border border-slate-200 bg-cover bg-center bg-no-repeat"
@@ -202,7 +222,7 @@ export default function JobSeekerDetails({
                   backgroundImage: `url("${profilePhotoUrl}")`,
                 }}
                 role="img"
-                aria-label={`${seeker.name} profile`}
+                aria-label={seeker.name}
               />
             ) : (
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50">
@@ -220,7 +240,7 @@ export default function JobSeekerDetails({
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                {seeker.desired_job || "Job Seeker"}
+                {seeker.desired_job || t("details.jobSeeker")}
               </p>
             </div>
           </div>
@@ -229,100 +249,104 @@ export default function JobSeekerDetails({
             type="button"
             onClick={onClose}
             className="rounded-full p-2 transition hover:bg-slate-100"
-            aria-label="Close"
+            aria-label={t("close")}
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* ==================================================
-            BODY
-        ================================================== */}
+        {/* BODY */}
 
         <div className="overflow-y-auto p-6">
           <div className="space-y-7">
-            {/* ==================================================
-                PROFILE INFORMATION
-            ================================================== */}
+            {/* PROFILE */}
 
             <section>
-              <h3 className="mb-4 text-lg font-bold">Profile Information</h3>
+              <h3 className="mb-4 text-lg font-bold">
+                {t("details.profileInformation")}
+              </h3>
 
               <div className="grid gap-3 md:grid-cols-3">
-                <Info icon={Mail} label="Email" value={seeker.email} />
+                <Info
+                  icon={Mail}
+                  label={t("details.email")}
+                  value={seeker.email}
+                />
 
-                <Info icon={Phone} label="Phone" value={text(seeker.phone)} />
+                <Info
+                  icon={Phone}
+                  label={t("details.phone")}
+                  value={text(seeker.phone)}
+                />
 
                 <Info
                   icon={MapPin}
-                  label="Address"
+                  label={t("details.address")}
                   value={text(seeker.address)}
                 />
 
                 <Info
                   icon={MapPin}
-                  label="Current Location"
+                  label={t("details.currentLocation")}
                   value={text(seeker.current_location)}
                 />
 
                 <Info
                   icon={UserRound}
-                  label="Nationality"
+                  label={t("details.nationality")}
                   value={text(seeker.nationality)}
                 />
 
                 <Info
                   icon={CalendarDays}
-                  label="Date of Birth"
+                  label={t("details.dateOfBirth")}
                   value={formatDate(seeker.date_of_birth)}
                 />
 
                 <Info
                   icon={ShieldCheck}
-                  label="Visa Type"
+                  label={t("details.visaType")}
                   value={text(seeker.visa_type)}
                 />
 
                 <Info
                   icon={CalendarDays}
-                  label="Visa Expiry"
+                  label={t("details.visaExpiry")}
                   value={formatDate(seeker.visa_expiry_date)}
                 />
 
                 <Info
                   icon={UserRound}
-                  label="Japanese Level"
+                  label={t("details.japaneseLevel")}
                   value={text(seeker.japanese_level)}
                 />
 
                 <Info
                   icon={Briefcase}
-                  label="Desired Job"
+                  label={t("details.desiredJob")}
                   value={text(seeker.desired_job)}
                 />
 
                 <Info
                   icon={MapPin}
-                  label="Desired Location"
+                  label={t("details.desiredLocation")}
                   value={text(seeker.desired_location)}
                 />
 
                 <Info
                   icon={FileText}
-                  label="Applications"
+                  label={t("details.applications")}
                   value={seeker.applications_count}
                 />
               </div>
             </section>
 
-            {/* ==================================================
-                EDUCATION / EMPLOYMENT
-            ================================================== */}
+            {/* EDUCATION / EMPLOYMENT */}
 
             <div className="grid gap-5 lg:grid-cols-2">
-              <Section title="Education" icon={GraduationCap}>
+              <Section title={t("details.education")} icon={GraduationCap}>
                 {seeker.education.length === 0 ? (
-                  <Empty />
+                  <Empty message={t("details.noInformation")} />
                 ) : (
                   seeker.education.map((education, index) => (
                     <div
@@ -337,9 +361,7 @@ export default function JobSeekerDetails({
 
                       <p className="mt-1 text-xs text-slate-400">
                         {formatDate(education.enrollment_date)}
-
                         {" — "}
-
                         {formatDate(education.graduation_date)}
                       </p>
                     </div>
@@ -347,9 +369,9 @@ export default function JobSeekerDetails({
                 )}
               </Section>
 
-              <Section title="Employment History" icon={Briefcase}>
+              <Section title={t("details.employmentHistory")} icon={Briefcase}>
                 {seeker.employment_history.length === 0 ? (
-                  <Empty />
+                  <Empty message={t("details.noInformation")} />
                 ) : (
                   seeker.employment_history.map((employment, index) => (
                     <div
@@ -364,9 +386,7 @@ export default function JobSeekerDetails({
 
                       <p className="mt-1 text-xs text-slate-400">
                         {formatDate(employment.start_date)}
-
                         {" — "}
-
                         {formatDate(employment.end_date)}
                       </p>
                     </div>
@@ -375,24 +395,18 @@ export default function JobSeekerDetails({
               </Section>
             </div>
 
-            {/* ==================================================
-                RESUME
-            ================================================== */}
+            {/* RESUME */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-slate-500" />
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-slate-500" />
 
-                    <h3 className="font-semibold">Resume / CV</h3>
-                  </div>
-
-                  <p className="mt-1 text-sm text-slate-500">
-                    Job Seeker resume or generated resume
-                  </p>
-                </div>
+                <h3 className="font-semibold">{t("details.resume")}</h3>
               </div>
+
+              <p className="mt-1 text-sm text-slate-500">
+                {t("details.resumeDescription")}
+              </p>
 
               {resumeUrl ? (
                 <div className="mt-4 flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -405,8 +419,8 @@ export default function JobSeekerDetails({
 
                     <p className="mt-1 text-xs text-slate-500">
                       {seeker.resume_file
-                        ? "Uploaded Resume"
-                        : "Generated Resume"}
+                        ? t("details.uploadedResume")
+                        : t("details.generatedResume")}
                     </p>
                   </div>
 
@@ -418,47 +432,47 @@ export default function JobSeekerDetails({
                       className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                     >
                       <ExternalLink className="h-4 w-4" />
-                      View
+
+                      {t("view")}
                     </a>
 
                     <button
                       type="button"
                       disabled={isDownloading}
                       onClick={() => onDownloadResume(seeker)}
-                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
                     >
                       <Download className="h-4 w-4" />
 
-                      {isDownloading ? "Downloading..." : "Download"}
+                      {isDownloading ? t("downloading") : t("download")}
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="mt-4">
-                  <Empty message="No resume uploaded." />
+                  <Empty message={t("details.noResume")} />
                 </div>
               )}
             </section>
 
-            {/* ==================================================
-                ADDITIONAL DOCUMENTS
-            ================================================== */}
+            {/* DOCUMENTS */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-slate-500" />
 
-                <h3 className="font-semibold">Additional Documents</h3>
+                <h3 className="font-semibold">
+                  {t("details.additionalDocuments")}
+                </h3>
               </div>
 
               <p className="mt-1 text-sm text-slate-500">
-                Passport, residence card, certificates and other supporting
-                documents.
+                {t("details.additionalDocumentsDescription")}
               </p>
 
               {seeker.other_documents.length === 0 ? (
                 <div className="mt-4">
-                  <Empty message="No additional documents uploaded." />
+                  <Empty message={t("details.noAdditionalDocuments")} />
                 </div>
               ) : (
                 <div className="mt-4 space-y-3">
@@ -466,18 +480,17 @@ export default function JobSeekerDetails({
                     <DocumentRow
                       key={document._id || `${document.name}-${index}`}
                       document={document}
+                      viewLabel={t("view")}
                     />
                   ))}
                 </div>
               )}
             </section>
 
-            {/* ==================================================
-                SKILLS
-            ================================================== */}
+            {/* SKILLS */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
-              <h3 className="font-semibold">Skills</h3>
+              <h3 className="font-semibold">{t("details.skills")}</h3>
 
               <div className="mt-3 flex flex-wrap gap-2">
                 {seeker.skills.length > 0 ? (
@@ -490,53 +503,57 @@ export default function JobSeekerDetails({
                     </span>
                   ))
                 ) : (
-                  <Empty />
+                  <Empty message={t("details.noInformation")} />
                 )}
               </div>
             </section>
 
-            {/* ==================================================
-                CURRENT STATUS
-            ================================================== */}
+            {/* CURRENT STATUS */}
 
             <section>
-              <h3 className="mb-4 text-lg font-bold">Current Status</h3>
+              <h3 className="mb-4 text-lg font-bold">
+                {t("details.currentStatus")}
+              </h3>
 
               <div className="grid gap-3 sm:grid-cols-3">
                 <Status
-                  label="Approval"
-                  value={seeker.approval_status}
+                  label={t("details.approval")}
+                  value={approvalLabel}
                   className={getApprovalClass(seeker.approval_status)}
                 />
 
                 <Status
-                  label="Account"
-                  value={seeker.account_status}
+                  label={t("details.account")}
+                  value={accountLabel}
                   className={getAccountClass(seeker.account_status)}
                 />
 
                 <Status
-                  label="Placement"
-                  value={getPlacementLabel(seeker.placement_status)}
+                  label={t("details.placement")}
+                  value={placementLabel}
                   className="border-slate-200 bg-slate-50 text-slate-700"
                 />
               </div>
             </section>
 
-            {/* ==================================================
-                STAFF SCREENING
-            ================================================== */}
+            {/* APPROVAL HISTORY */}
+
+            <ApprovalHistorySection seeker={seeker} />
+
+            {/* SCREENING */}
 
             <section>
               <div className="mb-4 flex items-center justify-between gap-3">
-                <h3 className="text-lg font-bold">Staff Screening</h3>
+                <h3 className="text-lg font-bold">
+                  {t("details.staffScreening")}
+                </h3>
 
                 <span
                   className={`rounded-full border px-3 py-1 text-xs font-semibold ${getScreeningClass(
                     seeker.staffScreening.status,
                   )}`}
                 >
-                  {getScreeningLabel(seeker.staffScreening.status)}
+                  {screeningLabel}
                 </span>
               </div>
 
@@ -545,7 +562,7 @@ export default function JobSeekerDetails({
                   <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
 
                   <p className="text-sm text-amber-700">
-                    This Job Seeker has not been screened by Staff yet.
+                    {t("details.notScreenedMessage")}
                   </p>
                 </div>
               )}
@@ -555,8 +572,7 @@ export default function JobSeekerDetails({
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
 
                   <p className="text-sm text-emerald-700">
-                    Staff screening has been completed. The registration is
-                    ready for Admin review.
+                    {t("details.screenedMessage")}
                   </p>
                 </div>
               )}
@@ -566,7 +582,7 @@ export default function JobSeekerDetails({
                   <AlertTriangle className="h-5 w-5 shrink-0 text-red-600" />
 
                   <p className="text-sm text-red-700">
-                    Staff marked this registration as needing Admin attention.
+                    {t("details.needsAttentionMessage")}
                   </p>
                 </div>
               )}
@@ -575,12 +591,12 @@ export default function JobSeekerDetails({
                 <>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <Detail
-                      label="Screened By"
+                      label={t("details.screenedBy")}
                       value={seeker.staffScreening.screenedByStaffId}
                     />
 
                     <Detail
-                      label="Screened At"
+                      label={t("details.screenedAt")}
                       value={formatDate(seeker.staffScreening.screenedAt)}
                     />
                   </div>
@@ -588,7 +604,7 @@ export default function JobSeekerDetails({
                   {seeker.staffScreening.note && (
                     <div className="mt-3 rounded-2xl bg-slate-50 p-4">
                       <p className="text-xs font-semibold uppercase text-slate-500">
-                        Screening Note
+                        {t("details.screeningNote")}
                       </p>
 
                       <p className="mt-2 whitespace-pre-wrap text-sm">
@@ -600,16 +616,13 @@ export default function JobSeekerDetails({
               )}
 
               <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
-                Staff screening is advisory. Final Job Seeker registration
-                approval remains with Admin.
+                {t("details.screeningNotice")}
               </div>
             </section>
           </div>
         </div>
 
-        {/* ==================================================
-            FOOTER
-        ================================================== */}
+        {/* FOOTER */}
 
         <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 px-6 py-4">
           {(seeker.resume_file || seeker.generated_resume_file) && (
@@ -617,11 +630,11 @@ export default function JobSeekerDetails({
               type="button"
               disabled={isDownloading}
               onClick={() => onDownloadResume(seeker)}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
 
-              {isDownloading ? "Downloading..." : "Download Resume"}
+              {isDownloading ? t("downloading") : t("details.downloadResume")}
             </button>
           )}
 
@@ -632,8 +645,18 @@ export default function JobSeekerDetails({
               className="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white"
             >
               {seeker.staffScreening.status === "NOT_SCREENED"
-                ? "Screen Job Seeker"
-                : "Edit Screening"}
+                ? t("table.screen")
+                : t("table.editScreening")}
+            </button>
+          )}
+
+          {canDecide && (
+            <button
+              type="button"
+              onClick={() => onApprove(seeker)}
+              className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            >
+              {t("table.approveReject")}
             </button>
           )}
         </div>
@@ -646,7 +669,14 @@ export default function JobSeekerDetails({
 // DOCUMENT ROW
 // ======================================================
 
-function DocumentRow({ document }: { document: SeekerDocument }) {
+function DocumentRow({
+  document,
+  viewLabel,
+}: {
+  document: SeekerDocument;
+
+  viewLabel: string;
+}) {
   const url = getFileUrl(document.file_url);
 
   const fileName = getFileName(document.file_url);
@@ -665,9 +695,7 @@ function DocumentRow({ document }: { document: SeekerDocument }) {
 
           <p className="mt-1 text-xs text-slate-500">
             {getDocumentTypeLabel(document.document_type)}
-
             {" · "}
-
             <span className="break-all">{fileName}</span>
           </p>
         </div>
@@ -681,7 +709,8 @@ function DocumentRow({ document }: { document: SeekerDocument }) {
           className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
         >
           <ExternalLink className="h-4 w-4" />
-          View
+
+          {viewLabel}
         </a>
       )}
     </div>
@@ -697,7 +726,7 @@ function Info({
   label,
   value,
 }: {
-  icon: typeof Mail;
+  icon: LucideIcon;
 
   label: string;
 
@@ -731,7 +760,7 @@ function Section({
 }: {
   title: string;
 
-  icon: typeof Briefcase;
+  icon: LucideIcon;
 
   children: React.ReactNode;
 }) {
@@ -767,7 +796,7 @@ function Status({
     <div className={`rounded-2xl border p-4 ${className}`}>
       <p className="text-xs font-semibold uppercase opacity-70">{label}</p>
 
-      <p className="mt-1 font-semibold capitalize">{value}</p>
+      <p className="mt-1 font-semibold">{value}</p>
     </div>
   );
 }
@@ -797,10 +826,6 @@ function Detail({
 // EMPTY
 // ======================================================
 
-function Empty({
-  message = "No information available.",
-}: {
-  message?: string;
-}) {
+function Empty({ message }: { message: string }) {
   return <p className="text-sm text-slate-400">{message}</p>;
 }

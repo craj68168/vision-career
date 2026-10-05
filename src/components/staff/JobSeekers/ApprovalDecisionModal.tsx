@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 
-import { AlertTriangle, CheckCircle2, X } from "lucide-react";
+import { CheckCircle2, Loader2, X, XCircle } from "lucide-react";
 
 import { useTranslations } from "next-intl";
 
-import type { ScreenSeekerPayload, StaffSeeker } from "./types";
+import type {
+  StaffSeeker,
+  StaffSeekerApprovalDecision,
+  StaffSeekerApprovalPayload,
+} from "./types";
 
 type Props = {
   seeker: StaffSeeker | null;
@@ -15,10 +19,10 @@ type Props = {
 
   onClose: () => void;
 
-  onSubmit: (seekerId: string, payload: ScreenSeekerPayload) => void;
+  onSubmit: (seekerId: string, payload: StaffSeekerApprovalPayload) => void;
 };
 
-export default function ScreenSeekerModal({
+export default function ApprovalDecisionModal({
   seeker,
   isSaving,
   onClose,
@@ -29,7 +33,7 @@ export default function ScreenSeekerModal({
   }
 
   return (
-    <ScreenForm
+    <ApprovalForm
       key={seeker.seeker_id}
       seeker={seeker}
       isSaving={isSaving}
@@ -39,7 +43,7 @@ export default function ScreenSeekerModal({
   );
 }
 
-function ScreenForm({
+function ApprovalForm({
   seeker,
   isSaving,
   onClose,
@@ -51,40 +55,43 @@ function ScreenForm({
 
   onClose: () => void;
 
-  onSubmit: (seekerId: string, payload: ScreenSeekerPayload) => void;
+  onSubmit: (seekerId: string, payload: StaffSeekerApprovalPayload) => void;
 }) {
   const t = useTranslations("staffJobSeekers");
 
-  const [status, setStatus] = useState<"SCREENED" | "NEEDS_ATTENTION">(
-    seeker.staffScreening.status === "NEEDS_ATTENTION"
-      ? "NEEDS_ATTENTION"
-      : "SCREENED",
-  );
+  const [decision, setDecision] =
+    useState<StaffSeekerApprovalDecision>("approved");
 
-  const [note, setNote] = useState(seeker.staffScreening.note || "");
+  const [reason, setReason] = useState("");
 
   const [error, setError] = useState("");
 
   const submit = () => {
     setError("");
 
-    const normalizedNote = note.trim();
+    const normalizedReason = reason.trim();
 
-    if (status === "NEEDS_ATTENTION" && !normalizedNote) {
-      setError(t("screeningModal.noteRequired"));
+    if (decision === "rejected" && !normalizedReason) {
+      setError(t("approvalModal.reasonRequired"));
+
+      return;
+    }
+
+    if (normalizedReason.length > 2000) {
+      setError(t("approvalModal.reasonTooLong"));
 
       return;
     }
 
     onSubmit(seeker.seeker_id, {
-      screeningStatus: status,
+      decision,
 
-      note: normalizedNote,
+      reason: decision === "rejected" ? normalizedReason : undefined,
     });
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
       <button
         type="button"
         className="absolute inset-0"
@@ -96,11 +103,11 @@ function ScreenForm({
         <div className="flex items-start justify-between border-b border-slate-200 p-6">
           <div>
             <p className="text-xs font-semibold uppercase text-indigo-600">
-              {t("screeningModal.eyebrow")}
+              {t("approvalModal.eyebrow")}
             </p>
 
             <h2 className="mt-1 text-2xl font-bold">
-              {t("screeningModal.title")}
+              {t("approvalModal.title")}
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">{seeker.seeker_id}</p>
@@ -134,67 +141,65 @@ function ScreenForm({
             <button
               type="button"
               disabled={isSaving}
-              onClick={() => setStatus("SCREENED")}
+              onClick={() => setDecision("approved")}
               className={`rounded-2xl border p-4 text-left transition disabled:opacity-50 ${
-                status === "SCREENED"
+                decision === "approved"
                   ? "border-emerald-300 bg-emerald-50"
                   : "border-slate-200"
               }`}
             >
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
 
-              <p className="mt-3 font-semibold">
-                {t("screeningModal.screened")}
-              </p>
+              <p className="mt-3 font-semibold">{t("approvalModal.approve")}</p>
 
               <p className="mt-1 text-sm text-slate-500">
-                {t("screeningModal.screenedDescription")}
+                {t("approvalModal.approveDescription")}
               </p>
             </button>
 
             <button
               type="button"
               disabled={isSaving}
-              onClick={() => setStatus("NEEDS_ATTENTION")}
+              onClick={() => setDecision("rejected")}
               className={`rounded-2xl border p-4 text-left transition disabled:opacity-50 ${
-                status === "NEEDS_ATTENTION"
+                decision === "rejected"
                   ? "border-red-300 bg-red-50"
                   : "border-slate-200"
               }`}
             >
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <XCircle className="h-5 w-5 text-red-600" />
 
-              <p className="mt-3 font-semibold">
-                {t("screeningModal.needsAttention")}
-              </p>
+              <p className="mt-3 font-semibold">{t("approvalModal.reject")}</p>
 
               <p className="mt-1 text-sm text-slate-500">
-                {t("screeningModal.needsAttentionDescription")}
+                {t("approvalModal.rejectDescription")}
               </p>
             </button>
           </div>
 
-          <label className="block">
-            <span className="text-sm font-semibold">
-              {t("screeningModal.note")}
-            </span>
+          {decision === "rejected" && (
+            <label className="block">
+              <span className="text-sm font-semibold">
+                {t("approvalModal.rejectionReason")}
+              </span>
 
-            <textarea
-              rows={5}
-              maxLength={2000}
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder={t("screeningModal.notePlaceholder")}
-              className="mt-2 w-full resize-none rounded-xl border border-slate-200 p-4 outline-none focus:border-indigo-500"
-            />
+              <textarea
+                rows={5}
+                maxLength={2000}
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                placeholder={t("approvalModal.rejectionPlaceholder")}
+                className="mt-2 w-full resize-none rounded-xl border border-slate-200 p-4 outline-none focus:border-red-500"
+              />
 
-            <p className="mt-1 text-right text-xs text-slate-400">
-              {note.length} / 2000
-            </p>
-          </label>
+              <p className="mt-1 text-right text-xs text-slate-400">
+                {reason.length} / 2000
+              </p>
+            </label>
+          )}
 
           <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
-            {t("screeningModal.permissionNotice")}
+            {t("approvalModal.permissionNotice")}
           </div>
         </div>
 
@@ -210,11 +215,21 @@ function ScreenForm({
 
           <button
             type="button"
-            disabled={isSaving}
+            disabled={isSaving || (decision === "rejected" && !reason.trim())}
             onClick={submit}
-            className="rounded-xl bg-slate-950 px-5 py-2.5 font-semibold text-white disabled:opacity-50"
+            className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-semibold text-white disabled:opacity-50 ${
+              decision === "approved"
+                ? "bg-emerald-600 hover:bg-emerald-700"
+                : "bg-red-600 hover:bg-red-700"
+            }`}
           >
-            {isSaving ? t("saving") : t("screeningModal.saveScreening")}
+            {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+
+            {isSaving
+              ? t("saving")
+              : decision === "approved"
+                ? t("approvalModal.approveSeeker")
+                : t("approvalModal.rejectSeeker")}
           </button>
         </div>
       </div>
