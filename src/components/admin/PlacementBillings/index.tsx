@@ -1,6 +1,6 @@
 "use client";
 import type { ComponentType } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations, useFormatter } from "next-intl";
 import BillingActionModal from "./BillingActionModal";
 import {
@@ -215,7 +215,7 @@ export default function PlacementBillings() {
         {/* ================================================= */}
         <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1200px] text-left">
+            <table className="w-full min-w-[960px] text-left">
               <thead className="bg-zinc-50 text-xs text-zinc-500 dark:bg-white/5 dark:text-zinc-400">
                 <tr>
                   <th className="px-4 py-2 font-medium">{t("invoice")}</th>
@@ -359,90 +359,70 @@ export default function PlacementBillings() {
                         {/* =============================== */}
                         <td className="px-4 py-2">
                           <div className="flex justify-end gap-1.5">
-                            <button
-                              type="button"
+                            <IconAction
+                              label={t("view")}
+                              icon={Eye}
                               onClick={() => setViewingBilling(billing)}
-                              className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-zinc-200 px-3 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 ${focusRing}`}
-                            >
-                              <Eye className="h-4 w-4" />
-                              {t("view")}
-                            </button>
+                            />
+
                             {billing.status === "draft" && (
                               <>
-                                <button
-                                  type="button"
+                                <IconAction
+                                  label={t("edit")}
+                                  icon={Pencil}
+                                  variant="dark"
                                   disabled={isSaving}
                                   onClick={() => setEditingBilling(billing)}
-                                  className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-zinc-950 px-3 text-xs font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 ${focusRing}`}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                  {t("edit")}
-                                </button>
-                                <button
-                                  type="button"
+                                />
+                                <IconAction
+                                  label={t("issue")}
+                                  icon={Send}
+                                  variant="primary"
                                   disabled={isSaving}
-                                  onClick={() =>
-                                    handleIssueBilling(billing.billingId)
-                                  }
-                                  className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
-                                >
-                                  <Send className="h-4 w-4" />
-                                  {t("issue")}
-                                </button>
-                                <button
-                                  type="button"
+                                  onClick={() => handleIssueBilling(billing.billingId)}
+                                />
+                                <IconAction
+                                  label={t("cancel")}
+                                  icon={XCircle}
+                                  variant="danger"
                                   disabled={isSaving}
-                                  onClick={() =>
-                                    handleCancelBilling(billing.billingId)
-                                  }
-                                  className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 ${focusRing}`}
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                  {t("cancel")}
-                                </button>
+                                  onClick={() => handleCancelBilling(billing.billingId)}
+                                />
                               </>
                             )}
+
                             {billing.status === "issued" && (
                               <>
-                                <button
-                                  type="button"
+                                <IconAction
+                                  label={t("markPaid")}
+                                  icon={CheckCircle2}
+                                  variant="primary"
                                   disabled={isSaving}
-                                  onClick={() =>
-                                    handleMarkPaid(billing.billingId)
-                                  }
-                                  className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
-                                >
-                                  <CheckCircle2 className="h-4 w-4" />
-                                  {t("markPaid")}
-                                </button>
-                                <button
-                                  type="button"
+                                  onClick={() => handleMarkPaid(billing.billingId)}
+                                />
+                                <IconAction
+                                  label={t("cancel")}
+                                  icon={XCircle}
+                                  variant="danger"
                                   disabled={isSaving}
-                                  onClick={() =>
-                                    handleCancelBilling(billing.billingId)
-                                  }
-                                  className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 ${focusRing}`}
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                  {t("cancel")}
-                                </button>
+                                  onClick={() => handleCancelBilling(billing.billingId)}
+                                />
                               </>
                             )}
-                            {["paid", "partially_refunded"].includes(
-                              billing.status,
-                            ) &&
+
+                            {["paid", "partially_refunded"].includes(billing.status) &&
                               refundableAmount > 0 && (
-                                <button
-                                  type="button"
+                                <IconAction
+                                  label={
+                                    billing.status === "partially_refunded"
+                                      ? t("refundAgain")
+                                      : t("refund")
+                                  }
+                                  icon={RotateCcw}
+                                  variant="danger"
                                   disabled={isSaving}
                                   onClick={() => openRefundModal(billing)}
-                                  className={`inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 ${focusRing}`}
-                                >
-                                  <RotateCcw className="h-4 w-4" />
-                                  {billing.status === "partially_refunded"
-                                    ? t("refundAgain")
-                                    : t("refund")}
-                                </button>
+                                />
                               )}
                           </div>
                         </td>
@@ -573,5 +553,74 @@ function StatusBadge({ status }: { status: PlacementBillingStatus }) {
     >
       {t(`statuses.${status}`)}
     </span>
+  );
+}
+// ======================================================
+// ICON ACTION BUTTON (icon only, label shown on hover)
+// ======================================================
+type IconActionVariant = "neutral" | "dark" | "primary" | "danger";
+
+const iconActionClasses: Record<IconActionVariant, string> = {
+  neutral:
+    "border border-zinc-200 text-zinc-700 hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10",
+  dark:
+    "bg-zinc-950 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200",
+  primary: "bg-emerald-600 text-white hover:bg-emerald-700",
+  danger:
+    "border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10",
+};
+
+function IconAction({
+  label,
+  icon: Icon,
+  onClick,
+  disabled,
+  variant = "neutral",
+}: {
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  onClick: () => void;
+  disabled?: boolean;
+  variant?: IconActionVariant;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const [tip, setTip] = useState<{ x: number; y: number } | null>(null);
+
+  const show = () => {
+    const rect = ref.current?.getBoundingClientRect();
+    if (!rect) return;
+    setTip({ x: rect.left + rect.width / 2, y: rect.bottom });
+  };
+  const hide = () => setTip(null);
+
+  return (
+    <>
+      <button
+        ref={ref}
+        type="button"
+        aria-label={label}
+        disabled={disabled}
+        onClick={() => {
+          hide();
+          onClick();
+        }}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        className={`inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition disabled:cursor-not-allowed disabled:opacity-50 ${iconActionClasses[variant]} ${focusRing}`}
+      >
+        <Icon className="h-4 w-4" />
+      </button>
+      {tip && (
+        <span
+          role="tooltip"
+          style={{ left: tip.x, top: tip.y + 8 }}
+          className="pointer-events-none fixed z-50 -translate-x-1/2 whitespace-nowrap rounded-md bg-zinc-900 px-2 py-1 text-xs font-medium text-white shadow-lg dark:bg-white dark:text-zinc-900"
+        >
+          {label}
+        </span>
+      )}
+    </>
   );
 }
