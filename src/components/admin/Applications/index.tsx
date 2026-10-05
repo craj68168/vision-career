@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType } from "react";
 import {
   CheckCircle2,
   Clock3,
@@ -71,42 +72,34 @@ export default function AdminApplications() {
       value: "ALL",
       label: lang === "ja" ? "すべて" : "All",
     },
-
     {
       value: "PENDING_ADMIN_APPROVAL",
       label: lang === "ja" ? "承認待ち" : "Pending",
     },
-
     {
       value: "SENT_TO_PROVIDER",
       label: lang === "ja" ? "企業へ送信済み" : "Sent to Provider",
     },
-
     {
       value: "UNDER_REVIEW",
       label: lang === "ja" ? "審査中" : "Under Review",
     },
-
     {
       value: "INTERVIEW",
       label: lang === "ja" ? "面接" : "Interview",
     },
-
     {
       value: "SELECTED",
       label: lang === "ja" ? "選考通過" : "Selected",
     },
-
     {
       value: "HIRED",
       label: lang === "ja" ? "採用" : "Hired",
     },
-
     {
       value: "ADMIN_REJECTED",
       label: lang === "ja" ? "管理者却下" : "Admin Rejected",
     },
-
     {
       value: "REJECTED",
       label: lang === "ja" ? "企業不採用" : "Provider Rejected",
@@ -144,31 +137,39 @@ export default function AdminApplications() {
         </button>
       </div>
 
-      {/* SUMMARY */}
+      {/* SUMMARY (clickable: each card applies a status filter) */}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
           label={lang === "ja" ? "総応募数" : "Applications"}
           value={summary?.total || 0}
           icon={UserRoundCheck}
+          isActive={statusFilter === "ALL"}
+          onClick={() => setStatusFilter("ALL")}
         />
 
         <SummaryCard
           label={lang === "ja" ? "管理者承認待ち" : "Pending Approval"}
           value={summary?.pendingAdminApproval || 0}
           icon={Clock3}
+          isActive={statusFilter === "PENDING_ADMIN_APPROVAL"}
+          onClick={() => setStatusFilter("PENDING_ADMIN_APPROVAL")}
         />
 
         <SummaryCard
           label={lang === "ja" ? "企業へ送信済み" : "Sent to Provider"}
           value={summary?.sentToProvider || 0}
           icon={Send}
+          isActive={statusFilter === "SENT_TO_PROVIDER"}
+          onClick={() => setStatusFilter("SENT_TO_PROVIDER")}
         />
 
         <SummaryCard
           label={lang === "ja" ? "採用" : "Hired"}
           value={summary?.hired || 0}
           icon={CheckCircle2}
+          isActive={statusFilter === "HIRED"}
+          onClick={() => setStatusFilter("HIRED")}
         />
       </div>
 
@@ -230,6 +231,19 @@ export default function AdminApplications() {
           <p className="text-zinc-500 dark:text-zinc-400">
             {lang === "ja" ? "応募がありません。" : "No applications found."}
           </p>
+
+          {(statusFilter !== "ALL" || search) && (
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter("ALL");
+                setSearch("");
+              }}
+              className={`mt-4 inline-flex h-10 cursor-pointer items-center justify-center rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 ${focusRing}`}
+            >
+              {lang === "ja" ? "フィルターをクリア" : "Clear filters"}
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 sm:gap-5 xl:grid-cols-2">
@@ -362,15 +376,28 @@ function SummaryCard({
   label,
   value,
   icon: Icon,
+  isActive,
+  onClick,
 }: {
   label: string;
   value: number;
-  icon: React.ComponentType<{
+  icon: ComponentType<{
     className?: string;
   }>;
+  isActive: boolean;
+  onClick: () => void;
 }) {
   return (
-    <div className="min-w-0 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-5">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={isActive}
+      className={`min-w-0 cursor-pointer rounded-lg border bg-white p-4 text-left shadow-sm transition hover:border-emerald-500/50 hover:shadow-md dark:bg-zinc-900 sm:p-5 ${focusRing} ${
+        isActive
+          ? "border-emerald-500 ring-2 ring-emerald-500/20"
+          : "border-zinc-200 dark:border-white/10"
+      }`}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-zinc-500 dark:text-zinc-400">
@@ -386,7 +413,7 @@ function SummaryCard({
           <Icon className="h-5 w-5" />
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 

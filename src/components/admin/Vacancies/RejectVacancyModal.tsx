@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import { Loader2, X } from "lucide-react";
 
@@ -18,6 +19,14 @@ type Props = {
   onReject: (vacancyId: string, reason: string) => void;
 };
 
+const MAX_LENGTH = 1000;
+
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-900";
+
+const FOCUSABLE =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export default function RejectVacancyModal({
   vacancy,
   isRejecting,
@@ -25,17 +34,89 @@ export default function RejectVacancyModal({
   onReject,
 }: Props) {
   const { lang } = useLanguage();
+  const ja = lang === "ja";
+
+  const titleId = useId();
+  const fieldId = useId();
+  const hintId = useId();
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [reason, setReason] = useState("");
 
   const canSubmit = reason.trim().length > 0 && !isRejecting;
+  const isNearLimit = reason.length >= MAX_LENGTH * 0.9;
+
+  // Lock background scroll, focus the reason field, restore focus on close.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    textareaRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus?.();
+    };
+  }, []);
+
+  const submit = () => {
+    if (canSubmit) {
+      onReject(vacancy.vacancyId, reason.trim());
+    }
+  };
+
+  // Escape closes (unless busy), Ctrl/Cmd+Enter submits, Tab stays inside.
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape") {
+      event.stopPropagation();
+
+      if (!isRejecting) {
+        onClose();
+      }
+
+      return;
+    }
+
+    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      submit();
+      return;
+    }
+
+    if (event.key !== "Tab" || !dialogRef.current) {
+      return;
+    }
+
+    const focusable = Array.from(
+      dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE),
+    );
+
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-      <button
-        type="button"
-        aria-label="Close"
-        className="absolute inset-0 cursor-default"
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-zinc-950/50 backdrop-blur-sm sm:items-center sm:p-4">
+      {/* Backdrop click closes the modal. Escape and the X button are the keyboard routes. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0"
         onClick={() => {
           if (!isRejecting) {
             onClose();
@@ -43,80 +124,115 @@ export default function RejectVacancyModal({
         }}
       />
 
-      <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl">
-        <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-red-500">
-              {lang === "ja" ? "求人を却下" : "Reject Vacancy"}
-            </p>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="relative z-10 w-full max-w-lg overflow-hidden rounded-t-xl border border-zinc-200 bg-white shadow-2xl outline-none dark:border-white/10 dark:bg-zinc-900 sm:rounded-xl"
+      >
+        {/* HEADER */}
 
-            <h2 className="mt-1 text-xl font-bold text-slate-950">
-              {vacancy.title}
+        <div className="flex items-start justify-between gap-4 border-b border-zinc-200 px-4 py-4 dark:border-white/10 sm:px-6">
+          <div className="min-w-0">
+            <h2
+              id={titleId}
+              className="text-lg font-semibold text-zinc-950 dark:text-white"
+            >
+              {ja ? "求人を却下" : "Reject Vacancy"}
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">{vacancy.companyName}</p>
+            <p className="mt-1 break-words text-sm text-zinc-600 dark:text-zinc-300">
+              {vacancy.title}
+            </p>
+
+            <p className="mt-0.5 break-words text-xs text-zinc-500 dark:text-zinc-400">
+              {vacancy.companyName}
+            </p>
           </div>
 
           <button
             type="button"
             disabled={isRejecting}
             onClick={onClose}
-            className="cursor-pointer rounded-full p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-50"
+            aria-label={ja ? "閉じる" : "Close"}
+            className={`grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white ${focusRing}`}
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="p-6">
-          <label className="text-sm font-semibold text-slate-700">
-            {lang === "ja" ? "却下理由" : "Reason for rejection"}
+        {/* BODY */}
+
+        <div className="px-4 py-4 sm:px-6">
+          <label
+            htmlFor={fieldId}
+            className="text-sm font-medium text-zinc-900 dark:text-zinc-100"
+          >
+            {ja ? "却下理由" : "Reason for rejection"}
           </label>
 
-          <p className="mt-1 text-xs text-slate-500">
-            {lang === "ja"
-              ? "企業が修正する内容を具体的に入力してください。"
-              : "Explain what the Provider should correct before resubmitting."}
+          <p
+            id={hintId}
+            className="mt-1 text-xs text-zinc-500 dark:text-zinc-400"
+          >
+            {ja
+              ? "企業が修正する内容を具体的に入力してください。この内容は企業に共有されます。"
+              : "Explain what the Provider should correct before resubmitting. This is shared with the Provider."}
           </p>
 
           <textarea
+            id={fieldId}
+            ref={textareaRef}
             rows={5}
-            maxLength={1000}
+            maxLength={MAX_LENGTH}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             disabled={isRejecting}
+            aria-describedby={hintId}
             placeholder={
-              lang === "ja"
+              ja
                 ? "例：仕事内容をより具体的に記載してください。"
                 : "Example: Please provide a more detailed job description."
             }
-            className="mt-3 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-red-400 disabled:bg-slate-50"
+            className="mt-3 w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-red-400 focus:ring-2 focus:ring-red-500/20 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-white dark:disabled:bg-white/5"
           />
 
-          <div className="mt-2 text-right text-xs text-slate-400">
-            {reason.length}/1000
-          </div>
+          <p
+            className={`mt-1.5 text-right text-xs ${
+              isNearLimit
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-zinc-400 dark:text-zinc-500"
+            }`}
+          >
+            {reason.length}/{MAX_LENGTH}
+          </p>
+        </div>
 
-          <div className="mt-6 flex justify-end gap-3">
-            <button
-              type="button"
-              disabled={isRejecting}
-              onClick={onClose}
-              className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            >
-              {lang === "ja" ? "キャンセル" : "Cancel"}
-            </button>
+        {/* ACTIONS */}
 
-            <button
-              type="button"
-              disabled={!canSubmit}
-              onClick={() => onReject(vacancy.vacancyId, reason.trim())}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isRejecting && <Loader2 className="h-4 w-4 animate-spin" />}
+        <div className="flex flex-wrap justify-end gap-2 border-t border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-white/10 dark:bg-zinc-950/40 sm:px-6">
+          <button
+            type="button"
+            disabled={isRejecting}
+            onClick={onClose}
+            className={`inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200 dark:hover:bg-white/10 ${focusRing}`}
+          >
+            {ja ? "キャンセル" : "Cancel"}
+          </button>
 
-              {lang === "ja" ? "求人を却下" : "Reject Vacancy"}
-            </button>
-          </div>
+          <button
+            type="button"
+            disabled={!canSubmit}
+            onClick={submit}
+            className={`inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-red-600 px-4 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
+          >
+            {isRejecting && <Loader2 className="h-4 w-4 animate-spin" />}
+
+            {ja ? "求人を却下" : "Reject Vacancy"}
+          </button>
         </div>
       </div>
     </div>
