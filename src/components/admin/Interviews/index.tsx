@@ -2,11 +2,15 @@
 
 import type { ComponentType } from "react";
 import {
+  Building2,
   CalendarDays,
   CheckCircle2,
+  Clock,
   Eye,
   Link2,
+  MapPin,
   Pencil,
+  Phone,
   RefreshCw,
   Search,
   Video,
@@ -176,6 +180,7 @@ export default function AdminInterviewsPage() {
           label={lang === "ja" ? "総面接数" : "Total"}
           value={summary?.total || 0}
           icon={CalendarDays}
+          tone="violet"
           isActive={statusFilter === "ALL"}
           onClick={() => setStatusFilter("ALL")}
         />
@@ -184,6 +189,7 @@ export default function AdminInterviewsPage() {
           label={lang === "ja" ? "リンク待ち" : "Awaiting Link"}
           value={summary?.awaitingLink || 0}
           icon={Link2}
+          tone="amber"
           isActive={statusFilter === "AWAITING_LINK"}
           onClick={() => setStatusFilter("AWAITING_LINK")}
         />
@@ -192,6 +198,7 @@ export default function AdminInterviewsPage() {
           label={lang === "ja" ? "確定" : "Confirmed"}
           value={summary?.confirmed || 0}
           icon={CheckCircle2}
+          tone="emerald"
           isActive={statusFilter === "CONFIRMED"}
           onClick={() => setStatusFilter("CONFIRMED")}
         />
@@ -200,6 +207,7 @@ export default function AdminInterviewsPage() {
           label={lang === "ja" ? "完了" : "Completed"}
           value={summary?.completed || 0}
           icon={Video}
+          tone="blue"
           isActive={statusFilter === "COMPLETED"}
           onClick={() => setStatusFilter("COMPLETED")}
         />
@@ -208,6 +216,7 @@ export default function AdminInterviewsPage() {
           label={lang === "ja" ? "キャンセル" : "Cancelled"}
           value={summary?.cancelled || 0}
           icon={XCircle}
+          tone="red"
           isActive={statusFilter === "CANCELLED"}
           onClick={() => setStatusFilter("CANCELLED")}
         />
@@ -298,71 +307,99 @@ export default function AdminInterviewsPage() {
               interview.status !== "COMPLETED" &&
               interview.status !== "CANCELLED";
 
+            const MethodIcon = getMethodIcon(interview.interviewMethod);
+
+            const companyName =
+              interview.vacancy?.companyName ||
+              interview.provider?.companyName;
+
             return (
               <article
                 key={interview.interviewId}
-                className="flex min-w-0 flex-col rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900"
+                className="flex min-w-0 flex-col rounded-lg border border-zinc-200 bg-white p-4 shadow-sm"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="truncate text-base font-semibold text-zinc-950 dark:text-white">
+                {/* Candidate + status */}
+
+                <div className="flex items-start gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-50 text-sm font-semibold text-emerald-700"
+                  >
+                    {getInitials(interview.candidate?.name)}
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-base font-semibold leading-snug text-zinc-950">
                       {interview.candidate?.name || "-"}
                     </h3>
 
-                    <p className="mt-0.5 truncate text-sm text-zinc-600 dark:text-zinc-300">
+                    <p className="mt-0.5 truncate text-sm text-zinc-600">
                       {interview.vacancy?.title || "-"}
                     </p>
 
-                    <p
-                      title={interview.interviewId}
-                      className="mt-0.5 truncate text-xs text-zinc-400 dark:text-zinc-500"
-                    >
-                      {shortId(interview.interviewId)}
-                    </p>
+                    {companyName && (
+                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-500">
+                        <Building2 className="h-3.5 w-3.5 shrink-0" />
+
+                        <span className="truncate">{companyName}</span>
+                      </p>
+                    )}
                   </div>
 
                   <InterviewStatusBadge status={interview.status} lang={lang} />
                 </div>
 
-                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5 rounded-md bg-zinc-50 p-3 dark:bg-white/5">
-                  <CardField
-                    label={lang === "ja" ? "企業" : "Company"}
-                    value={
-                      interview.vacancy?.companyName ||
-                      interview.provider?.companyName
-                    }
-                  />
+                {/* Schedule */}
 
-                  <CardField
-                    label={lang === "ja" ? "方法" : "Method"}
-                    value={getMethodLabel(interview.interviewMethod, lang)}
-                  />
+                <dl className="mt-3 flex flex-wrap gap-2 text-sm font-medium">
+                  <div className="inline-flex items-center gap-1.5 rounded-md bg-sky-50 px-2.5 py-1 text-sky-800">
+                    <dt className="sr-only">
+                      {lang === "ja" ? "面接日" : "Date"}
+                    </dt>
 
-                  <CardField
-                    label={lang === "ja" ? "面接日" : "Date"}
-                    value={formatDate(interview.interviewDate, lang)}
-                  />
+                    <CalendarDays
+                      aria-hidden="true"
+                      className="h-4 w-4 shrink-0 text-sky-500"
+                    />
 
-                  <CardField
-                    label={lang === "ja" ? "時間" : "Time"}
-                    value={
-                      interview.timezone
+                    <dd>{formatDate(interview.interviewDate, lang)}</dd>
+                  </div>
+
+                  <div className="inline-flex items-center gap-1.5 rounded-md bg-violet-50 px-2.5 py-1 text-violet-800">
+                    <dt className="sr-only">
+                      {lang === "ja" ? "時間" : "Time"}
+                    </dt>
+
+                    <Clock
+                      aria-hidden="true"
+                      className="h-4 w-4 shrink-0 text-violet-500"
+                    />
+
+                    <dd>
+                      {interview.timezone
                         ? `${interview.interviewTime} (${interview.timezone})`
-                        : interview.interviewTime
-                    }
-                  />
+                        : interview.interviewTime || "-"}
+                    </dd>
+                  </div>
 
-                  <CardField
-                    label={lang === "ja" ? "応募ID" : "Application"}
-                    value={shortId(interview.applicationId)}
-                    title={interview.applicationId}
-                  />
+                  <div className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2.5 py-1 text-emerald-800">
+                    <dt className="sr-only">
+                      {lang === "ja" ? "方法" : "Method"}
+                    </dt>
+
+                    <MethodIcon
+                      aria-hidden="true"
+                      className="h-4 w-4 shrink-0 text-emerald-500"
+                    />
+
+                    <dd>{getMethodLabel(interview.interviewMethod, lang)}</dd>
+                  </div>
                 </dl>
 
                 {interview.status === "AWAITING_LINK" && (
                   <div
                     role="status"
-                    className="mt-3 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300"
+                    className="mt-3 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700"
                   >
                     <Link2 className="h-3.5 w-3.5 shrink-0" />
 
@@ -372,28 +409,48 @@ export default function AdminInterviewsPage() {
                   </div>
                 )}
 
-                <div className="mt-auto flex flex-wrap justify-end gap-2 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => openDetails(interview.interviewId)}
-                    className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-zinc-200 px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 sm:flex-none ${focusRing}`}
-                  >
-                    <Eye className="h-4 w-4" />
+                {/* Footer: references + actions */}
 
-                    {lang === "ja" ? "詳細" : "View Details"}
-                  </button>
+                <div className="mt-auto pt-3">
+                  <div className="flex flex-col gap-2 border-t border-zinc-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="min-w-0 truncate text-xs text-zinc-400">
+                      <span title={interview.interviewId}>
+                        {lang === "ja" ? "面接" : "Interview"}{" "}
+                        {shortId(interview.interviewId)}
+                      </span>
 
-                  {canEdit && (
-                    <button
-                      type="button"
-                      onClick={() => openEdit(interview)}
-                      className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white transition hover:bg-emerald-700 sm:flex-none ${focusRing}`}
-                    >
-                      <Pencil className="h-4 w-4" />
+                      <span aria-hidden="true"> · </span>
 
-                      {lang === "ja" ? "編集" : "Edit"}
-                    </button>
-                  )}
+                      <span title={interview.applicationId}>
+                        {lang === "ja" ? "応募" : "Application"}{" "}
+                        {shortId(interview.applicationId)}
+                      </span>
+                    </p>
+
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openDetails(interview.interviewId)}
+                        className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-zinc-200 px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 sm:flex-none ${focusRing}`}
+                      >
+                        <Eye className="h-4 w-4" />
+
+                        {lang === "ja" ? "詳細" : "View Details"}
+                      </button>
+
+                      {canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => openEdit(interview)}
+                          className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white transition hover:bg-emerald-700 sm:flex-none ${focusRing}`}
+                        >
+                          <Pencil className="h-4 w-4" />
+
+                          {lang === "ja" ? "編集" : "Edit"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </article>
             );
@@ -429,10 +486,42 @@ export default function AdminInterviewsPage() {
 // SUMMARY CARD
 // ======================================================
 
+type Tone = "violet" | "amber" | "emerald" | "blue" | "red";
+
+// Colors match the status badges so cards and badges read as one set.
+const toneClasses: Record<Tone, { card: string; border: string; icon: string }> = {
+  violet: {
+    card: "bg-violet-50/70",
+    border: "border-violet-100",
+    icon: "bg-violet-100 text-violet-700",
+  },
+  amber: {
+    card: "bg-amber-50/70",
+    border: "border-amber-100",
+    icon: "bg-amber-100 text-amber-700",
+  },
+  emerald: {
+    card: "bg-emerald-50/70",
+    border: "border-emerald-100",
+    icon: "bg-emerald-100 text-emerald-700",
+  },
+  blue: {
+    card: "bg-blue-50/70",
+    border: "border-blue-100",
+    icon: "bg-blue-100 text-blue-700",
+  },
+  red: {
+    card: "bg-red-50/70",
+    border: "border-red-100",
+    icon: "bg-red-100 text-red-700",
+  },
+};
+
 function SummaryCard({
   label,
   value,
   icon: Icon,
+  tone,
   isActive,
   onClick,
 }: {
@@ -441,65 +530,41 @@ function SummaryCard({
   icon: ComponentType<{
     className?: string;
   }>;
+  tone: Tone;
   isActive: boolean;
   onClick: () => void;
 }) {
+  const classes = toneClasses[tone];
+
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={isActive}
-      className={`min-w-0 cursor-pointer rounded-lg border bg-white p-3 text-left shadow-sm transition hover:border-emerald-500/50 hover:shadow-md dark:bg-zinc-900 ${focusRing} ${
+      className={`min-w-0 cursor-pointer rounded-lg border p-3 text-left shadow-sm transition hover:shadow-md ${classes.card} ${focusRing} ${
         isActive
           ? "border-emerald-500 ring-2 ring-emerald-500/20"
-          : "border-zinc-200 dark:border-white/10"
+          : `${classes.border} hover:border-emerald-500/50`
       }`}
     >
       <div className="flex items-center gap-3">
-        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400">
+        <div
+          className={`grid h-9 w-9 shrink-0 place-items-center rounded-md ${classes.icon}`}
+        >
           <Icon className="h-4 w-4" />
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <p className="truncate text-xs font-medium text-zinc-600">
             {label}
           </p>
 
-          <p className="mt-0.5 text-xl font-semibold leading-tight text-zinc-950 dark:text-white">
+          <p className="mt-0.5 text-xl font-semibold leading-tight text-zinc-950">
             {value}
           </p>
         </div>
       </div>
     </button>
-  );
-}
-
-// ======================================================
-// CARD FIELD
-// ======================================================
-
-function CardField({
-  label,
-  value,
-  title,
-}: {
-  label: string;
-  value?: string | null;
-  title?: string;
-}) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-        {label}
-      </dt>
-
-      <dd
-        title={title}
-        className="mt-0.5 break-words text-sm font-medium text-zinc-900 dark:text-zinc-100"
-      >
-        {value || "-"}
-      </dd>
-    </div>
   );
 }
 
@@ -583,6 +648,45 @@ function getMethodLabel(method: AdminInterviewMethod, lang: string) {
     default:
       return lang === "ja" ? "その他" : "Other";
   }
+}
+
+function getMethodIcon(
+  method: AdminInterviewMethod,
+): ComponentType<{ className?: string }> {
+  switch (method) {
+    case "ZOOM":
+    case "GOOGLE_MEET":
+      return Video;
+
+    case "PHONE":
+      return Phone;
+
+    case "FACE_TO_FACE":
+      return MapPin;
+
+    default:
+      return Link2;
+  }
+}
+
+// ======================================================
+// CANDIDATE
+// ======================================================
+
+function getInitials(name?: string | null) {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) {
+    return "?";
+  }
+
+  if (parts.length === 1) {
+    return Array.from(parts[0]).slice(0, 2).join("").toUpperCase();
+  }
+
+  return (
+    Array.from(parts[0])[0] + Array.from(parts[parts.length - 1])[0]
+  ).toUpperCase();
 }
 
 // ======================================================
