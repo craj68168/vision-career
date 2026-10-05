@@ -6,9 +6,16 @@ import axios from "axios";
 
 import toast from "react-hot-toast";
 
+import { useTranslations } from "next-intl";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getStaffVacancies, screenStaffVacancy } from "./api";
+import {
+  approveStaffVacancy,
+  getStaffVacancies,
+  rejectStaffVacancy,
+  screenStaffVacancy,
+} from "./api";
 
 import type {
   ApiErrorResponse,
@@ -29,6 +36,8 @@ const VACANCY_QUERY_KEY = ["staff-vacancies"] as const;
 // ======================================================
 
 export const useStaffVacancies = () => {
+  const t = useTranslations("staffVacancies");
+
   const queryClient = useQueryClient();
 
   // ==================================================
@@ -57,6 +66,10 @@ export const useStaffVacancies = () => {
     null,
   );
 
+  const [decisionVacancy, setDecisionVacancy] = useState<StaffVacancy | null>(
+    null,
+  );
+
   // ==================================================
   // QUERY
   // ==================================================
@@ -71,12 +84,58 @@ export const useStaffVacancies = () => {
   // ERROR HELPER
   // ==================================================
 
-  const getErrorMessage = (error: unknown) => {
-    if (axios.isAxiosError<ApiErrorResponse>(error)) {
-      return error.response?.data?.message || "Something went wrong.";
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (!axios.isAxiosError<ApiErrorResponse>(error)) {
+      return fallback;
     }
 
-    return "Something went wrong.";
+    if (!error.response) {
+      return t("messages.network");
+    }
+
+    switch (error.response.status) {
+      case 400:
+      case 422:
+        return t("messages.invalid");
+
+      case 401:
+        return t("messages.unauthorized");
+
+      case 403:
+        return t("messages.forbidden");
+
+      case 404:
+        return t("messages.notFound");
+
+      case 409:
+        return t("messages.conflict");
+
+      case 429:
+        return t("messages.rateLimit");
+
+      default:
+        return error.response.status >= 500 ? t("messages.server") : fallback;
+    }
+  };
+
+  // ==================================================
+  // INVALIDATE
+  // ==================================================
+
+  const invalidateRelated = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: VACANCY_QUERY_KEY,
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["staff-dashboard"],
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["admin-vacancies"],
+      }),
+    ]);
   };
 
   // ==================================================
@@ -94,7 +153,7 @@ export const useStaffVacancies = () => {
     }) => screenStaffVacancy(vacancyId, payload),
 
     onSuccess: async (response) => {
-      toast.success(response.message || "Vacancy screening saved.");
+      toast.success(t("messages.screeningSaved"));
 
       setScreeningVacancy(null);
 
@@ -106,21 +165,77 @@ export const useStaffVacancies = () => {
         return response.data;
       });
 
-      await queryClient.invalidateQueries({
-        queryKey: VACANCY_QUERY_KEY,
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["staff-dashboard"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["admin-vacancies"],
-      });
+      await invalidateRelated();
     },
 
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error));
+      toast.error(getErrorMessage(error, t("messages.screeningFailed")));
+    },
+  });
+
+  // ==================================================
+  // APPROVE
+  // ==================================================
+
+  const approveMutation = useMutation({
+    mutationFn: approveStaffVacancy,
+
+    onSuccess: async (response) => {
+      toast.success(t("messages.approved"));
+
+      setDecisionVacancy(null);
+
+      setSelectedVacancy((current) => {
+        if (!current || current.vacancyId !== response.data.vacancyId) {
+          return current;
+        }
+
+        return response.data;
+      });
+
+      await invalidateRelated();
+    },
+
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, t("messages.approvalFailed")));
+    },
+  });
+
+  // ==================================================
+  // REJECT
+  // ==================================================
+
+  const rejectMutation = useMutation({
+    mutationFn: ({
+      vacancyId,
+      reason,
+    }: {
+      vacancyId: string;
+
+      reason: string;
+    }) =>
+      rejectStaffVacancy(vacancyId, {
+        reason,
+      }),
+
+    onSuccess: async (response) => {
+      toast.success(t("messages.rejected"));
+
+      setDecisionVacancy(null);
+
+      setSelectedVacancy((current) => {
+        if (!current || current.vacancyId !== response.data.vacancyId) {
+          return current;
+        }
+
+        return response.data;
+      });
+
+      await invalidateRelated();
+    },
+
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, t("messages.rejectionFailed")));
     },
   });
 
@@ -157,21 +272,13 @@ export const useStaffVacancies = () => {
 
       const searchable = [
         vacancy.vacancyId,
-
         vacancy.companyName,
-
         vacancy.title,
-
         vacancy.employmentType,
-
         vacancy.workLocation,
-
         vacancy.japaneseLevel,
-
         vacancy.status,
-
         vacancy.staffScreening.status,
-
         vacancy.staffScreening.note,
       ]
         .filter(Boolean)
@@ -193,6 +300,17 @@ export const useStaffVacancies = () => {
     screeningMutation.mutate({
       vacancyId,
       payload,
+    });
+  };
+
+  const approveVacancy = (vacancyId: string) => {
+    approveMutation.mutate(vacancyId);
+  };
+
+  const rejectVacancy = (vacancyId: string, reason: string) => {
+    rejectMutation.mutate({
+      vacancyId,
+      reason,
     });
   };
 
@@ -220,13 +338,24 @@ export const useStaffVacancies = () => {
     screeningVacancy,
     setScreeningVacancy,
 
+    decisionVacancy,
+    setDecisionVacancy,
+
     isLoading: vacancyQuery.isLoading,
 
     isFetching: vacancyQuery.isFetching,
 
     isScreening: screeningMutation.isPending,
 
+    isApproving: approveMutation.isPending,
+
+    isRejecting: rejectMutation.isPending,
+
     submitScreening,
+
+    approveVacancy,
+
+    rejectVacancy,
 
     refresh,
   };

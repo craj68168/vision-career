@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import {
   AlertTriangle,
   BriefcaseBusiness,
@@ -8,14 +10,14 @@ import {
   X,
 } from "lucide-react";
 
+import { useLocale, useTranslations } from "next-intl";
+
 import {
   formatDate,
   formatDateTime,
   formatSalary,
   getScreeningClass,
-  getScreeningLabel,
   getVacancyStatusClass,
-  getVacancyStatusLabel,
 } from "./helper";
 
 import type { StaffVacancy } from "./types";
@@ -25,26 +27,43 @@ type Props = {
 
   canReview: boolean;
 
+  canApprove: boolean;
+
   onClose: () => void;
 
   onScreen: (vacancy: StaffVacancy) => void;
+
+  onDecision: (vacancy: StaffVacancy) => void;
 };
 
 export default function VacancyDetails({
   vacancy,
   canReview,
+  canApprove,
   onClose,
   onScreen,
+  onDecision,
 }: Props) {
+  const t = useTranslations("staffVacancies");
+
+  const locale = useLocale();
+
   if (!vacancy) {
     return null;
   }
 
   const canScreen = canReview && vacancy.status === "pending_review";
 
+  const canDecide = canApprove && vacancy.status === "pending_review";
+
   return (
-    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/50 p-4">
-      <button type="button" className="absolute inset-0" onClick={onClose} />
+    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+      <button
+        type="button"
+        className="absolute inset-0"
+        onClick={onClose}
+        aria-label={t("details.close")}
+      />
 
       <div className="relative z-10 max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
         {/* HEADER */}
@@ -60,7 +79,12 @@ export default function VacancyDetails({
             <p className="mt-1 text-sm text-slate-500">{vacancy.companyName}</p>
           </div>
 
-          <button type="button" onClick={onClose}>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("details.close")}
+            className="rounded-full p-2 hover:bg-slate-100"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -74,7 +98,7 @@ export default function VacancyDetails({
                 vacancy.status,
               )}`}
             >
-              {getVacancyStatusLabel(vacancy.status)}
+              {t(`statuses.${vacancy.status}`)}
             </span>
 
             <span
@@ -82,7 +106,7 @@ export default function VacancyDetails({
                 vacancy.staffScreening.status,
               )}`}
             >
-              {getScreeningLabel(vacancy.staffScreening.status)}
+              {t(`screeningStatuses.${vacancy.staffScreening.status}`)}
             </span>
           </div>
 
@@ -92,33 +116,50 @@ export default function VacancyDetails({
             <div className="flex items-center gap-2">
               <BriefcaseBusiness className="h-5 w-5 text-indigo-600" />
 
-              <h3 className="font-semibold">Vacancy Information</h3>
+              <h3 className="font-semibold">
+                {t("details.vacancyInformation")}
+              </h3>
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <Info label="Company" value={vacancy.companyName} />
-
-              <Info label="Employment Type" value={vacancy.employmentType} />
-
-              <Info label="Positions" value={vacancy.numberOfPeople} />
-
-              <Info label="Japanese Level" value={vacancy.japaneseLevel} />
-
-              <Info label="Remote Work" value={vacancy.remoteWork} />
+              <Info label={t("details.company")} value={vacancy.companyName} />
 
               <Info
-                label="Salary"
+                label={t("details.employmentType")}
+                value={vacancy.employmentType}
+              />
+
+              <Info
+                label={t("details.positions")}
+                value={vacancy.numberOfPeople}
+              />
+
+              <Info
+                label={t("details.japaneseLevel")}
+                value={vacancy.japaneseLevel}
+              />
+
+              <Info
+                label={t("details.remoteWork")}
+                value={vacancy.remoteWork}
+              />
+
+              <Info
+                label={t("details.salary")}
                 value={formatSalary(vacancy.salaryMin, vacancy.salaryMax)}
               />
 
               <Info
-                label="Application Deadline"
-                value={formatDate(vacancy.applicationDeadline)}
+                label={t("details.applicationDeadline")}
+                value={formatDate(vacancy.applicationDeadline, locale)}
               />
 
-              <Info label="Start Date" value={vacancy.startDate} />
+              <Info label={t("details.startDate")} value={vacancy.startDate} />
 
-              <Info label="Created" value={formatDate(vacancy.createdAt)} />
+              <Info
+                label={t("details.created")}
+                value={formatDate(vacancy.createdAt, locale)}
+              />
             </div>
           </section>
 
@@ -128,87 +169,101 @@ export default function VacancyDetails({
             <div className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-indigo-600" />
 
-              <h3 className="font-semibold">Work Location</h3>
+              <h3 className="font-semibold">{t("details.workLocation")}</h3>
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <Info label="Location" value={vacancy.workLocation} />
+              <Info
+                label={t("details.location")}
+                value={vacancy.workLocation}
+              />
 
               <Info
-                label="Location Detail"
+                label={t("details.locationDetail")}
                 value={vacancy.workLocationDetail}
               />
             </div>
           </section>
 
-          {/* JOB DESCRIPTION */}
-
-          <TextSection title="Job Description" value={vacancy.jobDescription} />
+          <TextSection
+            title={t("details.jobDescription")}
+            value={vacancy.jobDescription}
+          />
 
           <TextSection
-            title="Responsibilities"
+            title={t("details.responsibilities")}
             value={vacancy.responsibilities}
           />
 
-          <TextSection title="Required Skills" value={vacancy.requiredSkills} />
+          <TextSection
+            title={t("details.requiredSkills")}
+            value={vacancy.requiredSkills}
+          />
 
           <TextSection
-            title="Preferred Skills"
+            title={t("details.preferredSkills")}
             value={vacancy.preferredSkills}
           />
 
           <TextSection
-            title="Required Education"
+            title={t("details.requiredEducation")}
             value={vacancy.requiredEducation}
           />
 
           <TextSection
-            title="Required Experience"
+            title={t("details.requiredExperience")}
             value={vacancy.requiredExperience}
           />
 
           {/* CONDITIONS */}
 
           <section className="rounded-2xl border border-slate-200 p-5">
-            <h3 className="font-semibold">Work Conditions</h3>
+            <h3 className="font-semibold">{t("details.workConditions")}</h3>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <Info label="Work Hours" value={vacancy.workHours} />
+              <Info label={t("details.workHours")} value={vacancy.workHours} />
 
-              <Info label="Break Time" value={vacancy.breakTime} />
+              <Info label={t("details.breakTime")} value={vacancy.breakTime} />
 
-              <Info label="Overtime" value={vacancy.overtime} />
+              <Info label={t("details.overtime")} value={vacancy.overtime} />
 
-              <Info label="Holidays" value={vacancy.holidays} />
+              <Info label={t("details.holidays")} value={vacancy.holidays} />
 
-              <Info label="Trial Period" value={vacancy.trialPeriod} />
+              <Info
+                label={t("details.trialPeriod")}
+                value={vacancy.trialPeriod}
+              />
 
-              <Info label="Salary Note" value={vacancy.salaryNote} />
+              <Info
+                label={t("details.salaryNote")}
+                value={vacancy.salaryNote}
+              />
             </div>
           </section>
 
-          {/* BENEFITS */}
+          <TagSection title={t("details.benefits")} values={vacancy.benefits} />
 
-          <TagSection title="Benefits" values={vacancy.benefits} />
-
-          <TagSection title="Insurance" values={vacancy.insurance} />
+          <TagSection
+            title={t("details.insurance")}
+            values={vacancy.insurance}
+          />
 
           <TextSection
-            title="Selection Process"
+            title={t("details.selectionProcess")}
             value={vacancy.selectionProcess}
           />
 
           {/* STAFF SCREENING */}
 
           <section className="rounded-2xl border border-slate-200 p-5">
-            <h3 className="font-semibold">Staff Screening</h3>
+            <h3 className="font-semibold">{t("details.staffScreening")}</h3>
 
             {vacancy.staffScreening.status === "NOT_SCREENED" && (
               <div className="mt-4 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
                 <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
 
                 <p className="text-sm text-amber-700">
-                  This vacancy has not been screened yet.
+                  {t("details.notScreenedNotice")}
                 </p>
               </div>
             )}
@@ -218,7 +273,7 @@ export default function VacancyDetails({
                 <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
 
                 <p className="text-sm text-emerald-700">
-                  Staff screening has been completed.
+                  {t("details.screenedNotice")}
                 </p>
               </div>
             )}
@@ -228,7 +283,7 @@ export default function VacancyDetails({
                 <AlertTriangle className="h-5 w-5 shrink-0 text-red-600" />
 
                 <p className="text-sm text-red-700">
-                  This vacancy requires additional Admin attention.
+                  {t("details.needsAttentionNotice")}
                 </p>
               </div>
             )}
@@ -236,13 +291,16 @@ export default function VacancyDetails({
             {vacancy.staffScreening.status !== "NOT_SCREENED" && (
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Info
-                  label="Screened By"
+                  label={t("details.screenedBy")}
                   value={vacancy.staffScreening.screenedByStaffId}
                 />
 
                 <Info
-                  label="Screened At"
-                  value={formatDateTime(vacancy.staffScreening.screenedAt)}
+                  label={t("details.screenedAt")}
+                  value={formatDateTime(
+                    vacancy.staffScreening.screenedAt,
+                    locale,
+                  )}
                 />
               </div>
             )}
@@ -250,7 +308,7 @@ export default function VacancyDetails({
             {vacancy.staffScreening.note && (
               <div className="mt-3 rounded-xl bg-slate-50 p-4">
                 <p className="text-xs font-semibold uppercase text-slate-500">
-                  Screening Note
+                  {t("details.screeningNote")}
                 </p>
 
                 <p className="mt-2 whitespace-pre-wrap text-sm">
@@ -258,14 +316,18 @@ export default function VacancyDetails({
                 </p>
               </div>
             )}
+
+            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
+              {t("details.permissionNotice")}
+            </div>
           </section>
 
-          {/* OLD ADMIN REJECTION */}
+          {/* REJECTION */}
 
           {vacancy.rejectionReason && (
             <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
               <p className="font-semibold text-red-700">
-                Admin Rejection Reason
+                {t("details.rejectionReason")}
               </p>
 
               <p className="mt-2 whitespace-pre-wrap text-sm text-red-700">
@@ -277,13 +339,13 @@ export default function VacancyDetails({
 
         {/* FOOTER */}
 
-        <div className="flex justify-end gap-3 border-t border-slate-200 p-6">
+        <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 p-6">
           <button
             type="button"
             onClick={onClose}
             className="rounded-xl border border-slate-200 px-5 py-2.5"
           >
-            Close
+            {t("details.close")}
           </button>
 
           {canScreen && (
@@ -293,8 +355,18 @@ export default function VacancyDetails({
               className="rounded-xl bg-slate-950 px-5 py-2.5 font-semibold text-white"
             >
               {vacancy.staffScreening.status === "NOT_SCREENED"
-                ? "Screen Vacancy"
-                : "Edit Screening"}
+                ? t("actions.screen")
+                : t("actions.editScreening")}
+            </button>
+          )}
+
+          {canDecide && (
+            <button
+              type="button"
+              onClick={() => onDecision(vacancy)}
+              className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white hover:bg-emerald-700"
+            >
+              {t("actions.decide")}
             </button>
           )}
         </div>
