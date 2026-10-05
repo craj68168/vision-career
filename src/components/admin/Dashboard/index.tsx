@@ -61,10 +61,10 @@ const focusRing = `
 `;
 
 const metricToneClasses: Record<MetricTone, string> = {
-  emerald: "bg-emerald-50 text-emerald-700",
-  blue: "bg-sky-50 text-sky-700",
-  violet: "bg-violet-50 text-violet-700",
-  amber: "bg-amber-50 text-amber-700",
+  emerald: "bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
+  blue: "bg-sky-50 text-sky-700 dark:bg-sky-400/10 dark:text-sky-300",
+  violet: "bg-violet-50 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300",
+  amber: "bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300",
 };
 
 // ======================================================
@@ -181,18 +181,18 @@ const getVacancyStatusClass = (
   status: AdminDashboardRecentVacancy["status"],
 ) => {
   if (status === "published") {
-    return "bg-emerald-50 text-emerald-700";
+    return "bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300";
   }
 
   if (status === "pending_review") {
-    return "bg-amber-50 text-amber-700";
+    return "bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300";
   }
 
   if (status === "rejected") {
-    return "bg-red-50 text-red-700";
+    return "bg-red-50 text-red-700 dark:bg-red-400/10 dark:text-red-300";
   }
 
-  return "bg-zinc-100 text-zinc-600";
+  return "bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-300";
 };
 
 // ======================================================
@@ -260,6 +260,8 @@ function StatCard({
         bg-white p-3
         text-left shadow-sm
 
+        dark:border-zinc-800 dark:bg-zinc-900
+
         sm:p-4
 
         ${
@@ -283,6 +285,8 @@ function StatCard({
             min-w-0 break-words
             text-xs font-medium leading-snug
             text-zinc-500
+
+            dark:text-zinc-400
 
             sm:text-sm
           "
@@ -310,6 +314,8 @@ function StatCard({
           text-xl font-semibold leading-tight
           tracking-tight text-zinc-950
 
+          dark:text-zinc-50
+
           sm:text-2xl
         "
       >
@@ -320,6 +326,8 @@ function StatCard({
         className="
           mt-1
           text-xs leading-snug text-zinc-500
+
+          dark:text-zinc-400
         "
       >
         {subtitle}
@@ -361,8 +369,8 @@ function AttentionCard({
 
         ${
           needsAttention
-            ? "border-amber-200 bg-amber-50/80"
-            : "border-zinc-200 bg-white"
+            ? "border-amber-200 bg-amber-50/80 dark:border-amber-400/20 dark:bg-amber-400/10"
+            : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
         }
 
         ${
@@ -379,6 +387,8 @@ function AttentionCard({
         className={`
           grid h-9 w-9 shrink-0 place-items-center
           rounded-md bg-white
+
+          dark:bg-zinc-800
 
           sm:h-10 sm:w-10
 
@@ -400,6 +410,8 @@ function AttentionCard({
             break-words
             text-sm font-semibold leading-snug
             text-zinc-900
+
+            dark:text-zinc-100
           "
         >
           {title}
@@ -409,6 +421,8 @@ function AttentionCard({
           className="
             mt-0.5
             text-xs leading-snug text-zinc-500
+
+            dark:text-zinc-400
           "
         >
           {description}
@@ -420,6 +434,9 @@ function AttentionCard({
           shrink-0
           text-xl font-semibold tracking-tight
           text-zinc-950
+          dark:text-zinc-50
+
+          dark:text-zinc-50
 
           sm:text-2xl
         "
@@ -632,6 +649,7 @@ export default function AdminDashboard({
               mt-4
               text-base font-semibold leading-relaxed
               text-red-900
+              dark:text-red-300
 
               sm:text-lg
             "
@@ -645,6 +663,7 @@ export default function AdminDashboard({
             className="
               mt-2
               text-sm leading-relaxed text-red-700
+              dark:text-red-200
             "
           >
             {lang === "ja"
@@ -736,7 +755,7 @@ export default function AdminDashboard({
       value: summary.vacancies.total,
       subtitle: (
         <>
-          <span className="font-semibold text-emerald-700">
+          <span className="font-semibold text-emerald-700 dark:text-emerald-300">
             {formatNumber(summary.vacancies.published, lang)}
           </span>{" "}
           {lang === "ja" ? "公開中" : "published"}
@@ -810,6 +829,7 @@ export default function AdminDashboard({
             className="
               mt-1
               text-sm leading-relaxed text-zinc-500
+              dark:text-zinc-400
             "
           >
             {lang === "ja"
@@ -831,9 +851,12 @@ export default function AdminDashboard({
             text-sm font-medium text-zinc-700
             shadow-sm transition
 
+            dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200
+
             sm:self-center
 
             hover:bg-zinc-100
+            dark:hover:bg-zinc-800
 
             disabled:cursor-not-allowed disabled:opacity-50
 
@@ -868,6 +891,7 @@ export default function AdminDashboard({
             border border-amber-200
             bg-amber-50 px-4 py-3
             text-sm text-amber-800
+            dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200
           "
         >
           <AlertCircle className="h-4 w-4 shrink-0" />
@@ -917,12 +941,13 @@ export default function AdminDashboard({
             id="needs-attention-heading"
             className="
               text-sm font-semibold text-zinc-950
+              dark:text-zinc-50
             "
           >
             {lang === "ja" ? "要対応" : "Needs attention"}
           </h3>
 
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
             {lang === "ja" ? "優先する対応" : "Your next priorities"}
           </p>
         </div>
@@ -987,12 +1012,13 @@ export default function AdminDashboard({
             id="overview-heading"
             className="
               text-sm font-semibold text-zinc-950
+              dark:text-zinc-50
             "
           >
             {lang === "ja" ? "採用の概要" : "Recruitment overview"}
           </h3>
 
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
             {lang === "ja" ? "現在の集計" : "Current totals"}
           </p>
         </div>
@@ -1054,6 +1080,8 @@ export default function AdminDashboard({
                   className="
                     text-sm font-semibold text-zinc-950
 
+                    dark:text-zinc-50
+
                     sm:text-base
                   "
                 >
@@ -1067,6 +1095,7 @@ export default function AdminDashboard({
                     rounded-md bg-zinc-100
                     px-2 py-0.5
                     text-xs font-medium text-zinc-500
+                    dark:bg-white/10 dark:text-zinc-300
                   "
                 >
                   {formatNumber(pendingAdminApplications, lang)}
@@ -1077,6 +1106,7 @@ export default function AdminDashboard({
                 className="
                   mt-0.5
                   text-xs leading-relaxed text-zinc-500
+                  dark:text-zinc-400
                 "
               >
                 {lang === "ja"
@@ -1098,9 +1128,12 @@ export default function AdminDashboard({
                   text-xs font-semibold text-emerald-700
                   transition
 
+                  dark:text-emerald-300
+
                   sm:text-sm
 
                   hover:text-emerald-800
+                  dark:hover:text-emerald-200
 
                   ${focusRing}
                 `}
@@ -1116,6 +1149,7 @@ export default function AdminDashboard({
             className="
               divide-y divide-zinc-200
               border-y border-zinc-200
+              dark:divide-zinc-800 dark:border-zinc-800
             "
           >
             {pendingApplications.length === 0 ? (
@@ -1135,6 +1169,7 @@ export default function AdminDashboard({
                   className="
                     mt-2
                     text-sm leading-relaxed text-zinc-500
+                    dark:text-zinc-400
                   "
                 >
                   {lang === "ja"
@@ -1199,6 +1234,7 @@ export default function AdminDashboard({
                                 break-words
                                 text-sm font-semibold leading-snug
                                 text-zinc-950
+                                dark:text-zinc-50
                               "
                             >
                               {application.candidateName}
@@ -1209,6 +1245,7 @@ export default function AdminDashboard({
                                 mt-0.5 break-words
                                 text-xs font-medium leading-snug
                                 text-zinc-600
+                                dark:text-zinc-300
 
                                 sm:text-sm
                               "
@@ -1220,6 +1257,7 @@ export default function AdminDashboard({
                               className="
                                 mt-0.5 break-words
                                 text-xs leading-snug text-zinc-500
+                                dark:text-zinc-400
                               "
                             >
                               {application.companyName}
@@ -1243,8 +1281,8 @@ export default function AdminDashboard({
 
                                   ${
                                     isOverdue
-                                      ? "bg-red-50 text-red-700"
-                                      : "bg-amber-50 text-amber-700"
+                                      ? "bg-red-50 text-red-700 dark:bg-red-400/10 dark:text-red-300"
+                                      : "bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300"
                                   }
                                 `}
                               >
@@ -1254,7 +1292,7 @@ export default function AdminDashboard({
                               </span>
                             )}
 
-                            <span className="text-xs text-zinc-500">
+                            <span className="text-xs text-zinc-500 dark:text-zinc-400">
                               {formatDate(application.appliedAt, lang)}
                             </span>
                           </div>
@@ -1265,6 +1303,7 @@ export default function AdminDashboard({
                           className="
                             mt-1 truncate
                             text-[11px] text-zinc-400
+                            dark:text-zinc-500
                           "
                         >
                           {shortId(application.applicationId)}
@@ -1301,6 +1340,8 @@ export default function AdminDashboard({
                   className="
                     text-sm font-semibold text-zinc-950
 
+                    dark:text-zinc-50
+
                     sm:text-base
                   "
                 >
@@ -1314,6 +1355,7 @@ export default function AdminDashboard({
                     rounded-md bg-zinc-100
                     px-2 py-0.5
                     text-xs font-medium text-zinc-500
+                    dark:bg-white/10 dark:text-zinc-300
                   "
                 >
                   {formatNumber(summary.vacancies.total, lang)}
@@ -1324,6 +1366,7 @@ export default function AdminDashboard({
                 className="
                   mt-0.5
                   text-xs leading-relaxed text-zinc-500
+                  dark:text-zinc-400
                 "
               >
                 {lang === "ja"
@@ -1345,9 +1388,12 @@ export default function AdminDashboard({
                   text-xs font-semibold text-emerald-700
                   transition
 
+                  dark:text-emerald-300
+
                   sm:text-sm
 
                   hover:text-emerald-800
+                  dark:hover:text-emerald-200
 
                   ${focusRing}
                 `}
@@ -1363,6 +1409,7 @@ export default function AdminDashboard({
             className="
               divide-y divide-zinc-200
               border-y border-zinc-200
+              dark:divide-zinc-800 dark:border-zinc-800
             "
           >
             {recent.vacancies.length === 0 ? (
@@ -1370,12 +1417,14 @@ export default function AdminDashboard({
                 className="
                   px-4 py-8
                   text-center text-sm text-zinc-500
+                  dark:text-zinc-400
                 "
               >
                 <Briefcase
                   className="
                     mx-auto mb-2 h-8 w-8
                     text-zinc-400
+                    dark:text-zinc-500
                   "
                 />
 
@@ -1402,6 +1451,8 @@ export default function AdminDashboard({
                         rounded-md border border-zinc-200
                         bg-white
                         text-xs font-semibold text-zinc-600
+                        dark:border-zinc-700 dark:bg-zinc-900
+                        dark:text-zinc-300
 
                         sm:h-9 sm:w-9
                       "
@@ -1424,6 +1475,7 @@ export default function AdminDashboard({
                               break-words
                               text-sm font-semibold leading-snug
                               text-zinc-950
+                              dark:text-zinc-50
                             "
                           >
                             {vacancy.title}
@@ -1434,6 +1486,7 @@ export default function AdminDashboard({
                               mt-0.5 break-words
                               text-xs font-medium leading-snug
                               text-zinc-600
+                              dark:text-zinc-300
 
                               sm:text-sm
                             "
@@ -1445,6 +1498,7 @@ export default function AdminDashboard({
                             className="
                               mt-0.5 break-words
                               text-xs leading-snug text-zinc-500
+                              dark:text-zinc-400
                             "
                           >
                             {vacancy.workLocation}
@@ -1475,7 +1529,7 @@ export default function AdminDashboard({
                             {getVacancyStatusLabel(vacancy.status, lang)}
                           </span>
 
-                          <span className="text-xs text-zinc-500">
+                          <span className="text-xs text-zinc-500 dark:text-zinc-400">
                             {formatDate(vacancy.createdAt, lang)}
                           </span>
                         </div>
@@ -1486,6 +1540,7 @@ export default function AdminDashboard({
                         className="
                           mt-1 truncate
                           text-[11px] text-zinc-400
+                          dark:text-zinc-500
                         "
                       >
                         {shortId(vacancy.vacancyId)}

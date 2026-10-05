@@ -1,15 +1,8 @@
 "use client";
 
-import type {
-  Dispatch,
-  KeyboardEvent as ReactKeyboardEvent,
-  RefObject,
-  SetStateAction,
-} from "react";
+import { ChevronRight, Menu, Moon, Sun } from "lucide-react";
 
-import { ChevronRight, Menu, Search } from "lucide-react";
-
-import type { TabConfig, TabGroup } from "./index";
+import type { TabConfig } from "./index";
 
 interface AdminHeaderProps {
   lang: string;
@@ -21,33 +14,14 @@ interface AdminHeaderProps {
   isMobileMenuOpen: boolean;
 
   focusRing: string;
-
-  searchQuery: string;
-  searchActiveIndex: number;
-  showSearchResults: boolean;
-
-  searchResults: {
-    tab: TabConfig;
-    group: TabGroup;
-  }[];
-
-  searchInputRef: RefObject<HTMLInputElement | null>;
-
-  setSearchQuery: Dispatch<SetStateAction<string>>;
-  setSearchActiveIndex: Dispatch<SetStateAction<number>>;
-  setIsSearchOpen: Dispatch<SetStateAction<boolean>>;
+  isDarkMode: boolean;
 
   toggleSidebar: () => void;
+  toggleDarkMode: () => void;
 
   getTabLabel: (tab: TabConfig) => string;
-  getGroupLabel: (group: TabGroup) => string;
 
   handleLangChange: (targetLang: "en" | "ja") => void;
-  handleSearchSelect: (tabId: string) => void;
-
-  handleSearchKeyDown: (
-    event: ReactKeyboardEvent<HTMLInputElement>,
-  ) => void;
 }
 
 export default function AdminHeader({
@@ -57,33 +31,24 @@ export default function AdminHeader({
   isSidebarCollapsed,
   isMobileMenuOpen,
   focusRing,
-  searchQuery,
-  searchActiveIndex,
-  showSearchResults,
-  searchResults,
-  searchInputRef,
-  setSearchQuery,
-  setSearchActiveIndex,
-  setIsSearchOpen,
+  isDarkMode,
   toggleSidebar,
+  toggleDarkMode,
   getTabLabel,
-  getGroupLabel,
   handleLangChange,
-  handleSearchSelect,
-  handleSearchKeyDown,
 }: AdminHeaderProps) {
   const ActiveTabIcon = activeTabConfig.icon;
 
   return (
-    <>
-      {/* Paste the complete header JSX here. */}
-              <header
-          className="
-            sticky top-0 z-30
-            border-b border-zinc-200
-            bg-zinc-50/85 backdrop-blur-xl
-          "
-        >
+    <header
+      className="
+        sticky top-0 z-30
+        border-b border-zinc-200
+        bg-zinc-50/85 backdrop-blur-xl
+
+        dark:border-zinc-800 dark:bg-zinc-950/85
+      "
+    >
           <div
             className="
               flex min-h-16 flex-wrap items-center
@@ -182,152 +147,40 @@ export default function AdminHeader({
               </div>
             </div>
 
-            {/* Search: full row below xl, inline from xl */}
-            <div
-              className="
-                relative order-last w-full
+            {/* Theme control */}
+            <button
+              type="button"
+              onClick={toggleDarkMode}
+              aria-label={
+                lang === "ja"
+                  ? isDarkMode
+                    ? "ライトモードに切り替え"
+                    : "ダークモードに切り替え"
+                  : isDarkMode
+                    ? "Switch to light mode"
+                    : "Switch to dark mode"
+              }
+              aria-pressed={isDarkMode}
+              className={`
+                grid h-11 w-11 shrink-0 place-items-center
+                cursor-pointer rounded-lg
+                border border-zinc-200 bg-white
+                text-zinc-700 transition
 
-                xl:order-none xl:w-64 xl:shrink-0
-              "
+                hover:bg-zinc-100
+
+                dark:border-zinc-700 dark:bg-zinc-900
+                dark:text-zinc-200 dark:hover:bg-zinc-800
+
+                ${focusRing}
+              `}
             >
-              <label
-                className="
-                  flex h-11 w-full items-center
-                  gap-2 rounded-lg
-                  border border-zinc-200 bg-white
-                  px-3 text-zinc-500
-
-                  focus-within:border-emerald-500
-                  focus-within:ring-2
-                  focus-within:ring-emerald-500/20
-                "
-              >
-                <Search
-                  className="
-                    h-4 w-4 shrink-0
-
-                    sm:h-5 sm:w-5
-                  "
-                />
-
-                <input
-                  ref={searchInputRef}
-                  type="search"
-                  role="combobox"
-                  autoComplete="off"
-                  value={searchQuery}
-                  onChange={(event) => {
-                    setSearchQuery(event.target.value);
-                    setSearchActiveIndex(0);
-                    setIsSearchOpen(true);
-                  }}
-                  onFocus={() => setIsSearchOpen(true)}
-                  onBlur={() => setIsSearchOpen(false)}
-                  onKeyDown={handleSearchKeyDown}
-                  aria-label={lang === "ja" ? "管理画面を検索" : "Search admin"}
-                  aria-expanded={showSearchResults}
-                  aria-controls="admin-search-results"
-                  aria-autocomplete="list"
-                  aria-activedescendant={
-                    showSearchResults && searchResults[searchActiveIndex]
-                      ? `admin-search-option-${searchResults[searchActiveIndex].tab.id}`
-                      : undefined
-                  }
-                  placeholder={lang === "ja" ? "管理画面を検索" : "Search admin"}
-                  className="
-                    min-w-0 flex-1
-                    bg-transparent
-                    text-base text-zinc-900
-                    outline-none
-                    placeholder:text-zinc-400
-                  "
-                />
-              </label>
-
-              {showSearchResults ? (
-                <ul
-                  id="admin-search-results"
-                  role="listbox"
-                  className="
-                    absolute inset-x-0 top-full z-50 mt-2
-                    max-h-72 overflow-y-auto overscroll-contain
-                    rounded-lg border border-zinc-200
-                    bg-white p-1
-                    shadow-xl shadow-zinc-950/5
-                  "
-                >
-                  {searchResults.length === 0 ? (
-                    <li
-                      role="presentation"
-                      className="
-                        px-3 py-3
-                        text-sm text-zinc-500
-                      "
-                    >
-                      {lang === "ja" ? "該当なし" : "No results"}
-                    </li>
-                  ) : (
-                    searchResults.map(({ tab, group }, index) => {
-                      const Icon = tab.icon;
-
-                      return (
-                        <li
-                          key={tab.id}
-                          id={`admin-search-option-${tab.id}`}
-                          role="option"
-                          aria-selected={index === searchActiveIndex}
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => handleSearchSelect(tab.id)}
-                          onMouseEnter={() => setSearchActiveIndex(index)}
-                          className={`
-                            flex min-h-11 w-full items-center
-                            gap-3 rounded-md px-3 py-2
-                            cursor-pointer
-                            text-left text-sm
-
-                            ${
-                              index === searchActiveIndex
-                                ? `
-                                    bg-zinc-100 text-zinc-950
-                                  `
-                                : `
-                                    text-zinc-600
-                                  `
-                            }
-                          `}
-                        >
-                          <Icon
-                            className="
-                              h-4 w-4 shrink-0
-
-                              sm:h-5 sm:w-5
-                            "
-                          />
-
-                          <span
-                            className="
-                              min-w-0 flex-1
-                              truncate font-medium
-                            "
-                          >
-                            {getTabLabel(tab)}
-                          </span>
-
-                          <span
-                            className="
-                              shrink-0
-                              text-xs text-zinc-400
-                            "
-                          >
-                            {getGroupLabel(group)}
-                          </span>
-                        </li>
-                      );
-                    })
-                  )}
-                </ul>
-              ) : null}
-            </div>
+              {isDarkMode ? (
+                <Sun className="h-4 w-4 sm:h-5 sm:w-5" />
+              ) : (
+                <Moon className="h-4 w-4 sm:h-5 sm:w-5" />
+              )}
+            </button>
 
             {/* Language controls */}
             <div
@@ -337,6 +190,8 @@ export default function AdminHeader({
                 flex shrink-0 items-center
                 rounded-lg border border-zinc-200
                 bg-white p-1
+
+                dark:border-zinc-700 dark:bg-zinc-900
               "
             >
               <button
@@ -362,6 +217,8 @@ export default function AdminHeader({
                           text-zinc-500
 
                           hover:bg-zinc-100
+
+                          dark:text-zinc-400 dark:hover:bg-zinc-800
                         `
                   }
                 `}
@@ -392,6 +249,8 @@ export default function AdminHeader({
                           text-zinc-500
 
                           hover:bg-zinc-100
+
+                          dark:text-zinc-400 dark:hover:bg-zinc-800
                         `
                   }
                 `}
@@ -400,7 +259,6 @@ export default function AdminHeader({
               </button>
             </div>
           </div>
-        </header>
-    </>
+    </header>
   );
 }

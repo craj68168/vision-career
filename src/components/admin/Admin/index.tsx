@@ -81,6 +81,7 @@ const focusRing = `
   focus-visible:ring-emerald-500
   focus-visible:ring-offset-2
   focus-visible:ring-offset-white
+  dark:focus-visible:ring-offset-zinc-950
 `;
 
 export default function AdminPage() {
@@ -98,6 +99,11 @@ export default function AdminPage() {
   const [isAllowed, setIsAllowed] = useState(false);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      localStorage.getItem("admin-theme") === "dark",
+  );
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     () =>
@@ -180,6 +186,14 @@ export default function AdminPage() {
     }
 
     setIsMobileMenuOpen((previous) => !previous);
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode((previous) => {
+      const next = !previous;
+      localStorage.setItem("admin-theme", next ? "dark" : "light");
+      return next;
+    });
   };
 
   // ======================================================
@@ -578,13 +592,17 @@ export default function AdminPage() {
   return (
     <div
       translate="no"
-      className="
+      className={`
         min-h-dvh w-full min-w-0
-        bg-zinc-50
-        text-sm text-zinc-950
-
+        text-sm
         sm:text-base
-      "
+
+        ${
+          isDarkMode
+            ? "dark bg-zinc-950 text-zinc-50"
+            : "bg-zinc-50 text-zinc-950"
+        }
+      `}
     >
       {/* Main page layout */}
       <div
@@ -613,20 +631,11 @@ export default function AdminPage() {
           isSidebarCollapsed={isSidebarCollapsed}
           isMobileMenuOpen={isMobileMenuOpen}
           focusRing={focusRing}
-          searchQuery={searchQuery}
-          searchActiveIndex={searchActiveIndex}
-          showSearchResults={showSearchResults}
-          searchResults={searchResults}
-          searchInputRef={searchInputRef}
-          setSearchQuery={setSearchQuery}
-          setSearchActiveIndex={setSearchActiveIndex}
-          setIsSearchOpen={setIsSearchOpen}
+          isDarkMode={isDarkMode}
           toggleSidebar={toggleSidebar}
+          toggleDarkMode={toggleDarkMode}
           getTabLabel={getTabLabel}
-          getGroupLabel={getGroupLabel}
           handleLangChange={handleLangChange}
-          handleSearchSelect={handleSearchSelect}
-          handleSearchKeyDown={handleSearchKeyDown}
         />
 
         {/* Sidebar */}
@@ -671,6 +680,8 @@ export default function AdminPage() {
           className="
             border-t border-zinc-200
             bg-white
+
+            dark:border-zinc-800 dark:bg-zinc-950
           "
         >
           <div
@@ -678,6 +689,8 @@ export default function AdminPage() {
               px-3 py-4
               text-center text-xs leading-relaxed
               text-zinc-500
+
+              dark:text-zinc-400
 
               sm:px-6
 
