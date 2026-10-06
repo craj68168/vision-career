@@ -1,4 +1,922 @@
 {
+  "staffPlacementBillings": {
+    "title": "人材紹介請求",
+    "description": "採用・就業が決まった候補者の人材紹介請求を確認・管理します。",
+    "refresh": "更新",
+
+    "permissionDenied": "人材紹介請求を閲覧する権限がありません。",
+    "viewOnlyNotice": "このアカウントは請求情報の閲覧のみ可能です。請求内容の作成・編集、請求書の発行、入金確認を行うには「請求管理：作成・発行・入金確認」権限が必要です。",
+
+    "summary": {
+      "total": "合計",
+      "draft": "下書き",
+      "issued": "発行済み",
+      "paid": "入金済み",
+      "partialRefund": "一部返金",
+      "refunded": "返金済み",
+      "cancelled": "取消済み",
+      "totalBilled": "請求総額",
+      "netPaid": "返金後入金額",
+      "refundedTotal": "返金総額",
+      "outstanding": "未入金額"
+    },
+
+    "searchPlaceholder": "請求番号、企業名、候補者名、職種で検索...",
+
+    "allStatuses": "すべてのステータス",
+
+    "filters": {
+      "allStatuses": "すべてのステータス"
+    },
+
+    "statuses": {
+      "draft": "下書き",
+      "issued": "発行済み",
+      "paid": "入金済み",
+      "partially_refunded": "一部返金",
+      "refunded": "返金済み",
+      "cancelled": "取消済み"
+    },
+
+    "table": {
+      "billing": "請求",
+      "company": "企業",
+      "candidate": "候補者",
+      "position": "職種",
+      "total": "合計金額",
+      "netPaid": "返金後入金額",
+      "status": "ステータス",
+      "dueDate": "支払期限",
+      "actions": "操作"
+    },
+
+    "actions": {
+      "view": "詳細",
+      "edit": "編集",
+      "issue": "発行",
+      "markPaid": "入金確認"
+    },
+
+    "loading": "人材紹介請求を読み込み中...",
+    "empty": "人材紹介請求が見つかりません。",
+
+    "details": {
+      "loading": "請求情報を読み込み中...",
+      "eyebrow": "人材紹介請求",
+      "close": "閉じる",
+
+      "placement": "紹介・就業情報",
+      "candidate": "候補者",
+      "position": "職種",
+      "recruitId": "紹介依頼ID",
+      "candidateId": "候補者ID",
+      "providerId": "企業ID",
+      "placementDate": "就業日",
+
+      "billing": "請求情報",
+      "placementFee": "人材紹介手数料",
+      "taxWithRate": "消費税（{rate}%）",
+      "totalAmount": "請求合計",
+      "dueDate": "支払期限",
+
+      "payment": "入金情報",
+      "paid": "入金額",
+      "refunded": "返金額",
+      "netPaid": "返金後入金額",
+
+      "billingNotes": "請求メモ",
+      "cancellationReason": "取消理由",
+
+      "refundHistory": "返金履歴",
+      "noRefunds": "返金履歴はありません。",
+
+      "auditHistory": "操作履歴",
+      "noAuditHistory": "操作履歴はありません。"
+    },
+
+    "editModal": {
+      "eyebrow": "スタッフ請求管理",
+      "title": "下書き請求を編集",
+
+      "company": "企業",
+      "candidate": "候補者",
+
+      "placementFee": "人材紹介手数料",
+      "taxRate": "消費税率（%）",
+      "dueDate": "支払期限",
+      "notes": "メモ",
+
+      "subtotal": "小計",
+      "tax": "消費税",
+      "total": "合計",
+
+      "cancel": "キャンセル",
+      "saving": "保存中...",
+      "save": "請求内容を保存"
+    },
+
+    "issueModal": {
+      "eyebrow": "請求書発行",
+      "title": "人材紹介請求を発行",
+      "close": "閉じる",
+
+      "description": "請求書を発行する前に、請求内容をご確認ください。",
+
+      "company": "企業",
+      "candidate": "候補者",
+
+      "total": "請求合計",
+      "totalAmount": "請求合計額",
+
+      "dueDate": "支払期限",
+
+      "invoiceTitle": "請求書情報が作成・確定されます",
+      "invoiceNotice": "請求を発行すると、顧客向けの請求書番号が作成され、この請求書の発行元、請求先、銀行振込先情報が確定されます。",
+
+      "permissionNotice": "請求の発行は「請求管理：作成・発行・入金確認」権限を持つスタッフのみ実行できる会計操作です。",
+
+      "warning": "請求を発行すると、顧客向け請求書が作成され、この請求書に使用する発行者情報、請求先情報、振込先情報が確定・保存されます。",
+
+      "invalidTitle": "この請求はまだ発行できません",
+      "feeRequired": "請求を発行する前に人材紹介手数料を設定してください。",
+      "dueDateRequired": "請求を発行する前に支払期限を設定してください。",
+
+      "cancel": "キャンセル",
+      "issuing": "発行中...",
+      "confirm": "請求書を発行"
+    },
+
+    "paidModal": {
+      "eyebrow": "入金確認",
+      "title": "入金を確認",
+      "close": "閉じる",
+
+      "description": "この請求の全額が入金されていることを確認してください。",
+
+      "company": "企業",
+      "candidate": "候補者",
+      "billingId": "請求ID",
+      "invoiceNumber": "請求書番号",
+
+      "total": "入金確認金額",
+      "totalAmount": "請求合計額",
+
+      "paymentTitle": "全額入金を確認",
+      "paymentNotice": "この操作を実行すると、請求金額の全額を入金済みとして記録し、請求ステータスを「入金済み」に変更します。",
+
+      "permissionNotice": "銀行振込などの入金を実際に確認した後でのみ、この操作を実行してください。",
+
+      "warning": "この操作を行うと、この請求は全額入金済みとして記録されます。銀行振込または入金を確認してから実行してください。",
+
+      "cancel": "キャンセル",
+      "saving": "確認中...",
+      "confirm": "入金を確認"
+    },
+
+    "auditActions": {
+      "CREATED": "作成",
+      "UPDATED": "更新",
+      "ISSUED": "発行",
+      "MARKED_PAID": "入金確認",
+      "CANCELLED": "取消",
+      "REFUND_PROCESSED": "返金処理"
+    },
+
+    "actorTypes": {
+      "system": "システム",
+      "admin": "管理者",
+      "staff": "スタッフ"
+    },
+
+    "messages": {
+      "network": "サーバーに接続できません。接続状況をご確認のうえ、もう一度お試しください。",
+      "invalid": "処理できませんでした。入力内容をご確認ください。",
+      "unauthorized": "セッションの有効期限が切れました。再度ログインしてください。",
+      "forbidden": "この請求操作を行う権限がありません。",
+      "notFound": "指定された人材紹介請求が見つかりません。",
+      "conflict": "請求ステータスが変更されているため、この操作を実行できません。",
+      "rateLimit": "リクエストが多すぎます。しばらくしてからお試しください。",
+      "server": "サーバーエラーが発生しました。しばらくしてからお試しください。",
+
+      "updated": "人材紹介請求を更新しました。",
+      "updateFailed": "人材紹介請求を更新できませんでした。",
+
+      "issued": "人材紹介請求書を発行しました。",
+      "issueFailed": "人材紹介請求書を発行できませんでした。",
+
+      "paid": "人材紹介請求を入金済みにしました。",
+      "paidFailed": "人材紹介請求を入金済みにできませんでした。",
+
+      "loadFailed": "人材紹介請求を読み込めませんでした。"
+    }
+  },
+  "staffPlacementCandidates": {
+    "title": "紹介候補者",
+    "description": "管理者がマッチングした候補者を確認し、企業側の選考状況を把握します。",
+    "refresh": "更新",
+    "summary": {
+      "totalCandidates": "候補者合計",
+      "notReviewed": "未確認",
+      "reviewed": "確認済み",
+      "needsAttention": "要確認",
+      "interview": "面接",
+      "placed": "就業済み"
+    },
+    "searchPlaceholder": "候補者、企業、人材紹介依頼、職種で検索...",
+    "filters": {
+      "allPipelineStatuses": "すべての選考状況",
+      "allStaffReviews": "すべてのスタッフ確認状況"
+    },
+    "candidateStatuses": {
+      "MATCHED": "企業へ紹介済み",
+      "UNDER_REVIEW": "企業にて選考中",
+      "INTERVIEW": "面接",
+      "SELECTED": "選考通過",
+      "PLACED": "就業済み",
+      "REJECTED": "不採用"
+    },
+    "reviewStatuses": {
+      "NOT_REVIEWED": "未確認",
+      "REVIEWED": "確認済み",
+      "NEEDS_ATTENTION": "要確認"
+    },
+    "table": {
+      "candidate": "候補者",
+      "company": "企業",
+      "placementRequest": "人材紹介依頼",
+      "pipeline": "選考状況",
+      "staffReview": "スタッフ確認",
+      "japanese": "日本語",
+      "visa": "在留資格",
+      "actions": "操作"
+    },
+    "loading": "候補者情報を読み込み中...",
+    "empty": "紹介候補者が見つかりません。",
+    "actions": {
+      "view": "詳細",
+      "review": "確認",
+      "reviewCandidate": "候補者を確認",
+      "editReview": "確認内容を編集"
+    },
+    "details": {
+      "close": "閉じる",
+      "seekerId": "求職者ID：{id}",
+      "placementRequest": "人材紹介依頼",
+      "company": "企業",
+      "job": "職種",
+      "location": "勤務地",
+      "recruitId": "依頼ID",
+      "positions": "募集人数",
+      "matchedByAdmin": "マッチング担当管理者",
+      "candidateProfile": "候補者プロフィール",
+      "nationality": "国籍",
+      "currentLocation": "現在地",
+      "visaType": "在留資格",
+      "visaExpiry": "在留期限",
+      "japaneseLevel": "日本語能力",
+      "desiredJob": "希望職種",
+      "desiredLocation": "希望勤務地",
+      "matchedAt": "紹介日時",
+      "skills": "スキル",
+      "education": "学歴",
+      "employmentHistory": "職歴",
+      "present": "現在",
+      "providerPipeline": "企業選考状況",
+      "providerReview": "企業確認",
+      "interview": "面接",
+      "selected": "選考通過",
+      "placed": "就業",
+      "providerRejectionReason": "企業による不採用理由",
+      "staffReview": "スタッフ確認",
+      "notReviewedMessage": "この候補者はまだスタッフによる確認が行われていません。",
+      "reviewedMessage": "スタッフによる候補者確認が完了しています。",
+      "needsAttentionMessage": "スタッフがこの候補者を要確認としています。",
+      "reviewedBy": "確認担当スタッフ",
+      "reviewedAt": "確認日時",
+      "staffReviewNote": "スタッフ確認メモ",
+      "operationalNotice": "スタッフ確認は内部業務上の確認です。面接、選考、就業、不採用などの候補者選考状況は企業側が管理します。",
+      "noInformation": "情報がありません。"
+    },
+    "reviewModal": {
+      "eyebrow": "スタッフ候補者確認",
+      "close": "閉じる",
+      "editNotice": "既存のスタッフ確認内容を編集しています。",
+      "reviewed": "確認済み",
+      "reviewedDescription": "候補者情報を確認し、現時点で特に対応が必要な問題はありません。",
+      "needsAttention": "要確認",
+      "needsAttentionDescription": "候補者または紹介情報について内部で追加確認が必要です。",
+      "note": "スタッフ確認メモ",
+      "notePlaceholder": "スタッフ確認内容を入力してください...",
+      "noteRequired": "確認が必要な内容を入力してください。",
+      "noteTooLong": "スタッフ確認メモは2000文字以内で入力してください。",
+      "pipelineNotice": "このスタッフ確認によって企業側の候補者選考状況は変更されません。面接、選考、就業、不採用は企業側の操作です。",
+      "cancel": "キャンセル",
+      "saving": "保存中...",
+      "save": "確認内容を保存"
+    },
+    "messages": {
+      "network": "サーバーに接続できません。接続状況をご確認のうえ、もう一度お試しください。",
+      "invalid": "処理できませんでした。入力内容をご確認ください。",
+      "unauthorized": "セッションの有効期限が切れました。再度ログインしてください。",
+      "forbidden": "紹介候補者を管理する権限がありません。",
+      "notFound": "指定された紹介候補者が見つかりません。",
+      "conflict": "候補者の状態が変更されているため、この操作を実行できません。",
+      "rateLimit": "リクエストが多すぎます。しばらくしてからお試しください。",
+      "server": "サーバーエラーが発生しました。しばらくしてからお試しください。",
+      "reviewSaved": "候補者のスタッフ確認内容を保存しました。",
+      "attentionSaved": "候補者を要確認として保存しました。",
+      "reviewFailed": "候補者のスタッフ確認内容を保存できませんでした。",
+      "loadFailed": "紹介候補者を読み込めませんでした。"
+    }
+  },
+  "staffPlacementRequests": {
+    "title": "人材紹介依頼",
+    "description": "企業からの人材紹介依頼を確認し、権限に応じて審査・承認を行います。",
+    "refresh": "更新",
+    "total": "合計",
+    "pending": "審査待ち",
+    "notScreened": "未確認",
+    "screened": "確認済み",
+    "needsAttention": "要確認",
+    "approved": "承認済み",
+    "rejected": "却下",
+    "searchPlaceholder": "依頼ID、企業名、職種で検索...",
+    "allRequestStatuses": "すべてのステータス",
+    "allScreening": "すべてのスクリーニング",
+    "request": "依頼",
+    "company": "企業",
+    "position": "職種",
+    "people": "人数",
+    "location": "勤務地",
+    "status": "ステータス",
+    "screening": "スクリーニング",
+    "actions": "操作",
+    "loading": "人材紹介依頼を読み込み中...",
+    "empty": "人材紹介依頼が見つかりません。",
+    "view": "詳細",
+    "screen": "確認",
+    "editScreening": "確認内容を編集",
+    "reviewDecision": "承認・却下",
+    "close": "閉じる",
+    "screenRequest": "依頼を確認",
+    "providerInformation": "企業情報",
+    "provider": "担当者",
+    "providerEmail": "企業メールアドレス",
+    "jobInformation": "求人情報",
+    "jobTitle": "職種",
+    "category": "カテゴリー",
+    "employmentType": "雇用形態",
+    "positions": "募集人数",
+    "workLocation": "勤務地",
+    "startDate": "勤務開始日",
+    "requirements": "応募条件",
+    "japaneseLevel": "日本語レベル",
+    "visaRequirement": "在留資格条件",
+    "jobDescription": "仕事内容",
+    "workConditions": "労働条件",
+    "salary": "給与",
+    "workingHours": "勤務時間",
+    "daysOff": "休日",
+    "requestTimeline": "依頼履歴",
+    "submittedAt": "申請日時",
+    "reviewedAt": "審査日時",
+    "createdAt": "作成日時",
+    "staffScreening": "スタッフ確認",
+    "screenedBy": "確認担当者",
+    "screenedAt": "確認日時",
+    "staffScreeningNote": "スタッフ確認メモ",
+    "notScreenedMessage": "この人材紹介依頼はまだスタッフによる確認が行われていません。",
+    "screenedMessage": "スタッフによる確認が完了しています。",
+    "needsAttentionMessage": "スタッフがこの依頼を要確認として設定しています。",
+    "screeningAdvisory": "スクリーニングと最終承認は別の権限です。",
+    "rejectionReason": "却下理由",
+    "screenModal": {
+      "eyebrow": "スタッフ確認",
+      "title": "人材紹介依頼を確認",
+      "screened": "確認済み",
+      "screenedDescription": "依頼内容を確認済みとして登録します。",
+      "needsAttention": "要確認",
+      "needsAttentionDescription": "最終判断前に確認が必要な事項があります。",
+      "note": "確認メモ",
+      "placeholder": "確認内容を入力してください...",
+      "required": "要確認とする理由を入力してください。",
+      "notice": "この操作だけでは依頼の承認・却下は行われません。",
+      "cancel": "キャンセル",
+      "saving": "保存中...",
+      "save": "確認内容を保存"
+    },
+    "decisionModal": {
+      "eyebrow": "人材紹介依頼の最終判断",
+      "title": "人材紹介依頼を承認または却下",
+      "close": "閉じる",
+      "approve": "承認",
+      "approveDescription": "この依頼を承認し、候補者のマッチングを可能にします。",
+      "reject": "却下",
+      "rejectDescription": "この依頼を却下し、企業へ結果を返します。",
+      "rejectionReason": "却下理由",
+      "rejectionPlaceholder": "この依頼を却下する理由を入力してください...",
+      "reasonRequired": "却下理由を入力してください。",
+      "reasonTooLong": "却下理由は1000文字以内で入力してください。",
+      "permissionNotice": "これは人材紹介依頼の最終判断です。スクリーニング権限と承認権限は別々に管理されます。",
+      "cancel": "キャンセル",
+      "saving": "保存中...",
+      "approveRequest": "依頼を承認",
+      "rejectRequest": "依頼を却下"
+    },
+    "messages": {
+      "network": "サーバーに接続できません。接続状況をご確認ください。",
+      "invalid": "リクエストを処理できませんでした。",
+      "unauthorized": "セッションの有効期限が切れました。再度ログインしてください。",
+      "forbidden": "この操作を行う権限がありません。",
+      "notFound": "人材紹介依頼が見つかりません。",
+      "conflict": "現在のステータスではこの操作を実行できません。",
+      "rateLimit": "リクエストが多すぎます。しばらくしてからお試しください。",
+      "server": "サーバーエラーが発生しました。しばらくしてからお試しください。",
+      "screeningSaved": "スクリーニング内容を保存しました。",
+      "screeningFailed": "スクリーニング内容を保存できませんでした。",
+      "approved": "人材紹介依頼を承認しました。",
+      "rejected": "人材紹介依頼を却下しました。",
+      "approvalFailed": "人材紹介依頼を更新できませんでした。"
+    }
+  },
+  "staffVacancies": {
+    "title": "求人",
+    "description": "企業の求人情報、スタッフ確認結果、求人の承認・却下を確認します。",
+    "refresh": "更新",
+    "summary": {
+      "total": "合計",
+      "pendingReview": "審査待ち",
+      "notScreened": "未確認",
+      "screened": "確認済み",
+      "needsAttention": "要確認",
+      "published": "公開中"
+    },
+    "searchPlaceholder": "求人、企業名、勤務地で検索...",
+    "filters": {
+      "allStatuses": "すべての求人ステータス",
+      "allScreening": "すべての確認状況"
+    },
+    "statuses": {
+      "draft": "下書き",
+      "pending_review": "審査待ち",
+      "approved": "承認済み",
+      "rejected": "却下",
+      "published": "公開中",
+      "closed": "終了"
+    },
+    "screeningStatuses": {
+      "NOT_SCREENED": "未確認",
+      "SCREENED": "確認済み",
+      "NEEDS_ATTENTION": "要確認"
+    },
+    "table": {
+      "vacancy": "求人",
+      "company": "企業",
+      "employment": "雇用形態",
+      "location": "勤務地",
+      "status": "ステータス",
+      "screening": "確認状況",
+      "actions": "操作"
+    },
+    "actions": {
+      "view": "詳細",
+      "screen": "確認",
+      "editScreening": "確認内容を編集",
+      "decide": "承認 / 却下"
+    },
+    "loading": "求人を読み込み中...",
+    "empty": "求人が見つかりません。",
+    "viewOnlyNotice": "このスタッフアカウントは求人の閲覧のみ可能です。確認または承認・却下を行うには、管理者による権限の付与が必要です。",
+    "screenModal": {
+      "eyebrow": "スタッフ確認",
+      "title": "求人を確認",
+      "close": "閉じる",
+      "screened": "確認済み",
+      "screenedDescription": "求人情報の確認が完了し、求人の承認判断を行える状態です。",
+      "needsAttention": "要確認",
+      "needsAttentionDescription": "この求人には追加確認が必要な項目があります。",
+      "note": "確認メモ",
+      "notePlaceholder": "確認内容を入力してください...",
+      "noteRequired": "確認が必要な内容を入力してください。",
+      "noteTooLong": "確認メモは2000文字以内で入力してください。",
+      "permissionNotice": "スタッフ確認だけでは求人の承認・却下は行われません。求人の承認・却下には「求人 - 承認 / 却下」権限が必要です。",
+      "cancel": "キャンセル",
+      "saving": "保存中...",
+      "save": "確認内容を保存"
+    },
+    "decisionModal": {
+      "eyebrow": "求人審査",
+      "title": "求人を審査",
+      "close": "閉じる",
+      "approve": "承認",
+      "approveDescription": "この求人を承認します。管理者が公開するまでは求職者には公開されません。",
+      "reject": "却下",
+      "rejectDescription": "この求人を却下し、求職者には公開しません。",
+      "rejectionReason": "却下理由",
+      "rejectionPlaceholder": "求人を却下する理由を入力してください...",
+      "reasonRequired": "却下理由を入力してください。",
+      "reasonTooLong": "却下理由は1000文字以内で入力してください。",
+      "permissionNotice": "このスタッフアカウントには求人を承認・却下する権限があります。求人の公開および終了は管理者のみが行います。",
+      "cancel": "キャンセル",
+      "saving": "保存中...",
+      "approveVacancy": "求人を承認",
+      "rejectVacancy": "求人を却下"
+    },
+    "details": {
+      "close": "閉じる",
+      "vacancyInformation": "求人情報",
+      "company": "企業",
+      "employmentType": "雇用形態",
+      "positions": "募集人数",
+      "japaneseLevel": "日本語レベル",
+      "remoteWork": "リモート勤務",
+      "salary": "給与",
+      "applicationDeadline": "応募期限",
+      "startDate": "勤務開始日",
+      "created": "登録日",
+      "workLocation": "勤務地",
+      "location": "勤務地",
+      "locationDetail": "勤務地詳細",
+      "jobDescription": "仕事内容",
+      "responsibilities": "業務内容",
+      "requiredSkills": "必須スキル",
+      "preferredSkills": "歓迎スキル",
+      "requiredEducation": "必要学歴",
+      "requiredExperience": "必要経験",
+      "workConditions": "勤務条件",
+      "workHours": "勤務時間",
+      "breakTime": "休憩時間",
+      "overtime": "残業",
+      "holidays": "休日",
+      "trialPeriod": "試用期間",
+      "salaryNote": "給与備考",
+      "benefits": "福利厚生",
+      "insurance": "保険",
+      "selectionProcess": "選考方法",
+      "staffScreening": "スタッフ確認",
+      "notScreenedNotice": "この求人はまだスタッフによる確認が行われていません。",
+      "screenedNotice": "スタッフによる求人確認が完了しています。",
+      "needsAttentionNotice": "この求人には追加確認が必要です。",
+      "screenedBy": "確認スタッフ",
+      "screenedAt": "確認日時",
+      "screeningNote": "確認メモ",
+      "permissionNotice": "スタッフ確認と求人の承認・却下は別の操作です。承認・却下には「求人 - 承認 / 却下」権限が必要です。",
+      "rejectionReason": "却下理由"
+    },
+    "messages": {
+      "generic": "エラーが発生しました。もう一度お試しください。",
+      "network": "サーバーに接続できません。接続状況をご確認ください。",
+      "invalid": "処理できませんでした。入力内容をご確認ください。",
+      "unauthorized": "セッションの有効期限が切れました。再度ログインしてください。",
+      "forbidden": "この操作を行う権限がありません。",
+      "notFound": "指定された求人が見つかりません。",
+      "conflict": "求人のステータスが変更されているため、この操作を実行できません。",
+      "rateLimit": "リクエストが多すぎます。しばらくしてからお試しください。",
+      "server": "サーバーエラーが発生しました。しばらくしてからお試しください。",
+      "screeningSaved": "求人の確認内容を保存しました。",
+      "screeningFailed": "求人の確認内容を保存できませんでした。",
+      "approved": "求人を承認しました。",
+      "rejected": "求人を却下しました。",
+      "approvalFailed": "求人の承認に失敗しました。",
+      "rejectionFailed": "求人の却下に失敗しました。"
+    }
+  },
+  "staffApplications": {
+    "title": "応募",
+    "description": "求職者からの応募、スタッフ確認結果、応募の承認・却下を確認します。",
+    "refresh": "更新",
+    "summary": {
+      "total": "合計",
+      "pendingApproval": "承認待ち",
+      "notScreened": "未確認",
+      "screened": "確認済み",
+      "needsAttention": "要確認"
+    },
+    "searchPlaceholder": "求職者、応募ID、求人、企業名で検索...",
+    "japaneseLevelNotSet": "日本語レベル未設定",
+    "filters": {
+      "allStatuses": "すべての応募ステータス",
+      "allScreening": "すべての確認状況"
+    },
+    "statuses": {
+      "PENDING_ADMIN_APPROVAL": "承認待ち",
+      "ADMIN_REJECTED": "企業送信前に却下",
+      "SENT_TO_PROVIDER": "企業へ送信済み",
+      "UNDER_REVIEW": "企業にて選考中",
+      "INTERVIEW": "面接",
+      "SELECTED": "選考通過",
+      "HIRED": "採用",
+      "REJECTED": "企業により不採用"
+    },
+    "screeningStatuses": {
+      "NOT_SCREENED": "未確認",
+      "SCREENED": "確認済み",
+      "NEEDS_ATTENTION": "要確認"
+    },
+    "table": {
+      "application": "応募",
+      "applicant": "求職者",
+      "vacancy": "求人",
+      "company": "企業",
+      "applicationStatus": "応募ステータス",
+      "screening": "確認状況",
+      "actions": "操作"
+    },
+    "actions": {
+      "view": "詳細",
+      "screen": "確認",
+      "editScreening": "確認内容を編集",
+      "decide": "承認 / 却下"
+    },
+    "loading": "応募情報を読み込み中...",
+    "empty": "応募が見つかりません。",
+    "permissions": {
+      "viewOnly": "このスタッフアカウントは応募の閲覧のみ可能です。確認または承認・却下を行うには、それぞれの権限が必要です。",
+      "screenOnly": "このスタッフアカウントでは応募の確認を行えますが、「応募 - 承認 / 却下」権限は付与されていません。",
+      "approvalOnly": "このスタッフアカウントでは応募の承認・却下を行えますが、「応募 - 確認」権限は付与されていません。"
+    },
+    "screenModal": {
+      "eyebrow": "スタッフ確認",
+      "title": "応募を確認",
+      "editTitle": "応募の確認内容を編集",
+      "close": "閉じる",
+      "screened": "確認済み",
+      "screenedDescription": "応募内容の確認が完了し、承認・却下の判断を行える状態です。",
+      "needsAttention": "要確認",
+      "needsAttentionDescription": "この応募には、判断前に追加確認が必要な項目があります。",
+      "note": "確認メモ",
+      "notePlaceholder": "確認内容を入力してください...",
+      "noteRequired": "確認が必要な内容を入力してください。",
+      "noteTooLong": "確認メモは2000文字以内で入力してください。",
+      "permissionNotice": "スタッフ確認だけでは応募の承認・却下は行われません。応募の承認・却下には別途「応募 - 承認 / 却下」権限が必要です。",
+      "cancel": "キャンセル",
+      "saving": "保存中...",
+      "save": "確認内容を保存"
+    },
+    "decisionModal": {
+      "eyebrow": "応募審査",
+      "title": "応募を審査",
+      "close": "閉じる",
+      "approve": "承認",
+      "approveDescription": "この応募を承認し、企業による選考のため応募情報を企業へ送信します。",
+      "reject": "却下",
+      "rejectDescription": "この応募を却下します。応募情報は企業へ送信されません。",
+      "rejectionReason": "却下理由",
+      "rejectionPlaceholder": "この応募を却下する理由を入力してください...",
+      "reasonRequired": "却下理由を入力してください。",
+      "reasonTooLong": "却下理由は2000文字以内で入力してください。",
+      "permissionNotice": "このスタッフアカウントには求職者の応募を承認・却下する権限があります。スタッフ確認と応募の承認・却下は別の権限です。",
+      "cancel": "キャンセル",
+      "saving": "保存中...",
+      "approveApplication": "応募を承認",
+      "rejectApplication": "応募を却下"
+    },
+    "details": {
+      "eyebrow": "応募",
+      "applicantFallback": "応募者",
+      "close": "閉じる",
+      "vacancy": "求人情報",
+      "position": "職種",
+      "company": "企業",
+      "employment": "雇用形態",
+      "location": "勤務地",
+      "requiredJapanese": "必要な日本語レベル",
+      "applied": "応募日",
+      "candidateProfile": "候補者プロフィール",
+      "nationality": "国籍",
+      "visa": "在留資格",
+      "visaExpiry": "在留期限",
+      "japanese": "日本語レベル",
+      "desiredJob": "希望職種",
+      "desiredLocation": "希望勤務地",
+      "skills": "スキル",
+      "noSkills": "スキルは登録されていません。",
+      "education": "学歴",
+      "noEducation": "学歴情報は登録されていません。",
+      "employmentHistory": "職歴",
+      "noEmployment": "職歴情報は登録されていません。",
+      "present": "現在",
+      "professionalResume": "応募時の履歴書",
+      "frozenResume": "応募時に保存された履歴書",
+      "frozenResumeDescription": "応募時点の候補者情報を保存した履歴書です。",
+      "opening": "開いています...",
+      "viewResume": "履歴書を見る",
+      "resumeUnavailable": "履歴書なし",
+      "coverLetter": "応募理由・カバーレター",
+      "staffScreening": "スタッフ確認",
+      "screenedBy": "確認スタッフ",
+      "screenedAt": "確認日時",
+      "screeningNote": "確認メモ",
+      "permissionNotice": "スタッフ確認と応募の承認・却下は別の操作です。「応募 - 承認 / 却下」権限を持つスタッフは、この応募を承認または却下できます。"
+    },
+    "messages": {
+      "generic": "エラーが発生しました。もう一度お試しください。",
+      "network": "サーバーに接続できません。接続状況をご確認ください。",
+      "invalid": "処理できませんでした。入力内容をご確認ください。",
+      "unauthorized": "セッションの有効期限が切れました。再度ログインしてください。",
+      "forbidden": "この操作を行う権限がありません。",
+      "notFound": "指定された応募が見つかりません。",
+      "conflict": "応募ステータスが変更されているため、この操作を実行できません。",
+      "rateLimit": "リクエストが多すぎます。しばらくしてからお試しください。",
+      "server": "サーバーエラーが発生しました。しばらくしてからお試しください。",
+      "screeningSaved": "応募の確認内容を保存しました。",
+      "screeningFailed": "応募の確認内容を保存できませんでした。",
+      "approved": "応募を承認し、企業へ送信しました。",
+      "rejected": "応募を却下しました。",
+      "approvalFailed": "応募の承認に失敗しました。",
+      "rejectionFailed": "応募の却下に失敗しました。",
+      "resumeUnavailable": "この応募には保存された履歴書がありません。",
+      "popupBlocked": "履歴書を開くにはポップアップを許可してください。",
+      "resumeOpenFailed": "応募時の履歴書を開けませんでした。"
+    }
+  },
+  "staffJobSeekers": {
+    "close": "閉じる",
+    "cancel": "キャンセル",
+    "saving": "保存中...",
+    "refresh": "更新",
+    "view": "表示",
+    "download": "ダウンロード",
+    "downloading": "ダウンロード中...",
+
+    "page": {
+      "title": "求職者",
+      "description": "求職者プロフィール、スクリーニング結果、登録審査を確認します。"
+    },
+
+    "summary": {
+      "total": "合計",
+      "pendingApproval": "承認待ち",
+      "notScreened": "未スクリーニング",
+      "screened": "確認済み",
+      "needsAttention": "要確認"
+    },
+
+    "filters": {
+      "search": "求職者、メール、IDを検索...",
+      "allApprovals": "すべての承認状況",
+      "allAccounts": "すべてのアカウント状態",
+      "allPlacement": "すべての配置状況",
+      "allScreening": "すべてのスクリーニング"
+    },
+
+    "statuses": {
+      "approval": {
+        "pending": "承認待ち",
+        "approved": "承認済み",
+        "rejected": "却下"
+      },
+      "account": {
+        "active": "有効",
+        "inactive": "無効",
+        "suspended": "停止"
+      },
+      "placement": {
+        "unplaced": "未配置",
+        "matching": "マッチング中",
+        "interview": "面接中",
+        "selected": "選考済み",
+        "placed": "配置済み"
+      },
+      "screening": {
+        "notScreened": "未確認",
+        "screened": "確認済み",
+        "needsAttention": "要確認"
+      }
+    },
+
+    "table": {
+      "id": "ID",
+      "jobSeeker": "求職者",
+      "approval": "承認",
+      "account": "アカウント",
+      "placement": "配置状況",
+      "screening": "スクリーニング",
+      "applications": "応募数",
+      "actions": "操作",
+      "loading": "求職者を読み込み中...",
+      "empty": "求職者が見つかりません。",
+      "screen": "スクリーニング",
+      "editScreening": "スクリーニング編集",
+      "approveReject": "承認 / 却下"
+    },
+
+    "pagination": {
+      "records": "{count}件",
+      "perPage": "{count}件 / ページ"
+    },
+
+    "permissions": {
+      "viewOnly": "このスタッフアカウントには求職者の閲覧権限のみが付与されています。",
+      "screenOnly": "このスタッフアカウントではスクリーニングを行えますが、登録承認権限は付与されていません。",
+      "approvalOnly": "このスタッフアカウントでは登録の承認・却下を行えますが、スクリーニング権限は付与されていません。"
+    },
+
+    "screeningModal": {
+      "eyebrow": "スタッフスクリーニング",
+      "title": "求職者をスクリーニング",
+      "screened": "確認済み",
+      "screenedDescription": "プロフィールの確認が完了し、登録審査を行える状態です。",
+      "needsAttention": "要確認",
+      "needsAttentionDescription": "この登録には追加確認が必要な項目があります。",
+      "note": "スクリーニングメモ",
+      "notePlaceholder": "確認内容を入力してください...",
+      "noteRequired": "確認が必要な内容を入力してください。",
+      "permissionNotice": "スクリーニング自体では求職者の承認・却下は行われません。登録承認は求職者承認権限によって個別に管理されます。",
+      "saveScreening": "スクリーニングを保存"
+    },
+
+    "approvalModal": {
+      "eyebrow": "登録審査",
+      "title": "求職者を審査",
+      "approve": "承認",
+      "approveDescription": "登録を承認し、アカウントを有効化します。",
+      "reject": "却下",
+      "rejectDescription": "登録を却下し、アカウントを無効のままにします。",
+      "rejectionReason": "却下理由",
+      "rejectionPlaceholder": "登録を却下する理由を入力してください...",
+      "reasonRequired": "却下理由を入力してください。",
+      "reasonTooLong": "却下理由は2000文字以内で入力してください。",
+      "permissionNotice": "この操作は、このスタッフアカウントに求職者承認権限が付与されている場合に利用できます。",
+      "approveSeeker": "求職者を承認",
+      "rejectSeeker": "求職者を却下"
+    },
+
+    "approvalHistory": {
+      "sectionTitle": "登録審査",
+      "currentDecision": "現在の審査結果",
+      "reviewerType": "審査者種別",
+      "reviewer": "審査者",
+      "reviewerId": "審査者ID",
+      "reviewedAt": "審査日時",
+      "reason": "理由",
+      "history": "審査履歴",
+      "noHistory": "登録審査の履歴はまだありません。",
+      "pendingMessage": "この登録は現在、承認審査待ちです。",
+      "admin": "管理者",
+      "staff": "スタッフ"
+    },
+
+    "details": {
+      "jobSeeker": "求職者",
+      "profileInformation": "プロフィール情報",
+      "email": "メール",
+      "phone": "電話番号",
+      "address": "住所",
+      "currentLocation": "現在地",
+      "nationality": "国籍",
+      "dateOfBirth": "生年月日",
+      "visaType": "在留資格",
+      "visaExpiry": "在留期限",
+      "japaneseLevel": "日本語レベル",
+      "desiredJob": "希望職種",
+      "desiredLocation": "希望勤務地",
+      "applications": "応募数",
+      "education": "学歴",
+      "employmentHistory": "職歴",
+      "resume": "履歴書 / CV",
+      "resumeDescription": "求職者が登録した履歴書または自動生成された履歴書",
+      "uploadedResume": "アップロード済み履歴書",
+      "generatedResume": "自動生成履歴書",
+      "noResume": "履歴書が登録されていません。",
+      "additionalDocuments": "追加書類",
+      "additionalDocumentsDescription": "パスポート、在留カード、証明書などの関連書類。",
+      "noAdditionalDocuments": "追加書類は登録されていません。",
+      "skills": "スキル",
+      "currentStatus": "現在の状態",
+      "approval": "承認",
+      "account": "アカウント",
+      "placement": "配置状況",
+      "staffScreening": "スタッフスクリーニング",
+      "notScreenedMessage": "この求職者はまだスタッフによるスクリーニングが行われていません。",
+      "screenedMessage": "スタッフによるスクリーニングが完了し、登録審査を行える状態です。",
+      "needsAttentionMessage": "この登録はスタッフにより追加確認が必要と判断されています。",
+      "screenedBy": "確認スタッフ",
+      "screenedAt": "確認日時",
+      "screeningNote": "スクリーニングメモ",
+      "screeningNotice": "スタッフスクリーニングと登録承認は別の操作です。求職者承認権限を持つスタッフは登録を承認または却下できます。",
+      "downloadResume": "履歴書をダウンロード",
+      "noInformation": "情報がありません。"
+    },
+
+    "messages": {
+      "screeningSaved": "求職者のスクリーニングを保存しました。",
+      "screeningFailed": "スクリーニングの保存に失敗しました。",
+      "approved": "求職者を承認しました。",
+      "rejected": "求職者を却下しました。",
+      "approvalFailed": "求職者の承認状態を更新できませんでした。",
+      "loadFailed": "求職者情報を読み込めませんでした。",
+      "resumeFailed": "履歴書をダウンロードできませんでした。",
+      "network": "サーバーに接続できません。",
+      "invalid": "入力内容を確認してください。",
+      "unauthorized": "セッションの有効期限が切れました。再度ログインしてください。",
+      "forbidden": "この操作を行う権限がありません。",
+      "notFound": "指定された求職者が見つかりません。",
+      "conflict": "求職者の状態が変更されているため、この操作を実行できません。",
+      "rateLimit": "リクエストが多すぎます。しばらくしてから再度お試しください。",
+      "server": "サーバーエラーが発生しました。再度お試しください。"
+    }
+  },
   "jobSeeker": {
     "auth": {
       "portalTitle": "求職者ポータル",
@@ -127,7 +1045,7 @@
       "statusCompleted": "完了",
       "statusCancelled": "キャンセル",
       "applicationStatusPendingAdminApproval": "管理者承認待ち",
-      "applicationStatusAdminRejected": "管理者により却下",
+      "applicationStatusAdminRejected": "応募却下",
       "applicationStatusSentToProvider": "応募情報を企業へ送信済み",
       "applicationStatusUnderReview": "企業にて選考中",
       "applicationStatusInterview": "面接",
@@ -1663,6 +2581,9 @@
     }
   },
   "adminStaff": {
+    "seekers:view": "求職者：閲覧",
+    "seekers:manage": "求職者：スクリーニング",
+    "seekers:approval": "求職者：承認・却下",
     "title": "スタッフ",
     "description": "社内スタッフのアカウント、権限、アカウントの状態を管理します。",
     "refresh": "更新",
@@ -1720,24 +2641,27 @@
       "suspended": "利用停止"
     },
     "permissions": {
+      "placement_requests:approval": "人材紹介依頼：承認・却下",
       "dashboard:view": "ダッシュボード：閲覧",
       "vacancies:view": "求人：閲覧",
-      "vacancies:review": "求人：審査",
+      "vacancies:review": "求人：スクリーニング",
+      "vacancies:approval": "求人：承認・却下",
       "applications:view": "応募：閲覧",
-      "applications:review": "応募：審査",
+      "applications:review": "応募：スクリーニング",
+      "applications:approval": "応募：承認・却下",
+      "interviews:view": "面接：閲覧",
+      "interviews:manage": "面接：管理",
       "providers:view": "企業：閲覧",
       "providers:manage": "企業：管理",
       "seekers:view": "求職者：閲覧",
-      "seekers:manage": "求職者：管理",
+      "seekers:manage": "求職者：スクリーニング",
+      "seekers:approval": "求職者：承認・却下",
       "placement_requests:view": "人材紹介依頼：閲覧",
       "placement_requests:review": "人材紹介依頼：審査",
-      "placement_requests:manage_candidates": "人材紹介依頼：候補者管理",
+      "placement_requests:manage_candidates": "紹介候補者：確認",
       "billing:view": "請求：閲覧",
       "billing:manage": "請求：管理",
-      "training:view": "研修：閲覧",
-      "training:manage": "研修：管理",
-      "interviews:view": "面接：閲覧",
-      "interviews:manage": "面接：管理"
+      "training:manage": "研修：管理"
     },
     "messages": {
       "generic": "エラーが発生しました。もう一度お試しください。",

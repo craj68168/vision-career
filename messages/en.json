@@ -1,4 +1,922 @@
 {
+  "staffPlacementBillings": {
+    "title": "Placement Billings",
+    "description": "View and manage billing generated from successful placements.",
+    "refresh": "Refresh",
+
+    "permissionDenied": "You do not have permission to view placement billings.",
+    "viewOnlyNotice": "Your account has billing view access only. Preparing, issuing and confirming payments requires the Billing - Prepare / Issue / Confirm Payment permission.",
+
+    "summary": {
+      "total": "Total",
+      "draft": "Draft",
+      "issued": "Issued",
+      "paid": "Paid",
+      "partialRefund": "Partial Refund",
+      "refunded": "Refunded",
+      "cancelled": "Cancelled",
+      "totalBilled": "Total Billed",
+      "netPaid": "Net Paid",
+      "refundedTotal": "Refunded",
+      "outstanding": "Outstanding"
+    },
+
+    "searchPlaceholder": "Search billing, company, candidate or position...",
+
+    "allStatuses": "All Statuses",
+
+    "filters": {
+      "allStatuses": "All Statuses"
+    },
+
+    "statuses": {
+      "draft": "Draft",
+      "issued": "Issued",
+      "paid": "Paid",
+      "partially_refunded": "Partially Refunded",
+      "refunded": "Refunded",
+      "cancelled": "Cancelled"
+    },
+
+    "table": {
+      "billing": "Billing",
+      "company": "Company",
+      "candidate": "Candidate",
+      "position": "Position",
+      "total": "Total",
+      "netPaid": "Net Paid",
+      "status": "Status",
+      "dueDate": "Due Date",
+      "actions": "Actions"
+    },
+
+    "actions": {
+      "view": "View",
+      "edit": "Edit",
+      "issue": "Issue",
+      "markPaid": "Mark Paid"
+    },
+
+    "loading": "Loading placement billings...",
+    "empty": "No placement billings found.",
+
+    "details": {
+      "loading": "Loading billing...",
+      "eyebrow": "Placement Billing",
+      "close": "Close",
+
+      "placement": "Placement",
+      "candidate": "Candidate",
+      "position": "Position",
+      "recruitId": "Recruit ID",
+      "candidateId": "Candidate ID",
+      "providerId": "Provider ID",
+      "placementDate": "Placement Date",
+
+      "billing": "Billing",
+      "placementFee": "Placement Fee",
+      "taxWithRate": "Tax ({rate}%)",
+      "totalAmount": "Total Amount",
+      "dueDate": "Due Date",
+
+      "payment": "Payment",
+      "paid": "Paid",
+      "refunded": "Refunded",
+      "netPaid": "Net Paid",
+
+      "billingNotes": "Billing Notes",
+      "cancellationReason": "Cancellation Reason",
+
+      "refundHistory": "Refund History",
+      "noRefunds": "No refunds recorded.",
+
+      "auditHistory": "Audit History",
+      "noAuditHistory": "No audit history recorded."
+    },
+
+    "editModal": {
+      "eyebrow": "Staff Billing",
+      "title": "Edit Draft Billing",
+
+      "company": "Company",
+      "candidate": "Candidate",
+
+      "placementFee": "Placement Fee",
+      "taxRate": "Tax Rate (%)",
+      "dueDate": "Due Date",
+      "notes": "Notes",
+
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "total": "Total",
+
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save Billing"
+    },
+
+    "issueModal": {
+      "eyebrow": "Issue Billing",
+      "title": "Issue Placement Billing",
+      "close": "Close",
+
+      "description": "Review the billing information before issuing the invoice.",
+
+      "company": "Company",
+      "candidate": "Candidate",
+
+      "total": "Total Amount",
+      "totalAmount": "Total Amount",
+
+      "dueDate": "Payment Due Date",
+
+      "invoiceTitle": "Invoice will be created and frozen",
+      "invoiceNotice": "Issuing this billing creates the customer-facing invoice number and freezes the issuer, recipient and bank-transfer information for this invoice.",
+
+      "permissionNotice": "Issuing a billing is a financial action available only to Staff with Billing - Prepare / Issue / Confirm Payment permission.",
+
+      "warning": "Issuing this billing creates the customer-facing invoice and freezes the issuer, recipient and bank-transfer information for this invoice.",
+
+      "invalidTitle": "Billing is not ready to issue",
+      "feeRequired": "Set the placement fee before issuing this billing.",
+      "dueDateRequired": "Set the payment due date before issuing this billing.",
+
+      "cancel": "Cancel",
+      "issuing": "Issuing...",
+      "confirm": "Issue Billing"
+    },
+
+    "paidModal": {
+      "eyebrow": "Payment Confirmation",
+      "title": "Confirm Payment",
+      "close": "Close",
+
+      "description": "Confirm that the full amount for this billing has been received.",
+
+      "company": "Company",
+      "candidate": "Candidate",
+      "billingId": "Billing ID",
+      "invoiceNumber": "Invoice Number",
+
+      "total": "Payment Amount",
+      "totalAmount": "Total Amount",
+
+      "paymentTitle": "Confirm full payment",
+      "paymentNotice": "This action records the full invoice amount as received and changes the billing status to Paid.",
+
+      "permissionNotice": "Only confirm payment after the bank transfer or other approved payment has actually been verified.",
+
+      "warning": "This action records the billing as fully paid. Confirm the bank transfer or payment before continuing.",
+
+      "cancel": "Cancel",
+      "saving": "Confirming...",
+      "confirm": "Confirm Payment"
+    },
+
+    "auditActions": {
+      "CREATED": "Created",
+      "UPDATED": "Updated",
+      "ISSUED": "Issued",
+      "MARKED_PAID": "Marked Paid",
+      "CANCELLED": "Cancelled",
+      "REFUND_PROCESSED": "Refund Processed"
+    },
+
+    "actorTypes": {
+      "system": "System",
+      "admin": "Admin",
+      "staff": "Staff"
+    },
+
+    "messages": {
+      "network": "Unable to connect to the server. Check your connection and try again.",
+      "invalid": "The request could not be processed. Please check the information and try again.",
+      "unauthorized": "Your session has expired. Please sign in again.",
+      "forbidden": "You do not have permission to perform this billing action.",
+      "notFound": "The placement billing could not be found.",
+      "conflict": "This action cannot be performed because the billing status has changed.",
+      "rateLimit": "Too many requests. Please try again later.",
+      "server": "A server error occurred. Please try again later.",
+
+      "updated": "Placement billing updated.",
+      "updateFailed": "Failed to update placement billing.",
+
+      "issued": "Placement billing issued successfully.",
+      "issueFailed": "Failed to issue placement billing.",
+
+      "paid": "Placement billing marked as paid.",
+      "paidFailed": "Failed to mark placement billing as paid.",
+
+      "loadFailed": "Failed to load placement billings."
+    }
+  },
+  "staffPlacementCandidates": {
+    "title": "Placement Candidates",
+    "description": "Review candidates matched by Admin and monitor their Provider hiring progress.",
+    "refresh": "Refresh",
+    "summary": {
+      "totalCandidates": "Total Candidates",
+      "notReviewed": "Not Reviewed",
+      "reviewed": "Reviewed",
+      "needsAttention": "Needs Attention",
+      "interview": "Interview",
+      "placed": "Placed"
+    },
+    "searchPlaceholder": "Search candidate, company, request or job...",
+    "filters": {
+      "allPipelineStatuses": "All Pipeline Statuses",
+      "allStaffReviews": "All Staff Reviews"
+    },
+    "candidateStatuses": {
+      "MATCHED": "Matched",
+      "UNDER_REVIEW": "Under Company Review",
+      "INTERVIEW": "Interview",
+      "SELECTED": "Selected",
+      "PLACED": "Placed",
+      "REJECTED": "Rejected"
+    },
+    "reviewStatuses": {
+      "NOT_REVIEWED": "Not Reviewed",
+      "REVIEWED": "Reviewed",
+      "NEEDS_ATTENTION": "Needs Attention"
+    },
+    "table": {
+      "candidate": "Candidate",
+      "company": "Company",
+      "placementRequest": "Placement Request",
+      "pipeline": "Pipeline",
+      "staffReview": "Staff Review",
+      "japanese": "Japanese",
+      "visa": "Visa",
+      "actions": "Actions"
+    },
+    "loading": "Loading placement candidates...",
+    "empty": "No placement candidates found.",
+    "actions": {
+      "view": "View",
+      "review": "Review",
+      "reviewCandidate": "Review Candidate",
+      "editReview": "Edit Review"
+    },
+    "details": {
+      "close": "Close",
+      "seekerId": "Seeker ID: {id}",
+      "placementRequest": "Placement Request",
+      "company": "Company",
+      "job": "Job",
+      "location": "Location",
+      "recruitId": "Recruit ID",
+      "positions": "Positions",
+      "matchedByAdmin": "Matched By Admin",
+      "candidateProfile": "Candidate Profile",
+      "nationality": "Nationality",
+      "currentLocation": "Current Location",
+      "visaType": "Visa Type",
+      "visaExpiry": "Visa Expiry",
+      "japaneseLevel": "Japanese Level",
+      "desiredJob": "Desired Job",
+      "desiredLocation": "Desired Location",
+      "matchedAt": "Matched At",
+      "skills": "Skills",
+      "education": "Education",
+      "employmentHistory": "Employment History",
+      "present": "Present",
+      "providerPipeline": "Provider Pipeline",
+      "providerReview": "Provider Review",
+      "interview": "Interview",
+      "selected": "Selected",
+      "placed": "Placed",
+      "providerRejectionReason": "Provider Rejection Reason",
+      "staffReview": "Staff Review",
+      "notReviewedMessage": "This candidate has not yet received a Staff operational review.",
+      "reviewedMessage": "Staff candidate review has been completed.",
+      "needsAttentionMessage": "Staff marked this candidate as needing attention.",
+      "reviewedBy": "Reviewed By",
+      "reviewedAt": "Reviewed At",
+      "staffReviewNote": "Staff Review Note",
+      "operationalNotice": "Staff review is operational only. The Provider controls the candidate hiring pipeline.",
+      "noInformation": "No information available."
+    },
+    "reviewModal": {
+      "eyebrow": "Staff Candidate Review",
+      "close": "Close",
+      "editNotice": "You are editing an existing Staff review.",
+      "reviewed": "Reviewed",
+      "reviewedDescription": "Candidate information has been checked and no immediate issue requires attention.",
+      "needsAttention": "Needs Attention",
+      "needsAttentionDescription": "Candidate or placement information requires internal attention.",
+      "note": "Staff Review Note",
+      "notePlaceholder": "Enter Staff review notes...",
+      "noteRequired": "Please explain what requires attention.",
+      "noteTooLong": "The Staff review note cannot exceed 2000 characters.",
+      "pipelineNotice": "This Staff review does not change the Provider's candidate pipeline status. Interview, selection, placement and rejection remain Provider actions.",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save Review"
+    },
+    "messages": {
+      "network": "Unable to connect to the server. Check your connection and try again.",
+      "invalid": "The request could not be processed. Please check the information and try again.",
+      "unauthorized": "Your session has expired. Please sign in again.",
+      "forbidden": "You do not have permission to manage placement candidates.",
+      "notFound": "The placement candidate could not be found.",
+      "conflict": "This action cannot be completed because the candidate state has changed.",
+      "rateLimit": "Too many requests. Please try again later.",
+      "server": "A server error occurred. Please try again later.",
+      "reviewSaved": "Candidate Staff review saved.",
+      "attentionSaved": "Candidate marked as needing attention.",
+      "reviewFailed": "Failed to save the candidate Staff review.",
+      "loadFailed": "Failed to load placement candidates."
+    }
+  },
+  "staffPlacementRequests": {
+    "title": "Placement Requests",
+    "description": "Screen Provider placement requests and make authorized registration decisions.",
+    "refresh": "Refresh",
+    "total": "Total",
+    "pending": "Pending",
+    "notScreened": "Not Screened",
+    "screened": "Screened",
+    "needsAttention": "Needs Attention",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "searchPlaceholder": "Search request, company, job title...",
+    "allRequestStatuses": "All Request Statuses",
+    "allScreening": "All Screening",
+    "request": "Request",
+    "company": "Company",
+    "position": "Position",
+    "people": "People",
+    "location": "Location",
+    "status": "Status",
+    "screening": "Screening",
+    "actions": "Actions",
+    "loading": "Loading placement requests...",
+    "empty": "No placement requests found.",
+    "view": "View",
+    "screen": "Screen",
+    "editScreening": "Edit Screening",
+    "reviewDecision": "Approve / Reject",
+    "close": "Close",
+    "screenRequest": "Screen Request",
+    "providerInformation": "Provider Information",
+    "provider": "Provider",
+    "providerEmail": "Provider Email",
+    "jobInformation": "Job Information",
+    "jobTitle": "Job Title",
+    "category": "Category",
+    "employmentType": "Employment Type",
+    "positions": "Positions",
+    "workLocation": "Work Location",
+    "startDate": "Start Date",
+    "requirements": "Requirements",
+    "japaneseLevel": "Japanese Level",
+    "visaRequirement": "Visa Requirement",
+    "jobDescription": "Job Description",
+    "workConditions": "Work Conditions",
+    "salary": "Salary",
+    "workingHours": "Working Hours",
+    "daysOff": "Days Off",
+    "requestTimeline": "Request Timeline",
+    "submittedAt": "Submitted At",
+    "reviewedAt": "Reviewed At",
+    "createdAt": "Created At",
+    "staffScreening": "Staff Screening",
+    "screenedBy": "Screened By",
+    "screenedAt": "Screened At",
+    "staffScreeningNote": "Staff Screening Note",
+    "notScreenedMessage": "This placement request has not been screened by Staff yet.",
+    "screenedMessage": "Staff screening has been completed.",
+    "needsAttentionMessage": "Staff marked this placement request as needing attention.",
+    "screeningAdvisory": "Screening and final approval are separate permissions.",
+    "rejectionReason": "Rejection Reason",
+    "screenModal": {
+      "eyebrow": "Staff Screening",
+      "title": "Screen Placement Request",
+      "screened": "Screened",
+      "screenedDescription": "The placement request has been checked.",
+      "needsAttention": "Needs Attention",
+      "needsAttentionDescription": "Something should be verified before a final decision.",
+      "note": "Screening Note",
+      "placeholder": "Enter screening notes...",
+      "required": "Please explain what requires attention.",
+      "notice": "Screening does not approve or reject the placement request.",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save Screening"
+    },
+    "decisionModal": {
+      "eyebrow": "Placement Request Decision",
+      "title": "Approve or Reject Placement Request",
+      "close": "Close",
+      "approve": "Approve",
+      "approveDescription": "Approve this placement request and allow candidate matching.",
+      "reject": "Reject",
+      "rejectDescription": "Reject this placement request. The Provider will be informed of the decision and reason.",
+      "rejectionReason": "Rejection Reason",
+      "rejectionPlaceholder": "Explain why this placement request is being rejected...",
+      "reasonRequired": "A rejection reason is required.",
+      "reasonTooLong": "The rejection reason cannot exceed 1000 characters.",
+      "permissionNotice": "This is the final placement-request decision. Screening and approval or rejection are separate Staff permissions.",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "approveRequest": "Approve Request",
+      "rejectRequest": "Reject Request"
+    },
+    "messages": {
+      "network": "Unable to connect to the server. Check your connection.",
+      "invalid": "The request could not be processed.",
+      "unauthorized": "Your session has expired. Please sign in again.",
+      "forbidden": "You do not have permission to perform this action.",
+      "notFound": "The placement request could not be found.",
+      "conflict": "The placement request is no longer in a state where this action can be performed.",
+      "rateLimit": "Too many requests. Please try again later.",
+      "server": "A server error occurred. Please try again later.",
+      "screeningSaved": "Placement request screening saved.",
+      "screeningFailed": "Failed to save placement request screening.",
+      "approved": "Placement request approved.",
+      "rejected": "Placement request rejected.",
+      "approvalFailed": "Failed to update placement request."
+    }
+  },
+  "staffVacancies": {
+    "title": "Vacancies",
+    "description": "Review Provider vacancies, screening results and vacancy decisions.",
+    "refresh": "Refresh",
+    "summary": {
+      "total": "Total",
+      "pendingReview": "Pending Review",
+      "notScreened": "Not Screened",
+      "screened": "Screened",
+      "needsAttention": "Needs Attention",
+      "published": "Published"
+    },
+    "searchPlaceholder": "Search vacancy, company or location...",
+    "filters": {
+      "allStatuses": "All Vacancy Statuses",
+      "allScreening": "All Screening"
+    },
+    "statuses": {
+      "draft": "Draft",
+      "pending_review": "Pending Review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "published": "Published",
+      "closed": "Closed"
+    },
+    "screeningStatuses": {
+      "NOT_SCREENED": "Not Screened",
+      "SCREENED": "Screened",
+      "NEEDS_ATTENTION": "Needs Attention"
+    },
+    "table": {
+      "vacancy": "Vacancy",
+      "company": "Company",
+      "employment": "Employment",
+      "location": "Location",
+      "status": "Status",
+      "screening": "Screening",
+      "actions": "Actions"
+    },
+    "actions": {
+      "view": "View",
+      "screen": "Screen",
+      "editScreening": "Edit Screening",
+      "decide": "Approve / Reject"
+    },
+    "loading": "Loading vacancies...",
+    "empty": "No vacancies found.",
+    "viewOnlyNotice": "Your Staff account has view-only access to vacancies. An Administrator must assign Screening or Approve / Reject permission before you can perform those actions.",
+    "screenModal": {
+      "eyebrow": "Staff Screening",
+      "title": "Screen Vacancy",
+      "close": "Close",
+      "screened": "Screened",
+      "screenedDescription": "The vacancy information has been reviewed and is ready for a vacancy decision.",
+      "needsAttention": "Needs Attention",
+      "needsAttentionDescription": "Something in this vacancy requires additional verification.",
+      "note": "Screening Note",
+      "notePlaceholder": "Enter screening notes...",
+      "noteRequired": "Please explain what requires attention.",
+      "noteTooLong": "The screening note cannot exceed 2000 characters.",
+      "permissionNotice": "Screening does not approve or reject the vacancy. Vacancy approval is controlled separately by the Vacancies - Approve / Reject permission.",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save Screening"
+    },
+    "decisionModal": {
+      "eyebrow": "Vacancy Decision",
+      "title": "Review Vacancy",
+      "close": "Close",
+      "approve": "Approve",
+      "approveDescription": "Approve this vacancy. It will remain unpublished until an Administrator publishes it.",
+      "reject": "Reject",
+      "rejectDescription": "Reject this vacancy and keep it unavailable to Job Seekers.",
+      "rejectionReason": "Rejection Reason",
+      "rejectionPlaceholder": "Explain why this vacancy is being rejected...",
+      "reasonRequired": "A rejection reason is required.",
+      "reasonTooLong": "The rejection reason cannot exceed 1000 characters.",
+      "permissionNotice": "Your Staff account has permission to approve or reject vacancies. Publishing and closing vacancies remain Administrator actions.",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "approveVacancy": "Approve Vacancy",
+      "rejectVacancy": "Reject Vacancy"
+    },
+    "details": {
+      "close": "Close",
+      "vacancyInformation": "Vacancy Information",
+      "company": "Company",
+      "employmentType": "Employment Type",
+      "positions": "Positions",
+      "japaneseLevel": "Japanese Level",
+      "remoteWork": "Remote Work",
+      "salary": "Salary",
+      "applicationDeadline": "Application Deadline",
+      "startDate": "Start Date",
+      "created": "Created",
+      "workLocation": "Work Location",
+      "location": "Location",
+      "locationDetail": "Location Detail",
+      "jobDescription": "Job Description",
+      "responsibilities": "Responsibilities",
+      "requiredSkills": "Required Skills",
+      "preferredSkills": "Preferred Skills",
+      "requiredEducation": "Required Education",
+      "requiredExperience": "Required Experience",
+      "workConditions": "Work Conditions",
+      "workHours": "Work Hours",
+      "breakTime": "Break Time",
+      "overtime": "Overtime",
+      "holidays": "Holidays",
+      "trialPeriod": "Trial Period",
+      "salaryNote": "Salary Note",
+      "benefits": "Benefits",
+      "insurance": "Insurance",
+      "selectionProcess": "Selection Process",
+      "staffScreening": "Staff Screening",
+      "notScreenedNotice": "This vacancy has not been screened yet.",
+      "screenedNotice": "Staff screening has been completed.",
+      "needsAttentionNotice": "This vacancy requires additional attention.",
+      "screenedBy": "Screened By",
+      "screenedAt": "Screened At",
+      "screeningNote": "Screening Note",
+      "permissionNotice": "Staff screening and vacancy approval are separate actions. Approval or rejection requires the Vacancies - Approve / Reject permission.",
+      "rejectionReason": "Rejection Reason"
+    },
+    "messages": {
+      "generic": "Something went wrong. Please try again.",
+      "network": "Unable to connect to the server. Check your connection and try again.",
+      "invalid": "The request could not be processed. Please check the information and try again.",
+      "unauthorized": "Your session has expired. Please log in again.",
+      "forbidden": "You do not have permission to perform this action.",
+      "notFound": "The requested vacancy was not found.",
+      "conflict": "This action cannot be performed because the vacancy status has changed.",
+      "rateLimit": "Too many requests. Please try again later.",
+      "server": "A server error occurred. Please try again later.",
+      "screeningSaved": "Vacancy screening saved.",
+      "screeningFailed": "Failed to save vacancy screening.",
+      "approved": "Vacancy approved successfully.",
+      "rejected": "Vacancy rejected.",
+      "approvalFailed": "Failed to approve vacancy.",
+      "rejectionFailed": "Failed to reject vacancy."
+    }
+  },
+  "staffApplications": {
+    "title": "Applications",
+    "description": "Review Job Seeker applications, screening results and application decisions.",
+    "refresh": "Refresh",
+    "summary": {
+      "total": "Total",
+      "pendingApproval": "Pending Approval",
+      "notScreened": "Not Screened",
+      "screened": "Screened",
+      "needsAttention": "Needs Attention"
+    },
+    "searchPlaceholder": "Search applicant, application, vacancy or company...",
+    "japaneseLevelNotSet": "Japanese level not set",
+    "filters": {
+      "allStatuses": "All Application Statuses",
+      "allScreening": "All Screening"
+    },
+    "statuses": {
+      "PENDING_ADMIN_APPROVAL": "Pending Approval",
+      "ADMIN_REJECTED": "Rejected Before Provider Review",
+      "SENT_TO_PROVIDER": "Sent to Provider",
+      "UNDER_REVIEW": "Under Review",
+      "INTERVIEW": "Interview",
+      "SELECTED": "Selected",
+      "HIRED": "Hired",
+      "REJECTED": "Provider Rejected"
+    },
+    "screeningStatuses": {
+      "NOT_SCREENED": "Not Screened",
+      "SCREENED": "Screened",
+      "NEEDS_ATTENTION": "Needs Attention"
+    },
+    "table": {
+      "application": "Application",
+      "applicant": "Applicant",
+      "vacancy": "Vacancy",
+      "company": "Company",
+      "applicationStatus": "Application Status",
+      "screening": "Screening",
+      "actions": "Actions"
+    },
+    "actions": {
+      "view": "View",
+      "screen": "Screen",
+      "editScreening": "Edit Screening",
+      "decide": "Approve / Reject"
+    },
+    "loading": "Loading applications...",
+    "empty": "No applications found.",
+    "permissions": {
+      "viewOnly": "Your Staff account currently has view-only access to applications. Screening or Approve / Reject permission must be assigned before you can perform those actions.",
+      "screenOnly": "Your Staff account can screen applications, but Applications - Approve / Reject permission has not been assigned.",
+      "approvalOnly": "Your Staff account can approve or reject applications, but Applications - Screening permission has not been assigned."
+    },
+    "screenModal": {
+      "eyebrow": "Staff Screening",
+      "title": "Screen Application",
+      "editTitle": "Edit Application Screening",
+      "close": "Close",
+      "screened": "Screened",
+      "screenedDescription": "The application has been checked and is ready for an application decision.",
+      "needsAttention": "Needs Attention",
+      "needsAttentionDescription": "Something in this application requires additional verification before a decision.",
+      "note": "Screening Note",
+      "notePlaceholder": "Enter screening notes...",
+      "noteRequired": "Please explain what requires attention.",
+      "noteTooLong": "The screening note cannot exceed 2000 characters.",
+      "permissionNotice": "Screening does not approve or reject the application. Application approval is controlled separately by the Applications - Approve / Reject permission.",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "save": "Save Screening"
+    },
+    "decisionModal": {
+      "eyebrow": "Application Decision",
+      "title": "Review Application",
+      "close": "Close",
+      "approve": "Approve",
+      "approveDescription": "Approve this application and send it to the Provider for company review.",
+      "reject": "Reject",
+      "rejectDescription": "Reject this application. It will not be sent to the Provider.",
+      "rejectionReason": "Rejection Reason",
+      "rejectionPlaceholder": "Explain why this application is being rejected...",
+      "reasonRequired": "A rejection reason is required.",
+      "reasonTooLong": "The rejection reason cannot exceed 2000 characters.",
+      "permissionNotice": "Your Staff account has permission to approve or reject Job Seeker applications. Screening and application approval are separate permissions.",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "approveApplication": "Approve Application",
+      "rejectApplication": "Reject Application"
+    },
+    "details": {
+      "eyebrow": "Application",
+      "applicantFallback": "Applicant",
+      "close": "Close",
+      "vacancy": "Vacancy",
+      "position": "Position",
+      "company": "Company",
+      "employment": "Employment",
+      "location": "Location",
+      "requiredJapanese": "Required Japanese",
+      "applied": "Applied",
+      "candidateProfile": "Candidate Profile",
+      "nationality": "Nationality",
+      "visa": "Visa",
+      "visaExpiry": "Visa Expiry",
+      "japanese": "Japanese",
+      "desiredJob": "Desired Job",
+      "desiredLocation": "Desired Location",
+      "skills": "Skills",
+      "noSkills": "No skills added.",
+      "education": "Education",
+      "noEducation": "No education records.",
+      "employmentHistory": "Employment History",
+      "noEmployment": "No employment records.",
+      "present": "Present",
+      "professionalResume": "Professional Resume",
+      "frozenResume": "Frozen Application Resume",
+      "frozenResumeDescription": "This resume preserves the candidate information from the time this application was submitted.",
+      "opening": "Opening...",
+      "viewResume": "View Resume",
+      "resumeUnavailable": "Resume Unavailable",
+      "coverLetter": "Cover Letter",
+      "staffScreening": "Staff Screening",
+      "screenedBy": "Screened By",
+      "screenedAt": "Screened At",
+      "screeningNote": "Screening Note",
+      "permissionNotice": "Staff screening and application approval are separate actions. Staff with the Applications - Approve / Reject permission can make the application decision."
+    },
+    "messages": {
+      "generic": "Something went wrong. Please try again.",
+      "network": "Unable to connect to the server. Check your connection and try again.",
+      "invalid": "The request could not be processed. Please check the information and try again.",
+      "unauthorized": "Your session has expired. Please log in again.",
+      "forbidden": "You do not have permission to perform this action.",
+      "notFound": "The requested application was not found.",
+      "conflict": "This action cannot be performed because the application status has changed.",
+      "rateLimit": "Too many requests. Please try again later.",
+      "server": "A server error occurred. Please try again later.",
+      "screeningSaved": "Application screening saved.",
+      "screeningFailed": "Failed to save application screening.",
+      "approved": "Application approved and sent to the Provider.",
+      "rejected": "Application rejected.",
+      "approvalFailed": "Failed to approve the application.",
+      "rejectionFailed": "Failed to reject the application.",
+      "resumeUnavailable": "No frozen resume is available for this application.",
+      "popupBlocked": "Please allow pop-ups to open the application resume.",
+      "resumeOpenFailed": "Failed to open the frozen application resume."
+    }
+  },
+  "staffJobSeekers": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "refresh": "Refresh",
+    "view": "View",
+    "download": "Download",
+    "downloading": "Downloading...",
+
+    "page": {
+      "title": "Job Seekers",
+      "description": "Review Job Seeker profiles, screening results and registration decisions."
+    },
+
+    "summary": {
+      "total": "Total",
+      "pendingApproval": "Pending Approval",
+      "notScreened": "Not Screened",
+      "screened": "Screened",
+      "needsAttention": "Needs Attention"
+    },
+
+    "filters": {
+      "search": "Search seeker, email, ID...",
+      "allApprovals": "All approvals",
+      "allAccounts": "All accounts",
+      "allPlacement": "All placement",
+      "allScreening": "All screening"
+    },
+
+    "statuses": {
+      "approval": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "account": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "suspended": "Suspended"
+      },
+      "placement": {
+        "unplaced": "Unplaced",
+        "matching": "Matching",
+        "interview": "Interview",
+        "selected": "Selected",
+        "placed": "Placed"
+      },
+      "screening": {
+        "notScreened": "Not Screened",
+        "screened": "Screened",
+        "needsAttention": "Needs Attention"
+      }
+    },
+
+    "table": {
+      "id": "ID",
+      "jobSeeker": "Job Seeker",
+      "approval": "Approval",
+      "account": "Account",
+      "placement": "Placement",
+      "screening": "Screening",
+      "applications": "Applications",
+      "actions": "Actions",
+      "loading": "Loading Job Seekers...",
+      "empty": "No Job Seekers found.",
+      "screen": "Screen",
+      "editScreening": "Edit Screening",
+      "approveReject": "Approve / Reject"
+    },
+
+    "pagination": {
+      "records": "{count} record(s)",
+      "perPage": "{count} / page"
+    },
+
+    "permissions": {
+      "viewOnly": "Your Staff account has view-only Job Seeker access.",
+      "screenOnly": "Your Staff account can screen Job Seekers, but registration approval permission has not been assigned.",
+      "approvalOnly": "Your Staff account can approve or reject registrations, but screening permission has not been assigned."
+    },
+
+    "screeningModal": {
+      "eyebrow": "Staff Screening",
+      "title": "Screen Job Seeker",
+      "screened": "Screened",
+      "screenedDescription": "The profile has been reviewed and is ready for a registration decision.",
+      "needsAttention": "Needs Attention",
+      "needsAttentionDescription": "Something in this registration requires additional verification.",
+      "note": "Screening Note",
+      "notePlaceholder": "Enter screening notes...",
+      "noteRequired": "Please explain what requires attention.",
+      "permissionNotice": "Screening does not approve or reject the Job Seeker. Registration approval is controlled separately by the Job Seeker approval permission.",
+      "saveScreening": "Save Screening"
+    },
+
+    "approvalModal": {
+      "eyebrow": "Registration Decision",
+      "title": "Review Job Seeker",
+      "approve": "Approve",
+      "approveDescription": "Approve the registration and activate the account.",
+      "reject": "Reject",
+      "rejectDescription": "Reject the registration and keep the account inactive.",
+      "rejectionReason": "Rejection Reason",
+      "rejectionPlaceholder": "Explain why this registration is being rejected...",
+      "reasonRequired": "A rejection reason is required.",
+      "reasonTooLong": "The rejection reason cannot exceed 2000 characters.",
+      "permissionNotice": "This decision is available because your Staff account has the Job Seeker approval permission.",
+      "approveSeeker": "Approve Job Seeker",
+      "rejectSeeker": "Reject Job Seeker"
+    },
+
+    "approvalHistory": {
+      "sectionTitle": "Registration Decision",
+      "currentDecision": "Current Decision",
+      "reviewerType": "Reviewer Type",
+      "reviewer": "Reviewed By",
+      "reviewerId": "Reviewer ID",
+      "reviewedAt": "Reviewed At",
+      "reason": "Reason",
+      "history": "Decision History",
+      "noHistory": "No registration decision has been recorded yet.",
+      "pendingMessage": "This registration is still waiting for an approval decision.",
+      "admin": "Admin",
+      "staff": "Staff"
+    },
+
+    "details": {
+      "jobSeeker": "Job Seeker",
+      "profileInformation": "Profile Information",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "currentLocation": "Current Location",
+      "nationality": "Nationality",
+      "dateOfBirth": "Date of Birth",
+      "visaType": "Visa Type",
+      "visaExpiry": "Visa Expiry",
+      "japaneseLevel": "Japanese Level",
+      "desiredJob": "Desired Job",
+      "desiredLocation": "Desired Location",
+      "applications": "Applications",
+      "education": "Education",
+      "employmentHistory": "Employment History",
+      "resume": "Resume / CV",
+      "resumeDescription": "Job Seeker resume or generated resume",
+      "uploadedResume": "Uploaded Resume",
+      "generatedResume": "Generated Resume",
+      "noResume": "No resume uploaded.",
+      "additionalDocuments": "Additional Documents",
+      "additionalDocumentsDescription": "Passport, residence card, certificates and other supporting documents.",
+      "noAdditionalDocuments": "No additional documents uploaded.",
+      "skills": "Skills",
+      "currentStatus": "Current Status",
+      "approval": "Approval",
+      "account": "Account",
+      "placement": "Placement",
+      "staffScreening": "Staff Screening",
+      "notScreenedMessage": "This Job Seeker has not been screened by Staff yet.",
+      "screenedMessage": "Staff screening has been completed and the registration is ready for a decision.",
+      "needsAttentionMessage": "Staff marked this registration as requiring additional attention.",
+      "screenedBy": "Screened By",
+      "screenedAt": "Screened At",
+      "screeningNote": "Screening Note",
+      "screeningNotice": "Staff screening and registration approval are separate actions. Staff with the Job Seeker approval permission can approve or reject the registration.",
+      "downloadResume": "Download Resume",
+      "noInformation": "No information available."
+    },
+
+    "messages": {
+      "screeningSaved": "Job Seeker screening saved.",
+      "screeningFailed": "Failed to save screening.",
+      "approved": "Job Seeker approved successfully.",
+      "rejected": "Job Seeker rejected successfully.",
+      "approvalFailed": "Failed to update Job Seeker approval.",
+      "loadFailed": "Failed to load Job Seeker.",
+      "resumeFailed": "Failed to download resume.",
+      "network": "Unable to connect to the server.",
+      "invalid": "Please check the entered information.",
+      "unauthorized": "Your session has expired. Please log in again.",
+      "forbidden": "You do not have permission to perform this action.",
+      "notFound": "The requested Job Seeker could not be found.",
+      "conflict": "This operation cannot be completed because the Job Seeker status has changed.",
+      "rateLimit": "Too many requests. Please try again shortly.",
+      "server": "A server error occurred. Please try again."
+    }
+  },
   "jobSeeker": {
     "auth": {
       "portalTitle": "Job Seeker Portal",
@@ -127,7 +1045,7 @@
       "statusCompleted": "Completed",
       "statusCancelled": "Cancelled",
       "applicationStatusPendingAdminApproval": "Pending admin approval",
-      "applicationStatusAdminRejected": "Rejected by admin",
+      "applicationStatusAdminRejected": "Application rejected",
       "applicationStatusSentToProvider": "Application sent to company",
       "applicationStatusUnderReview": "Application under company review",
       "applicationStatusInterview": "Interview",
@@ -1720,18 +2638,22 @@
       "suspended": "Suspended"
     },
     "permissions": {
+      "placement_requests:approval": "Placement requests - Approve / Reject",
       "dashboard:view": "Dashboard - View",
       "vacancies:view": "Vacancies - View",
-      "vacancies:review": "Vacancies - Review",
+      "vacancies:review": "Vacancies - Screening",
+      "vacancies:approval": "Vacancies - Approve / Reject",
       "applications:view": "Applications - View",
-      "applications:review": "Applications - Review",
+      "applications:review": "Applications - Screening",
+      "applications:approval": "Applications - Approve / Reject",
       "providers:view": "Clients - View",
       "providers:manage": "Clients - Manage",
       "seekers:view": "Job seekers - View",
-      "seekers:manage": "Job seekers - Manage",
+      "seekers:manage": "Job seekers - Screening",
+      "seekers:approval": "Job seekers - Approve / Reject",
       "placement_requests:view": "Placement requests - View",
       "placement_requests:review": "Placement requests - Review",
-      "placement_requests:manage_candidates": "Placement requests - Manage candidates",
+      "placement_requests:manage_candidates": "Placement candidates - Review",
       "billing:view": "Billing - View",
       "billing:manage": "Billing - Manage",
       "training:view": "Training - View",
@@ -2038,4 +2960,3 @@
     "networkError": "Unable to connect to the server. Please try again."
   }
 }
-

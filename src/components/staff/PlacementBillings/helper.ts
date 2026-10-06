@@ -1,22 +1,45 @@
 import type { PlacementBillingStatus } from "./types";
 
 // ======================================================
+// LOCALE
+// ======================================================
+
+const resolveLocale = (locale?: string) => {
+  if (locale?.toLowerCase().startsWith("ja")) {
+    return "ja-JP";
+  }
+
+  return "en-US";
+};
+
+// ======================================================
 // MONEY
 // ======================================================
 
-export const formatMoney = (value: number, currency = "JPY") => {
+export const formatMoney = (
+  value: number,
+  currency = "JPY",
+  locale?: string,
+) => {
+  const amount = Number(value || 0);
+
+  const resolvedLocale = resolveLocale(locale);
+
   if (currency === "JPY") {
-    return `¥${Number(value || 0).toLocaleString()}`;
+    return `¥${Math.round(amount).toLocaleString(resolvedLocale)}`;
   }
 
-  return `${currency} ${Number(value || 0).toLocaleString()}`;
+  return `${currency} ${amount.toLocaleString(resolvedLocale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 };
 
 // ======================================================
 // DATE
 // ======================================================
 
-export const formatBillingDate = (value?: string | null) => {
+export const formatBillingDate = (value?: string | null, locale?: string) => {
   if (!value) {
     return "-";
   }
@@ -27,10 +50,18 @@ export const formatBillingDate = (value?: string | null) => {
     return "-";
   }
 
-  return date.toLocaleDateString();
+  return date.toLocaleDateString(resolveLocale(locale), {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
 };
 
-export const formatBillingDateTime = (value?: string | null) => {
+export const formatBillingDateTime = (
+  value?: string | null,
+  locale?: string,
+) => {
   if (!value) {
     return "-";
   }
@@ -41,11 +72,21 @@ export const formatBillingDateTime = (value?: string | null) => {
     return "-";
   }
 
-  return date.toLocaleString();
+  return date.toLocaleString(resolveLocale(locale), {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 // ======================================================
 // STATUS
+//
+// Label helper remains for compatibility.
+// Translated UI should use next-intl.
 // ======================================================
 
 export const getBillingStatusLabel = (status: PlacementBillingStatus) => {
@@ -67,6 +108,9 @@ export const getBillingStatusLabel = (status: PlacementBillingStatus) => {
 
     case "cancelled":
       return "Cancelled";
+
+    default:
+      return status;
   }
 };
 
@@ -89,5 +133,8 @@ export const getBillingStatusClass = (status: PlacementBillingStatus) => {
 
     case "cancelled":
       return "bg-slate-100 text-slate-500";
+
+    default:
+      return "bg-slate-100 text-slate-600";
   }
 };

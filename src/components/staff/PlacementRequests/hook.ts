@@ -6,11 +6,15 @@ import axios from "axios";
 
 import toast from "react-hot-toast";
 
+import { useTranslations } from "next-intl";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  approveStaffPlacementRequest,
   getStaffPlacementRequest,
   getStaffPlacementRequests,
+  rejectStaffPlacementRequest,
   screenStaffPlacementRequest,
 } from "./api";
 
@@ -23,22 +27,12 @@ import type {
 } from "./types";
 
 // ======================================================
-// ERROR
-// ======================================================
-
-const getErrorMessage = (error: unknown) => {
-  if (axios.isAxiosError<ApiError>(error)) {
-    return error.response?.data?.message || "Something went wrong.";
-  }
-
-  return "Something went wrong.";
-};
-
-// ======================================================
 // HOOK
 // ======================================================
 
 export function useStaffPlacementRequests() {
+  const t = useTranslations("staffPlacementRequests");
+
   const queryClient = useQueryClient();
 
   // ====================================================
@@ -63,6 +57,47 @@ export function useStaffPlacementRequests() {
 
   const [screeningRequest, setScreeningRequest] =
     useState<StaffPlacementRequest | null>(null);
+
+  const [decisionRequest, setDecisionRequest] =
+    useState<StaffPlacementRequest | null>(null);
+
+  // ====================================================
+  // ERROR
+  // ====================================================
+
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (!axios.isAxiosError<ApiError>(error)) {
+      return fallback;
+    }
+
+    if (!error.response) {
+      return t("messages.network");
+    }
+
+    switch (error.response.status) {
+      case 400:
+      case 422:
+        return t("messages.invalid");
+
+      case 401:
+        return t("messages.unauthorized");
+
+      case 403:
+        return t("messages.forbidden");
+
+      case 404:
+        return t("messages.notFound");
+
+      case 409:
+        return t("messages.conflict");
+
+      case 429:
+        return t("messages.rateLimit");
+
+      default:
+        return error.response.status >= 500 ? t("messages.server") : fallback;
+    }
+  };
 
   // ====================================================
   // LIST
@@ -93,6 +128,30 @@ export function useStaffPlacementRequests() {
 
     retry: 1,
   });
+
+  // ====================================================
+  // INVALIDATE
+  // ====================================================
+
+  const invalidatePlacementRequestQueries = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["staff-placement-requests"],
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["staff-placement-request"],
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["staff-dashboard"],
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["admin-placement-requests"],
+      }),
+    ]);
+  };
 
   // ====================================================
   // FILTER
@@ -140,7 +199,7 @@ export function useStaffPlacementRequests() {
   }, [listQuery.data, search, statusFilter, screeningFilter]);
 
   // ====================================================
-  // SCREEN MUTATION
+  // SCREEN
   // ====================================================
 
   const screeningMutation = useMutation({
@@ -153,41 +212,81 @@ export function useStaffPlacementRequests() {
       payload: ScreenPlacementRequestPayload;
     }) => screenStaffPlacementRequest(recruitId, payload),
 
-    onSuccess: async (response) => {
-      toast.success(response.message || "Placement request screening saved.");
+    onSuccess: async () => {
+      toast.success(t("messages.screeningSaved"));
 
       setScreeningRequest(null);
 
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["staff-placement-requests"],
-        }),
-
-        queryClient.invalidateQueries({
-          queryKey: ["staff-placement-request"],
-        }),
-
-        queryClient.invalidateQueries({
-          queryKey: ["staff-dashboard"],
-        }),
-
-        queryClient.invalidateQueries({
-          queryKey: ["admin-placement-requests"],
-        }),
-      ]);
+      await invalidatePlacementRequestQueries();
     },
 
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error));
+      toast.error(getErrorMessage(error, t("messages.screeningFailed")));
     },
   });
+
+  // ====================================================
+  // APPROVE
+  // ====================================================
+
+  const approveMutation = useMutation({
+    mutationFn: approveStaffPlacementRequest,
+
+    onSuccess: async () => {
+      toast.success(t("messages.approved"));
+
+      setDecisionRequest(null);
+
+      setViewingId(null);
+
+      await invalidatePlacementRequestQueries();
+    },
+
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, t("messages.approvalFailed")));
+    },
+  });
+
+  // ====================================================
+  // REJECT
+  // ====================================================
+
+  const rejectMutation = useMutation({
+    mutationFn: ({
+      recruitId,
+      reason,
+    }: {
+      recruitId: string;
+
+      reason: string;
+    }) =>
+      rejectStaffPlacementRequest(recruitId, {
+        reason,
+      }),
+
+    onSuccess: async () => {
+      toast.success(t("messages.rejected"));
+
+      setDecisionRequest(null);
+
+      setViewingId(null);
+
+      await invalidatePlacementRequestQueries();
+    },
+
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, t("messages.approvalFailed")));
+    },
+  });
+
+  // ====================================================
+  // RETURN
+  // ====================================================
 
   return {
     requests,
 
     summary: listQuery.data?.summary,
-
-    // FILTERS
 
     search,
     setSearch,
@@ -198,23 +297,24 @@ export function useStaffPlacementRequests() {
     screeningFilter,
     setScreeningFilter,
 
-    // DETAILS
-
     viewingRequest: detailQuery.data?.data,
 
     viewingId,
-
     setViewingId,
 
     isDetailsLoading: detailQuery.isLoading,
 
-    // SCREENING
-
     screeningRequest,
-
     setScreeningRequest,
 
+    decisionRequest,
+    setDecisionRequest,
+
     isScreening: screeningMutation.isPending,
+
+    isApproving: approveMutation.isPending,
+
+    isRejecting: rejectMutation.isPending,
 
     submitScreening: (
       recruitId: string,
@@ -225,13 +325,20 @@ export function useStaffPlacementRequests() {
         payload,
       }),
 
-    // STATE
+    approveRequest: (recruitId: string) => {
+      approveMutation.mutate(recruitId);
+    },
+
+    rejectRequest: (recruitId: string, reason: string) => {
+      rejectMutation.mutate({
+        recruitId,
+        reason,
+      });
+    },
 
     isLoading: listQuery.isLoading,
 
     isFetching: listQuery.isFetching,
-
-    // REFRESH
 
     refresh: () => listQuery.refetch(),
   };

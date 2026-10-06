@@ -1,6 +1,7 @@
 import axiosInstance from "@/services/axiosInstance";
 
 import type {
+  RejectStaffVacancyPayload,
   ScreenVacancyPayload,
   StaffVacancyListResponse,
   StaffVacancyResponse,
@@ -39,6 +40,34 @@ export const screenStaffVacancy = async (
 ) => {
   const response = await axiosInstance.patch<StaffVacancyResponse>(
     `/staff/vacancies/${vacancyId}/screen`,
+    payload,
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// APPROVE
+// ======================================================
+
+export const approveStaffVacancy = async (vacancyId: string) => {
+  const response = await axiosInstance.patch<StaffVacancyResponse>(
+    `/staff/vacancies/${vacancyId}/approve`,
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// REJECT
+// ======================================================
+
+export const rejectStaffVacancy = async (
+  vacancyId: string,
+  payload: RejectStaffVacancyPayload,
+) => {
+  const response = await axiosInstance.patch<StaffVacancyResponse>(
+    `/staff/vacancies/${vacancyId}/reject`,
     payload,
   );
 

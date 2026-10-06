@@ -5,7 +5,7 @@ import { Eye, RefreshCw, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { getCurrentStaff } from "@/components/auth/Staff/api";
-
+import PlacementRequestDecisionModal from "./PlacementRequestDecisionModal";
 import {
   getRequestStatusClass,
   getRequestStatusLabel,
@@ -23,6 +23,7 @@ import type {
   PlacementRequestScreeningStatus,
   PlacementRequestStatus,
 } from "./types";
+import { useTranslations } from "next-intl";
 
 export default function StaffPlacementRequests() {
   const {
@@ -50,10 +51,17 @@ export default function StaffPlacementRequests() {
     isScreening,
 
     submitScreening,
+    decisionRequest,
+    setDecisionRequest,
 
+    isApproving,
+    isRejecting,
+
+    approveRequest,
+    rejectRequest,
     refresh,
   } = useStaffPlacementRequests();
-
+  const t = useTranslations("staffPlacementRequests");
   // ====================================================
   // STAFF PERMISSIONS
   // ====================================================
@@ -68,6 +76,10 @@ export default function StaffPlacementRequests() {
     staffQuery.data?.data.permissions.includes("placement_requests:review") ??
     false;
 
+  const canApprove =
+    staffQuery.data?.data.permissions.includes("placement_requests:approval") ??
+    false;
+
   return (
     <>
       <main className="mx-auto max-w-7xl space-y-6 px-6 py-10">
@@ -80,7 +92,8 @@ export default function StaffPlacementRequests() {
             </h1>
 
             <p className="mt-1 text-sm text-slate-500">
-              Screen Provider placement requests before final Admin review.
+              Review Provider placement requests, screening results and final
+              decisions.
             </p>
           </div>
 
@@ -308,6 +321,16 @@ export default function StaffPlacementRequests() {
                                 : "Edit Screening"}
                             </button>
                           )}
+                          {canApprove &&
+                            request.status === "pending_review" && (
+                              <button
+                                type="button"
+                                onClick={() => setDecisionRequest(request)}
+                                className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
+                              >
+                                {t("reviewDecision")}
+                              </button>
+                            )}
                         </div>
                       </td>
                     </tr>
@@ -333,11 +356,15 @@ export default function StaffPlacementRequests() {
         <PlacementRequestDetails
           request={viewingRequest}
           canReview={canReview}
+          canApprove={canApprove}
           onClose={() => setViewingId(null)}
           onScreen={(request) => {
             setViewingId(null);
-
             setScreeningRequest(request);
+          }}
+          onDecision={(request) => {
+            setViewingId(null);
+            setDecisionRequest(request);
           }}
         />
       )}
@@ -349,6 +376,15 @@ export default function StaffPlacementRequests() {
         isSaving={isScreening}
         onClose={() => setScreeningRequest(null)}
         onSubmit={submitScreening}
+      />
+
+      <PlacementRequestDecisionModal
+        request={decisionRequest}
+        isApproving={isApproving}
+        isRejecting={isRejecting}
+        onClose={() => setDecisionRequest(null)}
+        onApprove={approveRequest}
+        onReject={rejectRequest}
       />
     </>
   );

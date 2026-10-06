@@ -6,6 +6,8 @@ import axios from "axios";
 
 import toast from "react-hot-toast";
 
+import { useTranslations } from "next-intl";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -13,6 +15,7 @@ import {
   getStaffSeekerById,
   getStaffSeekers,
   screenStaffSeeker,
+  updateStaffSeekerApproval,
 } from "./api";
 
 import type {
@@ -23,30 +26,55 @@ import type {
   ScreenSeekerPayload,
   SeekerScreeningStatus,
   StaffSeeker,
+  StaffSeekerApprovalPayload,
 } from "./types";
-
-// ======================================================
-// ERROR
-// ======================================================
-
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (axios.isAxiosError<ApiErrorResponse>(error)) {
-    return error.response?.data?.message || fallback;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallback;
-};
 
 // ======================================================
 // HOOK
 // ======================================================
 
 export const useStaffJobSeekers = () => {
+  const t = useTranslations("staffJobSeekers");
+
   const queryClient = useQueryClient();
+
+  // ==================================================
+  // ERROR
+  // ==================================================
+
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    if (!axios.isAxiosError<ApiErrorResponse>(error)) {
+      return fallback;
+    }
+
+    if (!error.response) {
+      return t("messages.network");
+    }
+
+    switch (error.response.status) {
+      case 400:
+      case 422:
+        return t("messages.invalid");
+
+      case 401:
+        return t("messages.unauthorized");
+
+      case 403:
+        return t("messages.forbidden");
+
+      case 404:
+        return t("messages.notFound");
+
+      case 409:
+        return t("messages.conflict");
+
+      case 429:
+        return t("messages.rateLimit");
+
+      default:
+        return error.response.status >= 500 ? t("messages.server") : fallback;
+    }
+  };
 
   // ==================================================
   // FILTERS
@@ -84,6 +112,10 @@ export const useStaffJobSeekers = () => {
     null,
   );
 
+  const [approvalSeeker, setApprovalSeeker] = useState<StaffSeeker | null>(
+    null,
+  );
+
   const [isDownloading, setIsDownloading] = useState(false);
 
   // ==================================================
@@ -93,39 +125,40 @@ export const useStaffJobSeekers = () => {
   const seekerQuery = useQuery({
     queryKey: [
       "staff-seekers",
-
       search,
-
       approvalStatus,
-
       accountStatus,
-
       placementStatus,
-
       screeningStatus,
-
       page,
-
       limit,
     ],
 
     queryFn: () =>
       getStaffSeekers({
         search,
-
         approvalStatus,
-
         accountStatus,
-
         placementStatus,
-
         screeningStatus,
-
         page,
-
         limit,
       }),
   });
+
+  // ==================================================
+  // INVALIDATE
+  // ==================================================
+
+  const invalidateSeekerQueries = async () => {
+    await queryClient.invalidateQueries({
+      queryKey: ["staff-seekers"],
+    });
+
+    await queryClient.invalidateQueries({
+      queryKey: ["staff-dashboard"],
+    });
+  };
 
   // ==================================================
   // SCREEN
@@ -137,12 +170,11 @@ export const useStaffJobSeekers = () => {
       payload,
     }: {
       seekerId: string;
-
       payload: ScreenSeekerPayload;
     }) => screenStaffSeeker(seekerId, payload),
 
     onSuccess: async (response) => {
-      toast.success(response.message || "Screening saved.");
+      toast.success(t("messages.screeningSaved"));
 
       setScreeningSeeker(null);
 
@@ -154,17 +186,47 @@ export const useStaffJobSeekers = () => {
         return response.data;
       });
 
-      await queryClient.invalidateQueries({
-        queryKey: ["staff-seekers"],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["staff-dashboard"],
-      });
+      await invalidateSeekerQueries();
     },
 
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, "Failed to save screening."));
+      toast.error(getErrorMessage(error, t("messages.screeningFailed")));
+    },
+  });
+
+  // ==================================================
+  // APPROVE / REJECT
+  // ==================================================
+
+  const approvalMutation = useMutation({
+    mutationFn: ({
+      seekerId,
+      payload,
+    }: {
+      seekerId: string;
+      payload: StaffSeekerApprovalPayload;
+    }) => updateStaffSeekerApproval(seekerId, payload),
+
+    onSuccess: async (response) => {
+      const approved = response.data.approval_status === "approved";
+
+      toast.success(approved ? t("messages.approved") : t("messages.rejected"));
+
+      setApprovalSeeker(null);
+
+      setViewingSeeker((current) => {
+        if (current?.seeker_id !== response.data.seeker_id) {
+          return current;
+        }
+
+        return response.data;
+      });
+
+      await invalidateSeekerQueries();
+    },
+
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, t("messages.approvalFailed")));
     },
   });
 
@@ -178,7 +240,7 @@ export const useStaffJobSeekers = () => {
 
       setViewingSeeker(response.data);
     } catch (error) {
-      toast.error(getErrorMessage(error, "Failed to load Job Seeker."));
+      toast.error(getErrorMessage(error, t("messages.loadFailed")));
     }
   };
 
@@ -192,7 +254,7 @@ export const useStaffJobSeekers = () => {
 
       await downloadStaffSeekerResume(seeker);
     } catch (error) {
-      toast.error(getErrorMessage(error, "Failed to download resume."));
+      toast.error(getErrorMessage(error, t("messages.resumeFailed")));
     } finally {
       setIsDownloading(false);
     }
@@ -238,6 +300,10 @@ export const useStaffJobSeekers = () => {
     setLimit(value);
   };
 
+  // ==================================================
+  // RETURN
+  // ==================================================
+
   return {
     seekers: seekerQuery.data?.data || [],
 
@@ -260,11 +326,16 @@ export const useStaffJobSeekers = () => {
     screeningSeeker,
     setScreeningSeeker,
 
+    approvalSeeker,
+    setApprovalSeeker,
+
     isLoading: seekerQuery.isLoading,
 
     isFetching: seekerQuery.isFetching,
 
     isScreening: screenMutation.isPending,
+
+    isApproving: approvalMutation.isPending,
 
     isDownloading,
 
@@ -283,6 +354,12 @@ export const useStaffJobSeekers = () => {
 
     submitScreening: (seekerId: string, payload: ScreenSeekerPayload) =>
       screenMutation.mutate({
+        seekerId,
+        payload,
+      }),
+
+    submitApproval: (seekerId: string, payload: StaffSeekerApprovalPayload) =>
+      approvalMutation.mutate({
         seekerId,
         payload,
       }),

@@ -14,6 +14,50 @@ export type SeekerScreeningStatus =
   | "SCREENED"
   | "NEEDS_ATTENTION";
 
+// ======================================================
+// APPROVAL
+// ======================================================
+
+export type StaffSeekerApprovalDecision = "approved" | "rejected";
+
+export type ApprovalActorType = "admin" | "staff";
+
+export type StaffSeekerApprovalPayload = {
+  decision: StaffSeekerApprovalDecision;
+
+  reason?: string;
+};
+
+export type StaffSeekerApprovalReview = {
+  reviewedAt?: string | null;
+
+  reviewedByType?: ApprovalActorType | null;
+
+  reviewedById?: string | null;
+
+  reviewedByName?: string | null;
+};
+
+export type StaffSeekerApprovalHistoryItem = {
+  id?: string | null;
+
+  decision: StaffSeekerApprovalDecision;
+
+  actorType?: ApprovalActorType | null;
+
+  actorId?: string | null;
+
+  actorName?: string | null;
+
+  reason?: string | null;
+
+  reviewedAt?: string | null;
+};
+
+// ======================================================
+// SCREENING
+// ======================================================
+
 export type StaffSeekerScreening = {
   status: SeekerScreeningStatus;
 
@@ -23,6 +67,10 @@ export type StaffSeekerScreening = {
 
   screenedAt?: string | null;
 };
+
+// ======================================================
+// EDUCATION
+// ======================================================
 
 export type Education = {
   _id?: string;
@@ -38,6 +86,10 @@ export type Education = {
   major?: string | null;
 };
 
+// ======================================================
+// EMPLOYMENT
+// ======================================================
+
 export type EmploymentHistory = {
   _id?: string;
 
@@ -50,6 +102,10 @@ export type EmploymentHistory = {
   company_name: string;
 };
 
+// ======================================================
+// DOCUMENT
+// ======================================================
+
 export type SeekerDocument = {
   _id?: string;
 
@@ -59,6 +115,10 @@ export type SeekerDocument = {
 
   document_type: string;
 };
+
+// ======================================================
+// SEEKER
+// ======================================================
 
 export type StaffSeeker = {
   _id: string;
@@ -76,6 +136,10 @@ export type StaffSeeker = {
   approval_reviewed_at?: string | null;
 
   rejection_reason?: string | null;
+
+  approvalReview: StaffSeekerApprovalReview;
+
+  approvalHistory: StaffSeekerApprovalHistoryItem[];
 
   profile_photo?: string | null;
 
@@ -126,6 +190,10 @@ export type StaffSeeker = {
   updated_at: string;
 };
 
+// ======================================================
+// SUMMARY
+// ======================================================
+
 export type StaffSeekerSummary = {
   total: number;
 
@@ -138,6 +206,10 @@ export type StaffSeekerSummary = {
   needsAttention: number;
 };
 
+// ======================================================
+// PAGINATION
+// ======================================================
+
 export type Pagination = {
   page: number;
 
@@ -147,6 +219,10 @@ export type Pagination = {
 
   pages: number;
 };
+
+// ======================================================
+// RESPONSES
+// ======================================================
 
 export type StaffSeekerListResponse = {
   success: boolean;
@@ -168,6 +244,10 @@ export type StaffSeekerResponse = {
   message?: string;
 };
 
+// ======================================================
+// FILTERS
+// ======================================================
+
 export type StaffSeekerFilters = {
   search: string;
 
@@ -184,11 +264,19 @@ export type StaffSeekerFilters = {
   limit: number;
 };
 
+// ======================================================
+// SCREENING PAYLOAD
+// ======================================================
+
 export type ScreenSeekerPayload = {
   screeningStatus: "SCREENED" | "NEEDS_ATTENTION";
 
   note: string;
 };
+
+// ======================================================
+// API ERROR
+// ======================================================
 
 export type ApiErrorResponse = {
   success?: boolean;

@@ -2,12 +2,9 @@
 
 import { Eye, RefreshCw, Search } from "lucide-react";
 
-import {
-  getCandidateStatusClass,
-  getCandidateStatusLabel,
-  getReviewClass,
-  getReviewLabel,
-} from "./helper";
+import { useTranslations } from "next-intl";
+
+import { getCandidateStatusClass, getReviewClass } from "./helper";
 
 import { useStaffPlacementCandidates } from "./hook";
 
@@ -25,6 +22,8 @@ import type {
 // ======================================================
 
 export default function StaffPlacementCandidates() {
+  const t = useTranslations("staffPlacementCandidates");
+
   const {
     candidates,
     summary,
@@ -59,18 +58,15 @@ export default function StaffPlacementCandidates() {
   return (
     <>
       <main className="mx-auto max-w-7xl space-y-6 px-6 py-10">
+        {/* ================================================= */}
         {/* HEADER */}
+        {/* ================================================= */}
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-950">
-              Placement Candidates
-            </h1>
+            <h1 className="text-3xl font-bold text-slate-950">{t("title")}</h1>
 
-            <p className="mt-1 text-sm text-slate-500">
-              Review candidates matched by Admin and monitor their Provider
-              hiring progress.
-            </p>
+            <p className="mt-1 text-sm text-slate-500">{t("description")}</p>
           </div>
 
           <button
@@ -82,28 +78,47 @@ export default function StaffPlacementCandidates() {
             <RefreshCw
               className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
             />
-            Refresh
+
+            {t("refresh")}
           </button>
         </div>
 
+        {/* ================================================= */}
         {/* SUMMARY */}
+        {/* ================================================= */}
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-          <Summary label="Total Candidates" value={summary?.total ?? 0} />
-
-          <Summary label="Not Reviewed" value={summary?.notReviewed ?? 0} />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <Summary
+            label={t("summary.totalCandidates")}
+            value={summary?.total ?? 0}
+          />
 
           <Summary
-            label="Needs Attention"
+            label={t("summary.notReviewed")}
+            value={summary?.notReviewed ?? 0}
+          />
+
+          <Summary
+            label={t("summary.reviewed")}
+            value={summary?.reviewed ?? 0}
+          />
+
+          <Summary
+            label={t("summary.needsAttention")}
             value={summary?.needsAttention ?? 0}
           />
 
-          <Summary label="Interview" value={summary?.interview ?? 0} />
+          <Summary
+            label={t("summary.interview")}
+            value={summary?.interview ?? 0}
+          />
 
-          <Summary label="Placed" value={summary?.placed ?? 0} />
+          <Summary label={t("summary.placed")} value={summary?.placed ?? 0} />
         </div>
 
+        {/* ================================================= */}
         {/* FILTERS */}
+        {/* ================================================= */}
 
         <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 lg:grid-cols-[1fr_220px_220px]">
           <div className="relative">
@@ -112,12 +127,12 @@ export default function StaffPlacementCandidates() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search candidate, company, request, job..."
-              className="h-12 w-full rounded-xl border border-slate-200 pl-11 pr-4 text-sm outline-none"
+              placeholder={t("searchPlaceholder")}
+              className="h-12 w-full rounded-xl border border-slate-200 pl-11 pr-4 text-sm outline-none focus:border-indigo-500"
             />
           </div>
 
-          {/* PIPELINE */}
+          {/* PIPELINE FILTER */}
 
           <select
             value={statusFilter}
@@ -128,22 +143,26 @@ export default function StaffPlacementCandidates() {
             }
             className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm"
           >
-            <option value="ALL">All Pipeline Statuses</option>
+            <option value="ALL">{t("filters.allPipelineStatuses")}</option>
 
-            <option value="MATCHED">Matched</option>
+            <option value="MATCHED">{t("candidateStatuses.MATCHED")}</option>
 
-            <option value="UNDER_REVIEW">Under Review</option>
+            <option value="UNDER_REVIEW">
+              {t("candidateStatuses.UNDER_REVIEW")}
+            </option>
 
-            <option value="INTERVIEW">Interview</option>
+            <option value="INTERVIEW">
+              {t("candidateStatuses.INTERVIEW")}
+            </option>
 
-            <option value="SELECTED">Selected</option>
+            <option value="SELECTED">{t("candidateStatuses.SELECTED")}</option>
 
-            <option value="PLACED">Placed</option>
+            <option value="PLACED">{t("candidateStatuses.PLACED")}</option>
 
-            <option value="REJECTED">Rejected</option>
+            <option value="REJECTED">{t("candidateStatuses.REJECTED")}</option>
           </select>
 
-          {/* REVIEW */}
+          {/* STAFF REVIEW FILTER */}
 
           <select
             value={reviewFilter}
@@ -154,17 +173,23 @@ export default function StaffPlacementCandidates() {
             }
             className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm"
           >
-            <option value="ALL">All Staff Reviews</option>
+            <option value="ALL">{t("filters.allStaffReviews")}</option>
 
-            <option value="NOT_REVIEWED">Not Reviewed</option>
+            <option value="NOT_REVIEWED">
+              {t("reviewStatuses.NOT_REVIEWED")}
+            </option>
 
-            <option value="REVIEWED">Reviewed</option>
+            <option value="REVIEWED">{t("reviewStatuses.REVIEWED")}</option>
 
-            <option value="NEEDS_ATTENTION">Needs Attention</option>
+            <option value="NEEDS_ATTENTION">
+              {t("reviewStatuses.NEEDS_ATTENTION")}
+            </option>
           </select>
         </div>
 
+        {/* ================================================= */}
         {/* ERROR */}
+        {/* ================================================= */}
 
         {error && (
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -172,28 +197,30 @@ export default function StaffPlacementCandidates() {
           </div>
         )}
 
+        {/* ================================================= */}
         {/* TABLE */}
+        {/* ================================================= */}
 
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1250px]">
               <thead className="bg-slate-50">
                 <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  <th className="px-5 py-4">Candidate</th>
+                  <th className="px-5 py-4">{t("table.candidate")}</th>
 
-                  <th className="px-5 py-4">Company</th>
+                  <th className="px-5 py-4">{t("table.company")}</th>
 
-                  <th className="px-5 py-4">Placement Request</th>
+                  <th className="px-5 py-4">{t("table.placementRequest")}</th>
 
-                  <th className="px-5 py-4">Pipeline</th>
+                  <th className="px-5 py-4">{t("table.pipeline")}</th>
 
-                  <th className="px-5 py-4">Staff Review</th>
+                  <th className="px-5 py-4">{t("table.staffReview")}</th>
 
-                  <th className="px-5 py-4">Japanese</th>
+                  <th className="px-5 py-4">{t("table.japanese")}</th>
 
-                  <th className="px-5 py-4">Visa</th>
+                  <th className="px-5 py-4">{t("table.visa")}</th>
 
-                  <th className="px-5 py-4 text-right">Actions</th>
+                  <th className="px-5 py-4 text-right">{t("table.actions")}</th>
                 </tr>
               </thead>
 
@@ -204,7 +231,7 @@ export default function StaffPlacementCandidates() {
                       colSpan={8}
                       className="py-16 text-center text-sm text-slate-500"
                     >
-                      Loading placement candidates...
+                      {t("loading")}
                     </td>
                   </tr>
                 ) : candidates.length === 0 ? (
@@ -213,7 +240,7 @@ export default function StaffPlacementCandidates() {
                       colSpan={8}
                       className="py-16 text-center text-sm text-slate-500"
                     >
-                      No placement candidates found.
+                      {t("empty")}
                     </td>
                   </tr>
                 ) : (
@@ -270,7 +297,7 @@ export default function StaffPlacementCandidates() {
                             item.status,
                           )}`}
                         >
-                          {getCandidateStatusLabel(item.status)}
+                          {t(`candidateStatuses.${item.status}`)}
                         </span>
                       </td>
 
@@ -282,7 +309,7 @@ export default function StaffPlacementCandidates() {
                             item.staffReview.status,
                           )}`}
                         >
-                          {getReviewLabel(item.staffReview.status)}
+                          {t(`reviewStatuses.${item.staffReview.status}`)}
                         </span>
 
                         {item.staffReview.status === "NEEDS_ATTENTION" &&
@@ -305,7 +332,7 @@ export default function StaffPlacementCandidates() {
                         {item.candidate.visa_type || "-"}
                       </td>
 
-                      {/* ACTION */}
+                      {/* ACTIONS */}
 
                       <td className="px-5 py-4">
                         <div className="flex justify-end gap-2">
@@ -314,24 +341,25 @@ export default function StaffPlacementCandidates() {
                             onClick={() =>
                               setViewingId(item.placementCandidateId)
                             }
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium transition hover:bg-slate-50"
                           >
                             <Eye className="h-3.5 w-3.5" />
-                            View
+
+                            {t("actions.view")}
                           </button>
 
                           <button
                             type="button"
                             onClick={() => setReviewingCandidate(item)}
-                            className={`rounded-lg px-3 py-2 text-xs font-semibold text-white ${
+                            className={`rounded-lg px-3 py-2 text-xs font-semibold text-white transition ${
                               item.staffReview.status === "NEEDS_ATTENTION"
                                 ? "bg-red-600 hover:bg-red-700"
                                 : "bg-slate-950 hover:bg-slate-800"
                             }`}
                           >
                             {item.staffReview.status === "NOT_REVIEWED"
-                              ? "Review"
-                              : "Edit Review"}
+                              ? t("actions.review")
+                              : t("actions.editReview")}
                           </button>
                         </div>
                       </td>
@@ -344,7 +372,9 @@ export default function StaffPlacementCandidates() {
         </div>
       </main>
 
+      {/* ================================================= */}
       {/* DETAILS */}
+      {/* ================================================= */}
 
       {viewingId && viewingCandidate && (
         <CandidateDetails
@@ -358,7 +388,9 @@ export default function StaffPlacementCandidates() {
         />
       )}
 
+      {/* ================================================= */}
       {/* REVIEW */}
+      {/* ================================================= */}
 
       <ReviewCandidateModal
         candidate={reviewingCandidate}

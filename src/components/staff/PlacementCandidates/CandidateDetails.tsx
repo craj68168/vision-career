@@ -3,24 +3,25 @@
 import {
   AlertTriangle,
   Briefcase,
-  CalendarDays,
   CheckCircle2,
   GraduationCap,
-  MapPin,
-  UserRound,
   X,
 } from "lucide-react";
+
+import { useLocale, useTranslations } from "next-intl";
 
 import {
   formatDate,
   formatDateTime,
   getCandidateStatusClass,
-  getCandidateStatusLabel,
   getReviewClass,
-  getReviewLabel,
 } from "./helper";
 
 import type { StaffPlacementCandidate } from "./types";
+
+// ======================================================
+// PROPS
+// ======================================================
 
 type Props = {
   candidate: StaffPlacementCandidate | undefined;
@@ -39,16 +40,27 @@ export default function CandidateDetails({
   onClose,
   onReview,
 }: Props) {
+  const t = useTranslations("staffPlacementCandidates");
+
+  const locale = useLocale();
+
   if (!candidate) {
     return null;
   }
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-      <button type="button" className="absolute inset-0" onClick={onClose} />
+      <button
+        type="button"
+        className="absolute inset-0"
+        onClick={onClose}
+        aria-label={t("details.close")}
+      />
 
       <div className="relative z-10 flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+        {/* ================================================= */}
         {/* HEADER */}
+        {/* ================================================= */}
 
         <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
           <div>
@@ -61,7 +73,9 @@ export default function CandidateDetails({
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Seeker ID: {candidate.seekerId}
+              {t("details.seekerId", {
+                id: candidate.seekerId,
+              })}
             </p>
           </div>
 
@@ -71,107 +85,129 @@ export default function CandidateDetails({
                 candidate.status,
               )}`}
             >
-              {getCandidateStatusLabel(candidate.status)}
+              {t(`candidateStatuses.${candidate.status}`)}
             </span>
 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full p-2 hover:bg-slate-100"
+              aria-label={t("details.close")}
+              className="rounded-full p-2 transition hover:bg-slate-100"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
         </div>
 
+        {/* ================================================= */}
         {/* BODY */}
+        {/* ================================================= */}
 
         <div className="overflow-y-auto p-6">
           <div className="space-y-7">
-            {/* REQUEST */}
+            {/* ============================================= */}
+            {/* PLACEMENT REQUEST */}
+            {/* ============================================= */}
 
             <section>
-              <h3 className="mb-4 text-lg font-bold">Placement Request</h3>
+              <h3 className="mb-4 text-lg font-bold">
+                {t("details.placementRequest")}
+              </h3>
 
               <div className="grid gap-3 md:grid-cols-3">
                 <Field
-                  label="Company"
+                  label={t("details.company")}
                   value={candidate.provider?.companyName}
                 />
 
-                <Field label="Job" value={candidate.request?.jobTitle} />
+                <Field
+                  label={t("details.job")}
+                  value={candidate.request?.jobTitle}
+                />
 
                 <Field
-                  label="Location"
+                  label={t("details.location")}
                   value={candidate.request?.workLocation}
                 />
 
-                <Field label="Recruit ID" value={candidate.recruitId} />
+                <Field
+                  label={t("details.recruitId")}
+                  value={candidate.recruitId}
+                />
 
                 <Field
-                  label="Positions"
+                  label={t("details.positions")}
                   value={candidate.request?.numberOfPositions}
                 />
 
                 <Field
-                  label="Matched By Admin"
+                  label={t("details.matchedByAdmin")}
                   value={candidate.matchedByAdminId}
                 />
               </div>
             </section>
 
+            {/* ============================================= */}
             {/* PROFILE */}
+            {/* ============================================= */}
 
             <section>
-              <h3 className="mb-4 text-lg font-bold">Candidate Profile</h3>
+              <h3 className="mb-4 text-lg font-bold">
+                {t("details.candidateProfile")}
+              </h3>
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Field
-                  label="Nationality"
+                  label={t("details.nationality")}
                   value={candidate.candidate.nationality}
                 />
 
                 <Field
-                  label="Current Location"
+                  label={t("details.currentLocation")}
                   value={candidate.candidate.current_location}
                 />
 
                 <Field
-                  label="Visa Type"
+                  label={t("details.visaType")}
                   value={candidate.candidate.visa_type}
                 />
 
                 <Field
-                  label="Visa Expiry"
-                  value={formatDate(candidate.candidate.visa_expiry_date)}
+                  label={t("details.visaExpiry")}
+                  value={formatDate(
+                    candidate.candidate.visa_expiry_date,
+                    locale,
+                  )}
                 />
 
                 <Field
-                  label="Japanese Level"
+                  label={t("details.japaneseLevel")}
                   value={candidate.candidate.japanese_level}
                 />
 
                 <Field
-                  label="Desired Job"
+                  label={t("details.desiredJob")}
                   value={candidate.candidate.desired_job}
                 />
 
                 <Field
-                  label="Desired Location"
+                  label={t("details.desiredLocation")}
                   value={candidate.candidate.desired_location}
                 />
 
                 <Field
-                  label="Matched At"
-                  value={formatDateTime(candidate.matchedAt)}
+                  label={t("details.matchedAt")}
+                  value={formatDateTime(candidate.matchedAt, locale)}
                 />
               </div>
             </section>
 
+            {/* ============================================= */}
             {/* SKILLS */}
+            {/* ============================================= */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
-              <h3 className="font-bold">Skills</h3>
+              <h3 className="font-bold">{t("details.skills")}</h3>
 
               <div className="mt-3 flex flex-wrap gap-2">
                 {candidate.candidate.skills.length > 0 ? (
@@ -184,23 +220,25 @@ export default function CandidateDetails({
                     </span>
                   ))
                 ) : (
-                  <Empty />
+                  <Empty label={t("details.noInformation")} />
                 )}
               </div>
             </section>
 
+            {/* ============================================= */}
             {/* EDUCATION */}
+            {/* ============================================= */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5 text-slate-500" />
 
-                <h3 className="font-bold">Education</h3>
+                <h3 className="font-bold">{t("details.education")}</h3>
               </div>
 
               <div className="mt-4 space-y-3">
                 {candidate.candidate.education.length === 0 ? (
-                  <Empty />
+                  <Empty label={t("details.noInformation")} />
                 ) : (
                   candidate.candidate.education.map((education, index) => (
                     <div
@@ -216,11 +254,11 @@ export default function CandidateDetails({
                       </p>
 
                       <p className="mt-2 text-xs text-slate-400">
-                        {formatDate(education.enrollment_date)}
+                        {formatDate(education.enrollment_date, locale)}
 
                         {" — "}
 
-                        {formatDate(education.graduation_date)}
+                        {formatDate(education.graduation_date, locale)}
                       </p>
                     </div>
                   ))
@@ -228,18 +266,20 @@ export default function CandidateDetails({
               </div>
             </section>
 
-            {/* EMPLOYMENT */}
+            {/* ============================================= */}
+            {/* EMPLOYMENT HISTORY */}
+            {/* ============================================= */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
               <div className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-slate-500" />
 
-                <h3 className="font-bold">Employment History</h3>
+                <h3 className="font-bold">{t("details.employmentHistory")}</h3>
               </div>
 
               <div className="mt-4 space-y-3">
                 {candidate.candidate.employment_history.length === 0 ? (
-                  <Empty />
+                  <Empty label={t("details.noInformation")} />
                 ) : (
                   candidate.candidate.employment_history.map(
                     (employment, index) => (
@@ -256,11 +296,13 @@ export default function CandidateDetails({
                         </p>
 
                         <p className="mt-2 text-xs text-slate-400">
-                          {formatDate(employment.start_date)}
+                          {formatDate(employment.start_date, locale)}
 
                           {" — "}
 
-                          {formatDate(employment.end_date)}
+                          {employment.end_date
+                            ? formatDate(employment.end_date, locale)
+                            : t("details.present")}
                         </p>
                       </div>
                     ),
@@ -269,37 +311,41 @@ export default function CandidateDetails({
               </div>
             </section>
 
+            {/* ============================================= */}
             {/* PROVIDER PIPELINE */}
+            {/* ============================================= */}
 
             <section>
-              <h3 className="mb-4 text-lg font-bold">Provider Pipeline</h3>
+              <h3 className="mb-4 text-lg font-bold">
+                {t("details.providerPipeline")}
+              </h3>
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Field
-                  label="Provider Review"
-                  value={formatDateTime(candidate.providerReviewedAt)}
+                  label={t("details.providerReview")}
+                  value={formatDateTime(candidate.providerReviewedAt, locale)}
                 />
 
                 <Field
-                  label="Interview"
-                  value={formatDateTime(candidate.interviewAt)}
+                  label={t("details.interview")}
+                  value={formatDateTime(candidate.interviewAt, locale)}
                 />
 
                 <Field
-                  label="Selected"
-                  value={formatDateTime(candidate.selectedAt)}
+                  label={t("details.selected")}
+                  value={formatDateTime(candidate.selectedAt, locale)}
                 />
 
                 <Field
-                  label="Placed"
-                  value={formatDateTime(candidate.placedAt)}
+                  label={t("details.placed")}
+                  value={formatDateTime(candidate.placedAt, locale)}
                 />
               </div>
 
               {candidate.status === "REJECTED" && candidate.rejectionReason && (
                 <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 p-4">
                   <p className="text-xs font-semibold uppercase text-red-600">
-                    Provider Rejection Reason
+                    {t("details.providerRejectionReason")}
                   </p>
 
                   <p className="mt-2 whitespace-pre-wrap text-sm text-red-700">
@@ -309,18 +355,22 @@ export default function CandidateDetails({
               )}
             </section>
 
+            {/* ============================================= */}
             {/* STAFF REVIEW */}
+            {/* ============================================= */}
 
             <section>
               <div className="mb-4 flex items-center justify-between gap-3">
-                <h3 className="text-lg font-bold">Staff Review</h3>
+                <h3 className="text-lg font-bold">
+                  {t("details.staffReview")}
+                </h3>
 
                 <span
                   className={`rounded-full border px-3 py-1 text-xs font-semibold ${getReviewClass(
                     candidate.staffReview.status,
                   )}`}
                 >
-                  {getReviewLabel(candidate.staffReview.status)}
+                  {t(`reviewStatuses.${candidate.staffReview.status}`)}
                 </span>
               </div>
 
@@ -329,8 +379,7 @@ export default function CandidateDetails({
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
 
                   <p className="text-sm text-amber-700">
-                    This candidate has not yet received a Staff operational
-                    review.
+                    {t("details.notReviewedMessage")}
                   </p>
                 </div>
               )}
@@ -340,7 +389,7 @@ export default function CandidateDetails({
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
 
                   <p className="text-sm text-emerald-700">
-                    Staff candidate review has been completed.
+                    {t("details.reviewedMessage")}
                   </p>
                 </div>
               )}
@@ -350,7 +399,7 @@ export default function CandidateDetails({
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
 
                   <p className="text-sm text-red-700">
-                    Staff marked this candidate as needing attention.
+                    {t("details.needsAttentionMessage")}
                   </p>
                 </div>
               )}
@@ -358,13 +407,16 @@ export default function CandidateDetails({
               {candidate.staffReview.status !== "NOT_REVIEWED" && (
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
                   <Field
-                    label="Reviewed By"
+                    label={t("details.reviewedBy")}
                     value={candidate.staffReview.reviewedByStaffId}
                   />
 
                   <Field
-                    label="Reviewed At"
-                    value={formatDateTime(candidate.staffReview.reviewedAt)}
+                    label={t("details.reviewedAt")}
+                    value={formatDateTime(
+                      candidate.staffReview.reviewedAt,
+                      locale,
+                    )}
                   />
                 </div>
               )}
@@ -378,7 +430,7 @@ export default function CandidateDetails({
                   }`}
                 >
                   <p className="text-xs font-semibold uppercase text-slate-500">
-                    Staff Review Note
+                    {t("details.staffReviewNote")}
                   </p>
 
                   <p className="mt-2 whitespace-pre-wrap text-sm">
@@ -387,15 +439,16 @@ export default function CandidateDetails({
                 </div>
               )}
 
-              <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
-                Staff review is operational only. Provider controls the
-                candidate hiring pipeline.
+              <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-700">
+                {t("details.operationalNotice")}
               </div>
             </section>
           </div>
         </div>
 
+        {/* ================================================= */}
         {/* FOOTER */}
+        {/* ================================================= */}
 
         <div className="flex justify-end gap-3 border-t border-slate-200 p-6">
           <button
@@ -403,17 +456,17 @@ export default function CandidateDetails({
             onClick={onClose}
             className="rounded-xl border border-slate-200 px-5 py-2.5"
           >
-            Close
+            {t("details.close")}
           </button>
 
           <button
             type="button"
             onClick={() => onReview(candidate)}
-            className="rounded-xl bg-slate-950 px-5 py-2.5 font-semibold text-white"
+            className="rounded-xl bg-slate-950 px-5 py-2.5 font-semibold text-white transition hover:bg-slate-800"
           >
             {candidate.staffReview.status === "NOT_REVIEWED"
-              ? "Review Candidate"
-              : "Edit Review"}
+              ? t("actions.reviewCandidate")
+              : t("actions.editReview")}
           </button>
         </div>
       </div>
@@ -452,6 +505,6 @@ function Field({
 // EMPTY
 // ======================================================
 
-function Empty() {
-  return <p className="text-sm text-slate-400">No information available.</p>;
+function Empty({ label }: { label: string }) {
+  return <p className="text-sm text-slate-400">{label}</p>;
 }

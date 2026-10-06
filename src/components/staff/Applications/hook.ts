@@ -6,9 +6,16 @@ import axios from "axios";
 
 import toast from "react-hot-toast";
 
+import { useTranslations } from "next-intl";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getStaffApplications, screenStaffApplication } from "./api";
+import {
+  approveStaffApplication,
+  getStaffApplications,
+  rejectStaffApplication,
+  screenStaffApplication,
+} from "./api";
 
 import type {
   ApiErrorResponse,
@@ -29,7 +36,13 @@ const APPLICATION_QUERY_KEY = ["staff-applications"] as const;
 // ======================================================
 
 export const useStaffApplications = () => {
+  const t = useTranslations("staffApplications");
+
   const queryClient = useQueryClient();
+
+  // ==================================================
+  // FILTERS
+  // ==================================================
 
   const [search, setSearch] = useState("");
 
@@ -41,10 +54,17 @@ export const useStaffApplications = () => {
     "ALL" | StaffScreeningStatus
   >("ALL");
 
+  // ==================================================
+  // MODALS
+  // ==================================================
+
   const [selectedApplication, setSelectedApplication] =
     useState<StaffApplication | null>(null);
 
   const [screeningApplication, setScreeningApplication] =
+    useState<StaffApplication | null>(null);
+
+  const [decisionApplication, setDecisionApplication] =
     useState<StaffApplication | null>(null);
 
   // ==================================================
@@ -58,19 +78,87 @@ export const useStaffApplications = () => {
   });
 
   // ==================================================
-  // ERROR
+  // ERROR MESSAGE
   // ==================================================
 
-  const getErrorMessage = (error: unknown) => {
+  const getErrorMessage = (error: unknown, fallback: string) => {
     if (axios.isAxiosError<ApiErrorResponse>(error)) {
-      return error.response?.data?.message || "Something went wrong.";
+      if (!error.response) {
+        return t("messages.network");
+      }
+
+      switch (error.response.status) {
+        case 400:
+        case 422:
+          return t("messages.invalid");
+
+        case 401:
+          return t("messages.unauthorized");
+
+        case 403:
+          return t("messages.forbidden");
+
+        case 404:
+          return t("messages.notFound");
+
+        case 409:
+          return t("messages.conflict");
+
+        case 429:
+          return t("messages.rateLimit");
+
+        case 500:
+        case 502:
+        case 503:
+        case 504:
+          return t("messages.server");
+
+        default:
+          return error.response.data?.message || fallback;
+      }
     }
 
-    return "Something went wrong.";
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return fallback;
   };
 
   // ==================================================
-  // SCREEN MUTATION
+  // INVALIDATE
+  // ==================================================
+
+  const invalidateApplicationQueries = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: APPLICATION_QUERY_KEY,
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["staff-dashboard"],
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["admin-applications"],
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["provider-applications"],
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["job-seeker-applications"],
+      }),
+
+      queryClient.invalidateQueries({
+        queryKey: ["seeker-applications"],
+      }),
+    ]);
+  };
+
+  // ==================================================
+  // SCREEN
   // ==================================================
 
   const screeningMutation = useMutation({
@@ -84,7 +172,7 @@ export const useStaffApplications = () => {
     }) => screenStaffApplication(applicationId, payload),
 
     onSuccess: async (response) => {
-      toast.success(response.message || "Application screening saved.");
+      toast.success(t("messages.screeningSaved"));
 
       setScreeningApplication(null);
 
@@ -96,22 +184,65 @@ export const useStaffApplications = () => {
         return response.data;
       });
 
-      await queryClient.invalidateQueries({
-        queryKey: APPLICATION_QUERY_KEY,
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["staff-dashboard"],
-      });
-
-      // Admin needs fresh screening state too.
-      await queryClient.invalidateQueries({
-        queryKey: ["admin-applications"],
-      });
+      await invalidateApplicationQueries();
     },
 
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error));
+      toast.error(getErrorMessage(error, t("messages.screeningFailed")));
+    },
+  });
+
+  // ==================================================
+  // APPROVE
+  // ==================================================
+
+  const approveMutation = useMutation({
+    mutationFn: approveStaffApplication,
+
+    onSuccess: async () => {
+      toast.success(t("messages.approved"));
+
+      setDecisionApplication(null);
+
+      setSelectedApplication(null);
+
+      await invalidateApplicationQueries();
+    },
+
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, t("messages.approvalFailed")));
+    },
+  });
+
+  // ==================================================
+  // REJECT
+  // ==================================================
+
+  const rejectMutation = useMutation({
+    mutationFn: ({
+      applicationId,
+      reason,
+    }: {
+      applicationId: string;
+
+      reason: string;
+    }) =>
+      rejectStaffApplication(applicationId, {
+        reason,
+      }),
+
+    onSuccess: async () => {
+      toast.success(t("messages.rejected"));
+
+      setDecisionApplication(null);
+
+      setSelectedApplication(null);
+
+      await invalidateApplicationQueries();
+    },
+
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, t("messages.rejectionFailed")));
     },
   });
 
@@ -162,7 +293,7 @@ export const useStaffApplications = () => {
   }, [applications, search, statusFilter, screeningFilter]);
 
   // ==================================================
-  // ACTIONS
+  // SCREEN ACTION
   // ==================================================
 
   const submitScreening = (
@@ -175,9 +306,36 @@ export const useStaffApplications = () => {
     });
   };
 
+  // ==================================================
+  // APPROVE ACTION
+  // ==================================================
+
+  const approveApplication = (applicationId: string) => {
+    approveMutation.mutate(applicationId);
+  };
+
+  // ==================================================
+  // REJECT ACTION
+  // ==================================================
+
+  const rejectApplication = (applicationId: string, reason: string) => {
+    rejectMutation.mutate({
+      applicationId,
+      reason,
+    });
+  };
+
+  // ==================================================
+  // REFRESH
+  // ==================================================
+
   const refresh = async () => {
     await applicationQuery.refetch();
   };
+
+  // ==================================================
+  // RETURN
+  // ==================================================
 
   return {
     applications: filteredApplications,
@@ -199,13 +357,24 @@ export const useStaffApplications = () => {
     screeningApplication,
     setScreeningApplication,
 
+    decisionApplication,
+    setDecisionApplication,
+
     isLoading: applicationQuery.isLoading,
 
     isFetching: applicationQuery.isFetching,
 
     isScreening: screeningMutation.isPending,
 
+    isApproving: approveMutation.isPending,
+
+    isRejecting: rejectMutation.isPending,
+
     submitScreening,
+
+    approveApplication,
+
+    rejectApplication,
 
     refresh,
   };

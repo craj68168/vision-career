@@ -3,6 +3,7 @@ import axiosInstance from "@/services/axiosInstance";
 import type {
   ScreenSeekerPayload,
   StaffSeeker,
+  StaffSeekerApprovalPayload,
   StaffSeekerFilters,
   StaffSeekerListResponse,
   StaffSeekerResponse,
@@ -63,6 +64,22 @@ export const screenStaffSeeker = async (
 ): Promise<StaffSeekerResponse> => {
   const response = await axiosInstance.patch<StaffSeekerResponse>(
     `/staff/seekers/${seekerId}/screen`,
+    payload,
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// APPROVE / REJECT
+// ======================================================
+
+export const updateStaffSeekerApproval = async (
+  seekerId: string,
+  payload: StaffSeekerApprovalPayload,
+): Promise<StaffSeekerResponse> => {
+  const response = await axiosInstance.patch<StaffSeekerResponse>(
+    `/staff/seekers/${seekerId}/approval`,
     payload,
   );
 

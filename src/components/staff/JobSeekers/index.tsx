@@ -9,21 +9,20 @@ import {
   UserRound,
 } from "lucide-react";
 
+import { useTranslations } from "next-intl";
+
 import { useQuery } from "@tanstack/react-query";
 
 import { getCurrentStaff } from "@/components/auth/Staff/api";
 
-import {
-  getAccountClass,
-  getApprovalClass,
-  getPlacementLabel,
-  getScreeningClass,
-  getScreeningLabel,
-} from "./helper";
+import ApprovalDecisionModal from "./ApprovalDecisionModal";
+
+import { getAccountClass, getApprovalClass, getScreeningClass } from "./helper";
 
 import { useStaffJobSeekers } from "./hook";
 
 import JobSeekerDetails from "./JobSeekerDetails";
+
 import ScreenSeekerModal from "./ScreenSeekerModal";
 
 import type {
@@ -34,6 +33,8 @@ import type {
 } from "./types";
 
 export default function StaffJobSeekers() {
+  const t = useTranslations("staffJobSeekers");
+
   const {
     seekers,
     summary,
@@ -54,9 +55,13 @@ export default function StaffJobSeekers() {
     screeningSeeker,
     setScreeningSeeker,
 
+    approvalSeeker,
+    setApprovalSeeker,
+
     isLoading,
     isFetching,
     isScreening,
+    isApproving,
     isDownloading,
 
     setSearch,
@@ -71,12 +76,13 @@ export default function StaffJobSeekers() {
     openView,
     downloadResume,
     submitScreening,
+    submitApproval,
 
     refresh,
   } = useStaffJobSeekers();
 
   // ====================================================
-  // CURRENT STAFF / PERMISSION
+  // CURRENT STAFF
   // ====================================================
 
   const staffQuery = useQuery({
@@ -88,6 +94,65 @@ export default function StaffJobSeekers() {
   const canManage =
     staffQuery.data?.data.permissions.includes("seekers:manage") ?? false;
 
+  const canApprove =
+    staffQuery.data?.data.permissions.includes("seekers:approval") ?? false;
+
+  const approvalLabel = (status: ApprovalStatus) => {
+    if (status === "approved") {
+      return t("statuses.approval.approved");
+    }
+
+    if (status === "rejected") {
+      return t("statuses.approval.rejected");
+    }
+
+    return t("statuses.approval.pending");
+  };
+
+  const accountLabel = (status: AccountStatus) => {
+    if (status === "active") {
+      return t("statuses.account.active");
+    }
+
+    if (status === "suspended") {
+      return t("statuses.account.suspended");
+    }
+
+    return t("statuses.account.inactive");
+  };
+
+  const placementLabel = (status: PlacementStatus) => {
+    if (status === "matching") {
+      return t("statuses.placement.matching");
+    }
+
+    if (status === "interview") {
+      return t("statuses.placement.interview");
+    }
+
+    if (status === "selected") {
+      return t("statuses.placement.selected");
+    }
+
+    if (status === "placed") {
+      return t("statuses.placement.placed");
+    }
+
+    return t("statuses.placement.unplaced");
+  };
+
+  const screeningLabel = (status: SeekerScreeningStatus) => {
+    if (status === "SCREENED") {
+      return t("statuses.screening.screened");
+    }
+
+    if (status === "NEEDS_ATTENTION") {
+      return t("statuses.screening.needsAttention");
+    }
+
+    return t("statuses.screening.notScreened");
+  };
+
   return (
     <>
       <main className="mx-auto w-full max-w-7xl space-y-6 px-6 py-10">
@@ -95,11 +160,10 @@ export default function StaffJobSeekers() {
 
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Job Seekers</h1>
+            <h1 className="text-3xl font-bold">{t("page.title")}</h1>
 
             <p className="mt-1 text-sm text-slate-500">
-              Review Job Seeker profiles before final Admin registration
-              approval.
+              {t("page.description")}
             </p>
           </div>
 
@@ -107,31 +171,38 @@ export default function StaffJobSeekers() {
             type="button"
             disabled={isFetching}
             onClick={() => void refresh()}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 disabled:opacity-50"
           >
             <RefreshCw
               className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
             />
-            Refresh
+
+            {t("refresh")}
           </button>
         </div>
 
         {/* SUMMARY */}
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <Summary label="Total" value={summary?.total ?? 0} />
+          <Summary label={t("summary.total")} value={summary?.total ?? 0} />
 
           <Summary
-            label="Pending Admin"
+            label={t("summary.pendingApproval")}
             value={summary?.pendingApproval ?? 0}
           />
 
-          <Summary label="Not Screened" value={summary?.notScreened ?? 0} />
-
-          <Summary label="Screened" value={summary?.screened ?? 0} />
+          <Summary
+            label={t("summary.notScreened")}
+            value={summary?.notScreened ?? 0}
+          />
 
           <Summary
-            label="Needs Attention"
+            label={t("summary.screened")}
+            value={summary?.screened ?? 0}
+          />
+
+          <Summary
+            label={t("summary.needsAttention")}
             value={summary?.needsAttention ?? 0}
           />
         </div>
@@ -146,7 +217,7 @@ export default function StaffJobSeekers() {
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search seeker, email, ID..."
+                placeholder={t("filters.search")}
                 className="h-12 w-full rounded-xl border border-slate-200 pl-11 pr-4 outline-none"
               />
             </div>
@@ -158,13 +229,17 @@ export default function StaffJobSeekers() {
               }
               className="h-12 rounded-xl border border-slate-200 px-3"
             >
-              <option value="">All approvals</option>
+              <option value="">{t("filters.allApprovals")}</option>
 
-              <option value="pending">Pending</option>
+              <option value="pending">{t("statuses.approval.pending")}</option>
 
-              <option value="approved">Approved</option>
+              <option value="approved">
+                {t("statuses.approval.approved")}
+              </option>
 
-              <option value="rejected">Rejected</option>
+              <option value="rejected">
+                {t("statuses.approval.rejected")}
+              </option>
             </select>
 
             <select
@@ -174,13 +249,15 @@ export default function StaffJobSeekers() {
               }
               className="h-12 rounded-xl border border-slate-200 px-3"
             >
-              <option value="">All accounts</option>
+              <option value="">{t("filters.allAccounts")}</option>
 
-              <option value="active">Active</option>
+              <option value="active">{t("statuses.account.active")}</option>
 
-              <option value="inactive">Inactive</option>
+              <option value="inactive">{t("statuses.account.inactive")}</option>
 
-              <option value="suspended">Suspended</option>
+              <option value="suspended">
+                {t("statuses.account.suspended")}
+              </option>
             </select>
 
             <select
@@ -190,17 +267,25 @@ export default function StaffJobSeekers() {
               }
               className="h-12 rounded-xl border border-slate-200 px-3"
             >
-              <option value="">All placement</option>
+              <option value="">{t("filters.allPlacement")}</option>
 
-              <option value="unplaced">Unplaced</option>
+              <option value="unplaced">
+                {t("statuses.placement.unplaced")}
+              </option>
 
-              <option value="matching">Matching</option>
+              <option value="matching">
+                {t("statuses.placement.matching")}
+              </option>
 
-              <option value="interview">Interview</option>
+              <option value="interview">
+                {t("statuses.placement.interview")}
+              </option>
 
-              <option value="selected">Selected</option>
+              <option value="selected">
+                {t("statuses.placement.selected")}
+              </option>
 
-              <option value="placed">Placed</option>
+              <option value="placed">{t("statuses.placement.placed")}</option>
             </select>
 
             <select
@@ -212,13 +297,19 @@ export default function StaffJobSeekers() {
               }
               className="h-12 rounded-xl border border-slate-200 px-3"
             >
-              <option value="">All screening</option>
+              <option value="">{t("filters.allScreening")}</option>
 
-              <option value="NOT_SCREENED">Not Screened</option>
+              <option value="NOT_SCREENED">
+                {t("statuses.screening.notScreened")}
+              </option>
 
-              <option value="SCREENED">Screened</option>
+              <option value="SCREENED">
+                {t("statuses.screening.screened")}
+              </option>
 
-              <option value="NEEDS_ATTENTION">Needs Attention</option>
+              <option value="NEEDS_ATTENTION">
+                {t("statuses.screening.needsAttention")}
+              </option>
             </select>
           </div>
         </div>
@@ -230,21 +321,23 @@ export default function StaffJobSeekers() {
             <table className="w-full min-w-[1200px]">
               <thead className="bg-slate-50">
                 <tr className="text-left text-xs font-semibold uppercase text-slate-500">
-                  <th className="px-5 py-4">ID</th>
+                  <th className="px-5 py-4">{t("table.id")}</th>
 
-                  <th className="px-5 py-4">Job Seeker</th>
+                  <th className="px-5 py-4">{t("table.jobSeeker")}</th>
 
-                  <th className="px-5 py-4">Approval</th>
+                  <th className="px-5 py-4">{t("table.approval")}</th>
 
-                  <th className="px-5 py-4">Account</th>
+                  <th className="px-5 py-4">{t("table.account")}</th>
 
-                  <th className="px-5 py-4">Placement</th>
+                  <th className="px-5 py-4">{t("table.placement")}</th>
 
-                  <th className="px-5 py-4">Screening</th>
+                  <th className="px-5 py-4">{t("table.screening")}</th>
 
-                  <th className="px-5 py-4 text-center">Applications</th>
+                  <th className="px-5 py-4 text-center">
+                    {t("table.applications")}
+                  </th>
 
-                  <th className="px-5 py-4 text-right">Actions</th>
+                  <th className="px-5 py-4 text-right">{t("table.actions")}</th>
                 </tr>
               </thead>
 
@@ -255,7 +348,7 @@ export default function StaffJobSeekers() {
                       colSpan={8}
                       className="py-16 text-center text-slate-500"
                     >
-                      Loading Job Seekers...
+                      {t("table.loading")}
                     </td>
                   </tr>
                 ) : seekers.length === 0 ? (
@@ -264,7 +357,7 @@ export default function StaffJobSeekers() {
                       colSpan={8}
                       className="py-16 text-center text-slate-500"
                     >
-                      No Job Seekers found.
+                      {t("table.empty")}
                     </td>
                   </tr>
                 ) : (
@@ -284,26 +377,26 @@ export default function StaffJobSeekers() {
 
                       <td className="px-5 py-4">
                         <span
-                          className={`rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${getApprovalClass(
+                          className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${getApprovalClass(
                             seeker.approval_status,
                           )}`}
                         >
-                          {seeker.approval_status}
+                          {approvalLabel(seeker.approval_status)}
                         </span>
                       </td>
 
                       <td className="px-5 py-4">
                         <span
-                          className={`rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${getAccountClass(
+                          className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${getAccountClass(
                             seeker.account_status,
                           )}`}
                         >
-                          {seeker.account_status}
+                          {accountLabel(seeker.account_status)}
                         </span>
                       </td>
 
                       <td className="px-5 py-4 text-sm font-medium">
-                        {getPlacementLabel(seeker.placement_status)}
+                        {placementLabel(seeker.placement_status)}
                       </td>
 
                       <td className="px-5 py-4">
@@ -312,7 +405,7 @@ export default function StaffJobSeekers() {
                             seeker.staffScreening.status,
                           )}`}
                         >
-                          {getScreeningLabel(seeker.staffScreening.status)}
+                          {screeningLabel(seeker.staffScreening.status)}
                         </span>
                       </td>
 
@@ -328,7 +421,8 @@ export default function StaffJobSeekers() {
                             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium"
                           >
                             <Eye className="h-3.5 w-3.5" />
-                            View
+
+                            {t("view")}
                           </button>
 
                           {canManage &&
@@ -339,8 +433,19 @@ export default function StaffJobSeekers() {
                                 className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white"
                               >
                                 {seeker.staffScreening.status === "NOT_SCREENED"
-                                  ? "Screen"
-                                  : "Edit Screening"}
+                                  ? t("table.screen")
+                                  : t("table.editScreening")}
+                              </button>
+                            )}
+
+                          {canApprove &&
+                            seeker.approval_status === "pending" && (
+                              <button
+                                type="button"
+                                onClick={() => setApprovalSeeker(seeker)}
+                                className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                              >
+                                {t("table.approveReject")}
                               </button>
                             )}
                         </div>
@@ -356,7 +461,9 @@ export default function StaffJobSeekers() {
 
           <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-500">
-              {pagination?.total ?? 0} record(s)
+              {t("pagination.records", {
+                count: pagination?.total ?? 0,
+              })}
             </p>
 
             <div className="flex items-center gap-2">
@@ -365,11 +472,17 @@ export default function StaffJobSeekers() {
                 onChange={(event) => changeLimit(Number(event.target.value))}
                 className="rounded-lg border border-slate-200 px-3 py-2"
               >
-                <option value={10}>10 / page</option>
+                <option value={10}>
+                  {t("pagination.perPage", { count: 10 })}
+                </option>
 
-                <option value={20}>20 / page</option>
+                <option value={20}>
+                  {t("pagination.perPage", { count: 20 })}
+                </option>
 
-                <option value={50}>50 / page</option>
+                <option value={50}>
+                  {t("pagination.perPage", { count: 50 })}
+                </option>
               </select>
 
               <button
@@ -397,17 +510,31 @@ export default function StaffJobSeekers() {
           </div>
         </div>
 
-        {!canManage && (
+        {!canManage && !canApprove && (
           <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
-            Your Staff account has view-only Job Seeker access. An Admin must
-            grant seekers:manage before you can perform screening.
+            {t("permissions.viewOnly")}
+          </div>
+        )}
+
+        {canManage && !canApprove && (
+          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
+            {t("permissions.screenOnly")}
+          </div>
+        )}
+
+        {!canManage && canApprove && (
+          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
+            {t("permissions.approvalOnly")}
           </div>
         )}
       </main>
 
+      {/* DETAILS */}
+
       <JobSeekerDetails
         seeker={viewingSeeker}
         canManage={canManage}
+        canApprove={canApprove}
         isDownloading={isDownloading}
         onClose={() => setViewingSeeker(null)}
         onScreen={(seeker) => {
@@ -415,8 +542,15 @@ export default function StaffJobSeekers() {
 
           setScreeningSeeker(seeker);
         }}
+        onApprove={(seeker) => {
+          setViewingSeeker(null);
+
+          setApprovalSeeker(seeker);
+        }}
         onDownloadResume={(seeker) => void downloadResume(seeker)}
       />
+
+      {/* SCREEN */}
 
       <ScreenSeekerModal
         seeker={screeningSeeker}
@@ -424,9 +558,22 @@ export default function StaffJobSeekers() {
         onClose={() => setScreeningSeeker(null)}
         onSubmit={submitScreening}
       />
+
+      {/* APPROVAL */}
+
+      <ApprovalDecisionModal
+        seeker={approvalSeeker}
+        isSaving={isApproving}
+        onClose={() => setApprovalSeeker(null)}
+        onSubmit={submitApproval}
+      />
     </>
   );
 }
+
+// ======================================================
+// SUMMARY
+// ======================================================
 
 function Summary({
   label,

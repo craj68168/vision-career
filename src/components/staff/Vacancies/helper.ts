@@ -1,26 +1,8 @@
 import type { StaffVacancyScreeningStatus, StaffVacancyStatus } from "./types";
 
 // ======================================================
-// VACANCY STATUS
+// VACANCY STATUS CLASS
 // ======================================================
-
-export const getVacancyStatusLabel = (status: StaffVacancyStatus) => {
-  const labels: Record<StaffVacancyStatus, string> = {
-    draft: "Draft",
-
-    pending_review: "Pending Review",
-
-    approved: "Approved",
-
-    rejected: "Rejected",
-
-    published: "Published",
-
-    closed: "Closed",
-  };
-
-  return labels[status];
-};
 
 export const getVacancyStatusClass = (status: StaffVacancyStatus) => {
   switch (status) {
@@ -45,20 +27,8 @@ export const getVacancyStatusClass = (status: StaffVacancyStatus) => {
 };
 
 // ======================================================
-// SCREENING
+// SCREENING CLASS
 // ======================================================
-
-export const getScreeningLabel = (status: StaffVacancyScreeningStatus) => {
-  const labels: Record<StaffVacancyScreeningStatus, string> = {
-    NOT_SCREENED: "Not Screened",
-
-    SCREENED: "Screened",
-
-    NEEDS_ATTENTION: "Needs Attention",
-  };
-
-  return labels[status];
-};
 
 export const getScreeningClass = (status: StaffVacancyScreeningStatus) => {
   switch (status) {
@@ -90,14 +60,14 @@ export const formatSalary = (min?: number | null, max?: number | null) => {
     return `¥${min.toLocaleString()}+`;
   }
 
-  return `Up to ¥${Number(max).toLocaleString()}`;
+  return `¥${Number(max).toLocaleString()}`;
 };
 
 // ======================================================
 // DATE
 // ======================================================
 
-export const formatDate = (value?: string | null) => {
+export const formatDate = (value?: string | null, locale = "en") => {
   if (!value) {
     return "-";
   }
@@ -108,10 +78,19 @@ export const formatDate = (value?: string | null) => {
     return "-";
   }
 
-  return date.toLocaleDateString();
+  return new Intl.DateTimeFormat(locale.startsWith("ja") ? "ja-JP" : "en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "Asia/Tokyo",
+  }).format(date);
 };
 
-export const formatDateTime = (value?: string | null) => {
+// ======================================================
+// DATE TIME
+// ======================================================
+
+export const formatDateTime = (value?: string | null, locale = "en") => {
   if (!value) {
     return "-";
   }
@@ -122,5 +101,12 @@ export const formatDateTime = (value?: string | null) => {
     return "-";
   }
 
-  return date.toLocaleString();
+  return new Intl.DateTimeFormat(locale.startsWith("ja") ? "ja-JP" : "en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Tokyo",
+  }).format(date);
 };

@@ -6,6 +6,8 @@ import axios from "axios";
 
 import toast from "react-hot-toast";
 
+import { useLocale, useTranslations } from "next-intl";
+
 import {
   BriefcaseBusiness,
   Eye,
@@ -21,9 +23,7 @@ import {
   formatDate,
   formatDateTime,
   getApplicationStatusClass,
-  getApplicationStatusLabel,
   getScreeningClass,
-  getScreeningLabel,
 } from "./helper";
 
 import type { ApiErrorResponse, StaffApplication } from "./types";
@@ -37,25 +37,13 @@ type Props = {
 
   canReview: boolean;
 
+  canApprove: boolean;
+
   onClose: () => void;
 
   onScreen: (application: StaffApplication) => void;
-};
 
-// ======================================================
-// ERROR MESSAGE
-// ======================================================
-
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (axios.isAxiosError<ApiErrorResponse>(error)) {
-    return error.response?.data?.message || fallback;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallback;
+  onDecision: (application: StaffApplication) => void;
 };
 
 // ======================================================
@@ -65,17 +53,54 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 export default function ApplicationDetails({
   application,
   canReview,
+  canApprove,
   onClose,
   onScreen,
+  onDecision,
 }: Props) {
+  const t = useTranslations("staffApplications");
+
+  const locale = useLocale();
+
   const [isOpeningResume, setIsOpeningResume] = useState(false);
 
   if (!application) {
     return null;
   }
 
-  const canScreen =
-    canReview && application.status === "PENDING_ADMIN_APPROVAL";
+  const pending = application.status === "PENDING_ADMIN_APPROVAL";
+
+  const canScreen = canReview && pending;
+
+  const canDecide = canApprove && pending;
+
+  // ====================================================
+  // ERROR
+  // ====================================================
+
+  const getResumeErrorMessage = (error: unknown) => {
+    if (axios.isAxiosError<ApiErrorResponse>(error)) {
+      if (!error.response) {
+        return t("messages.network");
+      }
+
+      switch (error.response.status) {
+        case 401:
+          return t("messages.unauthorized");
+
+        case 403:
+          return t("messages.forbidden");
+
+        case 404:
+          return t("messages.resumeUnavailable");
+
+        default:
+          return error.response.data?.message || t("messages.resumeOpenFailed");
+      }
+    }
+
+    return t("messages.resumeOpenFailed");
+  };
 
   // ====================================================
   // VIEW FROZEN APPLICATION RESUME
@@ -83,20 +108,15 @@ export default function ApplicationDetails({
 
   const handleViewResume = async () => {
     if (!application.applicant.resumeAvailable) {
-      toast.error("No frozen resume is available for this application.");
+      toast.error(t("messages.resumeUnavailable"));
 
       return;
     }
 
-    // Open blank window immediately.
-    //
-    // This prevents the browser from blocking the PDF
-    // because window.open() happens directly from the
-    // user's click.
     const previewWindow = window.open("", "_blank");
 
     if (!previewWindow) {
-      toast.error("Please allow pop-ups to open the application resume.");
+      toast.error(t("messages.popupBlocked"));
 
       return;
     }
@@ -114,31 +134,27 @@ export default function ApplicationDetails({
 
       previewWindow.location.href = objectUrl;
 
-      // Keep URL alive long enough for Chrome PDF viewer
-      // to load the document.
       window.setTimeout(() => {
         URL.revokeObjectURL(objectUrl);
       }, 60_000);
     } catch (error) {
       previewWindow.close();
 
-      toast.error(
-        getErrorMessage(error, "Failed to open the frozen application resume."),
-      );
+      toast.error(getResumeErrorMessage(error));
     } finally {
       setIsOpeningResume(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/50 p-4">
+    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
       {/* BACKDROP */}
 
       <button
         type="button"
         className="absolute inset-0"
         onClick={onClose}
-        aria-label="Close application details"
+        aria-label={t("details.close")}
       />
 
       {/* MODAL */}
@@ -151,11 +167,11 @@ export default function ApplicationDetails({
         <div className="flex items-start justify-between border-b border-slate-200 p-6">
           <div>
             <p className="text-xs font-semibold uppercase text-indigo-600">
-              Application
+              {t("details.eyebrow")}
             </p>
 
             <h2 className="mt-1 text-2xl font-bold">
-              {application.applicant.name || "Applicant"}
+              {application.applicant.name || t("details.applicantFallback")}
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
@@ -166,6 +182,7 @@ export default function ApplicationDetails({
           <button
             type="button"
             onClick={onClose}
+            aria-label={t("details.close")}
             className="rounded-full p-2 transition hover:bg-slate-100"
           >
             <X className="h-5 w-5" />
@@ -178,9 +195,7 @@ export default function ApplicationDetails({
 
         <div className="overflow-y-auto">
           <div className="space-y-6 p-6">
-            {/* ============================================= */}
             {/* STATUS */}
-            {/* ============================================= */}
 
             <div className="flex flex-wrap gap-2">
               <span
@@ -188,7 +203,7 @@ export default function ApplicationDetails({
                   application.status,
                 )}`}
               >
-                {getApplicationStatusLabel(application.status)}
+                {t(`statuses.${application.status}`)}
               </span>
 
               <span
@@ -196,95 +211,94 @@ export default function ApplicationDetails({
                   application.screening.status,
                 )}`}
               >
-                {getScreeningLabel(application.screening.status)}
+                {t(`screeningStatuses.${application.screening.status}`)}
               </span>
             </div>
 
-            {/* ============================================= */}
             {/* VACANCY */}
-            {/* ============================================= */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
               <div className="flex items-center gap-2">
                 <BriefcaseBusiness className="h-5 w-5 text-indigo-600" />
 
-                <h3 className="font-semibold">Vacancy</h3>
+                <h3 className="font-semibold">{t("details.vacancy")}</h3>
               </div>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <Info
-                  label="Position"
+                  label={t("details.position")}
                   value={application.vacancy?.title || "-"}
                 />
 
                 <Info
-                  label="Company"
+                  label={t("details.company")}
                   value={application.vacancy?.companyName || "-"}
                 />
 
                 <Info
-                  label="Employment"
+                  label={t("details.employment")}
                   value={application.vacancy?.employmentType || "-"}
                 />
 
                 <Info
-                  label="Location"
+                  label={t("details.location")}
                   value={application.vacancy?.workLocation || "-"}
                 />
 
                 <Info
-                  label="Required Japanese"
+                  label={t("details.requiredJapanese")}
                   value={application.vacancy?.japaneseLevel || "-"}
                 />
 
                 <Info
-                  label="Applied"
-                  value={formatDate(application.appliedAt)}
+                  label={t("details.applied")}
+                  value={formatDate(application.appliedAt, locale)}
                 />
               </div>
             </section>
 
-            {/* ============================================= */}
             {/* CANDIDATE */}
-            {/* ============================================= */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
-              <h3 className="font-semibold">Candidate Profile</h3>
+              <h3 className="font-semibold">{t("details.candidateProfile")}</h3>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Info
-                  label="Nationality"
+                  label={t("details.nationality")}
                   value={application.applicant.nationality || "-"}
                 />
 
                 <Info
-                  label="Visa"
+                  label={t("details.visa")}
                   value={application.applicant.visaType || "-"}
                 />
 
                 <Info
-                  label="Visa Expiry"
-                  value={formatDate(application.applicant.visaExpiryDate)}
+                  label={t("details.visaExpiry")}
+                  value={formatDate(
+                    application.applicant.visaExpiryDate,
+                    locale,
+                  )}
                 />
 
                 <Info
-                  label="Japanese"
+                  label={t("details.japanese")}
                   value={application.applicant.japaneseLevel || "-"}
                 />
 
                 <Info
-                  label="Desired Job"
+                  label={t("details.desiredJob")}
                   value={application.applicant.desiredJob || "-"}
                 />
 
                 <Info
-                  label="Desired Location"
+                  label={t("details.desiredLocation")}
                   value={application.applicant.desiredLocation || "-"}
                 />
               </div>
 
               <div className="mt-5">
-                <p className="text-sm font-semibold">Skills</p>
+                <p className="text-sm font-semibold">{t("details.skills")}</p>
 
                 {application.applicant.skills.length > 0 ? (
                   <div className="mt-2 flex flex-wrap gap-2">
@@ -299,26 +313,24 @@ export default function ApplicationDetails({
                   </div>
                 ) : (
                   <p className="mt-2 text-sm text-slate-500">
-                    No skills added.
+                    {t("details.noSkills")}
                   </p>
                 )}
               </div>
             </section>
 
-            {/* ============================================= */}
             {/* EDUCATION */}
-            {/* ============================================= */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5 text-indigo-600" />
 
-                <h3 className="font-semibold">Education</h3>
+                <h3 className="font-semibold">{t("details.education")}</h3>
               </div>
 
               {application.applicant.education.length === 0 ? (
                 <p className="mt-4 text-sm text-slate-500">
-                  No education records.
+                  {t("details.noEducation")}
                 </p>
               ) : (
                 <div className="mt-4 space-y-3">
@@ -334,9 +346,11 @@ export default function ApplicationDetails({
                       </p>
 
                       <p className="mt-2 text-xs text-slate-400">
-                        {formatDate(education.enrollment_date)}
+                        {formatDate(education.enrollment_date, locale)}
+
                         {" - "}
-                        {formatDate(education.graduation_date)}
+
+                        {formatDate(education.graduation_date, locale)}
                       </p>
                     </div>
                   ))}
@@ -344,23 +358,25 @@ export default function ApplicationDetails({
               )}
             </section>
 
-            {/* ============================================= */}
             {/* EMPLOYMENT */}
-            {/* ============================================= */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
-              <h3 className="font-semibold">Employment History</h3>
+              <h3 className="font-semibold">
+                {t("details.employmentHistory")}
+              </h3>
 
               {application.applicant.employmentHistory.length === 0 ? (
                 <p className="mt-4 text-sm text-slate-500">
-                  No employment records.
+                  {t("details.noEmployment")}
                 </p>
               ) : (
                 <div className="mt-4 space-y-3">
                   {application.applicant.employmentHistory.map(
                     (employment, index) => (
                       <div
-                        key={`${employment.company_name || "employment"}-${index}`}
+                        key={`${
+                          employment.company_name || "employment"
+                        }-${index}`}
                         className="rounded-xl bg-slate-50 p-4"
                       >
                         <p className="font-semibold">
@@ -372,11 +388,13 @@ export default function ApplicationDetails({
                         </p>
 
                         <p className="mt-2 text-xs text-slate-400">
-                          {formatDate(employment.start_date)}
+                          {formatDate(employment.start_date, locale)}
+
                           {" - "}
+
                           {employment.end_date
-                            ? formatDate(employment.end_date)
-                            : "Present"}
+                            ? formatDate(employment.end_date, locale)
+                            : t("details.present")}
                         </p>
                       </div>
                     ),
@@ -385,26 +403,25 @@ export default function ApplicationDetails({
               )}
             </section>
 
-            {/* ============================================= */}
-            {/* FROZEN APPLICATION RESUME */}
-            {/* ============================================= */}
+            {/* RESUME */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
               <div className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-indigo-600" />
 
-                <h3 className="font-semibold">Professional Resume</h3>
+                <h3 className="font-semibold">
+                  {t("details.professionalResume")}
+                </h3>
               </div>
 
               <div className="mt-4 flex flex-col gap-4 rounded-xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-semibold text-slate-900">
-                    Frozen Application Resume
+                    {t("details.frozenResume")}
                   </p>
 
                   <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
-                    This resume preserves the candidate information from the
-                    time this application was submitted.
+                    {t("details.frozenResumeDescription")}
                   </p>
                 </div>
 
@@ -423,21 +440,19 @@ export default function ApplicationDetails({
                   )}
 
                   {isOpeningResume
-                    ? "Opening..."
+                    ? t("details.opening")
                     : application.applicant.resumeAvailable
-                      ? "View Resume"
-                      : "Resume Unavailable"}
+                      ? t("details.viewResume")
+                      : t("details.resumeUnavailable")}
                 </button>
               </div>
             </section>
 
-            {/* ============================================= */}
             {/* COVER LETTER */}
-            {/* ============================================= */}
 
             {application.coverLetter && (
               <section className="rounded-2xl border border-slate-200 p-5">
-                <h3 className="font-semibold">Cover Letter</h3>
+                <h3 className="font-semibold">{t("details.coverLetter")}</h3>
 
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">
                   {application.coverLetter}
@@ -445,34 +460,41 @@ export default function ApplicationDetails({
               </section>
             )}
 
-            {/* ============================================= */}
-            {/* SCREENING */}
-            {/* ============================================= */}
+            {/* STAFF SCREENING */}
 
             <section className="rounded-2xl border border-slate-200 p-5">
-              <h3 className="font-semibold">Staff Screening</h3>
+              <h3 className="font-semibold">{t("details.staffScreening")}</h3>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <Info
-                  label="Screened By"
+                  label={t("details.screenedBy")}
                   value={application.screening.screenedByStaffId || "-"}
                 />
 
                 <Info
-                  label="Screened At"
-                  value={formatDateTime(application.screening.screenedAt)}
+                  label={t("details.screenedAt")}
+                  value={formatDateTime(
+                    application.screening.screenedAt,
+                    locale,
+                  )}
                 />
               </div>
 
               {application.screening.note && (
                 <div className="mt-4 rounded-xl bg-slate-50 p-4">
-                  <p className="text-xs text-slate-500">Screening Note</p>
+                  <p className="text-xs text-slate-500">
+                    {t("details.screeningNote")}
+                  </p>
 
                   <p className="mt-2 whitespace-pre-wrap text-sm">
                     {application.screening.note}
                   </p>
                 </div>
               )}
+
+              <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-700">
+                {t("details.permissionNotice")}
+              </div>
             </section>
           </div>
         </div>
@@ -481,13 +503,13 @@ export default function ApplicationDetails({
         {/* FOOTER */}
         {/* ================================================= */}
 
-        <div className="flex shrink-0 justify-end gap-3 border-t border-slate-200 bg-white p-6">
+        <div className="flex shrink-0 flex-wrap justify-end gap-3 border-t border-slate-200 bg-white p-6">
           <button
             type="button"
             onClick={onClose}
             className="rounded-xl border border-slate-200 px-5 py-2.5"
           >
-            Close
+            {t("details.close")}
           </button>
 
           {canScreen && (
@@ -496,7 +518,19 @@ export default function ApplicationDetails({
               onClick={() => onScreen(application)}
               className="rounded-xl bg-slate-950 px-5 py-2.5 font-semibold text-white"
             >
-              Screen Application
+              {application.screening.status === "NOT_SCREENED"
+                ? t("actions.screen")
+                : t("actions.editScreening")}
+            </button>
+          )}
+
+          {canDecide && (
+            <button
+              type="button"
+              onClick={() => onDecision(application)}
+              className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white transition hover:bg-emerald-700"
+            >
+              {t("actions.decide")}
             </button>
           )}
         </div>

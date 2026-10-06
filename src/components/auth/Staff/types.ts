@@ -1,19 +1,25 @@
 export type StaffPermission =
   | "dashboard:view"
+  | "training:view"
   | "vacancies:view"
   | "vacancies:review"
+  | "vacancies:approval"
   | "applications:view"
   | "applications:review"
+  | "applications:approval"
+  | "interviews:view"
+  | "interviews:manage"
   | "providers:view"
   | "providers:manage"
   | "seekers:view"
   | "seekers:manage"
+  | "seekers:approval"
   | "placement_requests:view"
   | "placement_requests:review"
   | "placement_requests:manage_candidates"
+  | "placement_requests:approval"
   | "billing:view"
   | "billing:manage"
-  | "training:view"
   | "training:manage";
 
 export type StaffUser = {
