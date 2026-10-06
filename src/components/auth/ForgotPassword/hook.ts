@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,7 @@ import { useLanguage } from "@/context/LanguageContext";
 
 import {
   requestPasswordReset,
+  submitInitialPassword,
   submitNewPassword,
   verifyPasswordResetCode,
 } from "./api";
@@ -27,8 +28,13 @@ import type {
   ForgotPasswordStep,
 } from "./types";
 
+// ======================================================
+// FORGOT PASSWORD / INITIAL PASSWORD SETUP
+// ======================================================
+
 export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
   const router = useRouter();
+
   const { lang } = useLanguage();
 
   const [step, setStep] = useState<ForgotPasswordStep>("email");
@@ -43,13 +49,17 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
 
   const [resetToken, setResetToken] = useState("");
 
+  const [setupToken, setSetupToken] = useState("");
+
+  const [isInitialSetup, setIsInitialSetup] = useState(false);
+
   const [errors, setErrors] = useState<ForgotPasswordErrors>({});
 
   const [loading, setLoading] = useState(false);
 
-  // =====================================
+  // ====================================================
   // CONFIG
-  // =====================================
+  // ====================================================
 
   const authBaseUrl =
     authType === "seeker" ? "/seekers/auth" : "/auth/providers";
@@ -63,9 +73,49 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
         ? "/auth"
         : "/en/auth";
 
-  // =====================================
-  // ERROR
-  // =====================================
+  // ====================================================
+  // READ INITIAL PASSWORD SETUP TOKEN
+  //
+  // Example:
+  //
+  // /job-seekers-auth/forgot-password
+  // ?setup_token=xxxxxxxx
+  //
+  // State updates are placed inside setTimeout so they
+  // are not executed synchronously inside the effect.
+  // ====================================================
+
+  useEffect(() => {
+    if (authType !== "seeker" || typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    const token = params.get("setup_token");
+
+    if (!token) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSetupToken(token);
+
+      setIsInitialSetup(true);
+
+      setStep("reset");
+
+      setErrors({});
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [authType]);
+
+  // ====================================================
+  // GET API ERROR MESSAGE
+  // ====================================================
 
   const getErrorMessage = (error: unknown) => {
     if (axios.isAxiosError<ApiErrorResponse>(error)) {
@@ -78,9 +128,9 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
     return lang === "ja" ? "処理に失敗しました" : "Something went wrong";
   };
 
-  // =====================================
-  // SEND CODE
-  // =====================================
+  // ====================================================
+  // SEND RESET CODE
+  // ====================================================
 
   const handleRequestCode = async () => {
     const validationErrors = validateResetEmail(email, lang);
@@ -99,7 +149,15 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
       toast.success(response.message);
 
       setCode("");
+
+      setResetToken("");
+
+      setSetupToken("");
+
+      setIsInitialSetup(false);
+
       setErrors({});
+
       setStep("code");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error));
@@ -108,9 +166,9 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
     }
   };
 
-  // =====================================
-  // VERIFY CODE
-  // =====================================
+  // ====================================================
+  // VERIFY RESET CODE
+  // ====================================================
 
   const handleVerifyCode = async () => {
     const validationErrors = validateResetCode(code, lang);
@@ -142,6 +200,10 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
 
       setResetToken(response.reset_token);
 
+      setSetupToken("");
+
+      setIsInitialSetup(false);
+
       setStep("reset");
 
       setErrors({});
@@ -152,9 +214,9 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
     }
   };
 
-  // =====================================
-  // RESEND
-  // =====================================
+  // ====================================================
+  // RESEND CODE
+  // ====================================================
 
   const handleResendCode = async () => {
     try {
@@ -163,6 +225,7 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
       const response = await requestPasswordReset(authBaseUrl, email.trim());
 
       setCode("");
+
       setErrors({});
 
       toast.success(response.message);
@@ -173,9 +236,9 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
     }
   };
 
-  // =====================================
-  // RESET PASSWORD
-  // =====================================
+  // ====================================================
+  // RESET / INITIAL SET PASSWORD
+  // ====================================================
 
   const handleResetPassword = async () => {
     const validationErrors = validateNewPassword(
@@ -189,6 +252,77 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
     if (Object.keys(validationErrors).length > 0) {
       return;
     }
+
+    // ==================================================
+    // ADMIN-CREATED SEEKER
+    // ==================================================
+
+    if (isInitialSetup) {
+      if (!setupToken) {
+        toast.error(
+          lang === "ja"
+            ? "パスワード設定リンクが無効です"
+            : "Password setup link is invalid",
+        );
+
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        const response = await submitInitialPassword(
+          setupToken,
+          password,
+          confirmPassword,
+        );
+
+        toast.success(response.message);
+
+        setPassword("");
+
+        setConfirmPassword("");
+
+        setSetupToken("");
+
+        /*
+         * IMPORTANT:
+         *
+         * Do not set:
+         *
+         * setIsInitialSetup(false)
+         *
+         * here.
+         *
+         * We keep it true so the success page can
+         * correctly display:
+         *
+         * "Password created"
+         *
+         * instead of:
+         *
+         * "Password updated"
+         */
+
+        // Remove the sensitive setup token
+        // from the browser URL after success.
+        if (typeof window !== "undefined") {
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+
+        setStep("success");
+      } catch (error: unknown) {
+        toast.error(getErrorMessage(error));
+      } finally {
+        setLoading(false);
+      }
+
+      return;
+    }
+
+    // ==================================================
+    // NORMAL FORGOT PASSWORD
+    // ==================================================
 
     if (!resetToken) {
       toast.error(
@@ -215,7 +349,9 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
       toast.success(response.message);
 
       setResetToken("");
+
       setPassword("");
+
       setConfirmPassword("");
 
       setStep("success");
@@ -226,6 +362,10 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
     }
   };
 
+  // ====================================================
+  // CODE CHANGE
+  // ====================================================
+
   const handleCodeChange = (value: string) => {
     const numericValue = value.replace(/\D/g, "").slice(0, 6);
 
@@ -234,50 +374,85 @@ export const useForgotPassword = (authType: ForgotPasswordAuthType) => {
     if (errors.code) {
       setErrors((previous) => ({
         ...previous,
+
         code: undefined,
       }));
     }
   };
 
+  // ====================================================
+  // GO TO LOGIN
+  // ====================================================
+
   const goToLogin = () => {
     router.push(loginPath);
   };
 
+  // ====================================================
+  // GO BACK
+  // ====================================================
+
   const goBackToEmail = () => {
+    // Initial setup does not have
+    // email/code steps.
+    if (isInitialSetup) {
+      goToLogin();
+
+      return;
+    }
+
     setStep("email");
+
     setCode("");
+
     setResetToken("");
+
     setErrors({});
   };
 
+  // ====================================================
+  // RETURN
+  // ====================================================
+
   return {
     lang,
+
     authType,
 
     step,
 
     email,
+
     setEmail,
 
     code,
+
     handleCodeChange,
 
     password,
+
     setPassword,
 
     confirmPassword,
+
     setConfirmPassword,
 
     errors,
 
     loading,
 
+    isInitialSetup,
+
     handleRequestCode,
+
     handleVerifyCode,
+
     handleResendCode,
+
     handleResetPassword,
 
     goBackToEmail,
+
     goToLogin,
   };
 };

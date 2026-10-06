@@ -9,6 +9,12 @@ export type PlacementStatus =
   | "selected"
   | "placed";
 
+export type AccountSource = "self_registration" | "admin";
+
+export type ProfileStatus = "COMPLETE" | "INCOMPLETE";
+
+export type PlacementEligibilityStatus = "ELIGIBLE" | "NOT_ELIGIBLE";
+
 // ======================================================
 // STAFF SCREENING
 // ======================================================
@@ -47,12 +53,42 @@ export type Education = {
 };
 
 // ======================================================
+// CREATE EDUCATION
+// ======================================================
+
+export type CreateEducationInput = {
+  enrollment_date?: string | null;
+
+  graduation_date?: string | null;
+
+  school_type?: string | null;
+
+  school: string;
+
+  major?: string | null;
+};
+
+// ======================================================
 // EMPLOYMENT
 // ======================================================
 
 export type EmploymentHistory = {
   _id?: string;
 
+  start_date?: string | null;
+
+  end_date?: string | null;
+
+  employment_type?: string | null;
+
+  company_name: string;
+};
+
+// ======================================================
+// CREATE EMPLOYMENT
+// ======================================================
+
+export type CreateEmploymentHistoryInput = {
   start_date?: string | null;
 
   end_date?: string | null;
@@ -77,6 +113,16 @@ export type SeekerDocument = {
 };
 
 // ======================================================
+// PLACEMENT ELIGIBILITY
+// ======================================================
+
+export type PlacementEligibility = {
+  status: PlacementEligibilityStatus;
+
+  reasons: string[];
+};
+
+// ======================================================
 // SEEKER
 // ======================================================
 
@@ -88,6 +134,10 @@ export type AdminSeeker = {
   name: string;
 
   email: string;
+
+  account_source?: AccountSource;
+
+  password_setup_required?: boolean;
 
   approval_status: ApprovalStatus;
 
@@ -142,6 +192,20 @@ export type AdminSeeker = {
   applications_count: number;
 
   staffScreening: AdminSeekerStaffScreening;
+
+  // ====================================================
+  // PROFILE / PLACEMENT READINESS
+  // ====================================================
+
+  profile_status?: ProfileStatus;
+
+  completion_percentage?: number;
+
+  missing_fields?: string[];
+
+  placement_eligible?: boolean;
+
+  placement_eligibility?: PlacementEligibility;
 
   created_at: string;
 
@@ -206,6 +270,10 @@ export type SeekerResponse = {
   data: AdminSeeker;
 
   message?: string;
+
+  email_sent?: boolean | null;
+
+  warning?: string | null;
 };
 
 export type ApiMessageResponse = {
@@ -234,26 +302,62 @@ export type SeekerFilters = {
 
 // ======================================================
 // CREATE
+//
+// Admin does NOT provide:
+// - password
+// - approval_status
+// - account_status
+//
+// Backend automatically creates an approved / active
+// Admin-created account and sends the password setup
+// email.
 // ======================================================
 
 export type CreateSeekerPayload = {
+  // Account
   name: string;
 
   email: string;
 
-  password: string;
+  phone: string;
 
-  phone?: string;
+  // Personal
+  address?: string | null;
 
-  current_location?: string;
+  current_location?: string | null;
 
-  nationality?: string;
+  date_of_birth?: string | null;
 
-  approval_status: ApprovalStatus;
+  gender?: string | null;
 
-  account_status: AccountStatus;
+  nationality?: string | null;
 
-  placement_status: PlacementStatus;
+  // Visa
+  visa_type?: string | null;
+
+  visa_expiry_date?: string | null;
+
+  // Language / Skills
+  japanese_level?: string | null;
+
+  skills: string[];
+
+  // Job Preferences
+  desired_job?: string | null;
+
+  desired_location?: string | null;
+
+  available_from?: string | null;
+
+  // Background
+  education: CreateEducationInput[];
+
+  employment_history: CreateEmploymentHistoryInput[];
+
+  // Other
+  notes?: string | null;
+
+  placement_status?: PlacementStatus;
 };
 
 // ======================================================
@@ -290,6 +394,10 @@ export type EditSeekerPayload = {
   desired_location?: string | null;
 
   available_from?: string | null;
+
+  education?: CreateEducationInput[];
+
+  employment_history?: CreateEmploymentHistoryInput[];
 
   notes?: string | null;
 };

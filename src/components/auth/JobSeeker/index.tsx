@@ -1,21 +1,20 @@
 "use client";
 
 import React from "react";
+
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+
 import { useTranslations } from "next-intl";
+
 import { usePathname, useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+
+import { Eye, EyeOff, Lock, Mail, Phone, User } from "lucide-react";
 
 import { useJobSeekerAuth } from "./hook";
 
-/*
-  Palette
-  - page      #EEF3F2  soft mist
-  - ink       #0B2A2F  deep teal-ink (brand panel, headings)
-  - primary   teal-600 / teal-700 (buttons, focus, active tab)
-  - mint      #99F6E4  accent on the dark panel only
-  - text      slate-600 body, slate-900 headings
-*/
+// ======================================================
+// LANGUAGE PATH HELPERS
+// ======================================================
 
 const isEnglishPath = (pathname: string) =>
   pathname === "/en" || pathname.startsWith("/en/");
@@ -23,50 +22,97 @@ const isEnglishPath = (pathname: string) =>
 const withoutEnglishPrefix = (pathname: string) =>
   pathname === "/en" ? "/" : pathname.replace(/^\/en\//, "/");
 
+// ======================================================
+// JOB SEEKER AUTH
+// ======================================================
+
 export default function JobSeekerAuth() {
   const router = useRouter();
+
   const pathname = usePathname();
+
   const t = useTranslations("jobSeeker.auth");
+
   const reduceMotion = useReducedMotion();
 
   const {
     lang,
+
     mode,
+
     setMode,
+
     registerData,
+
     loginData,
+
     errors,
+
     isSubmitting,
+
     handleRegisterChange,
+
     handleLoginChange,
+
     handleRegister,
+
     handleLogin,
   } = useJobSeekerAuth();
 
+  // ====================================================
+  // LANGUAGE CHANGE
+  // ====================================================
+
   const handleLangChange = (targetLang: "en" | "ja") => {
-    if (lang === targetLang) return;
+    if (lang === targetLang) {
+      return;
+    }
 
     if (targetLang === "en") {
       router.push(isEnglishPath(pathname) ? pathname : `/en${pathname}`);
+
       return;
     }
 
     router.push(withoutEnglishPrefix(pathname));
   };
 
+  // ====================================================
+  // ROUTES
+  // ====================================================
+
   const employerHref = lang === "ja" ? "/auth" : "/en/auth";
+
   const forgotHref =
     lang === "ja"
       ? "/job-seekers-auth/forgot-password"
       : "/en/job-seekers-auth/forgot-password";
 
+  // ====================================================
+  // MOTION
+  // ====================================================
+
   const panelMotion = reduceMotion
     ? {}
     : {
-        initial: { opacity: 0, y: 12 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: -12 },
-        transition: { duration: 0.2 },
+        initial: {
+          opacity: 0,
+          y: 12,
+        },
+
+        animate: {
+          opacity: 1,
+          y: 0,
+        },
+
+        exit: {
+          opacity: 0,
+          y: -12,
+        },
+
+        transition: {
+          duration: 0.2,
+        },
       };
 
   return (
@@ -75,7 +121,10 @@ export default function JobSeekerAuth() {
       translate="no"
       className="relative flex min-h-dvh items-center justify-center bg-[#EEF3F2] px-4 py-16 sm:px-6 lg:py-10"
     >
-      {/* Language switch */}
+      {/* ================================================= */}
+      {/* LANGUAGE SWITCH */}
+      {/* ================================================= */}
+
       <div
         role="group"
         aria-label="Language"
@@ -98,8 +147,15 @@ export default function JobSeekerAuth() {
         ))}
       </div>
 
+      {/* ================================================= */}
+      {/* MAIN CARD */}
+      {/* ================================================= */}
+
       <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-20px_rgba(11,42,47,0.35)] lg:grid-cols-[1.05fr_1fr]">
-        {/* Brand panel */}
+        {/* =============================================== */}
+        {/* BRAND PANEL */}
+        {/* =============================================== */}
+
         <section className="relative flex flex-col justify-between gap-10 overflow-hidden bg-[#0B2A2F] p-7 text-white sm:p-10 lg:p-12">
           <div
             aria-hidden
@@ -133,14 +189,24 @@ export default function JobSeekerAuth() {
 
           <div className="relative hidden grid-cols-2 gap-4 sm:grid">
             {[
-              { title: t("searchTitle"), desc: t("searchDescription") },
-              { title: t("applyTitle"), desc: t("applyDescription") },
+              {
+                title: t("searchTitle"),
+
+                desc: t("searchDescription"),
+              },
+
+              {
+                title: t("applyTitle"),
+
+                desc: t("applyDescription"),
+              },
             ].map((item) => (
               <div
                 key={item.title}
                 className="rounded-2xl border border-white/10 bg-white/5 p-4"
               >
                 <p className="text-lg font-semibold">{item.title}</p>
+
                 <p className="mt-1.5 text-sm leading-6 text-slate-300">
                   {item.desc}
                 </p>
@@ -149,9 +215,16 @@ export default function JobSeekerAuth() {
           </div>
         </section>
 
-        {/* Form panel */}
+        {/* =============================================== */}
+        {/* FORM PANEL */}
+        {/* =============================================== */}
+
         <section className="p-6 sm:p-10 lg:p-12">
           <div className="mx-auto w-full max-w-md">
+            {/* =========================================== */}
+            {/* LOGIN / REGISTER TABS */}
+            {/* =========================================== */}
+
             <div
               role="tablist"
               aria-label={t("portalTitle")}
@@ -174,11 +247,18 @@ export default function JobSeekerAuth() {
                     <motion.span
                       layoutId="authTab"
                       transition={
-                        reduceMotion ? { duration: 0 } : { duration: 0.25 }
+                        reduceMotion
+                          ? {
+                              duration: 0,
+                            }
+                          : {
+                              duration: 0.25,
+                            }
                       }
                       className="absolute inset-0 rounded-xl bg-white shadow-sm"
                     />
                   )}
+
                   <span className="relative z-10">
                     {tab === "login" ? t("loginTab") : t("registerTab")}
                   </span>
@@ -186,19 +266,29 @@ export default function JobSeekerAuth() {
               ))}
             </div>
 
+            {/* =========================================== */}
+            {/* AUTH FORMS */}
+            {/* =========================================== */}
+
             <AnimatePresence mode="wait" initial={false}>
               {mode === "login" ? (
+                // ========================================
+                // LOGIN
+                // ========================================
+
                 <motion.div key="login" {...panelMotion}>
                   <form
                     noValidate
                     onSubmit={(event) => {
                       event.preventDefault();
-                      handleLogin();
+
+                      void handleLogin();
                     }}
                   >
                     <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
                       {t("signInTitle")}
                     </h2>
+
                     <p className="mt-2 text-slate-600">
                       {t("signInDescription")}
                     </p>
@@ -262,22 +352,32 @@ export default function JobSeekerAuth() {
                   </form>
                 </motion.div>
               ) : (
+                // ========================================
+                // REGISTER
+                // ========================================
+
                 <motion.div key="register" {...panelMotion}>
                   <form
                     noValidate
                     onSubmit={(event) => {
                       event.preventDefault();
-                      handleRegister();
+
+                      void handleRegister();
                     }}
                   >
                     <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
                       {t("createAccountTitle")}
                     </h2>
+
                     <p className="mt-2 text-slate-600">
                       {t("createAccountDescription")}
                     </p>
 
                     <div className="mt-8 space-y-5">
+                      {/* ================================= */}
+                      {/* NAME */}
+                      {/* ================================= */}
+
                       <InputField
                         id="register-name"
                         label={t("fullName")}
@@ -291,6 +391,10 @@ export default function JobSeekerAuth() {
                         onChange={handleRegisterChange}
                       />
 
+                      {/* ================================= */}
+                      {/* EMAIL */}
+                      {/* ================================= */}
+
                       <InputField
                         id="register-email"
                         label={t("email")}
@@ -303,6 +407,31 @@ export default function JobSeekerAuth() {
                         error={errors.email}
                         onChange={handleRegisterChange}
                       />
+
+                      {/* ================================= */}
+                      {/* PHONE - REQUIRED */}
+                      {/* ================================= */}
+
+                      <InputField
+                        id="register-phone"
+                        label={lang === "ja" ? "電話番号" : "Phone Number"}
+                        name="phone"
+                        type="tel"
+                        autoComplete="tel"
+                        value={registerData.phone}
+                        placeholder={
+                          lang === "ja"
+                            ? "例: +81 90 1234 5678"
+                            : "e.g. +81 90 1234 5678"
+                        }
+                        icon={Phone}
+                        error={errors.phone}
+                        onChange={handleRegisterChange}
+                      />
+
+                      {/* ================================= */}
+                      {/* PASSWORD */}
+                      {/* ================================= */}
 
                       <InputField
                         id="register-password"
@@ -341,7 +470,10 @@ export default function JobSeekerAuth() {
               )}
             </AnimatePresence>
 
-            {/* Employer link: shown here on small screens, where the brand panel hides it */}
+            {/* =========================================== */}
+            {/* MOBILE EMPLOYER LINK */}
+            {/* =========================================== */}
+
             <p className="mt-8 border-t border-slate-200 pt-6 text-center text-sm text-slate-600 lg:hidden">
               {t("employerText")}{" "}
               <a
@@ -358,39 +490,69 @@ export default function JobSeekerAuth() {
   );
 }
 
+// ======================================================
+// INPUT FIELD
+// ======================================================
+
 type InputFieldProps = {
   id: string;
+
   label: string;
+
   name: string;
+
   type: string;
+
   value: string;
+
   placeholder: string;
+
   autoComplete?: string;
-  icon: React.ComponentType<{ className?: string }>;
+
+  icon: React.ComponentType<{
+    className?: string;
+  }>;
+
   error?: string;
+
   showPasswordLabel?: string;
+
   hidePasswordLabel?: string;
+
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 function InputField({
   id,
+
   label,
+
   name,
+
   type,
+
   value,
+
   placeholder,
+
   autoComplete,
+
   icon: Icon,
+
   error,
+
   showPasswordLabel = "Show password",
+
   hidePasswordLabel = "Hide password",
+
   onChange,
 }: InputFieldProps) {
   const [showPassword, setShowPassword] = React.useState(false);
 
   const isPassword = type === "password";
+
   const inputType = isPassword && showPassword ? "text" : type;
+
   const errorId = `${id}-error`;
 
   return (
@@ -410,7 +572,9 @@ function InputField({
         }`}
       >
         <Icon
-          className={`h-5 w-5 shrink-0 ${error ? "text-red-500" : "text-slate-400"}`}
+          className={`h-5 w-5 shrink-0 ${
+            error ? "text-red-500" : "text-slate-400"
+          }`}
         />
 
         <input
@@ -451,13 +615,21 @@ function InputField({
   );
 }
 
+// ======================================================
+// SUBMIT BUTTON
+// ======================================================
+
 function SubmitButton({
   label,
+
   loadingLabel,
+
   isSubmitting,
 }: {
   label: string;
+
   loadingLabel: string;
+
   isSubmitting: boolean;
 }) {
   return (
@@ -472,6 +644,7 @@ function SubmitButton({
           className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
         />
       )}
+
       {isSubmitting ? loadingLabel : label}
     </button>
   );

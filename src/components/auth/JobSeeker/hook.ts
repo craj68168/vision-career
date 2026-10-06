@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
+
 import { useRouter } from "next/navigation";
+
 import { useTranslations } from "next-intl";
+
 import toast from "react-hot-toast";
 import axios from "axios";
+
 import { useLanguage } from "@/context/LanguageContext";
+
 import { loginJobSeeker, registerJobSeeker } from "./api";
 
 import {
@@ -21,75 +26,155 @@ import type {
   ValidationErrors,
 } from "./types";
 
+// ======================================================
+// JOB SEEKER AUTH
+// ======================================================
+
 export const useJobSeekerAuth = () => {
   const router = useRouter();
+
   const t = useTranslations("jobSeeker.auth");
+
   const { lang } = useLanguage();
+
+  // ====================================================
+  // MODE
+  // ====================================================
+
   const [mode, setMode] = useState<AuthMode>("login");
+
+  // ====================================================
+  // REGISTER DATA
+  // ====================================================
+
   const [registerData, setRegisterData] = useState<JobSeekerRegisterData>({
     name: "",
     email: "",
+    phone: "",
     password: "",
   });
+
+  // ====================================================
+  // LOGIN DATA
+  // ====================================================
 
   const [loginData, setLoginData] = useState<JobSeekerLoginData>({
     email: "",
     password: "",
   });
 
+  // ====================================================
+  // VALIDATION
+  // ====================================================
+
   const [errors, setErrors] = useState<ValidationErrors>({});
+
+  // ====================================================
+  // LOADING
+  // ====================================================
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ====================================================
+  // VALIDATION MESSAGES
+  // ====================================================
+
   const validationMessages = {
     nameRequired: t("nameRequired"),
+
     emailRequired: t("emailRequired"),
+
     emailInvalid: t("emailInvalid"),
+
+    phoneRequired:
+      lang === "ja" ? "電話番号を入力してください" : "Phone number is required",
+
+    phoneInvalid:
+      lang === "ja"
+        ? "有効な電話番号を入力してください"
+        : "Please enter a valid phone number",
+
     passwordRequired: t("passwordRequired"),
+
     passwordMinLength: t("passwordMinLength"),
   };
 
+  // ====================================================
+  // REGISTER INPUT CHANGE
+  // ====================================================
+
   const handleRegisterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setRegisterData((prev) => ({
-      ...prev,
+
+    setRegisterData((previous) => ({
+      ...previous,
+
       [name]: value,
     }));
 
-    setErrors((prev) => ({
-      ...prev,
+    setErrors((previous) => ({
+      ...previous,
+
       [name]: undefined,
     }));
   };
+
+  // ====================================================
+  // LOGIN INPUT CHANGE
+  // ====================================================
 
   const handleLoginChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setLoginData((prev) => ({
-      ...prev,
+
+    setLoginData((previous) => ({
+      ...previous,
+
       [name]: value,
     }));
 
-    setErrors((prev) => ({
-      ...prev,
+    setErrors((previous) => ({
+      ...previous,
+
       [name]: undefined,
     }));
   };
 
+  // ====================================================
+  // REGISTER
+  // ====================================================
+
   const handleRegister = async () => {
     const validationErrors = validateRegister(registerData, validationMessages);
+
     if (hasValidationErrors(validationErrors)) {
       setErrors(validationErrors);
+
       return;
     }
 
     try {
       setIsSubmitting(true);
+
       setErrors({});
 
-      const data = await registerJobSeeker(registerData);
+      const data = await registerJobSeeker({
+        name: registerData.name.trim(),
+
+        email: registerData.email.trim().toLowerCase(),
+
+        phone: registerData.phone.trim(),
+
+        password: registerData.password,
+      });
+
       console.log("Job seeker registration response:", data);
+
       toast.success(data.message || t("registrationSuccess"));
+
       setRegisterData({
         name: "",
         email: "",
+        phone: "",
         password: "",
       });
 
@@ -98,9 +183,7 @@ export const useJobSeekerAuth = () => {
       console.error("Job seeker registration error:", error);
 
       if (axios.isAxiosError(error)) {
-        toast.error(
-          error.response?.data?.message || t("registrationFailed"),
-        );
+        toast.error(error.response?.data?.message || t("registrationFailed"));
 
         return;
       }
@@ -111,64 +194,145 @@ export const useJobSeekerAuth = () => {
     }
   };
 
+  // ====================================================
+  // LOGIN
+  // ====================================================
+
   const handleLogin = async () => {
     const validationErrors = validateLogin(loginData, validationMessages);
 
     if (hasValidationErrors(validationErrors)) {
       setErrors(validationErrors);
+
       return;
     }
+
     try {
       setIsSubmitting(true);
+
       setErrors({});
 
-      const data = await loginJobSeeker(loginData);
+      const data = await loginJobSeeker({
+        email: loginData.email.trim().toLowerCase(),
+
+        password: loginData.password,
+      });
 
       console.log("Job seeker login response:", data);
 
+      // ==============================================
+      // PENDING APPROVAL
+      // ==============================================
+
       if (data.status === "pending_approval") {
-        toast.error(
-          data.message || t("pendingApproval"),
-        );
+        toast.error(data.message || t("pendingApproval"));
+
         return;
       }
+
+      // ==============================================
+      // INITIAL PASSWORD SETUP REQUIRED
+      // ==============================================
+
+      if (data.status === "password_setup_required") {
+        toast.error(
+          data.message ||
+            (lang === "ja"
+              ? "メールに記載されたリンクからパスワードを設定してください。"
+              : "Please set your password using the link sent to your email."),
+        );
+
+        return;
+      }
+
+      // ==============================================
+      // TOKEN REQUIRED
+      // ==============================================
 
       if (!data.token) {
         toast.error(data.message || t("loginFailed"));
+
         return;
       }
 
+      // ==============================================
+      // SAVE AUTH
+      // ==============================================
+
       localStorage.setItem("access_token", data.token);
+
       localStorage.setItem("user_role", data.user?.role || "seeker");
+
       toast.success(data.message || t("loginSuccess"));
+
       router.push(lang === "ja" ? "/job-seekers" : "/en/job-seekers");
     } catch (error: unknown) {
       console.error("Job seeker login error:", error);
 
       if (axios.isAxiosError(error)) {
-        toast.error(
-          error.response?.data?.message || t("loginFailed"),
-        );
+        const status = error.response?.data?.status;
+
+        // ============================================
+        // PENDING APPROVAL
+        // ============================================
+
+        if (status === "pending_approval") {
+          toast.error(error.response?.data?.message || t("pendingApproval"));
+
+          return;
+        }
+
+        // ============================================
+        // PASSWORD SETUP REQUIRED
+        // ============================================
+
+        if (status === "password_setup_required") {
+          toast.error(
+            error.response?.data?.message ||
+              (lang === "ja"
+                ? "メールに記載されたリンクからパスワードを設定してください。"
+                : "Please set your password using the link sent to your email."),
+          );
+
+          return;
+        }
+
+        toast.error(error.response?.data?.message || t("loginFailed"));
 
         return;
       }
+
       toast.error(t("loginFailed"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // ====================================================
+  // RETURN
+  // ====================================================
+
   return {
     lang,
+
     mode,
+
     setMode,
+
     registerData,
+
     loginData,
+
     errors,
+
     isSubmitting,
+
     handleRegisterChange,
+
     handleLoginChange,
+
     handleRegister,
+
     handleLogin,
   };
 };

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+
 import { motion } from "framer-motion";
+
 import {
   ArrowLeft,
   CheckCircle2,
@@ -15,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { useForgotPassword } from "./hook";
+
 import type { ForgotPasswordAuthType } from "./types";
 
 type ForgotPasswordProps = {
@@ -28,26 +31,37 @@ export default function ForgotPassword({ authType }: ForgotPasswordProps) {
     step,
 
     email,
+
     setEmail,
 
     code,
+
     handleCodeChange,
 
     password,
+
     setPassword,
 
     confirmPassword,
+
     setConfirmPassword,
 
     errors,
+
     loading,
 
+    isInitialSetup,
+
     handleRequestCode,
+
     handleVerifyCode,
+
     handleResendCode,
+
     handleResetPassword,
 
     goBackToEmail,
+
     goToLogin,
   } = useForgotPassword(authType);
 
@@ -64,19 +78,85 @@ export default function ForgotPassword({ authType }: ForgotPasswordProps) {
         ? "求人企業"
         : "Job Provider";
 
+  // ====================================================
+  // BACK
+  // ====================================================
+
   const handleBack = () => {
+    if (isInitialSetup) {
+      goToLogin();
+
+      return;
+    }
+
     if (step === "email") {
       goToLogin();
+
       return;
     }
 
     goBackToEmail();
   };
 
+  // ====================================================
+  // PASSWORD SCREEN TEXT
+  // ====================================================
+
+  const passwordTitle = isInitialSetup
+    ? lang === "ja"
+      ? "パスワードを設定"
+      : "Set your password"
+    : lang === "ja"
+      ? "新しいパスワードを設定"
+      : "Create new password";
+
+  const passwordDescription = isInitialSetup
+    ? lang === "ja"
+      ? "Vision Career アカウント用のパスワードを作成してください。"
+      : "Create a password for your new Vision Career account."
+    : lang === "ja"
+      ? "アカウント用の新しいパスワードを入力してください。"
+      : "Enter a new password for your account.";
+
+  const submitPasswordLabel = isInitialSetup
+    ? lang === "ja"
+      ? "パスワードを設定"
+      : "Set Password"
+    : lang === "ja"
+      ? "パスワードを変更"
+      : "Reset Password";
+
+  const loadingPasswordLabel = isInitialSetup
+    ? lang === "ja"
+      ? "設定中..."
+      : "Setting password..."
+    : lang === "ja"
+      ? "変更中..."
+      : "Resetting...";
+
+  const successTitle = isInitialSetup
+    ? lang === "ja"
+      ? "パスワード設定完了"
+      : "Password created"
+    : lang === "ja"
+      ? "パスワード変更完了"
+      : "Password updated";
+
+  const successDescription = isInitialSetup
+    ? lang === "ja"
+      ? "パスワードが正常に設定されました。Vision Career にログインできます。"
+      : "Your password has been created successfully. You can now sign in to Vision Career."
+    : lang === "ja"
+      ? "パスワードが正常に変更されました。新しいパスワードでログインしてください。"
+      : "Your password has been reset successfully. You can now sign in using your new password.";
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-linear-to-br from-slate-950 via-slate-900 to-slate-800 p-4 sm:p-6">
       <div className="w-full max-w-md">
-        {/* Back button */}
+        {/* ================================================= */}
+        {/* BACK BUTTON */}
+        {/* ================================================= */}
+
         {step !== "success" && (
           <button
             type="button"
@@ -86,30 +166,47 @@ export default function ForgotPassword({ authType }: ForgotPasswordProps) {
           >
             <ArrowLeft className="h-4 w-4" />
 
-            {step === "email"
+            {isInitialSetup
               ? lang === "ja"
                 ? "ログインに戻る"
                 : "Back to login"
-              : lang === "ja"
-                ? "戻る"
-                : "Back"}
+              : step === "email"
+                ? lang === "ja"
+                  ? "ログインに戻る"
+                  : "Back to login"
+                : lang === "ja"
+                  ? "戻る"
+                  : "Back"}
           </button>
         )}
 
         <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-950/70 shadow-2xl backdrop-blur-xl">
           <div className="p-6 sm:p-8">
-            {/* Portal */}
+            {/* ================================================= */}
+            {/* PORTAL */}
+            {/* ================================================= */}
+
             <div className="mb-6">
               <p className="text-xs font-medium uppercase tracking-[0.25em] text-sky-400">
                 {portalName}
               </p>
             </div>
 
+            {/* ================================================= */}
+            {/* STEP 1 - EMAIL */}
+            {/* ================================================= */}
+
             {step === "email" && (
               <motion.div
                 key="email"
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{
+                  opacity: 0,
+                  y: 18,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
               >
                 <div className="mb-7">
                   <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/10">
@@ -132,6 +229,7 @@ export default function ForgotPassword({ authType }: ForgotPasswordProps) {
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
+
                     void handleRequestCode();
                   }}
                   className="space-y-5"
@@ -206,9 +304,9 @@ export default function ForgotPassword({ authType }: ForgotPasswordProps) {
               </motion.div>
             )}
 
-            {/* ====================================== */}
+            {/* ================================================= */}
             {/* STEP 2 - VERIFY CODE */}
-            {/* ====================================== */}
+            {/* ================================================= */}
 
             {step === "code" && (
               <motion.div
@@ -259,6 +357,7 @@ export default function ForgotPassword({ authType }: ForgotPasswordProps) {
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
+
                     void handleVerifyCode();
                   }}
                   className="space-y-5"
@@ -331,9 +430,9 @@ export default function ForgotPassword({ authType }: ForgotPasswordProps) {
               </motion.div>
             )}
 
-            {/* ====================================== */}
-            {/* STEP 3 - NEW PASSWORD */}
-            {/* ====================================== */}
+            {/* ================================================= */}
+            {/* STEP 3 - PASSWORD */}
+            {/* ================================================= */}
 
             {step === "reset" && (
               <motion.div
@@ -360,21 +459,18 @@ export default function ForgotPassword({ authType }: ForgotPasswordProps) {
                   </div>
 
                   <h1 className="text-3xl font-semibold text-white">
-                    {lang === "ja"
-                      ? "新しいパスワードを設定"
-                      : "Create new password"}
+                    {passwordTitle}
                   </h1>
 
                   <p className="mt-3 text-sm leading-6 text-slate-400">
-                    {lang === "ja"
-                      ? "アカウント用の新しいパスワードを入力してください。"
-                      : "Enter a new password for your account."}
+                    {passwordDescription}
                   </p>
                 </div>
 
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
+
                     void handleResetPassword();
                   }}
                   className="space-y-5"
@@ -422,21 +518,15 @@ export default function ForgotPassword({ authType }: ForgotPasswordProps) {
                       }`}
                     />
 
-                    {loading
-                      ? lang === "ja"
-                        ? "変更中..."
-                        : "Resetting..."
-                      : lang === "ja"
-                        ? "パスワードを変更"
-                        : "Reset Password"}
+                    {loading ? loadingPasswordLabel : submitPasswordLabel}
                   </button>
                 </form>
               </motion.div>
             )}
 
-            {/* ====================================== */}
+            {/* ================================================= */}
             {/* STEP 4 - SUCCESS */}
-            {/* ====================================== */}
+            {/* ================================================= */}
 
             {step === "success" && (
               <motion.div
@@ -462,13 +552,11 @@ export default function ForgotPassword({ authType }: ForgotPasswordProps) {
                 </div>
 
                 <h1 className="mt-6 text-3xl font-semibold text-white">
-                  {lang === "ja" ? "パスワード変更完了" : "Password updated"}
+                  {successTitle}
                 </h1>
 
                 <p className="mt-3 text-sm leading-6 text-slate-400">
-                  {lang === "ja"
-                    ? "パスワードが正常に変更されました。新しいパスワードでログインしてください。"
-                    : "Your password has been reset successfully. You can now sign in using your new password."}
+                  {successDescription}
                 </p>
 
                 <button
@@ -487,25 +575,43 @@ export default function ForgotPassword({ authType }: ForgotPasswordProps) {
   );
 }
 
+// ======================================================
+// PASSWORD FIELD
+// ======================================================
+
 type PasswordFieldProps = {
   id: string;
+
   label: string;
+
   value: string;
+
   showPassword: boolean;
+
   onChange: (value: string) => void;
+
   onToggle: () => void;
+
   error?: string;
+
   disabled?: boolean;
 };
 
 function PasswordField({
   id,
+
   label,
+
   value,
+
   showPassword,
+
   onChange,
+
   onToggle,
+
   error,
+
   disabled = false,
 }: PasswordFieldProps) {
   return (
