@@ -6,6 +6,10 @@ import type {
   JobSeekerRegisterData,
 } from "./types";
 
+// ======================================================
+// REGISTER JOB SEEKER
+// ======================================================
+
 export const registerJobSeeker = async (
   payload: JobSeekerRegisterData,
 ): Promise<JobSeekerAuthResponse> => {
@@ -16,6 +20,10 @@ export const registerJobSeeker = async (
 
   return response.data;
 };
+
+// ======================================================
+// LOGIN JOB SEEKER
+// ======================================================
 
 export const loginJobSeeker = async (
   payload: JobSeekerLoginData,

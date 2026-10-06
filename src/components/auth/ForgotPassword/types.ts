@@ -18,6 +18,11 @@ export type ResetPasswordResponse = {
   message: string;
 };
 
+export type SetInitialPasswordResponse = {
+  status: "success" | "error";
+  message: string;
+};
+
 export type ApiErrorResponse = {
   status?: string;
   message?: string;
