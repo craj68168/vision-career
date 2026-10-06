@@ -246,9 +246,19 @@ export const useAdminJobSeekers = () => {
       setIsSaving(true);
       setActionError(null);
 
-      await createAdminSeeker(payload);
+      const response = await createAdminSeeker(payload);
 
-      toast.success("Job seeker created successfully.");
+      if (response.email_sent === false) {
+        toast.error(
+          response.warning ||
+            "Job seeker created, but the password setup email could not be sent.",
+        );
+      } else {
+        toast.success(
+          response.message ||
+            "Job seeker created successfully. Password setup email sent.",
+        );
+      }
 
       setCreateOpen(false);
 
@@ -266,7 +276,6 @@ export const useAdminJobSeekers = () => {
       setIsSaving(false);
     }
   };
-
   // ====================================================
   // EDIT
   // ====================================================

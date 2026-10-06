@@ -40,6 +40,8 @@ export type JobSeekerProfile = {
 
   address: string | null;
 
+  current_location: string | null;
+
   date_of_birth: string | null;
 
   gender: string | null;
@@ -82,6 +84,7 @@ export type JobSeekerProfile = {
 export type ProfileFormData = {
   phone: string;
   address: string;
+  current_location: string;
   date_of_birth: string;
   gender: string;
   nationality: string;

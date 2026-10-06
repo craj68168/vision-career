@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);
+
 import { useLanguage } from "@/context/LanguageContext";
 
 import {
@@ -32,11 +33,13 @@ import type {
   ProfileFormData,
   ProfileValidationErrors,
 } from "./types";
+
 import { formatDateForInput } from "@/lib/helpers";
 
 const initialFormData: ProfileFormData = {
   phone: "",
   address: "",
+  current_location: "",
   date_of_birth: "",
   gender: "",
   nationality: "",
@@ -52,8 +55,11 @@ const initialFormData: ProfileFormData = {
 
 export const useJobSeekerProfile = () => {
   const { lang } = useLanguage();
+
   const t = useTranslations("jobSeeker.profile");
+
   const router = useRouter();
+
   const openInEditMode =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("edit") === "1";
@@ -85,7 +91,9 @@ export const useJobSeekerProfile = () => {
   const [saving, setSaving] = useState(false);
 
   const [uploadingResume, setUploadingResume] = useState(false);
+
   const [generatingResume, setGeneratingResume] = useState(false);
+
   const [viewingGeneratedResume, setViewingGeneratedResume] = useState(false);
 
   const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
@@ -102,7 +110,9 @@ export const useJobSeekerProfile = () => {
     (
       data: Awaited<ReturnType<typeof getJobSeekerProfile>>,
       forceReadOnly = false,
-      options: { preserveDraft?: boolean } = {},
+      options: {
+        preserveDraft?: boolean;
+      } = {},
     ) => {
       setProfile(data.profile);
 
@@ -135,7 +145,10 @@ export const useJobSeekerProfile = () => {
 
         setFormData({
           phone: data.profile.phone || "",
+
           address: data.profile.address || "",
+
+          current_location: data.profile.current_location || "",
 
           date_of_birth: formatDateForInput(data.profile.date_of_birth),
 
@@ -163,39 +176,18 @@ export const useJobSeekerProfile = () => {
         setIsEditing(!forceReadOnly && (!data.is_complete || openInEditMode));
       }
     },
+
     [openInEditMode],
   );
 
-  const fetchProfile = useCallback(async (forceReadOnly = false) => {
-    try {
-      const token = localStorage.getItem("access_token");
+  const fetchProfile = useCallback(
+    async (forceReadOnly = false) => {
+      try {
+        const token = localStorage.getItem("access_token");
 
-      const role = localStorage.getItem("user_role");
+        const role = localStorage.getItem("user_role");
 
-      if (!token || role !== "seeker") {
-        router.replace(
-          lang === "ja" ? "/job-seekers-auth" : "/en/job-seekers-auth",
-        );
-
-        return;
-      }
-
-      const data = await getJobSeekerProfile();
-
-      if (data.status !== "success") {
-        throw new Error(data.message || "Failed to load profile");
-      }
-
-      populateProfile(data, forceReadOnly);
-    } catch (error: unknown) {
-      console.error("Error fetching profile:", error);
-
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        if (error.response?.status === 401 || error.response?.status === 403) {
-          localStorage.removeItem("access_token");
-
-          localStorage.removeItem("user_role");
-
+        if (!token || role !== "seeker") {
           router.replace(
             lang === "ja" ? "/job-seekers-auth" : "/en/job-seekers-auth",
           );
@@ -203,35 +195,64 @@ export const useJobSeekerProfile = () => {
           return;
         }
 
+        const data = await getJobSeekerProfile();
+
+        if (data.status !== "success") {
+          throw new Error(data.message || "Failed to load profile");
+        }
+
+        populateProfile(data, forceReadOnly);
+      } catch (error: unknown) {
+        console.error("Error fetching profile:", error);
+
+        if (axios.isAxiosError<ApiErrorResponse>(error)) {
+          if (
+            error.response?.status === 401 ||
+            error.response?.status === 403
+          ) {
+            localStorage.removeItem("access_token");
+
+            localStorage.removeItem("user_role");
+
+            router.replace(
+              lang === "ja" ? "/job-seekers-auth" : "/en/job-seekers-auth",
+            );
+
+            return;
+          }
+
+          toast.error(
+            error.response?.data?.message ||
+              (lang === "ja"
+                ? "プロフィールの読み込みに失敗しました"
+                : "Failed to load profile"),
+          );
+
+          return;
+        }
+
         toast.error(
-          error.response?.data?.message ||
-            (lang === "ja"
-              ? "プロフィールの読み込みに失敗しました"
-              : "Failed to load profile"),
+          lang === "ja"
+            ? "プロフィールの読み込みに失敗しました"
+            : "Failed to load profile",
         );
-
-        return;
+      } finally {
+        setLoading(false);
       }
+    },
 
-      toast.error(
-        lang === "ja"
-          ? "プロフィールの読み込みに失敗しました"
-          : "Failed to load profile",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [lang, populateProfile, router]);
+    [lang, populateProfile, router],
+  );
 
   useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+    const timer = window.setTimeout(() => {
+      void fetchProfile();
+    }, 0);
 
-//   useEffect(() => {
-//   if (new URLSearchParams(window.location.search).get("edit") === "1") {
-//     setIsEditing(true);
-//   }
-// }, []);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [fetchProfile]);
 
   const handleInputChange = useCallback(
     (
@@ -251,6 +272,7 @@ export const useJobSeekerProfile = () => {
         [name]: undefined,
       }));
     },
+
     [],
   );
 
@@ -272,6 +294,7 @@ export const useJobSeekerProfile = () => {
         [field]: error,
       }));
     },
+
     [lang],
   );
 
@@ -362,6 +385,7 @@ export const useJobSeekerProfile = () => {
 
         return result;
       },
+
       {} as Partial<Record<keyof ProfileFormData, boolean>>,
     );
 
@@ -417,6 +441,7 @@ export const useJobSeekerProfile = () => {
       populateProfile(data);
 
       setIsEditing(false);
+
       setTouched({});
 
       toast.success(
@@ -482,7 +507,9 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to upload profile photo");
       }
 
-      populateProfile(data, false, { preserveDraft: true });
+      populateProfile(data, false, {
+        preserveDraft: true,
+      });
 
       toast.success(
         lang === "ja"
@@ -551,7 +578,9 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to upload resume");
       }
 
-      populateProfile(data, false, { preserveDraft: true });
+      populateProfile(data, false, {
+        preserveDraft: true,
+      });
 
       toast.success(
         lang === "ja"
@@ -617,6 +646,7 @@ export const useJobSeekerProfile = () => {
       setViewingGeneratedResume(true);
 
       const blob = await getGeneratedJobSeekerResume();
+
       const fileUrl = URL.createObjectURL(blob);
 
       window.open(fileUrl, "_blank", "noopener,noreferrer");
@@ -645,7 +675,9 @@ export const useJobSeekerProfile = () => {
     documentType,
   }: {
     file: File | null;
+
     name: string;
+
     documentType: string;
   }): Promise<boolean> => {
     if (!file) {
@@ -707,7 +739,9 @@ export const useJobSeekerProfile = () => {
 
       const data = await uploadJobSeekerDocument({
         file,
+
         name: trimmedName,
+
         documentType: documentType || "other",
       });
 
@@ -715,7 +749,9 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to upload document");
       }
 
-      populateProfile(data, false, { preserveDraft: true });
+      populateProfile(data, false, {
+        preserveDraft: true,
+      });
 
       toast.success(
         lang === "ja"
@@ -780,7 +816,9 @@ export const useJobSeekerProfile = () => {
         throw new Error(data.message || "Failed to remove document");
       }
 
-      populateProfile(data, false, { preserveDraft: true });
+      populateProfile(data, false, {
+        preserveDraft: true,
+      });
 
       toast.success(
         lang === "ja" ? "書類を削除しました" : "Document removed successfully",
@@ -815,8 +853,11 @@ export const useJobSeekerProfile = () => {
 
   const cancelEdit = async () => {
     setErrors({});
+
     setTouched({});
+
     setIsEditing(false);
+
     router.replace(
       lang === "ja" ? "/job-seekers/profile" : "/en/job-seekers/profile",
     );
@@ -842,48 +883,71 @@ export const useJobSeekerProfile = () => {
     lang,
 
     profile,
+
     profileStatus,
 
     education,
+
     employmentHistory,
 
     formData,
 
     loading,
+
     saving,
+
     uploadingResume,
+
     generatingResume,
+
     viewingGeneratedResume,
+
     uploadingProfilePhoto,
+
     uploadingDocument,
+
     removingDocumentId,
+
     isEditing,
 
     setIsEditing,
 
     handleInputChange,
+
     handleBlur,
 
     addEducationRecord,
+
     removeEducationRecord,
+
     updateEducationRecord,
 
     addEmploymentRecord,
+
     removeEmploymentRecord,
+
     updateEmploymentRecord,
 
     saveProfile,
+
     fetchProfile,
+
     cancelEdit,
 
     handleProfilePhotoUpload,
+
     handleResumeUpload,
+
     handleGenerateResume,
+
     handleViewGeneratedResume,
+
     handleDocumentUpload,
+
     handleRemoveDocument,
 
     getFieldError,
+
     isFieldMissing,
   };
 };

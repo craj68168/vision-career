@@ -34,38 +34,45 @@ import {
 
 import { useJobSeekerProfile } from "./hook";
 
-/*
-  Design tokens (same as job seeker dashboard, Tailwind only)
-  - page      oklch(0.975 0.008 150)   text emerald-950   muted slate-600
-  - primary   emerald-700 (hover 800)  soft emerald-50
-  - warning   amber (incomplete / missing)   danger red
-  - weights   headings semibold, labels/body medium or normal (no bold)
-  - density   compact: 40px controls, 16px card padding, 12px gaps
-*/
-
 const pageBg = "bg-[oklch(0.975_0.008_150)] text-emerald-950";
+
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700";
+
 const btnBase = `inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md px-3.5 py-2 text-[13px] font-semibold transition active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55 ${focusRing}`;
+
 const btnPrimary = `${btnBase} bg-emerald-700 text-white hover:bg-emerald-800`;
+
 const btnSecondary = `${btnBase} border border-slate-200 bg-white text-emerald-950 hover:border-slate-300 hover:bg-slate-100`;
+
 const btnTinted = `${btnBase} border border-emerald-200 bg-white text-emerald-800 hover:border-emerald-300 hover:bg-emerald-100`;
+
 const btnDanger = `${btnBase} border border-red-200 bg-white text-red-700 hover:bg-red-50`;
 
 const container = "mx-auto w-full max-w-[90rem] px-4 sm:px-6 lg:px-10";
+
 const sectionCard =
   "min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm";
+
 const recordCard =
   "relative rounded-md border border-slate-200 bg-slate-50 p-3.5";
+
 const labelCaps =
   "text-[10px] font-medium uppercase tracking-wider text-slate-500";
+
 const fieldLabel =
   "flex items-center gap-1.5 text-[13px] font-medium text-slate-700";
-const readText = "min-h-10 py-2.5 text-[13px] text-slate-900 [overflow-wrap:anywhere]";
+
+const readText =
+  "min-h-10 py-2.5 text-[13px] text-slate-900 [overflow-wrap:anywhere]";
+
 const wrap = "[overflow-wrap:anywhere]";
+
 const dashedAction = `inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-dashed border-slate-300 bg-white px-4 py-2 text-[13px] font-medium text-slate-700 transition ${focusRing}`;
+
 const dashedEnabled =
   "cursor-pointer hover:border-emerald-700 hover:bg-emerald-50";
+
 const dashedDisabled = "cursor-not-allowed opacity-55";
 
 const controlBase =
@@ -85,35 +92,91 @@ function controlClass(isEditing: boolean, error?: string) {
   return `${controlBase} ${border} ${tone}`;
 }
 
-const MISSING_FIELD_LABELS: Record<string, { ja: string; en: string }> = {
-  phone: { ja: "\u96fb\u8a71\u756a\u53f7", en: "Phone Number" },
-  address: { ja: "\u4f4f\u6240", en: "Address" },
-  nationality: { ja: "\u56fd\u7c4d", en: "Nationality" },
-  visa_type: { ja: "\u30d3\u30b6\u7a2e\u985e", en: "Visa Type" },
-  japanese_level: { ja: "\u65e5\u672c\u8a9e\u30ec\u30d9\u30eb", en: "Japanese Level" },
-  desired_job: { ja: "\u5e0c\u671b\u8077\u7a2e", en: "Desired Job" },
-  desired_location: { ja: "\u5e0c\u671b\u52e4\u52d9\u5730", en: "Desired Location" },
-  available_from: { ja: "\u5c31\u696d\u53ef\u80fd\u65e5", en: "Available From" },
-  resume_file: { ja: "\u5c65\u6b74\u66f8", en: "Resume File" },
-  education: { ja: "\u5b66\u6b74", en: "Educational Background" },
-  employment_history: { ja: "\u8077\u6b74", en: "Employment History" },
+const MISSING_FIELD_LABELS: Record<
+  string,
+  {
+    ja: string;
+    en: string;
+  }
+> = {
+  phone: {
+    ja: "電話番号",
+    en: "Phone Number",
+  },
+
+  address: {
+    ja: "住所",
+    en: "Address",
+  },
+
+  current_location: {
+    ja: "現在地",
+    en: "Current Location",
+  },
+
+  nationality: {
+    ja: "国籍",
+    en: "Nationality",
+  },
+
+  visa_type: {
+    ja: "ビザ種類",
+    en: "Visa Type",
+  },
+
+  japanese_level: {
+    ja: "日本語レベル",
+    en: "Japanese Level",
+  },
+
+  desired_job: {
+    ja: "希望職種",
+    en: "Desired Job",
+  },
+
+  desired_location: {
+    ja: "希望勤務地",
+    en: "Desired Location",
+  },
+
+  available_from: {
+    ja: "就業可能日",
+    en: "Available From",
+  },
+
+  resume_file: {
+    ja: "履歴書",
+    en: "Resume File",
+  },
+
+  education: {
+    ja: "学歴",
+    en: "Educational Background",
+  },
+
+  employment_history: {
+    ja: "職歴",
+    en: "Employment History",
+  },
 };
 
 const GENDERS = {
-  ja: ["\u7537\u6027", "\u5973\u6027", "\u305d\u306e\u4ed6", "\u56de\u7b54\u3057\u306a\u3044"],
+  ja: ["男性", "女性", "その他", "回答しない"],
+
   en: ["Male", "Female", "Other", "Prefer not to say"],
 };
 
 const JAPANESE_LEVELS = {
   ja: [
-    "\u30cd\u30a4\u30c6\u30a3\u30d6",
-    "N1 (\u30d3\u30b8\u30cd\u30b9\u30ec\u30d9\u30eb)",
-    "N2 (\u65e5\u5e38\u4f1a\u8a71\u30ec\u30d9\u30eb)",
-    "N3 (\u57fa\u672c\u7684\u306a\u30b3\u30df\u30e5\u30cb\u30b1\u30fc\u30b7\u30e7\u30f3)",
-    "N4 (\u521d\u7d1a)",
-    "N5 (\u5165\u9580)",
-    "\u5b66\u7fd2\u4e2d",
+    "ネイティブ",
+    "N1 (ビジネスレベル)",
+    "N2 (日常会話レベル)",
+    "N3 (基本的なコミュニケーション)",
+    "N4 (初級)",
+    "N5 (入門)",
+    "学習中",
   ],
+
   en: [
     "Native",
     "N1 (Business Level)",
@@ -127,18 +190,19 @@ const JAPANESE_LEVELS = {
 
 const VISA_TYPES = {
   ja: [
-    "\u6c38\u4f4f\u8005",
-    "\u65e5\u672c\u4eba\u306e\u914d\u5076\u8005\u7b49",
-    "\u6c38\u4f4f\u8005\u306e\u914d\u5076\u8005\u7b49",
-    "\u5b9a\u4f4f\u8005",
-    "\u6280\u8853\u30fb\u4eba\u6587\u77e5\u8b58\u30fb\u56fd\u969b\u696d\u52d9",
-    "\u7279\u5b9a\u6280\u80fd",
-    "\u6280\u80fd\u5b9f\u7fd2",
-    "\u7559\u5b66",
-    "\u30ef\u30fc\u30ad\u30f3\u30b0\u30db\u30ea\u30c7\u30fc",
-    "\u305d\u306e\u4ed6",
-    "\u5c31\u52b4\u30d3\u30b6\u4e0d\u8981",
+    "永住者",
+    "日本人の配偶者等",
+    "永住者の配偶者等",
+    "定住者",
+    "技術・人文知識・国際業務",
+    "特定技能",
+    "技能実習",
+    "留学",
+    "ワーキングホリデー",
+    "その他",
+    "就労ビザ不要",
   ],
+
   en: [
     "Permanent Resident",
     "Spouse of Japanese National",
@@ -156,22 +220,23 @@ const VISA_TYPES = {
 
 const NATIONALITIES = {
   ja: [
-    "\u65e5\u672c",
-    "\u4e2d\u56fd",
-    "\u97d3\u56fd",
-    "\u30d9\u30c8\u30ca\u30e0",
-    "\u30cd\u30d1\u30fc\u30eb",
-    "\u30a4\u30f3\u30c9\u30cd\u30b7\u30a2",
-    "\u30d5\u30a3\u30ea\u30d4\u30f3",
-    "\u30bf\u30a4",
-    "\u30df\u30e3\u30f3\u30de\u30fc",
-    "\u30a4\u30f3\u30c9",
-    "\u30a2\u30e1\u30ea\u30ab",
-    "\u30a4\u30ae\u30ea\u30b9",
-    "\u30ab\u30ca\u30c0",
-    "\u30aa\u30fc\u30b9\u30c8\u30e9\u30ea\u30a2",
-    "\u305d\u306e\u4ed6",
+    "日本",
+    "中国",
+    "韓国",
+    "ベトナム",
+    "ネパール",
+    "インドネシア",
+    "フィリピン",
+    "タイ",
+    "ミャンマー",
+    "インド",
+    "アメリカ",
+    "イギリス",
+    "カナダ",
+    "オーストラリア",
+    "その他",
   ],
+
   en: [
     "Japan",
     "China",
@@ -192,7 +257,8 @@ const NATIONALITIES = {
 };
 
 const SCHOOL_TYPES = {
-  ja: ["\u9ad8\u6821", "\u5c02\u9580\u5b66\u6821", "\u77ed\u671f\u5927\u5b66", "\u5927\u5b66", "\u5927\u5b66\u9662", "\u305d\u306e\u4ed6"],
+  ja: ["高校", "専門学校", "短期大学", "大学", "大学院", "その他"],
+
   en: [
     "High School",
     "Vocational School",
@@ -204,7 +270,15 @@ const SCHOOL_TYPES = {
 };
 
 const EMPLOYMENT_TYPES = {
-  ja: ["\u6b63\u793e\u54e1", "\u5951\u7d04\u793e\u54e1", "\u6d3e\u9063\u793e\u54e1", "\u30d1\u30fc\u30c8\u30fb\u30a2\u30eb\u30d0\u30a4\u30c8", "\u30a4\u30f3\u30bf\u30fc\u30f3", "\u305d\u306e\u4ed6"],
+  ja: [
+    "正社員",
+    "契約社員",
+    "派遣社員",
+    "パート・アルバイト",
+    "インターン",
+    "その他",
+  ],
+
   en: [
     "Full-time",
     "Contract",
@@ -214,16 +288,26 @@ const EMPLOYMENT_TYPES = {
     "Other",
   ],
 };
+
 type InputFieldProps = {
   label: string;
+
   name: string;
+
   value: string;
+
   type?: string;
+
   placeholder?: string;
+
   required?: boolean;
+
   icon?: React.ReactNode;
+
   rows?: number;
+
   isEditing: boolean;
+
   error?: string;
 
   onChange: (
@@ -235,6 +319,7 @@ type InputFieldProps = {
   ) => void;
 
   maxLength?: number;
+
   autoComplete?: string;
 };
 
@@ -255,6 +340,7 @@ function InputField({
   autoComplete = "off",
 }: InputFieldProps) {
   const charCount = rows && typeof value === "string" ? value.length : 0;
+
   const commonClasses = controlClass(isEditing, error);
 
   return (
@@ -314,6 +400,7 @@ function InputField({
       {error && (
         <div className="flex items-center gap-1 text-xs text-red-600">
           <AlertCircle className="h-3 w-3 shrink-0" />
+
           <p>{error}</p>
         </div>
       )}
@@ -323,15 +410,25 @@ function InputField({
 
 type SkillsFieldProps = {
   label: string;
+
   name: string;
+
   value: string;
+
   placeholder?: string;
+
   icon?: React.ReactNode;
+
   isEditing: boolean;
+
   error?: string;
+
   maxLength?: number;
+
   addSkillLabel: string;
+
   removeSkillLabel: (skill: string) => string;
+
   onChange: (value: string) => void;
 };
 
@@ -357,7 +454,9 @@ function SkillsField({
   onChange,
 }: SkillsFieldProps) {
   const [draft, setDraft] = useState("");
+
   const skills = parseSkills(value);
+
   const commonClasses = controlClass(isEditing, error);
 
   const getUniqueSkills = (nextSkills: string[]) =>
@@ -387,18 +486,22 @@ function SkillsField({
 
     if (!nextSkills.length) {
       setDraft("");
+
       return;
     }
 
     const uniqueSkills = getUniqueSkills([...skills, ...nextSkills]);
+
     const nextValue = formatSkills(uniqueSkills);
 
     if (nextValue.length > maxLength) {
       setDraft(rawValue);
+
       return;
     }
 
     onChange(nextValue);
+
     setDraft("");
   };
 
@@ -410,6 +513,7 @@ function SkillsField({
     if (event.key === "Enter" || event.key === "Tab") {
       if (draft.trim()) {
         event.preventDefault();
+
         addDraftSkills();
       }
     }
@@ -424,6 +528,7 @@ function SkillsField({
 
     if (pasted.includes(",")) {
       event.preventDefault();
+
       addDraftSkills(pasted);
     }
   };
@@ -511,6 +616,7 @@ function SkillsField({
       {error && (
         <div className="flex items-center gap-1 text-xs text-red-600">
           <AlertCircle className="h-3 w-3 shrink-0" />
+
           <p>{error}</p>
         </div>
       )}
@@ -520,7 +626,9 @@ function SkillsField({
 
 type SectionHeaderProps = {
   title: string;
+
   icon: React.ReactNode;
+
   description?: string;
 };
 
@@ -549,14 +657,19 @@ function SectionHeader({ title, icon, description }: SectionHeaderProps) {
 
 export default function JobSeekerProfilePage() {
   const router = useRouter();
+
   const t = useTranslations("jobSeeker.profile");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
+
   const documentInputRef = useRef<HTMLInputElement>(null);
 
   const [documentName, setDocumentName] = useState("");
+
   const [documentType, setDocumentType] = useState("other");
+
   const [selectedDocumentFile, setSelectedDocumentFile] = useState<File | null>(
     null,
   );
@@ -647,7 +760,9 @@ export default function JobSeekerProfilePage() {
   const uploadSelectedDocument = async () => {
     const uploaded = await handleDocumentUpload({
       file: selectedDocumentFile,
+
       name: documentName,
+
       documentType,
     });
 
@@ -656,7 +771,9 @@ export default function JobSeekerProfilePage() {
     }
 
     setDocumentName("");
+
     setDocumentType("other");
+
     setSelectedDocumentFile(null);
 
     if (documentInputRef.current) {
@@ -677,9 +794,13 @@ export default function JobSeekerProfilePage() {
   const getPlacementStatusLabel = (status?: string | null) => {
     const labels: Record<string, string> = {
       unplaced: t("placementUnplaced"),
+
       matching: t("placementMatching"),
+
       interview: t("placementInterview"),
+
       selected: t("placementSelected"),
+
       placed: t("placementPlaced"),
     };
 
@@ -715,7 +836,8 @@ export default function JobSeekerProfilePage() {
 
   return (
     <div className={`min-h-dvh ${pageBg}`}>
-      {/* Header */}
+      {/* HEADER */}
+
       <header className="border-b border-slate-200 bg-white">
         <div
           className={`${container} flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between`}
@@ -793,7 +915,8 @@ export default function JobSeekerProfilePage() {
       </header>
 
       <main className={`${container} py-5 sm:py-6`}>
-        {/* Completion status */}
+        {/* PROFILE COMPLETION */}
+
         {!profileStatus.isComplete && (
           <section className="mb-4 flex items-start justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50 p-3.5">
             <div className="flex min-w-0 items-start gap-3">
@@ -835,7 +958,8 @@ export default function JobSeekerProfilePage() {
         )}
 
         <div className="space-y-3 sm:space-y-4">
-          {/* Basic Information */}
+          {/* BASIC INFORMATION */}
+
           <section className={sectionCard}>
             <SectionHeader
               title={t("basicInformation")}
@@ -986,7 +1110,33 @@ export default function JobSeekerProfilePage() {
                 </div>
               </div>
 
+              {/* CURRENT LOCATION */}
+
               <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                <div>
+                  <InputField
+                    label={lang === "ja" ? "現在地" : "Current Location"}
+                    name="current_location"
+                    value={formData.current_location}
+                    placeholder={
+                      lang === "ja" ? "例：東京都、日本" : "e.g., Tokyo, Japan"
+                    }
+                    icon={<MapPin />}
+                    isEditing={isEditing}
+                    error={getFieldError("current_location")}
+                    onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    required
+                  />
+
+                  {isFieldMissing("current_location") &&
+                    !getFieldError("current_location") && (
+                      <MissingFieldMessage
+                        label={t("fieldRequiredForProfile")}
+                      />
+                    )}
+                </div>
+
                 <InputField
                   label={t("dateOfBirth")}
                   name="date_of_birth"
@@ -998,7 +1148,9 @@ export default function JobSeekerProfilePage() {
                   onChange={handleInputChange}
                   onBlur={handleBlur}
                 />
+              </div>
 
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                 <SelectField
                   label={t("gender")}
                   name="gender"
@@ -1009,9 +1161,7 @@ export default function JobSeekerProfilePage() {
                   isEditing={isEditing}
                   onChange={handleInputChange}
                 />
-              </div>
 
-              <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                 <div>
                   <SelectField
                     label={t("nationality")}
@@ -1031,10 +1181,14 @@ export default function JobSeekerProfilePage() {
 
                   {isFieldMissing("nationality") &&
                     !getFieldError("nationality") && (
-                      <MissingFieldMessage label={t("fieldRequiredForProfile")} />
+                      <MissingFieldMessage
+                        label={t("fieldRequiredForProfile")}
+                      />
                     )}
                 </div>
+              </div>
 
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                 <div>
                   <SelectField
                     label={t("japaneseLevel")}
@@ -1054,7 +1208,9 @@ export default function JobSeekerProfilePage() {
 
                   {isFieldMissing("japanese_level") &&
                     !getFieldError("japanese_level") && (
-                      <MissingFieldMessage label={t("fieldRequiredForProfile")} />
+                      <MissingFieldMessage
+                        label={t("fieldRequiredForProfile")}
+                      />
                     )}
                 </div>
               </div>
@@ -1069,7 +1225,11 @@ export default function JobSeekerProfilePage() {
                 isEditing={isEditing}
                 error={getFieldError("skills")}
                 addSkillLabel={t("addSkill")}
-                removeSkillLabel={(skill) => t("removeSkill", { skill })}
+                removeSkillLabel={(skill) =>
+                  t("removeSkill", {
+                    skill,
+                  })
+                }
                 onChange={(nextValue) =>
                   handleInputChange({
                     target: {
@@ -1082,7 +1242,8 @@ export default function JobSeekerProfilePage() {
             </div>
           </section>
 
-          {/* Education */}
+          {/* EDUCATION */}
+
           <section className={sectionCard}>
             <SectionHeader
               title={t("education")}
@@ -1114,7 +1275,11 @@ export default function JobSeekerProfilePage() {
 
                   <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                     <div className="md:col-span-2">
-                      <label className={`${fieldLabel} mb-1.5 ${isEditing ? "pr-8" : ""}`}>
+                      <label
+                        className={`${fieldLabel} mb-1.5 ${
+                          isEditing ? "pr-8" : ""
+                        }`}
+                      >
                         {t("schoolName")}
 
                         <span className="text-red-600">*</span>
@@ -1229,7 +1394,8 @@ export default function JobSeekerProfilePage() {
             </div>
           </section>
 
-          {/* Employment */}
+          {/* EMPLOYMENT */}
+
           <section className={sectionCard}>
             <SectionHeader
               title={t("employmentHistory")}
@@ -1257,7 +1423,11 @@ export default function JobSeekerProfilePage() {
 
                   <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                     <div className="md:col-span-2">
-                      <label className={`${fieldLabel} mb-1.5 ${isEditing ? "pr-8" : ""}`}>
+                      <label
+                        className={`${fieldLabel} mb-1.5 ${
+                          isEditing ? "pr-8" : ""
+                        }`}
+                      >
                         {t("companyName")}
 
                         <span className="text-red-600">*</span>
@@ -1352,7 +1522,8 @@ export default function JobSeekerProfilePage() {
             </div>
           </section>
 
-          {/* Visa */}
+          {/* VISA */}
+
           <section className={sectionCard}>
             <SectionHeader
               title={t("visaInformation")}
@@ -1396,7 +1567,8 @@ export default function JobSeekerProfilePage() {
             </div>
           </section>
 
-          {/* Job preferences */}
+          {/* JOB PREFERENCES */}
+
           <section className={sectionCard}>
             <SectionHeader
               title={t("jobPreferences")}
@@ -1465,7 +1637,8 @@ export default function JobSeekerProfilePage() {
             </div>
           </section>
 
-          {/* Resume */}
+          {/* RESUME */}
+
           <section className={sectionCard}>
             <SectionHeader
               title={t("resume")}
@@ -1526,6 +1699,7 @@ export default function JobSeekerProfilePage() {
                         {viewingGeneratedResume && (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         )}
+
                         {t("view")}
                       </button>
                     )}
@@ -1599,7 +1773,8 @@ export default function JobSeekerProfilePage() {
             </div>
           </section>
 
-          {/* Additional Documents */}
+          {/* ADDITIONAL DOCUMENTS */}
+
           <section className={sectionCard}>
             <SectionHeader
               title={t("additionalDocuments")}
@@ -1629,7 +1804,9 @@ export default function JobSeekerProfilePage() {
 
                         <p className="mt-0.5 truncate text-xs text-slate-500">
                           {document.document_type || "other"}
-                          {" Â· "}
+
+                          {" · "}
+
                           {getDisplayFileName(document.file_url, t("document"))}
                         </p>
                       </div>
@@ -1686,7 +1863,9 @@ export default function JobSeekerProfilePage() {
                       <input
                         type="text"
                         value={documentName}
-                        onChange={(event) => setDocumentName(event.target.value)}
+                        onChange={(event) =>
+                          setDocumentName(event.target.value)
+                        }
                         placeholder={t("documentNamePlaceholder")}
                         className={`${controlClass(true)} h-10 px-3`}
                       />
@@ -1699,23 +1878,31 @@ export default function JobSeekerProfilePage() {
 
                       <select
                         value={documentType}
-                        onChange={(event) => setDocumentType(event.target.value)}
+                        onChange={(event) =>
+                          setDocumentType(event.target.value)
+                        }
                         className={`${controlClass(true)} h-10 px-3`}
                       >
                         <option value="passport">
                           {t("documentTypePassport")}
                         </option>
+
                         <option value="residence_card">
                           {t("documentTypeResidenceCard")}
                         </option>
+
                         <option value="visa">{t("documentTypeVisa")}</option>
+
                         <option value="certificate">
                           {t("documentTypeCertificate")}
                         </option>
+
                         <option value="jlpt">{t("documentTypeJlpt")}</option>
+
                         <option value="education">
                           {t("documentTypeEducation")}
                         </option>
+
                         <option value="other">{t("documentTypeOther")}</option>
                       </select>
                     </div>
@@ -1730,7 +1917,9 @@ export default function JobSeekerProfilePage() {
                       disabled={uploadingDocument}
                       className="hidden"
                       onChange={(event) => {
-                        setSelectedDocumentFile(event.target.files?.[0] || null);
+                        setSelectedDocumentFile(
+                          event.target.files?.[0] || null,
+                        );
                       }}
                     />
 
@@ -1781,12 +1970,10 @@ export default function JobSeekerProfilePage() {
             </div>
           </section>
 
-          {/* Notes */}
+          {/* NOTES */}
+
           <section className={sectionCard}>
-            <SectionHeader
-              title={t("additionalNotes")}
-              icon={<FileText />}
-            />
+            <SectionHeader title={t("additionalNotes")} icon={<FileText />} />
 
             <InputField
               label={t("otherInformation")}
@@ -1809,13 +1996,21 @@ export default function JobSeekerProfilePage() {
 
 type SelectFieldProps = {
   label: string;
+
   name: string;
+
   value: string;
+
   options: string[];
+
   placeholder: string;
+
   icon?: React.ReactNode;
+
   required?: boolean;
+
   isEditing: boolean;
+
   error?: string;
 
   onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -1890,7 +2085,14 @@ function RequiredNotice({ text }: { text: string }) {
   );
 }
 
-function EmptyBox({ text, icon }: { text: string; icon?: React.ReactNode }) {
+function EmptyBox({
+  text,
+  icon,
+}: {
+  text: string;
+
+  icon?: React.ReactNode;
+}) {
   return (
     <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
       <span
@@ -1914,8 +2116,11 @@ function RecordDateField({
   onChange,
 }: {
   label: string;
+
   value: string | null;
+
   isEditing: boolean;
+
   onChange: (value: string) => void;
 }) {
   return (

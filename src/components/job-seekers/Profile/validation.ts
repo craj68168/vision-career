@@ -39,6 +39,20 @@ export const validateProfileField = (
       }
       break;
 
+    case "current_location":
+      if (!value.trim()) {
+        return lang === "ja"
+          ? "現在地を入力してください"
+          : "Please enter your current location";
+      }
+
+      if (value.trim().length < 2) {
+        return lang === "ja"
+          ? "現在地を正しく入力してください"
+          : "Please enter a valid current location";
+      }
+      break;
+
     case "date_of_birth":
       if (value) {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
