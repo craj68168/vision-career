@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { PublicVacancy } from "@/lib/publicVacancies";
+import { SITE_URL } from "@/lib/siteConfig";
 
 type Language = "ja" | "en";
 
@@ -229,7 +230,9 @@ function getJobPosting(vacancy: PublicVacancy, language: Language) {
   return {
     "@context": "https://schema.org",
     "@type": "JobPosting",
-    url: `https://www.vision-career.co.jp${language === "en" ? "/en" : ""}/jobs/${encodeURIComponent(vacancy.vacancyId)}/`,
+    url: `${SITE_URL}${
+      language === "en" ? "/en" : ""
+    }/jobs/${encodeURIComponent(vacancy.vacancyId)}/`,
     title: vacancy.title,
     description: [
       vacancy.jobDescription,

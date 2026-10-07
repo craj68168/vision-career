@@ -1,48 +1,121 @@
+import "server-only";
+
+// ======================================================
+// PUBLIC VACANCY
+// ======================================================
+
 export type PublicVacancy = {
   vacancyId: string;
+
   companyName: string;
+
   title: string;
+
   employmentType: string;
+
   numberOfPeople: number;
+
   jobDescription: string;
+
   responsibilities?: string | null;
+
   requiredSkills?: string | null;
+
   preferredSkills?: string | null;
+
   requiredEducation?: string | null;
+
   requiredExperience?: string | null;
+
   japaneseLevel?: string | null;
+
   workLocation: string;
+
   remoteWork?: string | null;
+
   salaryMin?: number | null;
+
   salaryMax?: number | null;
+
   salaryNote?: string | null;
+
   workHours?: string | null;
+
   holidays?: string | null;
+
   benefits?: string[];
+
   insurance?: string[];
+
   applicationDeadline?: string | null;
+
   createdAt?: string | null;
+
+  updatedAt?: string | null;
 };
+
+// ======================================================
+// API RESPONSE
+// ======================================================
 
 type VacancyResponse = {
   status: "success" | "error";
+
   data?: PublicVacancy[] | PublicVacancy;
+
+  message?: string;
 };
+
+// ======================================================
+// INTERNAL API URL
+//
+// Server Components should preferably contact the
+// backend directly rather than routing back through the
+// public frontend/domain.
+//
+// Local:
+// INTERNAL_API_URL=http://localhost:5000/api
+//
+// Staging/production when frontend/backend share server:
+// INTERNAL_API_URL=http://127.0.0.1:5000/api
+// ======================================================
 
 const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+  process.env.INTERNAL_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000/api"
 ).replace(/\/+$/, "");
 
-const fetchOptions = {
-  next: { revalidate: 300 },
-};
+// ======================================================
+// FETCH OPTIONS
+// ======================================================
+
+const isDevelopment = process.env.NODE_ENV === "development";
+
+const fetchOptions: RequestInit & {
+  next?: {
+    revalidate: number;
+  };
+  cache?: RequestCache;
+} = isDevelopment
+  ? {
+      cache: "no-store",
+    }
+  : {
+      next: {
+        revalidate: 60,
+      },
+    };
+
+// ======================================================
+// GET PUBLIC VACANCIES
+// ======================================================
 
 export async function getPublicVacancies(): Promise<PublicVacancy[] | null> {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/providers/vacancies/public`,
-      fetchOptions,
-    );
+    const url = `${API_BASE_URL}/providers/vacancies/public`;
+
+    const response = await fetch(url, fetchOptions);
 
     if (!response.ok) {
       throw new Error(`Could not load public vacancies (${response.status})`);
@@ -57,17 +130,23 @@ export async function getPublicVacancies(): Promise<PublicVacancy[] | null> {
     return result.data;
   } catch (error) {
     console.error("Unable to load public vacancies:", error);
+
     return null;
   }
 }
 
+// ======================================================
+// GET ONE PUBLIC VACANCY
+// ======================================================
+
 export async function getPublicVacancyById(
   vacancyId: string,
 ): Promise<PublicVacancy | null> {
-  const response = await fetch(
-    `${API_BASE_URL}/providers/vacancies/public/${encodeURIComponent(vacancyId)}`,
-    fetchOptions,
-  );
+  const encodedVacancyId = encodeURIComponent(vacancyId);
+
+  const url = `${API_BASE_URL}/providers/vacancies/public/${encodedVacancyId}`;
+
+  const response = await fetch(url, fetchOptions);
 
   if (response.status === 404) {
     return null;
@@ -90,14 +169,26 @@ export async function getPublicVacancyById(
   return result.data;
 }
 
+// ======================================================
+// META DESCRIPTION
+// ======================================================
+
 export function getVacancyDescription(vacancy: PublicVacancy): string {
-  return [
+  const description = [
     vacancy.jobDescription,
+
     vacancy.responsibilities,
+
     vacancy.requiredSkills,
   ]
     .filter(Boolean)
     .join(" ")
     .replace(/\s+/g, " ")
-    .slice(0, 160);
+    .trim();
+
+  if (description.length <= 160) {
+    return description;
+  }
+
+  return `${description.slice(0, 157).trim()}...`;
 }
