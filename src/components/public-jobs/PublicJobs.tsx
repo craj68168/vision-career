@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import PublicJobApplyButton from "./PublicJobApplyButton";
+
 import type { PublicVacancy } from "@/lib/publicVacancies";
 import { SITE_URL } from "@/lib/siteConfig";
 
@@ -298,8 +300,7 @@ export function PublicJobDetail({
   language: Language;
 }) {
   const text = copy[language];
-  const authHref =
-    language === "en" ? "/en/job-seekers-auth" : "/job-seekers-auth";
+
   const details = [
     [text.location, vacancy.workLocation],
     [text.employment, vacancy.employmentType],
@@ -341,13 +342,18 @@ export function PublicJobDetail({
           <p className="mt-3 text-sm text-slate-600">
             {vacancy.workLocation} · {vacancy.employmentType}
           </p>
-          <Link
-            className="mt-6 inline-flex min-h-11 items-center justify-center rounded-md bg-emerald-800 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900"
-            href={authHref}
-          >
-            {text.apply}
-          </Link>
-          <p className="mt-2 text-xs text-slate-500">{text.signIn}</p>
+          <PublicJobApplyButton
+            vacancyId={vacancy.vacancyId}
+            vacancyTitle={vacancy.title}
+            companyName={vacancy.companyName}
+            language={language}
+          />
+
+          <p className="mt-2 text-xs text-slate-500">
+            {language === "ja"
+              ? "応募するには求職者アカウントが必要です。"
+              : "A Job Seeker account is required to apply."}
+          </p>
         </header>
 
         <dl className="grid gap-x-8 gap-y-5 py-6 sm:grid-cols-2 lg:grid-cols-3">
