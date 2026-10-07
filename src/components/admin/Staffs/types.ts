@@ -22,6 +22,7 @@ export type StaffPermission =
   | "vacancies:approval"
   | "applications:view"
   | "applications:review"
+  | "applications:approval"
   | "interviews:view"
   | "interviews:manage"
   | "providers:view"
