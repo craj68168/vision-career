@@ -2,12 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { useRouter } from "next/navigation";
+
 import axios from "axios";
 
 import toast from "react-hot-toast";
+
 import { useTranslations } from "next-intl";
 
 import { closeProviderVacancy, getProviderVacancies } from "./api";
+
+import { getProviderProfile } from "../../Profile/api";
 
 import type { Vacancy, VacancyApiError } from "./types";
 
@@ -21,11 +26,26 @@ type Props = {
   onDataChanged: () => void | Promise<void>;
 };
 
+// ======================================================
+// ERROR MESSAGE
+// ======================================================
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (axios.isAxiosError<VacancyApiError>(error)) {
+    return error.response?.data?.message || fallback;
+  }
+
+  return fallback;
+};
+
 export const useVacancies = ({
+  lang,
   refreshVersion,
   createSignal,
   onDataChanged,
 }: Props) => {
+  const router = useRouter();
+
   const t = useTranslations("provider.vacancies.list");
 
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
@@ -46,16 +66,64 @@ export const useVacancies = ({
     useState<Vacancy | null>(null);
 
   // ====================================================
-  // ERROR
+  // PROFILE ROUTE
   // ====================================================
 
-  const getErrorMessage = (error: unknown, fallback: string) => {
-    if (axios.isAxiosError<VacancyApiError>(error)) {
-      return error.response?.data?.message || fallback;
-    }
+  const providerProfileRoute =
+    lang === "ja"
+      ? "/provider-dashboard/profile"
+      : "/en/provider-dashboard/profile";
 
-    return fallback;
-  };
+  // ====================================================
+  // PROFILE COMPLETION GATE
+  //
+  // Backend remains the final authority.
+  //
+  // This check exists only to give the Provider a
+  // better frontend experience before opening forms.
+  // ====================================================
+
+  const ensureProviderProfileComplete = useCallback(async () => {
+    try {
+      const response = await getProviderProfile();
+
+      if (response.status !== "success") {
+        toast.error(t("toast.loadFailed"));
+
+        return false;
+      }
+
+      if (response.is_complete) {
+        return true;
+      }
+
+      const missingLabels = response.missing_fields
+        ?.map((item) => item.label)
+        .filter(Boolean)
+        .join(", ");
+
+      const message =
+        lang === "ja"
+          ? missingLabels
+            ? `求人を掲載する前に企業プロフィールを完成してください。未入力: ${missingLabels}`
+            : "求人を掲載する前に企業プロフィールを完成してください。"
+          : missingLabels
+            ? `Complete your company profile before posting or updating a vacancy. Missing: ${missingLabels}`
+            : "Complete your company profile before posting or updating a vacancy.";
+
+      toast.error(message, {
+        duration: 5000,
+      });
+
+      router.push(providerProfileRoute);
+
+      return false;
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t("toast.loadFailed")));
+
+      return false;
+    }
+  }, [lang, providerProfileRoute, router, t]);
 
   // ====================================================
   // LOAD
@@ -74,18 +142,41 @@ export const useVacancies = ({
   }, [t]);
 
   useEffect(() => {
-    void loadVacancies();
+    const timer = window.setTimeout(() => {
+      void loadVacancies();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [loadVacancies, refreshVersion]);
 
   // ====================================================
   // HEADER CREATE SIGNAL
+  //
+  // Dashboard header may trigger vacancy creation from
+  // outside this component.
+  //
+  // That path must use the same Profile check.
   // ====================================================
 
   useEffect(() => {
-    if (createSignal > 0) {
-      setPostVacancyOpen(true);
+    if (createSignal <= 0) {
+      return;
     }
-  }, [createSignal]);
+
+    const checkProfileAndOpen = async () => {
+      const allowed = await ensureProviderProfileComplete();
+
+      if (!allowed) {
+        return;
+      }
+
+      setPostVacancyOpen(true);
+    };
+
+    void checkProfileAndOpen();
+  }, [createSignal, ensureProviderProfileComplete]);
 
   // ====================================================
   // FILTER
@@ -145,7 +236,17 @@ export const useVacancies = ({
   // ====================================================
 
   const openPostVacancy = () => {
-    setPostVacancyOpen(true);
+    const checkProfileAndOpen = async () => {
+      const allowed = await ensureProviderProfileComplete();
+
+      if (!allowed) {
+        return;
+      }
+
+      setPostVacancyOpen(true);
+    };
+
+    void checkProfileAndOpen();
   };
 
   const closePostVacancy = () => {
@@ -176,14 +277,27 @@ export const useVacancies = ({
 
   // ====================================================
   // EDIT
+  //
+  // Editing a vacancy sends it back to Admin review,
+  // therefore a complete company profile is required.
   // ====================================================
 
   const openVacancyEdit = (vacancy: Vacancy) => {
-    setViewVacancy(null);
+    const checkProfileAndOpen = async () => {
+      const allowed = await ensureProviderProfileComplete();
 
-    window.setTimeout(() => {
-      setEditVacancy(vacancy);
-    }, 0);
+      if (!allowed) {
+        return;
+      }
+
+      setViewVacancy(null);
+
+      window.setTimeout(() => {
+        setEditVacancy(vacancy);
+      }, 0);
+    };
+
+    void checkProfileAndOpen();
   };
 
   const closeVacancyEdit = () => {
@@ -230,7 +344,9 @@ export const useVacancies = ({
     }
 
     const confirmed = window.confirm(
-      t("toast.confirmClose", { title: vacancy.title }),
+      t("toast.confirmClose", {
+        title: vacancy.title,
+      }),
     );
 
     if (!confirmed) {
