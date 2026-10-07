@@ -6,9 +6,37 @@ import AppIntlProvider from "@/context/IntlProvider";
 import QueryProvider from "./QueryProvider";
 
 export const metadata: Metadata = {
-  title: "Vision Career",
-  description: "Recruitment Platform",
+  metadataBase: new URL("https://www.vision-career.co.jp"),
+  title: {
+    default: "Vision Career | Career and Recruitment Support in Japan",
+    template: "%s | Vision Career",
+  },
+  description:
+    "Vision Career connects job seekers and employers in Japan with recruitment, career, and job-placement support.",
+  keywords: [
+    "Vision Career",
+    "jobs in Japan",
+    "job seekers",
+    "recruitment",
+    "career support",
+    "job placement",
+  ],
   applicationName: "Vision Career",
+  openGraph: {
+    type: "website",
+    siteName: "Vision Career",
+    title: "Vision Career | Career and Recruitment Support in Japan",
+    description:
+      "Connect with employers and find career and job-placement support in Japan.",
+    locale: "ja_JP",
+    alternateLocale: ["en_US"],
+  },
+  twitter: {
+    card: "summary",
+    title: "Vision Career | Career and Recruitment Support in Japan",
+    description:
+      "Connect with employers and find career and job-placement support in Japan.",
+  },
   icons: {
     icon: [
       {
@@ -46,6 +74,18 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AppIntlProvider>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: "Vision Career",
+                url: "https://www.vision-career.co.jp",
+                logo: "https://www.vision-career.co.jp/icon-512.png",
+              }).replace(/</g, "\\u003c"),
+            }}
+          />
           <QueryProvider>{children}</QueryProvider>
         </AppIntlProvider>
       </body>
