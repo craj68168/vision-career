@@ -13,6 +13,12 @@ export type ApplicationStatus =
   | "REJECTED";
 
 // ======================================================
+// REVIEW ACTOR
+// ======================================================
+
+export type ApplicationReviewActorType = "admin" | "staff";
+
+// ======================================================
 // STAFF SCREENING STATUS
 // ======================================================
 
@@ -38,7 +44,7 @@ export type EducationSnapshot = {
 };
 
 // ======================================================
-// EMPLOYMENT HISTORY
+// EMPLOYMENT
 // ======================================================
 
 export type EmploymentSnapshot = {
@@ -144,14 +150,6 @@ export type AdminApplicationProvider = {
 // ======================================================
 // STAFF SCREENING
 // ======================================================
-//
-// Staff only screens the application.
-//
-// Staff DOES NOT approve/reject the application.
-//
-// Final decision remains with Admin.
-//
-// ======================================================
 
 export type AdminApplicationStaffScreening = {
   status: StaffScreeningStatus;
@@ -160,11 +158,24 @@ export type AdminApplicationStaffScreening = {
 
   screenedByStaffId?: string | null;
 
+  screenedByStaffName?: string | null;
+
   screenedAt?: string | null;
 };
 
 // ======================================================
-// ADMIN REVIEW
+// APPLICATION REVIEW
+//
+// reviewedBy is retained for compatibility.
+//
+// Newer API responses may additionally return:
+// reviewedByType
+// reviewedById
+// reviewedByName
+//
+// If only reviewedBy is returned:
+// ADM-* => Admin
+// STF-* => Staff
 // ======================================================
 
 export type AdminApplicationReview = {
@@ -172,7 +183,39 @@ export type AdminApplicationReview = {
 
   reviewedBy?: string | null;
 
+  reviewedByType?: ApplicationReviewActorType | null;
+
+  reviewedById?: string | null;
+
+  reviewedByName?: string | null;
+
   rejectionReason?: string | null;
+};
+
+// ======================================================
+// OPTIONAL APPLICATION AUDIT HISTORY
+// ======================================================
+
+export type AdminApplicationWorkflowHistoryItem = {
+  id?: string | null;
+
+  action?: string | null;
+
+  fromStatus?: string | null;
+
+  toStatus?: string | null;
+
+  actorType?: ApplicationReviewActorType | string | null;
+
+  actorId?: string | null;
+
+  actorName?: string | null;
+
+  reason?: string | null;
+
+  note?: string | null;
+
+  createdAt?: string | null;
 };
 
 // ======================================================
@@ -203,6 +246,8 @@ export type AdminApplication = {
   staffScreening: AdminApplicationStaffScreening;
 
   adminReview: AdminApplicationReview;
+
+  workflowHistory?: AdminApplicationWorkflowHistoryItem[];
 };
 
 // ======================================================
@@ -282,6 +327,12 @@ export type AdminApplicationActionResponse = {
     reviewedAt?: string | null;
 
     reviewedBy?: string | null;
+
+    reviewedByType?: ApplicationReviewActorType | null;
+
+    reviewedById?: string | null;
+
+    reviewedByName?: string | null;
 
     rejectionReason?: string | null;
   };

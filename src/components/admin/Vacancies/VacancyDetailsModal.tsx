@@ -2,12 +2,15 @@
 
 import { useEffect, useRef } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
+
 import {
   AlertTriangle,
   CheckCircle2,
   CircleDashed,
+  History,
   Loader2,
   Send,
+  ShieldCheck,
   X,
   XCircle,
 } from "lucide-react";
@@ -21,7 +24,16 @@ import {
   getVacancyStatusLabel,
 } from "./helper";
 
-import type { AdminVacancyDetails, VacancyStaffScreeningStatus } from "./types";
+import type {
+  AdminVacancyDetails,
+  AdminVacancyWorkflowHistoryItem,
+  VacancyActorType,
+  VacancyStaffScreeningStatus,
+} from "./types";
+
+// ======================================================
+// PROPS
+// ======================================================
 
 type Props = {
   vacancy: AdminVacancyDetails;
@@ -50,7 +62,7 @@ const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 // ======================================================
-// LAYOUT HELPERS
+// SECTION
 // ======================================================
 
 function Section({
@@ -87,6 +99,10 @@ function Section({
   );
 }
 
+// ======================================================
+// FIELD GRID
+// ======================================================
+
 function FieldGrid({
   cols = 3,
   children,
@@ -104,6 +120,10 @@ function FieldGrid({
     </dl>
   );
 }
+
+// ======================================================
+// FIELD
+// ======================================================
 
 function Field({
   label,
@@ -134,6 +154,10 @@ function Field({
     </div>
   );
 }
+
+// ======================================================
+// CHIP GROUP
+// ======================================================
 
 function ChipGroup({
   label,
@@ -174,7 +198,54 @@ function ChipGroup({
 }
 
 // ======================================================
-// STAFF SCREENING
+// DATE TIME
+// ======================================================
+
+function formatDateTime(value?: string | null, lang = "en") {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat(lang === "ja" ? "ja-JP" : "en-US", {
+    year: "numeric",
+    month: lang === "ja" ? "numeric" : "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+// ======================================================
+// ACTOR
+// ======================================================
+
+function getActorTypeLabel(
+  actorType: VacancyActorType | string | null | undefined,
+  lang: string,
+) {
+  if (!actorType) {
+    return "-";
+  }
+
+  if (actorType === "admin") {
+    return lang === "ja" ? "管理者" : "Admin";
+  }
+
+  if (actorType === "staff") {
+    return lang === "ja" ? "スタッフ" : "Staff";
+  }
+
+  return actorType;
+}
+
+// ======================================================
+// SCREENING
 // ======================================================
 
 function getStaffScreeningLabel(
@@ -228,8 +299,8 @@ function getScreeningNotice(status: VacancyStaffScreeningStatus, lang: string) {
         icon: CheckCircle2,
         title: ja ? "スタッフ確認済み" : "Staff screening completed",
         body: ja
-          ? "この求人は管理者の最終審査の準備ができています。"
-          : "This vacancy is ready for the Admin's final review.",
+          ? "スタッフによる確認が完了しています。"
+          : "Staff screening for this vacancy has been completed.",
         className:
           "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200",
       };
@@ -241,8 +312,8 @@ function getScreeningNotice(status: VacancyStaffScreeningStatus, lang: string) {
           ? "スタッフがこの求人を要確認としています"
           : "Staff marked this vacancy as needing attention",
         body: ja
-          ? "スタッフメモを確認してから最終判断を行ってください。"
-          : "Review the Staff note before making the final decision.",
+          ? "承認・却下の判断前にスタッフメモを確認してください。"
+          : "Review the Staff note before making an approval or rejection decision.",
         className:
           "border-red-200 bg-red-50 text-red-800 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-200",
       };
@@ -254,8 +325,8 @@ function getScreeningNotice(status: VacancyStaffScreeningStatus, lang: string) {
           ? "この求人はまだスタッフによる確認が完了していません"
           : "This vacancy has not been screened by Staff yet",
         body: ja
-          ? "管理者は最終判断を行うことができます。"
-          : "Admin still controls the final vacancy decision.",
+          ? "スタッフ確認と求人の承認は別の操作です。"
+          : "Staff screening and vacancy approval are separate actions.",
         className:
           "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200",
       };
@@ -263,7 +334,125 @@ function getScreeningNotice(status: VacancyStaffScreeningStatus, lang: string) {
 }
 
 // ======================================================
-// VACANCY DETAILS
+// REVIEW DECISION
+// ======================================================
+
+function getReviewDecision(
+  vacancy: AdminVacancyDetails,
+): "approved" | "rejected" | "pending" {
+  const history = vacancy.workflowHistory || [];
+
+  const latestDecision = history.find(
+    (item) => item.action === "APPROVED" || item.action === "REJECTED",
+  );
+
+  if (latestDecision?.action === "REJECTED") {
+    return "rejected";
+  }
+
+  if (latestDecision?.action === "APPROVED") {
+    return "approved";
+  }
+
+  if (vacancy.rejectionReason || vacancy.review?.rejectionReason) {
+    return "rejected";
+  }
+
+  if (
+    vacancy.status === "approved" ||
+    vacancy.status === "published" ||
+    vacancy.status === "closed"
+  ) {
+    return "approved";
+  }
+
+  if (vacancy.status === "rejected") {
+    return "rejected";
+  }
+
+  return "pending";
+}
+
+function getDecisionLabel(
+  decision: "approved" | "rejected" | "pending",
+  lang: string,
+) {
+  if (decision === "approved") {
+    return lang === "ja" ? "承認済み" : "Approved";
+  }
+
+  if (decision === "rejected") {
+    return lang === "ja" ? "却下" : "Rejected";
+  }
+
+  return lang === "ja" ? "未審査" : "Not Reviewed";
+}
+
+function getDecisionClass(decision: "approved" | "rejected" | "pending") {
+  if (decision === "approved") {
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  }
+
+  if (decision === "rejected") {
+    return "border-red-200 bg-red-50 text-red-700";
+  }
+
+  return "border-zinc-200 bg-zinc-100 text-zinc-600";
+}
+
+// ======================================================
+// WORKFLOW ACTION
+// ======================================================
+
+function getWorkflowActionLabel(
+  item: AdminVacancyWorkflowHistoryItem,
+  lang: string,
+) {
+  switch (item.action) {
+    case "SCREENED":
+      return lang === "ja" ? "スタッフ確認済み" : "Staff Screening Completed";
+
+    case "NEEDS_ATTENTION":
+      return lang === "ja" ? "要確認" : "Needs Attention";
+
+    case "APPROVED":
+      return lang === "ja" ? "求人承認" : "Vacancy Approved";
+
+    case "REJECTED":
+      return lang === "ja" ? "求人却下" : "Vacancy Rejected";
+
+    case "PUBLISHED":
+      return lang === "ja" ? "求人公開" : "Vacancy Published";
+
+    case "CLOSED":
+      return lang === "ja" ? "求人終了" : "Vacancy Closed";
+
+    default:
+      return item.action || "-";
+  }
+}
+
+function getWorkflowDotClass(action?: string | null) {
+  switch (action) {
+    case "APPROVED":
+    case "PUBLISHED":
+    case "SCREENED":
+      return "bg-emerald-500";
+
+    case "REJECTED":
+    case "NEEDS_ATTENTION":
+      return "bg-red-500";
+
+    case "CLOSED":
+      return "bg-slate-500";
+
+    default:
+      return "bg-zinc-400";
+  }
+}
+
+// ======================================================
+// COMPONENT
 // ======================================================
 
 export default function VacancyDetailsModal({
@@ -278,6 +467,7 @@ export default function VacancyDetailsModal({
   onCloseVacancy,
 }: Props) {
   const { lang } = useLanguage();
+
   const ja = lang === "ja";
 
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -285,24 +475,73 @@ export default function VacancyDetailsModal({
   const isBusy = isApproving || isPublishing || isClosing;
 
   const staffScreening = vacancy.staffScreening;
+
   const notice = getScreeningNotice(staffScreening.status, lang);
+
   const NoticeIcon = notice.icon;
 
-  // Lock background scroll, move focus into the dialog, restore it on close.
+  const review = {
+    reviewedAt: vacancy.review?.reviewedAt ?? vacancy.reviewedAt ?? null,
+
+    reviewedByType:
+      vacancy.review?.reviewedByType ?? vacancy.reviewedByType ?? null,
+
+    reviewedById: vacancy.review?.reviewedById ?? vacancy.reviewedById ?? null,
+
+    reviewedByName:
+      vacancy.review?.reviewedByName ?? vacancy.reviewedByName ?? null,
+
+    rejectionReason:
+      vacancy.review?.rejectionReason ?? vacancy.rejectionReason ?? null,
+  };
+
+  const publication = {
+    publishedAt:
+      vacancy.publication?.publishedAt ?? vacancy.publishedAt ?? null,
+
+    publishedByAdminId:
+      vacancy.publication?.publishedByAdminId ??
+      vacancy.publishedByAdminId ??
+      null,
+
+    publishedByAdminName:
+      vacancy.publication?.publishedByAdminName ??
+      vacancy.publishedByAdminName ??
+      null,
+  };
+
+  const closing = {
+    closedAt: vacancy.closing?.closedAt ?? vacancy.closedAt ?? null,
+
+    closedByAdminId:
+      vacancy.closing?.closedByAdminId ?? vacancy.closedByAdminId ?? null,
+
+    closedByAdminName:
+      vacancy.closing?.closedByAdminName ?? vacancy.closedByAdminName ?? null,
+  };
+
+  const workflowHistory = Array.isArray(vacancy.workflowHistory)
+    ? vacancy.workflowHistory
+    : [];
+
+  const decision = getReviewDecision(vacancy);
+
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
+
     const previousOverflow = document.body.style.overflow;
 
     document.body.style.overflow = "hidden";
+
     dialogRef.current?.focus();
 
     return () => {
       document.body.style.overflow = previousOverflow;
+
       previouslyFocused?.focus?.();
     };
   }, []);
 
-  // Escape closes (unless busy); Tab stays inside the dialog.
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape") {
       event.stopPropagation();
@@ -322,19 +561,23 @@ export default function VacancyDetailsModal({
       dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE),
     );
 
-    if (focusable.length === 0) {
+    if (!focusable.length) {
       event.preventDefault();
+
       return;
     }
 
     const first = focusable[0];
+
     const last = focusable[focusable.length - 1];
 
     if (event.shiftKey && document.activeElement === first) {
       event.preventDefault();
+
       last.focus();
     } else if (!event.shiftKey && document.activeElement === last) {
       event.preventDefault();
+
       first.focus();
     }
   };
@@ -344,7 +587,6 @@ export default function VacancyDetailsModal({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-zinc-950/50 backdrop-blur-sm sm:items-center sm:p-4">
-      {/* Backdrop click closes the modal. Escape and the X button are the keyboard routes. */}
       <div
         aria-hidden="true"
         className="absolute inset-0"
@@ -362,7 +604,7 @@ export default function VacancyDetailsModal({
         aria-labelledby="vacancy-details-title"
         tabIndex={-1}
         onKeyDown={handleKeyDown}
-        className="relative z-10 flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-xl border border-zinc-200 bg-white shadow-2xl outline-none dark:border-white/10 dark:bg-zinc-900 sm:rounded-xl"
+        className="relative z-10 flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-t-xl border border-zinc-200 bg-white shadow-2xl outline-none dark:border-white/10 dark:bg-zinc-900 sm:rounded-xl"
       >
         {/* HEADER */}
 
@@ -376,7 +618,7 @@ export default function VacancyDetailsModal({
             </h2>
 
             {vacancy.titleKana && (
-              <p className="mt-0.5 break-words text-xs text-zinc-400 dark:text-zinc-500">
+              <p className="mt-0.5 break-words text-xs text-zinc-400">
                 {vacancy.titleKana}
               </p>
             )}
@@ -400,106 +642,336 @@ export default function VacancyDetailsModal({
               disabled={isBusy}
               onClick={onClose}
               aria-label={ja ? "閉じる" : "Close"}
-              className={`grid h-9 w-9 cursor-pointer place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-950 disabled:cursor-not-allowed disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white ${focusRing}`}
+              className={`grid h-9 w-9 cursor-pointer place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 disabled:opacity-50 dark:hover:bg-white/10 ${focusRing}`}
             >
               <X className="h-4 w-4" />
             </button>
           </div>
         </div>
 
-        {/* CONTENT */}
+        {/* BODY */}
 
-        <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain bg-zinc-50 p-4 dark:bg-zinc-950 sm:p-6">
-          {/* STAFF SCREENING (first: it decides how the admin reviews the rest) */}
+        <div className="flex-1 space-y-4 overflow-y-auto bg-zinc-50 p-4 dark:bg-zinc-950 sm:p-6">
+          {/* WORKFLOW & AUDIT */}
 
           <Section
-            title={ja ? "スタッフ確認" : "Staff Screening"}
-            aside={
-              <span
-                className={`whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${getStaffScreeningClass(
-                  staffScreening.status,
-                )}`}
-              >
-                {getStaffScreeningLabel(staffScreening.status, lang)}
-              </span>
+            title={ja ? "ワークフロー・監査" : "Workflow & Audit"}
+            hint={
+              ja
+                ? "社内用の審査・公開履歴です。求職者には表示されません。"
+                : "Internal Vision Career review history. This is not exposed to Job Seekers."
             }
           >
-            <div className="space-y-3">
-              <div
-                className={`flex gap-3 rounded-md border px-3 py-2.5 ${notice.className}`}
-              >
-                <NoticeIcon className="mt-0.5 h-4 w-4 shrink-0" />
+            <div className="space-y-4">
+              {/* STAFF SCREENING */}
 
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">{notice.title}</p>
+              <div className="rounded-lg border border-zinc-200 p-4 dark:border-white/10">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-indigo-500" />
 
-                  <p className="mt-0.5 text-xs opacity-90">{notice.body}</p>
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-white">
+                      {ja ? "スタッフ確認" : "Staff Screening"}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${getStaffScreeningClass(
+                      staffScreening.status,
+                    )}`}
+                  >
+                    {getStaffScreeningLabel(staffScreening.status, lang)}
+                  </span>
                 </div>
+
+                <div
+                  className={`mt-3 flex gap-3 rounded-md border px-3 py-2.5 ${notice.className}`}
+                >
+                  <NoticeIcon className="mt-0.5 h-4 w-4 shrink-0" />
+
+                  <div>
+                    <p className="text-sm font-medium">{notice.title}</p>
+
+                    <p className="mt-0.5 text-xs opacity-90">{notice.body}</p>
+                  </div>
+                </div>
+
+                {staffScreening.status !== "NOT_SCREENED" && (
+                  <div className="mt-3">
+                    <FieldGrid>
+                      <Field
+                        label={ja ? "確認担当" : "Screened By"}
+                        value={
+                          staffScreening.screenedByStaffName ||
+                          staffScreening.screenedByStaffId
+                        }
+                      />
+
+                      <Field
+                        label={ja ? "スタッフID" : "Staff ID"}
+                        value={staffScreening.screenedByStaffId}
+                      />
+
+                      <Field
+                        label={ja ? "確認日時" : "Screened At"}
+                        value={formatDateTime(staffScreening.screenedAt, lang)}
+                      />
+                    </FieldGrid>
+                  </div>
+                )}
+
+                {staffScreening.note && (
+                  <div className="mt-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 dark:border-white/10 dark:bg-white/5">
+                    <p className="text-xs font-medium text-zinc-500">
+                      {ja ? "スタッフメモ" : "Screening Note"}
+                    </p>
+
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-zinc-800 dark:text-zinc-200">
+                      {staffScreening.note}
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {staffScreening.status !== "NOT_SCREENED" && (
-                <FieldGrid cols={2}>
-                  <Field
-                    label={ja ? "確認担当スタッフ" : "Screened By"}
-                    value={staffScreening.screenedByStaffId}
-                  />
+              {/* REVIEW DECISION */}
 
-                  <Field
-                    label={ja ? "確認日時" : "Screened At"}
-                    value={formatVacancyDate(staffScreening.screenedAt, lang)}
-                  />
-                </FieldGrid>
-              )}
+              <div className="rounded-lg border border-zinc-200 p-4 dark:border-white/10">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-indigo-500" />
 
-              {staffScreening.note && (
-                <div
-                  className={`rounded-md border px-3 py-2.5 ${
-                    staffScreening.status === "NEEDS_ATTENTION"
-                      ? "border-red-200 bg-red-50 dark:border-red-400/20 dark:bg-red-400/10"
-                      : "border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/5"
-                  }`}
-                >
-                  <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                    {ja ? "スタッフメモ" : "Staff Screening Note"}
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-white">
+                      {ja ? "求人審査結果" : "Vacancy Review Decision"}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${getDecisionClass(
+                      decision,
+                    )}`}
+                  >
+                    {getDecisionLabel(decision, lang)}
+                  </span>
+                </div>
+
+                {decision !== "pending" ? (
+                  <div className="mt-3">
+                    <FieldGrid>
+                      <Field
+                        label={ja ? "審査担当" : "Reviewed By"}
+                        value={review.reviewedByName || review.reviewedById}
+                      />
+
+                      <Field
+                        label={ja ? "権限" : "Role"}
+                        value={getActorTypeLabel(review.reviewedByType, lang)}
+                      />
+
+                      <Field
+                        label={ja ? "担当者ID" : "Actor ID"}
+                        value={review.reviewedById}
+                      />
+
+                      <Field
+                        label={ja ? "審査日時" : "Reviewed At"}
+                        value={formatDateTime(review.reviewedAt, lang)}
+                      />
+                    </FieldGrid>
+
+                    {review.rejectionReason && (
+                      <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3">
+                        <p className="text-xs font-medium text-red-600">
+                          {ja ? "却下理由" : "Rejection Reason"}
+                        </p>
+
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-red-700">
+                          {review.rejectionReason}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-sm text-zinc-500">
+                    {ja
+                      ? "承認・却下の判断はまだ記録されていません。"
+                      : "No approval or rejection decision has been recorded yet."}
                   </p>
+                )}
+              </div>
 
-                  <p className="mt-1 whitespace-pre-wrap break-words text-sm text-zinc-800 dark:text-zinc-200">
-                    {staffScreening.note}
+              {/* PUBLICATION */}
+
+              <div className="rounded-lg border border-zinc-200 p-4 dark:border-white/10">
+                <div className="flex items-center gap-2">
+                  <Send className="h-4 w-4 text-indigo-500" />
+
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-white">
+                    {ja ? "公開" : "Publication"}
                   </p>
                 </div>
-              )}
 
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                {publication.publishedAt || publication.publishedByAdminId ? (
+                  <div className="mt-3">
+                    <FieldGrid>
+                      <Field
+                        label={ja ? "公開者" : "Published By"}
+                        value={
+                          publication.publishedByAdminName ||
+                          publication.publishedByAdminId
+                        }
+                      />
+
+                      <Field
+                        label={ja ? "管理者ID" : "Admin ID"}
+                        value={publication.publishedByAdminId}
+                      />
+
+                      <Field
+                        label={ja ? "公開日時" : "Published At"}
+                        value={formatDateTime(publication.publishedAt, lang)}
+                      />
+                    </FieldGrid>
+                  </div>
+                ) : (
+                  <p className="mt-3 text-sm text-zinc-500">
+                    {ja ? "まだ公開されていません。" : "Not published yet."}
+                  </p>
+                )}
+              </div>
+
+              {/* CLOSING */}
+
+              <div className="rounded-lg border border-zinc-200 p-4 dark:border-white/10">
+                <div className="flex items-center gap-2">
+                  <XCircle className="h-4 w-4 text-indigo-500" />
+
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-white">
+                    {ja ? "求人終了" : "Closing"}
+                  </p>
+                </div>
+
+                {closing.closedAt || closing.closedByAdminId ? (
+                  <div className="mt-3">
+                    <FieldGrid>
+                      <Field
+                        label={ja ? "終了処理担当" : "Closed By"}
+                        value={
+                          closing.closedByAdminName || closing.closedByAdminId
+                        }
+                      />
+
+                      <Field
+                        label={ja ? "管理者ID" : "Admin ID"}
+                        value={closing.closedByAdminId}
+                      />
+
+                      <Field
+                        label={ja ? "終了日時" : "Closed At"}
+                        value={formatDateTime(closing.closedAt, lang)}
+                      />
+                    </FieldGrid>
+                  </div>
+                ) : (
+                  <p className="mt-3 text-sm text-zinc-500">
+                    {ja
+                      ? "求人終了の記録はありません。"
+                      : "No closing action has been recorded."}
+                  </p>
+                )}
+              </div>
+
+              {/* HISTORY */}
+
+              <div className="rounded-lg border border-zinc-200 p-4 dark:border-white/10">
+                <div className="flex items-center gap-2">
+                  <History className="h-4 w-4 text-indigo-500" />
+
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-white">
+                    {ja ? "完全な履歴" : "Complete History"}
+                  </p>
+                </div>
+
+                {workflowHistory.length ? (
+                  <div className="mt-3 space-y-2">
+                    {workflowHistory.map((item, index) => (
+                      <div
+                        key={
+                          item.id || `${item.action}-${item.createdAt}-${index}`
+                        }
+                        className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-white/10 dark:bg-white/5"
+                      >
+                        <div className="flex items-start gap-3">
+                          <span
+                            className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${getWorkflowDotClass(
+                              item.action,
+                            )}`}
+                          />
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                                {getWorkflowActionLabel(item, lang)}
+                              </p>
+
+                              <p className="text-xs text-zinc-400">
+                                {formatDateTime(item.createdAt, lang)}
+                              </p>
+                            </div>
+
+                            <p className="mt-1 text-xs text-zinc-500">
+                              {item.actorName || item.actorId || "-"} ·{" "}
+                              {getActorTypeLabel(item.actorType, lang)}
+                              {item.actorId ? ` · ${item.actorId}` : ""}
+                            </p>
+
+                            {(item.fromStatus || item.toStatus) && (
+                              <p className="mt-1 text-xs text-zinc-500">
+                                {item.fromStatus || "-"} →{" "}
+                                {item.toStatus || "-"}
+                              </p>
+                            )}
+
+                            {item.reason && (
+                              <p className="mt-2 rounded-md bg-red-50 px-2.5 py-2 text-xs text-red-700">
+                                {ja ? "理由" : "Reason"}: {item.reason}
+                              </p>
+                            )}
+
+                            {item.note && (
+                              <p className="mt-2 rounded-md bg-zinc-100 px-2.5 py-2 text-xs text-zinc-600">
+                                {ja ? "メモ" : "Note"}: {item.note}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-sm text-zinc-500">
+                    {ja
+                      ? "ワークフロー履歴はありません。"
+                      : "No workflow history has been recorded."}
+                  </p>
+                )}
+              </div>
+
+              <p className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
                 {ja
-                  ? "スタッフ確認は参考情報です。求人の承認・却下・公開の最終判断は管理者が行います。"
-                  : "Staff screening is advisory. Final approval, rejection and publishing authority remains with Admin."}
+                  ? "スタッフ確認と承認・却下は別の操作です。求人の承認・却下は管理者または権限を持つスタッフが実行できます。公開・終了は管理者のみが実行します。"
+                  : "Staff screening and approval/rejection are separate actions. Admin or Staff with the Vacancy Approve/Reject permission may make the decision. Publishing and closing remain Admin-only actions."}
               </p>
             </div>
           </Section>
-
-          {/* ADMIN REVIEW */}
-
-          {(vacancy.reviewedAt || vacancy.rejectionReason) && (
-            <Section title={ja ? "審査情報" : "Admin Review"}>
-              <FieldGrid cols={2}>
-                <Field
-                  label={ja ? "審査日" : "Reviewed At"}
-                  value={formatVacancyDate(vacancy.reviewedAt, lang)}
-                />
-
-                <Field
-                  label={ja ? "却下理由" : "Rejection Reason"}
-                  value={vacancy.rejectionReason}
-                />
-              </FieldGrid>
-            </Section>
-          )}
 
           {/* BASIC */}
 
           <Section title={ja ? "基本情報" : "Basic Information"}>
             <FieldGrid>
-              <Field label={ja ? "求人ID" : "Vacancy ID"} value={vacancy.vacancyId} />
+              <Field
+                label={ja ? "求人ID" : "Vacancy ID"}
+                value={vacancy.vacancyId}
+              />
 
               <Field
                 label={ja ? "企業名" : "Company"}
@@ -601,7 +1073,7 @@ export default function VacancyDetailsModal({
             </FieldGrid>
           </Section>
 
-          {/* SCHEDULE */}
+          {/* WORK CONDITIONS */}
 
           <Section title={ja ? "勤務条件" : "Work Conditions"}>
             <FieldGrid cols={2}>
@@ -615,9 +1087,15 @@ export default function VacancyDetailsModal({
                 value={vacancy.breakTime}
               />
 
-              <Field label={ja ? "残業" : "Overtime"} value={vacancy.overtime} />
+              <Field
+                label={ja ? "残業" : "Overtime"}
+                value={vacancy.overtime}
+              />
 
-              <Field label={ja ? "休日" : "Holidays"} value={vacancy.holidays} />
+              <Field
+                label={ja ? "休日" : "Holidays"}
+                value={vacancy.holidays}
+              />
 
               <Field
                 label={ja ? "試用期間" : "Trial Period"}
@@ -632,13 +1110,13 @@ export default function VacancyDetailsModal({
             <div className="grid gap-4 sm:grid-cols-2">
               <ChipGroup
                 label={ja ? "福利厚生" : "Benefits"}
-                items={vacancy.benefits}
+                items={vacancy.benefits || []}
                 tone="emerald"
               />
 
               <ChipGroup
                 label={ja ? "保険" : "Insurance"}
-                items={vacancy.insurance}
+                items={vacancy.insurance || []}
                 tone="zinc"
               />
             </div>
@@ -665,14 +1143,14 @@ export default function VacancyDetailsModal({
             </FieldGrid>
           </Section>
 
-          {/* PRIVATE CONTACT */}
+          {/* PROVIDER PRIVATE CONTACT */}
 
           <Section
             title={ja ? "企業担当者" : "Provider Contact"}
             hint={
               ja
-                ? "管理者専用情報です。求職者には表示されません。"
-                : "Admin-only information. This is not exposed to Job Seekers."
+                ? "社内専用情報です。求職者には表示されません。"
+                : "Internal information. This is not exposed to Job Seekers."
             }
           >
             <FieldGrid>
@@ -694,20 +1172,17 @@ export default function VacancyDetailsModal({
           </Section>
         </div>
 
-        {/* ACTIONS */}
+        {/* FOOTER */}
 
         <div className="border-t border-zinc-200 bg-white dark:border-white/10 dark:bg-zinc-900">
           {vacancy.status === "pending_review" &&
             staffScreening.status === "NEEDS_ATTENTION" && (
-              <div
-                role="status"
-                className="flex items-center gap-2 border-b border-red-100 bg-red-50 px-4 py-2 text-xs text-red-700 dark:border-red-400/10 dark:bg-red-400/10 dark:text-red-300 sm:px-6"
-              >
+              <div className="flex items-center gap-2 border-b border-red-100 bg-red-50 px-4 py-2 text-xs text-red-700 sm:px-6">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
 
                 {ja
-                  ? "スタッフが「要確認」としています。最終判断前にスタッフメモを確認してください。"
-                  : "Staff marked this as Needs Attention. Review the note before deciding."}
+                  ? "スタッフが「要確認」としています。判断前にスタッフメモを確認してください。"
+                  : "Staff marked this vacancy as Needs Attention. Review the note before deciding."}
               </div>
             )}
 
@@ -716,7 +1191,7 @@ export default function VacancyDetailsModal({
               type="button"
               disabled={isBusy}
               onClick={onClose}
-              className={`inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 ${focusRing}`}
+              className={`inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 ${focusRing}`}
             >
               {ja ? "閉じる" : "Close"}
             </button>
@@ -727,7 +1202,7 @@ export default function VacancyDetailsModal({
                   type="button"
                   disabled={isBusy}
                   onClick={onReject}
-                  className={`inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-red-200 px-4 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 ${focusRing}`}
+                  className={`inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-red-200 px-4 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 ${focusRing}`}
                 >
                   <XCircle className="h-4 w-4" />
 
