@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 
 import { Loader2, UserRound } from "lucide-react";
 
-import { getProviderApplicationPhoto } from "./api";
+import axiosInstance from "@/services/axiosInstance";
 
 // ======================================================
 // PROPS
 // ======================================================
 
 type Props = {
-  applicationId: string;
+  placementCandidateId: string;
 
   photoAvailable?: boolean;
 
@@ -27,8 +27,10 @@ type Props = {
 // ======================================================
 
 type PhotoState = {
-  applicationId: string;
+  placementCandidateId: string;
+
   url: string | null;
+
   failed: boolean;
 };
 
@@ -38,30 +40,54 @@ type PhotoState = {
 
 const SIZE_CLASSES = {
   sm: {
-    container: "h-12 w-12",
+    container: "h-11 w-11",
+
     icon: "h-5 w-5",
   },
 
   md: {
     container: "h-16 w-16",
+
     icon: "h-6 w-6",
   },
 
   lg: {
     container: "h-24 w-24",
+
     icon: "h-8 w-8",
   },
 };
 
 // ======================================================
-// PROVIDER CANDIDATE PHOTO
+// PHOTO API
 // ======================================================
 
-export default function ProviderCandidatePhoto({
-  applicationId,
+const getProviderPlacementCandidatePhoto = async (
+  placementCandidateId: string,
+) => {
+  const response = await axiosInstance.get<Blob>(
+    `/providers/placement-candidates/${placementCandidateId}/photo`,
+    {
+      responseType: "blob",
+    },
+  );
+
+  return response.data;
+};
+
+// ======================================================
+// COMPONENT
+// ======================================================
+
+export default function ProviderPlacementCandidatePhoto({
+  placementCandidateId,
+
   photoAvailable = false,
+
   candidateName,
-  size = "md",
+
+  size = "sm",
+
   className = "",
 }: Props) {
   const [photoState, setPhotoState] = useState<PhotoState | null>(null);
@@ -69,42 +95,42 @@ export default function ProviderCandidatePhoto({
   const sizeClasses = SIZE_CLASSES[size];
 
   // ====================================================
-  // CURRENT PHOTO STATE
+  // CURRENT STATE
   // ====================================================
 
   const currentPhotoState =
-    photoState?.applicationId === applicationId ? photoState : null;
+    photoState?.placementCandidateId === placementCandidateId
+      ? photoState
+      : null;
 
   const photoUrl = currentPhotoState?.url ?? null;
 
   const failed = currentPhotoState?.failed ?? false;
 
   const loading =
-    photoAvailable && Boolean(applicationId) && !currentPhotoState;
+    photoAvailable && Boolean(placementCandidateId) && !currentPhotoState;
 
   // ====================================================
-  // LOAD AUTHENTICATED PHOTO
+  // LOAD PHOTO
   // ====================================================
 
   useEffect(() => {
-    if (!photoAvailable || !applicationId) {
+    if (!photoAvailable || !placementCandidateId) {
       return;
     }
 
     let active = true;
-    let currentObjectUrl: string | null = null;
+
+    let objectUrl: string | null = null;
 
     const loadPhoto = async () => {
       try {
-        const blob = await getProviderApplicationPhoto(applicationId);
+        const blob =
+          await getProviderPlacementCandidatePhoto(placementCandidateId);
 
         if (!active) {
           return;
         }
-
-        // =================================================
-        // VALIDATE RESPONSE
-        // =================================================
 
         if (!blob || blob.size === 0) {
           throw new Error("Candidate photo response is empty.");
@@ -114,28 +140,33 @@ export default function ProviderCandidatePhoto({
           throw new Error("Invalid candidate photo response.");
         }
 
-        currentObjectUrl = URL.createObjectURL(blob);
+        objectUrl = URL.createObjectURL(blob);
 
         if (!active) {
-          URL.revokeObjectURL(currentObjectUrl);
+          URL.revokeObjectURL(objectUrl);
+
           return;
         }
 
         setPhotoState({
-          applicationId,
-          url: currentObjectUrl,
+          placementCandidateId,
+
+          url: objectUrl,
+
           failed: false,
         });
       } catch (error) {
-        console.error("Load provider candidate photo error:", error);
+        console.error("Load placement candidate photo error:", error);
 
         if (!active) {
           return;
         }
 
         setPhotoState({
-          applicationId,
+          placementCandidateId,
+
           url: null,
+
           failed: true,
         });
       }
@@ -143,21 +174,17 @@ export default function ProviderCandidatePhoto({
 
     void loadPhoto();
 
-    // ====================================================
-    // CLEANUP
-    // ====================================================
-
     return () => {
       active = false;
 
-      if (currentObjectUrl) {
-        URL.revokeObjectURL(currentObjectUrl);
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [applicationId, photoAvailable]);
+  }, [placementCandidateId, photoAvailable]);
 
   // ====================================================
-  // NO PHOTO / FAILED
+  // FALLBACK
   // ====================================================
 
   if (!photoAvailable || failed) {
@@ -165,8 +192,10 @@ export default function ProviderCandidatePhoto({
       <div
         title={candidateName || "Candidate"}
         className={[
-          "flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 text-slate-400",
+          "flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-indigo-50 text-indigo-600",
+
           sizeClasses.container,
+
           className,
         ].join(" ")}
       >
@@ -184,8 +213,10 @@ export default function ProviderCandidatePhoto({
       <div
         title={candidateName || "Candidate"}
         className={[
-          "flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-slate-400",
+          "flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 text-slate-400",
+
           sizeClasses.container,
+
           className,
         ].join(" ")}
       >
@@ -203,8 +234,10 @@ export default function ProviderCandidatePhoto({
       <div
         title={candidateName || "Candidate"}
         className={[
-          "shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100",
+          "shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100",
+
           sizeClasses.container,
+
           className,
         ].join(" ")}
       >
@@ -225,8 +258,10 @@ export default function ProviderCandidatePhoto({
     <div
       title={candidateName || "Candidate"}
       className={[
-        "flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 text-slate-400",
+        "flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-indigo-50 text-indigo-600",
+
         sizeClasses.container,
+
         className,
       ].join(" ")}
     >

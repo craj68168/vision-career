@@ -29,8 +29,6 @@ export default function Applications({ lang, refreshVersion }: Props) {
 
     refresh,
   } = useApplications({
-    lang,
-
     refreshVersion,
   });
 

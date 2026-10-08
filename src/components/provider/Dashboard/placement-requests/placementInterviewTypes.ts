@@ -1,5 +1,5 @@
 // ======================================================
-// INTERVIEW METHOD
+// PLACEMENT INTERVIEW METHOD
 // ======================================================
 
 export type PlacementInterviewMethod =
@@ -10,7 +10,7 @@ export type PlacementInterviewMethod =
   | "OTHER";
 
 // ======================================================
-// INTERVIEW STATUS
+// PLACEMENT INTERVIEW STATUS
 // ======================================================
 
 export type PlacementInterviewStatus =
@@ -20,53 +20,13 @@ export type PlacementInterviewStatus =
   | "CANCELLED";
 
 // ======================================================
-// CANDIDATE SNAPSHOT
-// ======================================================
-
-export type PlacementInterviewCandidate = {
-  name?: string | null;
-
-  nationality?: string | null;
-
-  visaType?: string | null;
-
-  visaExpiryDate?: string | null;
-
-  japaneseLevel?: string | null;
-
-  skills?: string[];
-
-  desiredJob?: string | null;
-
-  desiredLocation?: string | null;
-};
-
-// ======================================================
-// REQUEST SNAPSHOT
-// ======================================================
-
-export type PlacementInterviewRequestSummary = {
-  recruitId?: string | null;
-
-  title?: string | null;
-
-  companyName?: string | null;
-
-  employmentType?: string | null;
-
-  workLocation?: string | null;
-
-  japaneseLevel?: string | null;
-};
-
-// ======================================================
-// INTERVIEW
+// PLACEMENT INTERVIEW
 // ======================================================
 
 export type PlacementInterview = {
   interviewId: string;
 
-  sourceType: "APPLICATION" | "PLACEMENT";
+  sourceType?: "APPLICATION" | "PLACEMENT";
 
   applicationId?: string | null;
 
@@ -102,17 +62,13 @@ export type PlacementInterview = {
 
   cancellationReason?: string | null;
 
-  createdAt?: string | null;
+  createdAt?: string;
 
-  updatedAt?: string | null;
-
-  candidate?: PlacementInterviewCandidate | null;
-
-  placementRequest?: PlacementInterviewRequestSummary | null;
+  updatedAt?: string;
 };
 
 // ======================================================
-// FORM
+// FORM PAYLOAD
 // ======================================================
 
 export type PlacementInterviewFormPayload = {
@@ -130,21 +86,29 @@ export type PlacementInterviewFormPayload = {
 };
 
 // ======================================================
-// RESPONSES
+// LIST RESPONSE
 // ======================================================
 
 export type PlacementInterviewListResponse = {
-  status: "success" | "error";
+  status?: "success" | "error";
 
-  count: number;
+  success?: boolean;
+
+  count?: number;
 
   data: PlacementInterview[];
 
   message?: string;
 };
 
+// ======================================================
+// SINGLE RESPONSE
+// ======================================================
+
 export type PlacementInterviewResponse = {
-  status: "success" | "error";
+  status?: "success" | "error";
+
+  success?: boolean;
 
   data: PlacementInterview;
 
@@ -152,7 +116,7 @@ export type PlacementInterviewResponse = {
 };
 
 // ======================================================
-// ERROR
+// API ERROR
 // ======================================================
 
 export type PlacementInterviewApiError = {
