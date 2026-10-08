@@ -9,6 +9,16 @@ export type PlacementRequestStatus =
   | "rejected";
 
 // ======================================================
+// ACTOR
+// ======================================================
+
+export type PlacementRequestActorRole =
+  | "admin"
+  | "staff"
+  | "provider"
+  | "system";
+
+// ======================================================
 // STAFF SCREENING
 // ======================================================
 
@@ -24,7 +34,56 @@ export type PlacementRequestStaffScreening = {
 
   screenedByStaffId?: string | null;
 
+  screenedByStaffName?: string | null;
+
   screenedAt?: string | null;
+};
+
+// ======================================================
+// FINAL REVIEW
+// ======================================================
+
+export type StaffPlacementRequestDecisionAudit = {
+  decision?: "approved" | "rejected" | null;
+
+  reviewedAt?: string | null;
+
+  reviewedByRole?: "admin" | "staff" | null;
+
+  reviewedById?: string | null;
+
+  reviewedByName?: string | null;
+
+  rejectionReason?: string | null;
+};
+
+// ======================================================
+// WORKFLOW HISTORY
+// ======================================================
+
+export type PlacementRequestWorkflowAction =
+  | "SCREENED"
+  | "NEEDS_ATTENTION"
+  | "APPROVED"
+  | "REJECTED"
+  | "RESUBMITTED";
+
+export type PlacementRequestWorkflowHistoryEntry = {
+  action: PlacementRequestWorkflowAction;
+
+  fromStatus?: string | null;
+
+  toStatus?: string | null;
+
+  actorRole?: PlacementRequestActorRole | null;
+
+  actorId?: string | null;
+
+  actorName?: string | null;
+
+  note?: string | null;
+
+  createdAt?: string | null;
 };
 
 // ======================================================
@@ -77,11 +136,18 @@ export type StaffPlacementRequest = {
   submittedAt?: string | null;
 
   reviewedAt?: string | null;
+
   reviewedByRole?: "admin" | "staff" | null;
 
   reviewedById?: string | null;
 
+  reviewedByName?: string | null;
+
+  review?: StaffPlacementRequestDecisionAudit;
+
   staffScreening: PlacementRequestStaffScreening;
+
+  workflowHistory?: PlacementRequestWorkflowHistoryEntry[];
 
   createdAt?: string;
 
