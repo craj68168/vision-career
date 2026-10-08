@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 
 import axios from "axios";
 
@@ -65,61 +65,75 @@ const toDateInputValue = (value?: string | null) => {
 
 export const usePlacementInterview = ({
   placementCandidateId,
+
   interview,
+
   lang,
+
   onSuccess,
+
   onClose,
 }: Props) => {
+  // ====================================================
+  // EDIT MODE
+  // ====================================================
+
   const isEdit = Boolean(interview);
 
-  const [interviewDate, setInterviewDate] = useState("");
+  // ====================================================
+  // FORM STATE
+  //
+  // IMPORTANT:
+  //
+  // Values are initialized directly from props.
+  //
+  // We do NOT use useEffect to copy props into state.
+  //
+  // This fixes:
+  //
+  // "Calling setState synchronously within an effect..."
+  //
+  // The interview modal is mounted per candidate/interview,
+  // so lazy initial state is the correct pattern here.
+  // ====================================================
 
-  const [interviewTime, setInterviewTime] = useState("");
+  const [interviewDate, setInterviewDate] = useState(() =>
+    toDateInputValue(interview?.interviewDate),
+  );
 
-  const [timezone, setTimezone] = useState("Asia/Tokyo");
+  const [interviewTime, setInterviewTime] = useState(
+    () => interview?.interviewTime || "",
+  );
+
+  const [timezone, setTimezone] = useState(
+    () => interview?.timezone || "Asia/Tokyo",
+  );
 
   const [interviewMethod, setInterviewMethod] =
-    useState<PlacementInterviewMethod>("ZOOM");
+    useState<PlacementInterviewMethod>(
+      () => interview?.interviewMethod || "ZOOM",
+    );
 
-  const [meetingLink, setMeetingLink] = useState("");
+  const [meetingLink, setMeetingLink] = useState(
+    () => interview?.meetingLink || "",
+  );
 
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(() => interview?.notes || "");
 
   const [validationError, setValidationError] = useState("");
 
   const [saving, setSaving] = useState(false);
 
-  // ======================================================
-  // SYNC EDIT DATA
-  // ======================================================
+  // ====================================================
+  // ONLINE INTERVIEW
+  // ====================================================
 
-  useEffect(() => {
-    setInterviewDate(toDateInputValue(interview?.interviewDate));
+  const onlineInterview =
+    interviewMethod === "ZOOM" || interviewMethod === "GOOGLE_MEET";
 
-    setInterviewTime(interview?.interviewTime || "");
-
-    setTimezone(interview?.timezone || "Asia/Tokyo");
-
-    setInterviewMethod(interview?.interviewMethod || "ZOOM");
-
-    setMeetingLink(interview?.meetingLink || "");
-
-    setNotes(interview?.notes || "");
-
-    setValidationError("");
-  }, [interview]);
-
-  // ======================================================
-  // ONLINE
-  // ======================================================
-
-  const onlineInterview = useMemo(() => {
-    return interviewMethod === "ZOOM" || interviewMethod === "GOOGLE_MEET";
-  }, [interviewMethod]);
-
-  // ======================================================
+  // ====================================================
   // VALIDATE
-  // ======================================================
+  // ====================================================
 
   const validate = () => {
     if (!interviewDate) {
@@ -155,17 +169,17 @@ export const usePlacementInterview = ({
     return "";
   };
 
-  // ======================================================
+  // ====================================================
   // SUBMIT
-  // ======================================================
+  // ====================================================
 
   const handleSubmit = async () => {
     setValidationError("");
 
-    const error = validate();
+    const validationMessage = validate();
 
-    if (error) {
-      setValidationError(error);
+    if (validationMessage) {
+      setValidationError(validationMessage);
 
       return;
     }
@@ -187,11 +201,16 @@ export const usePlacementInterview = ({
     try {
       setSaving(true);
 
-      /*
-       * Important:
-       * Even if the parent component did not load the interview,
-       * check the backend before attempting POST.
-       */
+      // ===============================================
+      // SAFETY CHECK
+      //
+      // If parent did not already load an existing
+      // interview, check Provider interviews before
+      // POSTing a new interview.
+      //
+      // This prevents duplicate placement interviews.
+      // ===============================================
+
       let existingInterview = interview ?? null;
 
       if (!existingInterview) {
@@ -201,9 +220,25 @@ export const usePlacementInterview = ({
           );
       }
 
+      // ===============================================
+      // UPDATE OR CREATE
+      // ===============================================
+
       const response = existingInterview
-        ? await updatePlacementInterview(existingInterview.interviewId, payload)
-        : await schedulePlacementInterview(placementCandidateId, payload);
+        ? await updatePlacementInterview(
+            existingInterview.interviewId,
+
+            payload,
+          )
+        : await schedulePlacementInterview(
+            placementCandidateId,
+
+            payload,
+          );
+
+      // ===============================================
+      // SUCCESS MESSAGE
+      // ===============================================
 
       const updatedExisting = Boolean(existingInterview);
 
@@ -217,6 +252,10 @@ export const usePlacementInterview = ({
               ? "面接を設定しました。"
               : "Interview scheduled successfully."),
       );
+
+      // ===============================================
+      // REFRESH PARENT
+      // ===============================================
 
       await onSuccess();
 
@@ -243,25 +282,35 @@ export const usePlacementInterview = ({
     }
   };
 
+  // ====================================================
+  // RETURN
+  // ====================================================
+
   return {
     isEdit,
 
     interviewDate,
+
     setInterviewDate,
 
     interviewTime,
+
     setInterviewTime,
 
     timezone,
+
     setTimezone,
 
     interviewMethod,
+
     setInterviewMethod,
 
     meetingLink,
+
     setMeetingLink,
 
     notes,
+
     setNotes,
 
     validationError,

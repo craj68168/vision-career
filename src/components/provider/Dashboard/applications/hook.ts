@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -11,7 +11,6 @@ import { getProviderApplications } from "./api";
 import type { ApplicationApiError, ProviderApplication } from "./types";
 
 type Props = {
-  lang: string;
   refreshVersion: number;
 };
 
@@ -23,26 +22,47 @@ export const useApplications = ({ refreshVersion }: Props) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadApplications = useCallback(async () => {
-    try {
-      const response = await getProviderApplications();
-
-      setApplications(Array.isArray(response.data) ? response.data : []);
-    } catch (error: unknown) {
-      if (axios.isAxiosError<ApplicationApiError>(error)) {
-        toast.error(error.response?.data?.message || t("loadFailed"));
-        return;
-      }
-
-      toast.error(t("loadFailed"));
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
+  // ====================================================
+  // INITIAL LOAD / PARENT REFRESH
+  // ====================================================
 
   useEffect(() => {
-    void loadApplications();
-  }, [loadApplications, refreshVersion]);
+    let active = true;
+
+    getProviderApplications()
+      .then((response) => {
+        if (!active) {
+          return;
+        }
+
+        setApplications(Array.isArray(response.data) ? response.data : []);
+      })
+      .catch((error: unknown) => {
+        if (!active) {
+          return;
+        }
+
+        if (axios.isAxiosError<ApplicationApiError>(error)) {
+          toast.error(error.response?.data?.message || t("loadFailed"));
+          return;
+        }
+
+        toast.error(t("loadFailed"));
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [refreshVersion, t]);
+
+  // ====================================================
+  // SEARCH / FILTER
+  // ====================================================
 
   const filteredApplications = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -82,11 +102,24 @@ export const useApplications = ({ refreshVersion }: Props) => {
     });
   }, [applications, search]);
 
+  // ====================================================
+  // MANUAL REFRESH
+  // ====================================================
+
   const refresh = async () => {
     try {
       setRefreshing(true);
 
-      await loadApplications();
+      const response = await getProviderApplications();
+
+      setApplications(Array.isArray(response.data) ? response.data : []);
+    } catch (error: unknown) {
+      if (axios.isAxiosError<ApplicationApiError>(error)) {
+        toast.error(error.response?.data?.message || t("loadFailed"));
+        return;
+      }
+
+      toast.error(t("loadFailed"));
     } finally {
       setRefreshing(false);
     }

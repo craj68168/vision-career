@@ -110,3 +110,52 @@ export const formatDateTime = (value?: string | null, locale = "en") => {
     timeZone: "Asia/Tokyo",
   }).format(date);
 };
+
+// ======================================================
+// VACANCY STATUS LABEL
+// ======================================================
+
+export const getVacancyStatusLabel = (status: string): string => {
+  switch (status) {
+    case "draft":
+      return "Draft";
+
+    case "pending_review":
+      return "Pending Review";
+
+    case "approved":
+      return "Approved";
+
+    case "rejected":
+      return "Rejected";
+
+    case "published":
+      return "Published";
+
+    case "closed":
+      return "Closed";
+
+    default:
+      return status || "-";
+  }
+};
+
+// ======================================================
+// STAFF SCREENING LABEL
+// ======================================================
+
+export const getScreeningLabel = (status: string): string => {
+  switch (status) {
+    case "NOT_SCREENED":
+      return "Not Screened";
+
+    case "SCREENED":
+      return "Screened";
+
+    case "NEEDS_ATTENTION":
+      return "Needs Attention";
+
+    default:
+      return status || "-";
+  }
+};

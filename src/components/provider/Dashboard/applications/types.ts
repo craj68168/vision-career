@@ -35,6 +35,23 @@ export type ProviderEmploymentHistory = {
 export type ProviderApplicant = {
   name?: string | null;
 
+  // ====================================================
+  // PROTECTED PROFILE PHOTO
+  //
+  // Backend only tells us whether a photo exists.
+  //
+  // It never exposes:
+  // - seeker ID
+  // - storage key
+  // - Supabase path
+  //
+  // Actual photo is loaded through:
+  //
+  // /providers/applications/:applicationId/photo
+  // ====================================================
+
+  photo_available?: boolean;
+
   nationality?: string | null;
 
   visa_type?: string | null;
@@ -299,6 +316,10 @@ export type UpdateProviderInterviewPayload = {
 
   notes?: string;
 };
+
+// ======================================================
+// ERROR
+// ======================================================
 
 export type ApplicationApiError = {
   status?: string;

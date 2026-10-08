@@ -30,6 +30,7 @@ import {
 } from "./api";
 
 import ScheduleInterviewModal from "./ScheduleInterviewModal";
+import ProviderCandidatePhoto from "./ProviderCandidatePhoto";
 
 import type {
   ProviderApplication,
@@ -213,22 +214,37 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
   // ====================================================
 
   useEffect(() => {
-    setCardApplication(application);
+    const timer = window.setTimeout(() => {
+      // ==================================================
+      // SYNC CARD WITH LATEST PARENT APPLICATION
+      // ==================================================
 
-    if (details?.application_id === application.application_id) {
+      setCardApplication(application);
+
+      // ==================================================
+      // SYNC OPEN DETAILS IF THIS IS THE SAME APPLICATION
+      // ==================================================
+
       setDetails((current) => {
         if (!current) {
           return current;
         }
 
+        if (current.application_id !== application.application_id) {
+          return current;
+        }
+
         return {
           ...current,
-
           ...application,
         };
       });
-    }
-  }, [application, details?.application_id]);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [application]);
 
   // ====================================================
   // LOAD INTERVIEW
@@ -280,12 +296,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
         setInterview(null);
       }
     } catch (error) {
-      toast.error(
-        getErrorMessage(
-          error,
-          t("toast.loadDetailsFailed"),
-        ),
-      );
+      toast.error(getErrorMessage(error, t("toast.loadDetailsFailed")));
 
       setOpen(false);
     } finally {
@@ -347,12 +358,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
     } catch (error) {
       previewWindow.close();
 
-      toast.error(
-        getErrorMessage(
-          error,
-          t("toast.openResumeFailed"),
-        ),
-      );
+      toast.error(getErrorMessage(error, t("toast.openResumeFailed")));
     } finally {
       setLoadingResume(false);
     }
@@ -396,12 +402,7 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
 
       toast.success(t("toast.statusUpdated"));
     } catch (error) {
-      toast.error(
-        getErrorMessage(
-          error,
-          t("toast.statusUpdateFailed"),
-        ),
-      );
+      toast.error(getErrorMessage(error, t("toast.statusUpdateFailed")));
     } finally {
       setUpdatingStatus(null);
     }
@@ -455,18 +456,31 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
     <>
       <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-400">
-              {cardApplication.application_id}
-            </p>
+          <div className="flex min-w-0 items-start gap-4">
+            <ProviderCandidatePhoto
+              applicationId={cardApplication.application_id}
+              photoAvailable={cardApplication.applicant?.photo_available}
+              candidateName={cardApplication.applicant?.name}
+              size="sm"
+            />
 
-            <h3 className="mt-1 text-xl font-semibold text-slate-900">
-              {cardApplication.vacancy?.title || cardApplication.vacancy_id}
-            </h3>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-slate-400">
+                {cardApplication.application_id}
+              </p>
 
-            <p className="mt-1 text-sm text-slate-500">
-              {cardApplication.vacancy?.companyName || "-"}
-            </p>
+              <h3 className="mt-1 text-xl font-semibold text-slate-900">
+                {cardApplication.vacancy?.title || cardApplication.vacancy_id}
+              </h3>
+
+              <p className="mt-1 text-sm font-medium text-slate-700">
+                {cardApplication.applicant?.name || "-"}
+              </p>
+
+              <p className="mt-0.5 text-xs text-slate-500">
+                {cardApplication.vacancy?.companyName || "-"}
+              </p>
+            </div>
           </div>
 
           <ApplicationStatusBadge status={cardApplication.status} t={t} />
@@ -524,18 +538,27 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
             {/* HEADER */}
 
             <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5 md:px-8">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-                  {t("title")}
-                </p>
+              <div className="flex min-w-0 items-center gap-4">
+                <ProviderCandidatePhoto
+                  applicationId={current.application_id}
+                  photoAvailable={current.applicant?.photo_available}
+                  candidateName={current.applicant?.name}
+                  size="md"
+                />
 
-                <h2 className="mt-1 text-2xl font-bold text-slate-950">
-                  {current.applicant?.name || "-"}
-                </h2>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                    {t("title")}
+                  </p>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  {current.application_id}
-                </p>
+                  <h2 className="mt-1 truncate text-2xl font-bold text-slate-950">
+                    {current.applicant?.name || "-"}
+                  </h2>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    {current.application_id}
+                  </p>
+                </div>
               </div>
 
               <div className="flex items-center gap-3">
@@ -870,7 +893,11 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
 
                             <InfoField
                               label={t("interview.method")}
-                              value={t(INTERVIEW_METHOD_KEYS[interview.interviewMethod])}
+                              value={t(
+                                INTERVIEW_METHOD_KEYS[
+                                  interview.interviewMethod
+                                ],
+                              )}
                             />
                           </div>
 
@@ -965,7 +992,9 @@ export default function ProviderApplicationCard({ application, lang }: Props) {
                                   : "rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
                               }
                             >
-                              {updatingStatus === nextStatus ? t("updating") : t(DECISION_KEYS[nextStatus])}
+                              {updatingStatus === nextStatus
+                                ? t("updating")
+                                : t(DECISION_KEYS[nextStatus])}
                             </button>
                           ))}
                         </div>

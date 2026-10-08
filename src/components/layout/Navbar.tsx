@@ -375,6 +375,12 @@ const Navbar = () => {
         : `Notifications, ${unreadCount} unread`
       : notificationsLabel;
 
+  const isPublicJobsPage =
+    pathname === "/jobs" ||
+    pathname.startsWith("/jobs/") ||
+    pathname === "/en/jobs" ||
+    pathname.startsWith("/en/jobs/");
+
   // ====================================================
   // UI
   // ====================================================
@@ -390,7 +396,15 @@ const Navbar = () => {
           {/* LOGO */}
 
           <Link
-            href={lang === "ja" ? "/job-seekers" : "/en/job-seekers"}
+            href={
+              isPublicJobsPage
+                ? lang === "ja"
+                  ? "/jobs"
+                  : "/en/jobs"
+                : lang === "ja"
+                  ? "/job-seekers"
+                  : "/en/job-seekers"
+            }
             className={`group inline-flex min-w-0 items-center gap-2.5 rounded-md ${focusRing}`}
           >
             <span
@@ -401,7 +415,7 @@ const Navbar = () => {
             </span>
 
             <span className="hidden truncate text-lg font-semibold tracking-tight min-[380px]:inline">
-              Vacancify
+              Vision Career
             </span>
           </Link>
 
@@ -498,7 +512,9 @@ const Navbar = () => {
                         </span>
 
                         <p className="mt-3 text-[13px] font-medium text-slate-700">
-                          {lang === "ja" ? "通知はありません" : "No notifications"}
+                          {lang === "ja"
+                            ? "通知はありません"
+                            : "No notifications"}
                         </p>
                       </div>
                     ) : (
@@ -551,18 +567,29 @@ const Navbar = () => {
 
             {/* LOGOUT */}
 
-            <button
-              type="button"
-              onClick={handleLogout}
-              className={`${iconButtonBase} ${iconButtonIdle} w-10 sm:w-auto sm:gap-2 sm:px-3`}
-              aria-label={lang === "ja" ? "ログアウト" : "Logout"}
-            >
-              <LogOut className="h-4 w-4" />
+            {isPublicJobsPage ? (
+              <Link
+                href={
+                  lang === "ja" ? "/job-seekers-auth" : "/en/job-seekers-auth"
+                }
+                className="inline-flex min-h-10 items-center justify-center rounded-md bg-emerald-800 px-3 text-xs font-semibold text-white hover:bg-emerald-900 sm:px-4 sm:text-sm"
+              >
+                {lang === "ja" ? "求職者ログイン" : "Sign in"}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className={`${iconButtonBase} ${iconButtonIdle} w-10 sm:w-auto sm:gap-2 sm:px-3`}
+                aria-label={lang === "ja" ? "ログアウト" : "Logout"}
+              >
+                <LogOut className="h-4 w-4" />
 
-              <span className="hidden sm:inline">
-                {lang === "ja" ? "ログアウト" : "Logout"}
-              </span>
-            </button>
+                <span className="hidden sm:inline">
+                  {lang === "ja" ? "ログアウト" : "Logout"}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -619,9 +646,7 @@ function NotificationItem({
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">
-              <p className={`text-[13px] font-semibold ${wrap}`}>
-                {title}
-              </p>
+              <p className={`text-[13px] font-semibold ${wrap}`}>{title}</p>
 
               {!notification.isRead && (
                 <span

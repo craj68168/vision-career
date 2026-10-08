@@ -8,64 +8,63 @@ import type {
 } from "./placementInterviewTypes";
 
 // ======================================================
-// GET PLACEMENT INTERVIEWS
+// GET ALL PROVIDER INTERVIEWS
+//
+// GET
+// /api/providers/interviews
 // ======================================================
 
-export const getProviderPlacementInterviews =
-  async (): Promise<PlacementInterviewListResponse> => {
-    const response = await axiosInstance.get<PlacementInterviewListResponse>(
-      "/providers/interviews",
-    );
+export const getProviderPlacementInterviews = async () => {
+  const response = await axiosInstance.get<PlacementInterviewListResponse>(
+    "/providers/interviews",
+  );
 
-    const allInterviews = Array.isArray(response.data.data)
-      ? response.data.data
-      : [];
-
-    const placementInterviews = allInterviews.filter(
-      (interview) => interview.sourceType === "PLACEMENT",
-    );
-
-    return {
-      ...response.data,
-
-      count: placementInterviews.length,
-
-      data: placementInterviews,
-    };
-  };
+  return response.data;
+};
 
 // ======================================================
-// FIND INTERVIEW BY CANDIDATE
+// FIND PLACEMENT INTERVIEW BY CANDIDATE ID
+//
+// IMPORTANT:
+//
+// Backend already gives Provider interviews through:
+//
+// GET /providers/interviews
+//
+// Therefore we do not need to invent another backend
+// endpoint just to find the candidate's interview.
+//
+// This helper loads Provider interviews and safely finds
+// the placement interview belonging to the candidate.
 // ======================================================
 
 export const getProviderPlacementInterviewByCandidateId = async (
   placementCandidateId: string,
 ): Promise<PlacementInterview | null> => {
-  const response = await axiosInstance.get<PlacementInterviewListResponse>(
-    "/providers/interviews",
-  );
+  const response = await getProviderPlacementInterviews();
 
-  const interviews = Array.isArray(response.data.data)
-    ? response.data.data
-    : [];
+  if (!Array.isArray(response.data)) {
+    return null;
+  }
 
   return (
-    interviews.find(
-      (interview) =>
-        interview.sourceType === "PLACEMENT" &&
-        interview.placementCandidateId === placementCandidateId,
+    response.data.find(
+      (interview) => interview.placementCandidateId === placementCandidateId,
     ) ?? null
   );
 };
 
 // ======================================================
-// CREATE INTERVIEW
+// SCHEDULE PLACEMENT INTERVIEW
+//
+// POST
+// /api/providers/interviews
 // ======================================================
 
 export const schedulePlacementInterview = async (
   placementCandidateId: string,
   payload: PlacementInterviewFormPayload,
-): Promise<PlacementInterviewResponse> => {
+) => {
   const response = await axiosInstance.post<PlacementInterviewResponse>(
     "/providers/interviews",
     {
@@ -89,13 +88,16 @@ export const schedulePlacementInterview = async (
 };
 
 // ======================================================
-// UPDATE INTERVIEW
+// UPDATE PLACEMENT INTERVIEW
+//
+// PATCH
+// /api/providers/interviews/:interviewId
 // ======================================================
 
 export const updatePlacementInterview = async (
   interviewId: string,
   payload: PlacementInterviewFormPayload,
-): Promise<PlacementInterviewResponse> => {
+) => {
   const response = await axiosInstance.patch<PlacementInterviewResponse>(
     `/providers/interviews/${interviewId}`,
     {
@@ -115,3 +117,20 @@ export const updatePlacementInterview = async (
 
   return response.data;
 };
+
+// ======================================================
+// COMPATIBILITY TYPE EXPORTS
+//
+// This also prevents older files from breaking if they
+// still import interview types from placementInterviewApi.
+// ======================================================
+
+export type {
+  PlacementInterview,
+  PlacementInterviewApiError,
+  PlacementInterviewFormPayload,
+  PlacementInterviewListResponse,
+  PlacementInterviewMethod,
+  PlacementInterviewResponse,
+  PlacementInterviewStatus,
+} from "./placementInterviewTypes";
