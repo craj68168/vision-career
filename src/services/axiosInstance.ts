@@ -26,13 +26,25 @@ const getAccessToken = () => {
   );
 };
 
+const getRequestLanguage = () => {
+  if (typeof window === "undefined") {
+    return "ja";
+  }
+
+  return window.location.pathname.startsWith("/en") ? "en" : "ja";
+};
+
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = getAccessToken();
+    const language = getRequestLanguage();
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    config.headers["X-Language"] = language;
+    config.headers["Accept-Language"] = language;
 
     return config;
   },
