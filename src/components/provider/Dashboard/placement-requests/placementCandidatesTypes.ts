@@ -15,7 +15,7 @@ export type ProviderEducation = {
 };
 
 // ======================================================
-// EMPLOYMENT
+// EMPLOYMENT HISTORY
 // ======================================================
 
 export type ProviderEmploymentHistory = {
@@ -29,7 +29,7 @@ export type ProviderEmploymentHistory = {
 };
 
 // ======================================================
-// STATUS
+// PLACEMENT CANDIDATE STATUS
 // ======================================================
 
 export type PlacementCandidateStatus =
@@ -40,19 +40,26 @@ export type PlacementCandidateStatus =
   | "PLACED"
   | "REJECTED";
 
-export type ProviderPlacementCandidateDecisionStatus =
-  | "UNDER_REVIEW"
-  | "INTERVIEW"
-  | "SELECTED"
-  | "PLACED"
-  | "REJECTED";
-
 // ======================================================
-// SNAPSHOT
+// PROVIDER-SAFE CANDIDATE
+//
+// Provider MUST NOT receive:
+//
+// seekerId
+// email
+// phone
+// home address
+// profile photo path
+// storage key
+// private documents
 // ======================================================
 
 export type ProviderPlacementCandidateSnapshot = {
   name: string;
+
+  // Boolean only.
+  // Actual photo is loaded through protected endpoint.
+  photo_available?: boolean;
 
   nationality?: string | null;
 
@@ -76,7 +83,7 @@ export type ProviderPlacementCandidateSnapshot = {
 };
 
 // ======================================================
-// CANDIDATE
+// PLACEMENT CANDIDATE
 // ======================================================
 
 export type ProviderPlacementCandidate = {
@@ -108,7 +115,7 @@ export type ProviderPlacementCandidate = {
 };
 
 // ======================================================
-// RESPONSES
+// LIST RESPONSE
 // ======================================================
 
 export type ProviderPlacementCandidateListResponse = {
@@ -121,6 +128,10 @@ export type ProviderPlacementCandidateListResponse = {
   message?: string;
 };
 
+// ======================================================
+// SINGLE RESPONSE
+// ======================================================
+
 export type ProviderPlacementCandidateResponse = {
   success: boolean;
 
@@ -130,7 +141,22 @@ export type ProviderPlacementCandidateResponse = {
 };
 
 // ======================================================
-// UPDATE
+// PROVIDER DIRECT DECISIONS
+//
+// INTERVIEW IS NOT HERE.
+//
+// UNDER_REVIEW -> INTERVIEW happens only through
+// interview scheduling.
+// ======================================================
+
+export type ProviderPlacementCandidateDecisionStatus =
+  | "UNDER_REVIEW"
+  | "SELECTED"
+  | "PLACED"
+  | "REJECTED";
+
+// ======================================================
+// UPDATE STATUS
 // ======================================================
 
 export type UpdateProviderPlacementCandidateStatusPayload = {
@@ -140,7 +166,7 @@ export type UpdateProviderPlacementCandidateStatusPayload = {
 };
 
 // ======================================================
-// ERROR
+// API ERROR
 // ======================================================
 
 export type PlacementCandidateApiError = {

@@ -15,6 +15,8 @@ export type ProfileStatus = "COMPLETE" | "INCOMPLETE";
 
 export type PlacementEligibilityStatus = "ELIGIBLE" | "NOT_ELIGIBLE";
 
+export type SeekerApprovalActorType = "admin" | "staff";
+
 // ======================================================
 // STAFF SCREENING
 // ======================================================
@@ -31,7 +33,43 @@ export type AdminSeekerStaffScreening = {
 
   screenedByStaffId?: string | null;
 
+  screenedByStaffName?: string | null;
+
   screenedAt?: string | null;
+};
+
+// ======================================================
+// APPROVAL REVIEW
+// ======================================================
+
+export type AdminSeekerApprovalReview = {
+  reviewedAt?: string | null;
+
+  reviewedByType?: SeekerApprovalActorType | null;
+
+  reviewedById?: string | null;
+
+  reviewedByName?: string | null;
+};
+
+// ======================================================
+// APPROVAL HISTORY
+// ======================================================
+
+export type AdminSeekerApprovalHistoryItem = {
+  id?: string | null;
+
+  decision: ApprovalStatus;
+
+  actorType?: SeekerApprovalActorType | string | null;
+
+  actorId?: string | null;
+
+  actorName?: string | null;
+
+  reason?: string | null;
+
+  reviewedAt?: string | null;
 };
 
 // ======================================================
@@ -51,10 +89,6 @@ export type Education = {
 
   major?: string | null;
 };
-
-// ======================================================
-// CREATE EDUCATION
-// ======================================================
 
 export type CreateEducationInput = {
   enrollment_date?: string | null;
@@ -83,10 +117,6 @@ export type EmploymentHistory = {
 
   company_name: string;
 };
-
-// ======================================================
-// CREATE EMPLOYMENT
-// ======================================================
 
 export type CreateEmploymentHistoryInput = {
   start_date?: string | null;
@@ -145,7 +175,17 @@ export type AdminSeeker = {
 
   approval_reviewed_at?: string | null;
 
+  approval_reviewed_by_type?: SeekerApprovalActorType | null;
+
+  approval_reviewed_by_id?: string | null;
+
+  approval_reviewed_by_name?: string | null;
+
   rejection_reason?: string | null;
+
+  approvalReview?: AdminSeekerApprovalReview | null;
+
+  approvalHistory?: AdminSeekerApprovalHistoryItem[];
 
   profile_photo?: string | null;
 
@@ -192,10 +232,6 @@ export type AdminSeeker = {
   applications_count: number;
 
   staffScreening: AdminSeekerStaffScreening;
-
-  // ====================================================
-  // PROFILE / PLACEMENT READINESS
-  // ====================================================
 
   profile_status?: ProfileStatus;
 
@@ -302,26 +338,15 @@ export type SeekerFilters = {
 
 // ======================================================
 // CREATE
-//
-// Admin does NOT provide:
-// - password
-// - approval_status
-// - account_status
-//
-// Backend automatically creates an approved / active
-// Admin-created account and sends the password setup
-// email.
 // ======================================================
 
 export type CreateSeekerPayload = {
-  // Account
   name: string;
 
   email: string;
 
   phone: string;
 
-  // Personal
   address?: string | null;
 
   current_location?: string | null;
@@ -332,29 +357,24 @@ export type CreateSeekerPayload = {
 
   nationality?: string | null;
 
-  // Visa
   visa_type?: string | null;
 
   visa_expiry_date?: string | null;
 
-  // Language / Skills
   japanese_level?: string | null;
 
   skills: string[];
 
-  // Job Preferences
   desired_job?: string | null;
 
   desired_location?: string | null;
 
   available_from?: string | null;
 
-  // Background
   education: CreateEducationInput[];
 
   employment_history: CreateEmploymentHistoryInput[];
 
-  // Other
   notes?: string | null;
 
   placement_status?: PlacementStatus;

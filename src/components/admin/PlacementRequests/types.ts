@@ -9,6 +9,16 @@ export type PlacementRequestStatus =
   | "rejected";
 
 // ======================================================
+// INTERNAL ACTOR
+// ======================================================
+
+export type PlacementRequestActorRole =
+  | "admin"
+  | "staff"
+  | "provider"
+  | "system";
+
+// ======================================================
 // STAFF SCREENING
 // ======================================================
 
@@ -24,7 +34,56 @@ export type PlacementRequestStaffScreening = {
 
   screenedByStaffId?: string | null;
 
+  screenedByStaffName?: string | null;
+
   screenedAt?: string | null;
+};
+
+// ======================================================
+// FINAL REVIEW / DECISION
+// ======================================================
+
+export type PlacementRequestDecisionAudit = {
+  decision?: "approved" | "rejected" | null;
+
+  reviewedAt?: string | null;
+
+  reviewedByRole?: "admin" | "staff" | null;
+
+  reviewedById?: string | null;
+
+  reviewedByName?: string | null;
+
+  rejectionReason?: string | null;
+};
+
+// ======================================================
+// WORKFLOW HISTORY
+// ======================================================
+
+export type PlacementRequestWorkflowAction =
+  | "SCREENED"
+  | "NEEDS_ATTENTION"
+  | "APPROVED"
+  | "REJECTED"
+  | "RESUBMITTED";
+
+export type PlacementRequestWorkflowHistoryEntry = {
+  action: PlacementRequestWorkflowAction;
+
+  fromStatus?: string | null;
+
+  toStatus?: string | null;
+
+  actorRole?: PlacementRequestActorRole | null;
+
+  actorId?: string | null;
+
+  actorName?: string | null;
+
+  note?: string | null;
+
+  createdAt?: string | null;
 };
 
 // ======================================================
@@ -78,11 +137,17 @@ export type PlacementRequest = {
 
   reviewedAt?: string | null;
 
-  // ==================================================
-  // STAFF SCREENING
-  // ==================================================
+  reviewedByRole?: "admin" | "staff" | null;
+
+  reviewedById?: string | null;
+
+  reviewedByName?: string | null;
+
+  review?: PlacementRequestDecisionAudit;
 
   staffScreening: PlacementRequestStaffScreening;
+
+  workflowHistory?: PlacementRequestWorkflowHistoryEntry[];
 
   createdAt?: string;
 
@@ -293,7 +358,9 @@ export type PlacementCandidateStaffReview = {
 
 export type PlacementCandidate = {
   placementCandidateId: string;
+
   staffReview: PlacementCandidateStaffReview;
+
   recruitId: string;
 
   providerId: string;

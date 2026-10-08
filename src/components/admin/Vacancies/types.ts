@@ -11,6 +11,12 @@ export type VacancyStatus =
   | "closed";
 
 // ======================================================
+// ACTOR TYPE
+// ======================================================
+
+export type VacancyActorType = "admin" | "staff";
+
+// ======================================================
 // STAFF SCREENING STATUS
 // ======================================================
 
@@ -30,7 +36,84 @@ export type AdminVacancyStaffScreening = {
 
   screenedByStaffId?: string | null;
 
+  screenedByStaffName?: string | null;
+
   screenedAt?: string | null;
+};
+
+// ======================================================
+// REVIEW AUDIT
+// ======================================================
+
+export type AdminVacancyReview = {
+  reviewedAt?: string | null;
+
+  reviewedByType?: VacancyActorType | null;
+
+  reviewedById?: string | null;
+
+  reviewedByName?: string | null;
+
+  rejectionReason?: string | null;
+};
+
+// ======================================================
+// PUBLICATION AUDIT
+// ======================================================
+
+export type AdminVacancyPublication = {
+  publishedAt?: string | null;
+
+  publishedByAdminId?: string | null;
+
+  publishedByAdminName?: string | null;
+};
+
+// ======================================================
+// CLOSING AUDIT
+// ======================================================
+
+export type AdminVacancyClosing = {
+  closedAt?: string | null;
+
+  closedByAdminId?: string | null;
+
+  closedByAdminName?: string | null;
+};
+
+// ======================================================
+// WORKFLOW HISTORY
+// ======================================================
+
+export type AdminVacancyWorkflowAction =
+  | "SCREENED"
+  | "NEEDS_ATTENTION"
+  | "APPROVED"
+  | "REJECTED"
+  | "PUBLISHED"
+  | "CLOSED"
+  | string;
+
+export type AdminVacancyWorkflowHistoryItem = {
+  id?: string | null;
+
+  action?: AdminVacancyWorkflowAction | null;
+
+  fromStatus?: string | null;
+
+  toStatus?: string | null;
+
+  actorType?: VacancyActorType | string | null;
+
+  actorId?: string | null;
+
+  actorName?: string | null;
+
+  reason?: string | null;
+
+  note?: string | null;
+
+  createdAt?: string | null;
 };
 
 // ======================================================
@@ -84,9 +167,51 @@ export type AdminVacancy = {
 
   isPublished: boolean;
 
+  // ====================================================
+  // LEGACY / FLAT REVIEW FIELDS
+  // ====================================================
+
   reviewedAt?: string | null;
 
+  reviewedByType?: VacancyActorType | null;
+
+  reviewedById?: string | null;
+
+  reviewedByName?: string | null;
+
   rejectionReason?: string | null;
+
+  // ====================================================
+  // LEGACY / FLAT PUBLICATION FIELDS
+  // ====================================================
+
+  publishedAt?: string | null;
+
+  publishedByAdminId?: string | null;
+
+  publishedByAdminName?: string | null;
+
+  // ====================================================
+  // LEGACY / FLAT CLOSING FIELDS
+  // ====================================================
+
+  closedAt?: string | null;
+
+  closedByAdminId?: string | null;
+
+  closedByAdminName?: string | null;
+
+  // ====================================================
+  // NORMALIZED AUDIT OBJECTS
+  // ====================================================
+
+  review?: AdminVacancyReview | null;
+
+  publication?: AdminVacancyPublication | null;
+
+  closing?: AdminVacancyClosing | null;
+
+  workflowHistory?: AdminVacancyWorkflowHistoryItem[];
 
   createdAt: string;
 
@@ -209,7 +334,25 @@ export type AdminVacancyActionResponse = {
 
     reviewedAt?: string | null;
 
+    reviewedByType?: VacancyActorType | null;
+
+    reviewedById?: string | null;
+
+    reviewedByName?: string | null;
+
     rejectionReason?: string | null;
+
+    publishedAt?: string | null;
+
+    publishedByAdminId?: string | null;
+
+    publishedByAdminName?: string | null;
+
+    closedAt?: string | null;
+
+    closedByAdminId?: string | null;
+
+    closedByAdminName?: string | null;
   };
 };
 

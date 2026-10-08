@@ -119,7 +119,7 @@ export type PlacementRequestApiError = {
 };
 
 // ======================================================
-// TEMPORARY COMPATIBILITY EXPORTS
+// PLACEMENT CANDIDATE COMPATIBILITY EXPORTS
 // ======================================================
 
 export type {
@@ -134,3 +134,16 @@ export type {
   UpdateProviderPlacementCandidateStatusPayload,
   PlacementCandidateApiError,
 } from "./placementCandidatesTypes";
+
+// ======================================================
+// PLACEMENT INTERVIEW COMPATIBILITY EXPORTS
+// ======================================================
+
+export type {
+  PlacementInterview,
+  PlacementInterviewStatus,
+  PlacementInterviewMethod,
+  PlacementInterviewFormPayload,
+  PlacementInterviewListResponse,
+  PlacementInterviewResponse,
+} from "./placementInterviewTypes";

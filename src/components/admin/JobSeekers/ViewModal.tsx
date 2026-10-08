@@ -1,6 +1,7 @@
 "use client";
 
 import type { ComponentType, ReactNode } from "react";
+
 import {
   AlertTriangle,
   Briefcase,
@@ -10,6 +11,7 @@ import {
   ExternalLink,
   FileText,
   GraduationCap,
+  History,
   Mail,
   MapPin,
   Phone,
@@ -23,6 +25,7 @@ import type {
   AdminSeeker,
   ApprovalStatus,
   PlacementStatus,
+  SeekerApprovalActorType,
 } from "./types";
 
 const focusRing =
@@ -50,10 +53,6 @@ type Props = {
 
 // ======================================================
 // BACKEND BASE URL
-//
-// Used only for old /uploads/... records.
-// New Supabase files already arrive as complete signed
-// HTTPS URLs.
 // ======================================================
 
 const backendBaseUrl =
@@ -101,6 +100,34 @@ export default function ViewModal({
       : "Download";
 
   // ==================================================
+  // APPROVAL AUDIT
+  // ==================================================
+
+  const approvalReview = {
+    reviewedAt:
+      seeker.approvalReview?.reviewedAt ?? seeker.approval_reviewed_at ?? null,
+
+    reviewedByType:
+      seeker.approvalReview?.reviewedByType ??
+      seeker.approval_reviewed_by_type ??
+      null,
+
+    reviewedById:
+      seeker.approvalReview?.reviewedById ??
+      seeker.approval_reviewed_by_id ??
+      null,
+
+    reviewedByName:
+      seeker.approvalReview?.reviewedByName ??
+      seeker.approval_reviewed_by_name ??
+      null,
+  };
+
+  const approvalHistory = Array.isArray(seeker.approvalHistory)
+    ? seeker.approvalHistory
+    : [];
+
+  // ==================================================
   // STAFF SCREENING STATE
   // ==================================================
 
@@ -119,8 +146,8 @@ export default function ViewModal({
     : "This Job Seeker has not been screened by Staff yet.";
 
   let bannerText = ja
-    ? "管理者は最終判断を行うことができます。"
-    : "Admin retains final registration approval authority.";
+    ? "スタッフ確認と登録承認は別の操作です。"
+    : "Staff screening and registration approval are separate actions.";
 
   switch (screening.status) {
     case "SCREENED":
@@ -137,8 +164,8 @@ export default function ViewModal({
       bannerTitle = ja ? "スタッフ確認済み" : "Staff screening completed.";
 
       bannerText = ja
-        ? "この登録は管理者の最終判断の準備ができています。"
-        : "This registration is ready for the Admin's final decision.";
+        ? "スタッフによる登録内容の確認が完了しています。"
+        : "Staff screening for this registration has been completed.";
 
       break;
 
@@ -156,15 +183,11 @@ export default function ViewModal({
         : "Staff marked this Job Seeker as needing attention.";
 
       bannerText = ja
-        ? "スタッフメモを確認してから承認・却下してください。"
-        : "Review the Staff note before making the final registration decision.";
+        ? "承認・却下の判断前にスタッフメモを確認してください。"
+        : "Review the Staff note before making the registration decision.";
 
       break;
   }
-
-  // ==================================================
-  // UI
-  // ==================================================
 
   return (
     <div
@@ -189,7 +212,9 @@ export default function ViewModal({
             {profilePhotoUrl ? (
               <div
                 className="h-12 w-12 shrink-0 rounded-lg border border-zinc-200 bg-cover bg-center bg-no-repeat dark:border-white/10"
-                style={{ backgroundImage: `url("${profilePhotoUrl}")` }}
+                style={{
+                  backgroundImage: `url("${profilePhotoUrl}")`,
+                }}
                 role="img"
                 aria-label={`${seeker.name} profile`}
               />
@@ -200,7 +225,7 @@ export default function ViewModal({
             )}
 
             <div className="min-w-0">
-              <p className="truncate text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              <p className="truncate text-xs font-medium text-emerald-600">
                 {seeker.seeker_id}
               </p>
 
@@ -211,7 +236,7 @@ export default function ViewModal({
                 {seeker.name}
               </h2>
 
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-zinc-500">
                 {ja ? "求職者詳細" : "Job Seeker Details"}
               </p>
             </div>
@@ -221,7 +246,7 @@ export default function ViewModal({
             type="button"
             onClick={onClose}
             aria-label={ja ? "閉じる" : "Close"}
-            className={`grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-white/10 ${focusRing}`}
+            className={`grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 dark:hover:bg-white/10 ${focusRing}`}
           >
             <X className="h-5 w-5" />
           </button>
@@ -241,6 +266,10 @@ export default function ViewModal({
               {text(seeker.phone)}
             </Info>
 
+            <Info icon={MapPin} label={ja ? "住所" : "Address"}>
+              {text(seeker.address)}
+            </Info>
+
             <Info icon={MapPin} label={ja ? "現在地" : "Current Location"}>
               {text(seeker.current_location)}
             </Info>
@@ -251,6 +280,10 @@ export default function ViewModal({
 
             <Info icon={CalendarDays} label={ja ? "生年月日" : "Date of Birth"}>
               {dateText(seeker.date_of_birth, lang)}
+            </Info>
+
+            <Info icon={UserRound} label={ja ? "性別" : "Gender"}>
+              {text(seeker.gender)}
             </Info>
 
             <Info icon={ShieldCheck} label={ja ? "在留資格" : "Visa Type"}>
@@ -272,10 +305,7 @@ export default function ViewModal({
               {text(seeker.desired_job)}
             </Info>
 
-            <Info
-              icon={MapPin}
-              label={ja ? "希望勤務地" : "Desired Location"}
-            >
+            <Info icon={MapPin} label={ja ? "希望勤務地" : "Desired Location"}>
               {text(seeker.desired_location)}
             </Info>
 
@@ -291,7 +321,7 @@ export default function ViewModal({
             </Info>
           </dl>
 
-          {/* EDUCATION + EMPLOYMENT */}
+          {/* EDUCATION / EMPLOYMENT */}
 
           <div className="grid gap-3 lg:grid-cols-2">
             <Section title={ja ? "学歴" : "Education"} icon={GraduationCap}>
@@ -311,7 +341,7 @@ export default function ViewModal({
                       {text(education.major)}
                     </p>
 
-                    <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
+                    <p className="mt-0.5 text-xs text-zinc-400">
                       {dateText(education.enrollment_date, lang)} —{" "}
                       {dateText(education.graduation_date, lang)}
                     </p>
@@ -340,7 +370,7 @@ export default function ViewModal({
                       {text(employment.employment_type)}
                     </p>
 
-                    <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
+                    <p className="mt-0.5 text-xs text-zinc-400">
                       {dateText(employment.start_date, lang)} —{" "}
                       {dateText(employment.end_date, lang)}
                     </p>
@@ -350,7 +380,7 @@ export default function ViewModal({
             </Section>
           </div>
 
-          {/* RESUME / CV */}
+          {/* RESUME */}
 
           <Section title={ja ? "履歴書 / CV" : "Resume / CV"} icon={FileText}>
             {resumeUrl ? (
@@ -360,9 +390,7 @@ export default function ViewModal({
                     {getFileName(resumeSource)}
                   </p>
 
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {resumeType}
-                  </p>
+                  <p className="text-xs text-zinc-500">{resumeType}</p>
                 </div>
 
                 <div className="flex shrink-0 flex-wrap gap-2">
@@ -433,7 +461,7 @@ export default function ViewModal({
                           {document.name || fileName}
                         </p>
 
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        <p className="text-xs text-zinc-500">
                           {getDocumentTypeLabel(document.document_type)} ·{" "}
                           <span className="break-all">{fileName}</span>
                         </p>
@@ -493,23 +521,9 @@ export default function ViewModal({
             </StatusField>
           </dl>
 
-          {/* ADMIN REJECTION */}
-
-          {seeker.rejection_reason && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-400/20 dark:bg-red-400/10">
-              <p className="text-[11px] font-medium text-red-700 dark:text-red-300">
-                {ja ? "却下理由" : "Admin Rejection Reason"}
-              </p>
-
-              <p className="mt-1 whitespace-pre-wrap break-words text-sm text-red-700 dark:text-red-300">
-                {seeker.rejection_reason}
-              </p>
-            </div>
-          )}
-
           {/* STAFF SCREENING */}
 
-          <section className="space-y-3">
+          <section className="space-y-3 rounded-lg border border-zinc-200 p-4 dark:border-white/10">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">
                 {ja ? "スタッフ確認" : "Staff Screening"}
@@ -525,7 +539,7 @@ export default function ViewModal({
             <div className={`flex gap-3 rounded-lg border p-3 ${bannerClass}`}>
               <BannerIcon className="mt-0.5 h-4 w-4 shrink-0" />
 
-              <div className="min-w-0">
+              <div>
                 <p className="text-sm font-medium">{bannerTitle}</p>
 
                 <p className="mt-0.5 text-xs opacity-90">{bannerText}</p>
@@ -533,26 +547,26 @@ export default function ViewModal({
             </div>
 
             {screening.status !== "NOT_SCREENED" && (
-              <dl className="grid gap-3 rounded-md bg-zinc-50 p-3 dark:bg-white/5 sm:grid-cols-2">
-                <StatusField label={ja ? "確認担当スタッフ" : "Screened By"}>
+              <dl className="grid gap-3 rounded-md bg-zinc-50 p-3 dark:bg-white/5 sm:grid-cols-3">
+                <StatusField label={ja ? "確認担当" : "Screened By"}>
+                  {screening.screenedByStaffName ||
+                    screening.screenedByStaffId ||
+                    "-"}
+                </StatusField>
+
+                <StatusField label={ja ? "スタッフID" : "Staff ID"}>
                   {screening.screenedByStaffId || "-"}
                 </StatusField>
 
                 <StatusField label={ja ? "確認日時" : "Screened At"}>
-                  {dateText(screening.screenedAt, lang)}
+                  {dateTimeText(screening.screenedAt, lang)}
                 </StatusField>
               </dl>
             )}
 
             {screening.note && (
-              <div
-                className={`rounded-lg border p-3 ${
-                  screening.status === "NEEDS_ATTENTION"
-                    ? "border-red-200 bg-red-50 dark:border-red-400/20 dark:bg-red-400/10"
-                    : "border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/5"
-                }`}
-              >
-                <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 dark:border-white/10 dark:bg-white/5">
+                <p className="text-[11px] font-medium text-zinc-500">
                   {ja ? "スタッフメモ" : "Staff Screening Note"}
                 </p>
 
@@ -561,11 +575,129 @@ export default function ViewModal({
                 </p>
               </div>
             )}
+          </section>
 
-            <p className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-400">
+          {/* REGISTRATION DECISION & AUDIT */}
+
+          <section className="space-y-4 rounded-lg border border-indigo-200 bg-indigo-50/40 p-4 dark:border-indigo-400/20 dark:bg-indigo-400/5">
+            <div className="flex items-center gap-2">
+              <History className="h-4 w-4 text-indigo-600" />
+
+              <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                {ja ? "登録審査・監査履歴" : "Registration Decision & Audit"}
+              </h3>
+            </div>
+
+            <div className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-white/10 dark:bg-zinc-900">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  {ja ? "現在の審査結果" : "Current Decision"}
+                </p>
+
+                <span
+                  className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${getApprovalBadgeClass(
+                    seeker.approval_status,
+                  )}`}
+                >
+                  {getApprovalLabel(seeker.approval_status, lang)}
+                </span>
+              </div>
+
+              {seeker.approval_status !== "pending" ? (
+                <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <StatusField label={ja ? "審査担当" : "Reviewed By"}>
+                    {approvalReview.reviewedByName ||
+                      approvalReview.reviewedById ||
+                      "-"}
+                  </StatusField>
+
+                  <StatusField label={ja ? "権限" : "Reviewer Type"}>
+                    {getActorTypeLabel(approvalReview.reviewedByType, lang)}
+                  </StatusField>
+
+                  <StatusField label={ja ? "担当者ID" : "Reviewer ID"}>
+                    {approvalReview.reviewedById || "-"}
+                  </StatusField>
+
+                  <StatusField label={ja ? "審査日時" : "Reviewed At"}>
+                    {dateTimeText(approvalReview.reviewedAt, lang)}
+                  </StatusField>
+                </dl>
+              ) : (
+                <p className="mt-3 text-sm text-zinc-500">
+                  {ja
+                    ? "この登録はまだ承認待ちです。"
+                    : "This registration is still waiting for an approval decision."}
+                </p>
+              )}
+
+              {seeker.rejection_reason && (
+                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3">
+                  <p className="text-xs font-medium text-red-600">
+                    {ja ? "却下理由" : "Rejection Reason"}
+                  </p>
+
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-red-700">
+                    {seeker.rejection_reason}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                {ja ? "判断履歴" : "Decision History"}
+              </p>
+
+              {approvalHistory.length ? (
+                <div className="space-y-2">
+                  {approvalHistory.map((entry, index) => (
+                    <div
+                      key={
+                        entry.id ||
+                        `${entry.decision}-${entry.reviewedAt}-${index}`
+                      }
+                      className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-white/10 dark:bg-zinc-900"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                            {getApprovalLabel(entry.decision, lang)}
+                          </p>
+
+                          <p className="mt-1 text-xs text-zinc-500">
+                            {entry.actorName || entry.actorId || "-"} ·{" "}
+                            {getActorTypeLabel(entry.actorType, lang)}
+                            {entry.actorId ? ` · ${entry.actorId}` : ""}
+                          </p>
+                        </div>
+
+                        <p className="text-xs text-zinc-400">
+                          {dateTimeText(entry.reviewedAt, lang)}
+                        </p>
+                      </div>
+
+                      {entry.reason && (
+                        <div className="mt-2 rounded-md bg-red-50 px-2.5 py-2 text-xs text-red-700">
+                          {ja ? "理由" : "Reason"}: {entry.reason}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-zinc-500">
+                  {ja
+                    ? "登録判断の履歴はありません。"
+                    : "No registration decision history has been recorded."}
+                </p>
+              )}
+            </div>
+
+            <p className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
               {ja
-                ? "スタッフ確認は参考情報です。最終的な登録承認・却下およびアカウント管理は管理者が行います。"
-                : "Staff screening is advisory. Final registration approval, rejection and account control remain with Admin."}
+                ? "スタッフ確認と登録承認は別の操作です。管理者または求職者承認権限を持つスタッフが承認・却下できます。"
+                : "Staff screening and registration approval are separate actions. Admin or Staff with the Job Seeker approval permission may approve or reject the registration."}
             </p>
           </section>
         </div>
@@ -576,10 +708,10 @@ export default function ViewModal({
           <div className="space-y-2.5 border-t border-zinc-200 px-4 py-3 dark:border-white/10 sm:px-5">
             {seeker.approval_status === "pending" &&
               screening.status === "NEEDS_ATTENTION" && (
-                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300">
+                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
                   {ja
-                    ? "スタッフがこの登録を「要確認」としています。最終判断前にスタッフメモを確認してください。"
-                    : "Staff marked this registration as Needs Attention. Review the screening note before making the final decision."}
+                    ? "スタッフがこの登録を「要確認」としています。判断前にスタッフメモを確認してください。"
+                    : "Staff marked this registration as Needs Attention. Review the screening note before making the decision."}
                 </p>
               )}
 
@@ -589,17 +721,11 @@ export default function ViewModal({
                   type="button"
                   disabled={isDownloading}
                   onClick={onDownloadResume}
-                  className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 sm:flex-none ${focusRing}`}
+                  className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-200 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:opacity-50 sm:flex-none ${focusRing}`}
                 >
                   <Download className="h-4 w-4" />
 
-                  {isDownloading
-                    ? ja
-                      ? "ダウンロード中..."
-                      : "Downloading..."
-                    : ja
-                      ? "履歴書をダウンロード"
-                      : "Download Resume"}
+                  {downloadLabel}
                 </button>
               )}
 
@@ -607,7 +733,7 @@ export default function ViewModal({
                 <button
                   type="button"
                   onClick={onReview}
-                  className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700 sm:flex-none ${focusRing}`}
+                  className={`inline-flex h-9 flex-1 cursor-pointer items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white hover:bg-emerald-700 sm:flex-none ${focusRing}`}
                 >
                   {ja ? "登録審査" : "Review Registration"}
                 </button>
@@ -635,12 +761,10 @@ function Info({
 }) {
   return (
     <div className="flex min-w-0 gap-2.5">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
 
       <div className="min-w-0">
-        <dt className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-          {label}
-        </dt>
+        <dt className="text-[11px] font-medium text-zinc-500">{label}</dt>
 
         <dd className="mt-0.5 break-words text-sm font-medium text-zinc-900 dark:text-zinc-100">
           {children}
@@ -666,7 +790,7 @@ function Section({
   return (
     <section className="min-w-0 rounded-lg border border-zinc-200 p-4 dark:border-white/10">
       <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-950 dark:text-white">
-        <Icon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        <Icon className="h-4 w-4 text-emerald-600" />
 
         {title}
       </div>
@@ -691,9 +815,7 @@ function StatusField({
 }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-        {label}
-      </dt>
+      <dt className="text-[11px] font-medium text-zinc-500">{label}</dt>
 
       <dd className="mt-0.5 break-words text-sm font-medium text-zinc-900 dark:text-zinc-100">
         {children}
@@ -708,7 +830,7 @@ function StatusField({
 
 function Empty({ lang, message }: { lang: string; message?: string }) {
   return (
-    <p className="py-1 text-sm text-zinc-400 dark:text-zinc-500">
+    <p className="py-1 text-sm text-zinc-400">
       {message ||
         (lang === "ja" ? "情報がありません。" : "No information available.")}
     </p>
@@ -716,7 +838,7 @@ function Empty({ lang, message }: { lang: string; message?: string }) {
 }
 
 // ======================================================
-// STATUS LABELS
+// APPROVAL
 // ======================================================
 
 function getApprovalLabel(status: ApprovalStatus, lang: string) {
@@ -732,6 +854,42 @@ function getApprovalLabel(status: ApprovalStatus, lang: string) {
   }
 }
 
+function getApprovalBadgeClass(status: ApprovalStatus) {
+  switch (status) {
+    case "approved":
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+
+    case "rejected":
+      return "border-red-200 bg-red-50 text-red-700";
+
+    default:
+      return "border-amber-200 bg-amber-50 text-amber-700";
+  }
+}
+
+// ======================================================
+// ACTOR TYPE
+// ======================================================
+
+function getActorTypeLabel(
+  type: SeekerApprovalActorType | string | null | undefined,
+  lang: string,
+) {
+  if (type === "admin") {
+    return lang === "ja" ? "管理者" : "Admin";
+  }
+
+  if (type === "staff") {
+    return lang === "ja" ? "スタッフ" : "Staff";
+  }
+
+  return "-";
+}
+
+// ======================================================
+// ACCOUNT
+// ======================================================
+
 function getAccountLabel(status: AccountStatus, lang: string) {
   switch (status) {
     case "active":
@@ -744,6 +902,10 @@ function getAccountLabel(status: AccountStatus, lang: string) {
       return lang === "ja" ? "無効" : "Inactive";
   }
 }
+
+// ======================================================
+// PLACEMENT
+// ======================================================
 
 function getPlacementLabel(status: PlacementStatus, lang: string) {
   switch (status) {
@@ -798,11 +960,28 @@ function dateText(value?: string | null, lang = "en") {
   }).format(date);
 }
 
+function dateTimeText(value?: string | null, lang = "en") {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat(lang === "ja" ? "ja-JP" : "en-US", {
+    year: "numeric",
+    month: lang === "ja" ? "numeric" : "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
 // ======================================================
 // FILE URL
-//
-// NEW:    https://...supabase.co/...
-// LEGACY: /uploads/file.pdf, /private_uploads/file.pdf
 // ======================================================
 
 function getFileUrl(value?: string | null) {
@@ -818,7 +997,7 @@ function getFileUrl(value?: string | null) {
 }
 
 // ======================================================
-// CLEAN FILE NAME
+// FILE NAME
 // ======================================================
 
 function getFileName(value?: string | null) {
@@ -849,7 +1028,7 @@ function getFileName(value?: string | null) {
 }
 
 // ======================================================
-// DOCUMENT TYPE LABEL
+// DOCUMENT TYPE
 // ======================================================
 
 function getDocumentTypeLabel(value?: string | null) {

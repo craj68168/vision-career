@@ -27,6 +27,47 @@ import type {
 } from "./types";
 
 // ======================================================
+// SAFE RETURN URL
+//
+// Only allow local application paths.
+//
+// Allowed:
+// /en/jobs/V-000036
+// /jobs/V-000036
+// /en/job-seekers
+//
+// Not allowed:
+// https://other-site.com
+// //other-site.com
+//
+// This prevents open redirect problems.
+// ======================================================
+
+const getSafeReturnTo = (): string | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+
+  const returnTo = params.get("returnTo");
+
+  if (!returnTo) {
+    return null;
+  }
+
+  if (!returnTo.startsWith("/")) {
+    return null;
+  }
+
+  if (returnTo.startsWith("//")) {
+    return null;
+  }
+
+  return returnTo;
+};
+
+// ======================================================
 // JOB SEEKER AUTH
 // ======================================================
 
@@ -178,6 +219,14 @@ export const useJobSeekerAuth = () => {
         password: "",
       });
 
+      // ------------------------------------------------
+      // Registration does NOT redirect to the job yet.
+      //
+      // The new account still requires Admin approval.
+      // After approval the seeker can login and the
+      // returnTo URL will be respected.
+      // ------------------------------------------------
+
       setMode("login");
     } catch (error: unknown) {
       console.error("Job seeker registration error:", error);
@@ -265,7 +314,36 @@ export const useJobSeekerAuth = () => {
 
       toast.success(data.message || t("loginSuccess"));
 
-      router.push(lang === "ja" ? "/job-seekers" : "/en/job-seekers");
+      // ==============================================
+      // RETURN TO ORIGINAL PAGE
+      //
+      // Example:
+      //
+      // User was viewing:
+      // /en/jobs/V-000036
+      //
+      // Apply →
+      // /en/job-seekers-auth
+      //   ?returnTo=/en/jobs/V-000036
+      //
+      // Login success →
+      // /en/jobs/V-000036
+      //
+      // ==============================================
+
+      const returnTo = getSafeReturnTo();
+
+      if (returnTo) {
+        router.replace(returnTo);
+
+        return;
+      }
+
+      // ==============================================
+      // NORMAL LOGIN
+      // ==============================================
+
+      router.replace(lang === "ja" ? "/job-seekers" : "/en/job-seekers");
     } catch (error: unknown) {
       console.error("Job seeker login error:", error);
 
