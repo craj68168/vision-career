@@ -1,20 +1,15 @@
 "use client";
 
 import Link from "next/link";
-
 import { usePathname } from "next/navigation";
-
 import type { ComponentType } from "react";
-
 import {
+  ArrowUpRight,
   BriefcaseBusiness,
   Building2,
   ClipboardCheck,
-  CreditCard,
+  Clock,
   FileText,
-  GraduationCap,
-  LayoutDashboard,
-  LogOut,
   Send,
   ShieldCheck,
   UserRoundSearch,
@@ -26,179 +21,160 @@ import { useStaffDashboard } from "./hook";
 import type { StaffPermission } from "@/components/auth/Staff/types";
 
 // ======================================================
-// MENU TYPE
+// STYLES
+//
+// Additions for the light accent colors and clickable
+// cards. The base classes (metric-card, welcome-section,
+// etc.) come from the existing dashboard styles.
 // ======================================================
 
-type MenuItem = {
-  label: string;
+const accentStyles = `
+.accent-indigo  { --a: #4f46e5; --a-soft: #eef2ff; --a-line: #c7d2fe; }
+.accent-sky     { --a: #0284c7; --a-soft: #f0f9ff; --a-line: #bae6fd; }
+.accent-emerald { --a: #059669; --a-soft: #ecfdf5; --a-line: #a7f3d0; }
+.accent-violet  { --a: #7c3aed; --a-soft: #f5f3ff; --a-line: #ddd6fe; }
+.accent-amber   { --a: #b45309; --a-soft: #fffbeb; --a-line: #fde68a; }
+.accent-rose    { --a: #e11d48; --a-soft: #fff1f2; --a-line: #fecdd3; }
+.accent-teal    { --a: #0d9488; --a-soft: #f0fdfa; --a-line: #99f6e4; }
 
-  permission?: StaffPermission;
+.workspace-content .welcome-section {
+  background: linear-gradient(120deg, #eef2ff 0%, #f5f3ff 45%, #ffffff 100%);
+}
 
-  href: string;
+.workspace-content .metric-card,
+.workspace-content .operational-card {
+  position: relative;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  background: linear-gradient(180deg, var(--a-soft) 0%, #ffffff 75%);
+  border-color: var(--a-line);
+  transition: border-color .15s, box-shadow .15s;
+}
 
-  icon: ComponentType<{
-    className?: string;
-  }>;
+.card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.card-icon { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 8px; background: #ffffff; border: 1px solid var(--a-line); color: var(--a); }
+.card-icon svg { width: 16px; height: 16px; }
+.operational-card .card-icon { width: 28px; height: 28px; border-radius: 7px; }
+.operational-card .card-icon svg { width: 14px; height: 14px; }
+
+.card-arrow { position: absolute; right: 10px; bottom: 10px; width: 14px; height: 14px; color: var(--a); opacity: 0; transition: opacity .15s; }
+
+a.metric-card:hover,
+a.operational-card:hover,
+a.metric-card:focus-visible,
+a.operational-card:focus-visible {
+  border-color: var(--a);
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--a) 45%, transparent);
+  outline: none;
+}
+a.metric-card:hover .card-arrow,
+a.operational-card:hover .card-arrow,
+a.metric-card:focus-visible .card-arrow,
+a.operational-card:focus-visible .card-arrow { opacity: 1; }
+
+.mini-stat.is-indigo { background: #eef2ff; border-color: #c7d2fe; }
+.mini-stat.is-amber  { background: #fffbeb; border-color: #fde68a; }
+
+.workspace-content .security-section { background: linear-gradient(120deg, #fffbeb 0%, #ffffff 70%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-content .metric-card,
+  .workspace-content .operational-card,
+  .card-arrow { transition: none; }
+}
+`;
+
+// ======================================================
+// TYPES
+// ======================================================
+
+type IconType = ComponentType<{ className?: string }>;
+
+type Accent = "indigo" | "sky" | "emerald" | "violet" | "amber" | "rose" | "teal";
+
+type MetricCardProps = {
+  title: string;
+  value: number;
+  icon: IconType;
+  accent: Accent;
+
+  // Where the card goes when clicked. Without it
+  // (or without permission) the card is not a link.
+  href?: string;
+
+  note?: string;
+  noteTone?: "positive" | "warning";
+  warnValue?: boolean;
+
+  size?: "primary" | "operational";
 };
 
 // ======================================================
-// STAFF MENU
-// ======================================================
-//
-// AUTOMATIC:
-// Dashboard
-// Staff Training
-// Security
-//
-// These three modules are available to every
-// authenticated active Staff account.
-//
-// All other modules depend on assigned permissions.
+// METRIC CARD
 // ======================================================
 
-const menuItems: MenuItem[] = [
-  // ====================================================
-  // DASHBOARD
-  //
-  // Automatic access.
-  // ====================================================
+function MetricCard({
+  title,
+  value,
+  icon: Icon,
+  accent,
+  href,
+  note,
+  noteTone,
+  warnValue,
+  size = "primary",
+}: MetricCardProps) {
+  const isOperational = size === "operational";
 
-  {
-    label: "Dashboard",
+  const baseClass = isOperational ? "operational-card" : "metric-card";
 
-    href: "/staff",
+  const className = `${baseClass} accent-${accent}`;
 
-    icon: LayoutDashboard,
-  },
+  const noteClass = isOperational
+    ? "tone-warning mt-2 text-[11px]"
+    : `metric-note ${
+        noteTone === "warning"
+          ? "tone-warning"
+          : noteTone === "positive"
+            ? "tone-positive"
+            : "sub"
+      }`;
 
-  // ====================================================
-  // VACANCIES
-  // ====================================================
+  const content = (
+    <>
+      <div className="card-head">
+        {isOperational ? (
+          <h3 className="metric-title">{title}</h3>
+        ) : (
+          <h2 className="metric-title">{title}</h2>
+        )}
 
-  {
-    label: "Vacancies",
+        <span className="card-icon" aria-hidden="true">
+          <Icon />
+        </span>
+      </div>
 
-    permission: "vacancies:view",
+      <div className={`metric-value ${warnValue ? "tone-warning" : ""}`}>
+        {value}
+      </div>
 
-    href: "/staff/vacancies",
+      {note && <p className={noteClass}>{note}</p>}
 
-    icon: BriefcaseBusiness,
-  },
+      {href && <ArrowUpRight className="card-arrow" aria-hidden="true" />}
+    </>
+  );
 
-  // ====================================================
-  // APPLICATIONS
-  // ====================================================
+  if (href) {
+    return (
+      <Link href={href} className={className} aria-label={`${title}: ${value}`}>
+        {content}
+      </Link>
+    );
+  }
 
-  {
-    label: "Applications",
-
-    permission: "applications:view",
-
-    href: "/staff/applications",
-
-    icon: FileText,
-  },
-
-  // ====================================================
-  // CLIENTS / PROVIDERS
-  // ====================================================
-
-  {
-    label: "Clients",
-
-    permission: "providers:view",
-
-    href: "/staff/clients",
-
-    icon: Building2,
-  },
-
-  // ====================================================
-  // JOB SEEKERS
-  // ====================================================
-
-  {
-    label: "Job Seekers",
-
-    permission: "seekers:view",
-
-    href: "/staff/job-seekers",
-
-    icon: Users,
-  },
-
-  // ====================================================
-  // PLACEMENT REQUESTS
-  // ====================================================
-
-  {
-    label: "Placement Requests",
-
-    permission: "placement_requests:view",
-
-    href: "/staff/placement-requests",
-
-    icon: ClipboardCheck,
-  },
-
-  // ====================================================
-  // PLACEMENT CANDIDATES
-  // ====================================================
-
-  {
-    label: "Placement Candidates",
-
-    permission: "placement_requests:manage_candidates",
-
-    href: "/staff/placement-candidates",
-
-    icon: UserRoundSearch,
-  },
-
-  // ====================================================
-  // PLACEMENT BILLINGS
-  // ====================================================
-
-  {
-    label: "Placement Billings",
-
-    permission: "billing:view",
-
-    href: "/staff/placement-billings",
-
-    icon: CreditCard,
-  },
-
-  // ====================================================
-  // STAFF TRAINING
-  //
-  // Automatic access.
-  // ====================================================
-
-  {
-    label: "Staff Training",
-
-    href: "/staff/training",
-
-    icon: GraduationCap,
-  },
-
-  // ====================================================
-  // SECURITY
-  //
-  // Automatic access.
-  // Every authenticated active Staff user can manage
-  // their own password.
-  // ====================================================
-
-  {
-    label: "Security",
-
-    href: "/staff/security",
-
-    icon: ShieldCheck,
-  },
-];
+  return <article className={className}>{content}</article>;
+}
 
 // ======================================================
 // STAFF DASHBOARD
@@ -206,26 +182,9 @@ const menuItems: MenuItem[] = [
 
 export default function StaffDashboard() {
   const pathname = usePathname();
-
-  const {
-    staff,
-
-    summary,
-
-    isLoading,
-
-    logout,
-  } = useStaffDashboard();
-
-  // ====================================================
-  // LANGUAGE PREFIX
-  // ====================================================
+  const { staff, summary, isLoading } = useStaffDashboard();
 
   const prefix = pathname.startsWith("/en/") ? "/en" : "";
-
-  // ====================================================
-  // LOADING
-  // ====================================================
 
   if (isLoading) {
     return (
@@ -235,344 +194,191 @@ export default function StaffDashboard() {
     );
   }
 
-  // ====================================================
-  // NO STAFF
-  //
-  // StaffRouteGuard / auth handling will redirect an
-  // invalid Staff session.
-  // ====================================================
-
   if (!staff) {
     return null;
   }
 
   // ====================================================
-  // PERMISSION-CONTROLLED MENU
+  // CARD LINKS
   //
-  // Items without permission are always visible.
-  //
-  // Automatic:
-  // Dashboard
-  // Staff Training
-  // Security
-  //
-  // Assigned:
-  // Vacancies
-  // Applications
-  // Clients
-  // Job Seekers
-  // Placement Requests
-  // Placement Candidates
-  // Placement Billings
+  // A card is only clickable when the staff member has
+  // the permission for the page it opens.
   // ====================================================
 
-  const visibleMenu = menuItems.filter((item) => {
-    if (!item.permission) {
-      return true;
+  const linkTo = (href: string, permission?: StaffPermission) => {
+    if (permission && !staff.permissions.includes(permission)) {
+      return undefined;
     }
 
-    return staff.permissions.includes(item.permission);
-  });
-
-  // ====================================================
-  // ACTIVE ROUTE CHECK
-  // ====================================================
-
-  const isMenuActive = (href: string) => {
-    const fullHref = `${prefix}${href}`;
-
-    if (href === "/staff") {
-      return pathname === fullHref || pathname === `${fullHref}/`;
-    }
-
-    return pathname.startsWith(fullHref);
+    return `${prefix}${href}`;
   };
-
-  // ====================================================
-  // SECURITY URL
-  // ====================================================
 
   const securityHref = `${prefix}/staff/security`;
 
-  // ====================================================
-  // RENDER
-  // ====================================================
+  const pendingVacancyReviews = summary?.vacancies.pendingReview ?? 0;
+  const pendingApplications = summary?.applications.pendingAdminApproval ?? 0;
+  const needsAttention = summary?.placementCandidates?.needsAttention ?? 0;
+  const pendingTotal = pendingVacancyReviews + pendingApplications;
+
+  const primaryMetrics: MetricCardProps[] = [
+    {
+      title: "Job Seekers",
+      value: summary?.jobSeekers.total ?? 0,
+      icon: Users,
+      accent: "indigo",
+      href: linkTo("/staff/job-seekers", "seekers:view"),
+    },
+    {
+      title: "Job Providers",
+      value: summary?.providers.total ?? 0,
+      icon: Building2,
+      accent: "sky",
+      href: linkTo("/staff/clients", "providers:view"),
+    },
+    {
+      title: "Vacancies",
+      value: summary?.vacancies.total ?? 0,
+      icon: BriefcaseBusiness,
+      accent: "emerald",
+      note: `Published: ${summary?.vacancies.published ?? 0}`,
+      noteTone: "positive",
+      href: linkTo("/staff/vacancies", "vacancies:view"),
+    },
+    {
+      title: "Applications",
+      value: summary?.applications.total ?? 0,
+      icon: FileText,
+      accent: "violet",
+      note: `Pending: ${pendingApplications}`,
+      noteTone: pendingApplications > 0 ? "warning" : undefined,
+      href: linkTo("/staff/applications", "applications:view"),
+    },
+  ];
+
+  const operationalMetrics: MetricCardProps[] = [
+    {
+      title: "Pending Vacancy Reviews",
+      value: pendingVacancyReviews,
+      icon: ClipboardCheck,
+      accent: "amber",
+      warnValue: pendingVacancyReviews > 0,
+      href: linkTo("/staff/vacancies", "vacancies:view"),
+    },
+    {
+      title: "Pending Applications",
+      value: pendingApplications,
+      icon: Clock,
+      accent: "rose",
+      warnValue: pendingApplications > 0,
+      href: linkTo("/staff/applications", "applications:view"),
+    },
+    {
+      title: "Provider Process",
+      value: summary?.applications.providerProcess ?? 0,
+      icon: Send,
+      accent: "teal",
+      href: linkTo("/staff/applications", "applications:view"),
+    },
+    {
+      title: "Placement Requests",
+      value: summary?.placementRequests.total ?? 0,
+      icon: ClipboardCheck,
+      accent: "indigo",
+      href: linkTo("/staff/placement-requests", "placement_requests:view"),
+    },
+    {
+      title: "Placement Candidates",
+      value: summary?.placementCandidates?.total ?? 0,
+      icon: UserRoundSearch,
+      accent: "emerald",
+      note: needsAttention > 0 ? `Needs attention: ${needsAttention}` : undefined,
+      href: linkTo(
+        "/staff/placement-candidates",
+        "placement_requests:manage_candidates",
+      ),
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
-      {/* ================================================= */}
-      {/* HEADER */}
-      {/* ================================================= */}
+    <div className="workspace-content">
+      <style dangerouslySetInnerHTML={{ __html: accentStyles }} />
 
-      <header className="border-b border-slate-200 bg-white">
-        {/* TOP BAR */}
+      <section className="welcome-section" aria-label="Dashboard overview">
+        <div className="welcome-grid" />
 
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-xl font-bold text-slate-950">Staff Panel</h1>
+        <div className="relative flex flex-wrap items-end justify-between gap-6">
+          <div className="max-w-[48ch]">
+            <h1 className="font-display text-3xl font-semibold leading-tight lg:text-4xl">
+              Welcome back, {staff.name}.
+            </h1>
 
-            <p className="mt-1 text-xs text-slate-500">
-              {staff.name}
-              {" • "}
-              {staff.staffId}
+            <p className="sub mt-3 max-w-[48ch] text-sm leading-7">
+              Your recruitment overview at a glance. {pendingVacancyReviews}{" "}
+              vacancy reviews and {needsAttention} placement candidates need
+              attention.
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              void logout();
-            }}
-            className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="mini-stat is-indigo">
+              <div className="metric-title">Pending</div>
+              <div className="font-display tone-positive mt-1 text-xl font-semibold">
+                {pendingTotal}
+              </div>
+            </div>
+
+            <div className="mini-stat is-amber">
+              <div className="metric-title">Flagged</div>
+              <div className="font-display tone-warning mt-1 text-xl font-semibold">
+                {needsAttention}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"
+        aria-label="Recruitment summary"
+      >
+        {primaryMetrics.map((metric) => (
+          <MetricCard key={metric.title} {...metric} />
+        ))}
+      </section>
+
+      <section className="operational-section" aria-labelledby="operational-title">
+        <h2 id="operational-title" className="sub mb-3 text-[10px] uppercase">
+          Operational counters
+        </h2>
+
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
+          {operationalMetrics.map((metric) => (
+            <MetricCard key={metric.title} size="operational" {...metric} />
+          ))}
+        </div>
+      </section>
+
+      <section className="security-section" aria-label="Account security">
+        <div className="flex items-center gap-3">
+          <ShieldCheck className="tone-warning size-5 shrink-0" />
+
+          <div>
+            <h2 className="text-sm font-medium">Security</h2>
+            <p className="sub mt-1 text-xs">
+              Manage your account security and change your password.
+            </p>
+          </div>
         </div>
 
-        {/* ================================================= */}
-        {/* NAVIGATION */}
-        {/* ================================================= */}
+        <Link href={securityHref} className="btn btn-warning">
+          Open
+          <ArrowUpRight />
+        </Link>
+      </section>
 
-        <div className="border-t border-slate-100">
-          <nav className="mx-auto flex max-w-7xl flex-wrap items-center gap-1 px-6 py-2">
-            {visibleMenu.map((item) => {
-              const Icon = item.icon;
-
-              const href = `${prefix}${item.href}`;
-
-              const active = isMenuActive(item.href);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={href}
-                  className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
-                    active
-                      ? "bg-indigo-50 font-semibold text-indigo-600"
-                      : "text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      </header>
-
-      {/* ================================================= */}
-      {/* DASHBOARD */}
-      {/* ================================================= */}
-
-      <main className="mx-auto max-w-7xl px-6 py-10">
-        {/* PAGE HEADER */}
-
-        <div className="mb-7">
-          <h2 className="text-3xl font-bold text-slate-950">Dashboard</h2>
-
-          <p className="mt-1 text-sm text-slate-500">
-            Welcome back, {staff.name}.
-          </p>
-        </div>
-
-        {/* ================================================= */}
-        {/* SECURITY */}
-        {/* ================================================= */}
-
-        <div className="mb-6">
-          <DashboardActionCard
-            title="Security"
-            description="Manage your account security and change your password."
-            href={securityHref}
-            icon={ShieldCheck}
-          />
-        </div>
-
-        {/* ================================================= */}
-        {/* DASHBOARD SUMMARY */}
-        {/* Dashboard is automatic for every active Staff. */}
-        {/* ================================================= */}
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {/* ================================================= */}
-          {/* JOB SEEKERS */}
-          {/* ================================================= */}
-
-          <SummaryCard
-            title="Job Seekers"
-            value={summary?.jobSeekers.total ?? 0}
-            icon={Users}
-          />
-
-          {/* ================================================= */}
-          {/* JOB PROVIDERS */}
-          {/* ================================================= */}
-
-          <SummaryCard
-            title="Job Providers"
-            value={summary?.providers.total ?? 0}
-            icon={Building2}
-          />
-
-          {/* ================================================= */}
-          {/* VACANCIES */}
-          {/* ================================================= */}
-
-          <SummaryCard
-            title="Vacancies"
-            value={summary?.vacancies.total ?? 0}
-            note={`Published: ${summary?.vacancies.published ?? 0}`}
-            icon={BriefcaseBusiness}
-          />
-
-          {/* ================================================= */}
-          {/* APPLICATIONS */}
-          {/* ================================================= */}
-
-          <SummaryCard
-            title="Applications"
-            value={summary?.applications.total ?? 0}
-            note={`Pending: ${summary?.applications.pendingAdminApproval ?? 0}`}
-            icon={FileText}
-          />
-
-          {/* ================================================= */}
-          {/* PENDING VACANCIES */}
-          {/* ================================================= */}
-
-          <SummaryCard
-            title="Pending Vacancy Reviews"
-            value={summary?.vacancies.pendingReview ?? 0}
-            icon={ClipboardCheck}
-          />
-
-          {/* ================================================= */}
-          {/* PENDING APPLICATIONS */}
-          {/* ================================================= */}
-
-          <SummaryCard
-            title="Pending Applications"
-            value={summary?.applications.pendingAdminApproval ?? 0}
-            icon={Users}
-          />
-
-          {/* ================================================= */}
-          {/* PROVIDER PROCESS */}
-          {/* ================================================= */}
-
-          <SummaryCard
-            title="Provider Process"
-            value={summary?.applications.providerProcess ?? 0}
-            icon={Send}
-          />
-
-          {/* ================================================= */}
-          {/* PLACEMENT REQUESTS */}
-          {/* ================================================= */}
-
-          <SummaryCard
-            title="Placement Requests"
-            value={summary?.placementRequests.total ?? 0}
-            icon={ClipboardCheck}
-          />
-
-          {/* ================================================= */}
-          {/* PLACEMENT CANDIDATES */}
-          {/* ================================================= */}
-
-          <SummaryCard
-            title="Placement Candidates"
-            value={summary?.placementCandidates?.total ?? 0}
-            note={`Needs Attention: ${
-              summary?.placementCandidates?.needsAttention ?? 0
-            }`}
-            icon={UserRoundSearch}
-          />
-        </div>
-      </main>
+      <footer className="workspace-footnote">
+        <span>Staff Panel / Dashboard</span>
+      </footer>
     </div>
-  );
-}
-
-// ======================================================
-// SUMMARY CARD
-// ======================================================
-
-type SummaryCardProps = {
-  title: string;
-
-  value: number;
-
-  note?: string;
-
-  icon: ComponentType<{
-    className?: string;
-  }>;
-};
-
-function SummaryCard({ title, value, note, icon: Icon }: SummaryCardProps) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-slate-500">{title}</p>
-
-          <p className="mt-2 text-3xl font-bold text-slate-950">{value}</p>
-
-          {note && <p className="mt-1 text-xs text-slate-500">{note}</p>}
-        </div>
-
-        <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600">
-          <Icon className="h-5 w-5" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ======================================================
-// DASHBOARD ACTION CARD
-// ======================================================
-
-type DashboardActionCardProps = {
-  title: string;
-
-  description: string;
-
-  href: string;
-
-  icon: ComponentType<{
-    className?: string;
-  }>;
-};
-
-function DashboardActionCard({
-  title,
-  description,
-  href,
-  icon: Icon,
-}: DashboardActionCardProps) {
-  return (
-    <Link
-      href={href}
-      className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/30"
-    >
-      <div className="flex items-center gap-4">
-        <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600 transition group-hover:bg-indigo-100">
-          <Icon className="h-5 w-5" />
-        </div>
-
-        <div>
-          <p className="font-semibold text-slate-950">{title}</p>
-
-          <p className="mt-1 text-sm text-slate-500">{description}</p>
-        </div>
-      </div>
-
-      <span className="text-sm font-semibold text-indigo-600">Open</span>
-    </Link>
   );
 }

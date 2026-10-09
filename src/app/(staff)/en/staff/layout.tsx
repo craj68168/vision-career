@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import StaffRouteGuard from "@/components/staff/StaffRouteGuard";
-import StaffPageControls from "@/components/staff/StaffPageControls";
+import StaffShell from "@/components/staff/StaffShell";
 
 type Props = {
   children: ReactNode;
@@ -10,9 +10,7 @@ type Props = {
 export default function StaffEnglishLayout({ children }: Props) {
   return (
     <StaffRouteGuard>
-      <StaffPageControls />
-
-      {children}
+      <StaffShell>{children}</StaffShell>
     </StaffRouteGuard>
   );
 }
