@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -9,7 +9,6 @@ import { getCurrentStaff } from "@/components/auth/Staff/api";
 
 import StaffHeader from "./StaffHeader";
 import StaffSidebar from "./StaffSidebar";
-import { staffShellStyles } from "./styles";
 
 type StaffShellProps = {
   children: ReactNode;
@@ -36,18 +35,9 @@ export default function StaffShell({ children }: StaffShellProps) {
   const japaneseHref = pathWithoutLocale || "/staff";
   const englishHref = `/en${pathWithoutLocale || "/staff"}`;
 
-  useEffect(() => {
-    if (!mobileOpen) {
-      return;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [mobileOpen]);
+  // Stable reference so StaffSidebar's effect does not re-run on every render.
+  // (The sidebar already handles Escape + page scroll lock while the drawer is open.)
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
 
   const logout = () => {
     localStorage.removeItem("access_token");
@@ -68,7 +58,9 @@ export default function StaffShell({ children }: StaffShellProps) {
     router.replace(isEnglish ? "/en/staff-login" : "/staff-login");
   };
 
-  if (staffQuery.isPending || staffQuery.isFetching) {
+  // Only block on the first load. Background refetches (window focus,
+  // stale data) must not replace the whole panel with a loading screen.
+  if (staffQuery.isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F7F8FA]">
         <p className="text-sm text-slate-500">Loading Staff panel...</p>
@@ -83,13 +75,11 @@ export default function StaffShell({ children }: StaffShellProps) {
   }
 
   return (
-    <div className="staff-shell">
-      <style dangerouslySetInnerHTML={{ __html: staffShellStyles }} />
-
+    <div className="flex min-h-screen bg-[#F7F8FA] text-slate-950">
       {mobileOpen && (
         <div
-          className="sidebar-backdrop"
-          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 z-30 bg-slate-900/50 lg:hidden"
+          onClick={closeMobile}
           aria-hidden="true"
         />
       )}
@@ -100,7 +90,7 @@ export default function StaffShell({ children }: StaffShellProps) {
         pathname={pathname}
         collapsed={collapsed}
         mobileOpen={mobileOpen}
-        onCloseMobile={() => setMobileOpen(false)}
+        onCloseMobile={closeMobile}
         onLogout={logout}
       />
 
