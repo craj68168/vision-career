@@ -5,12 +5,28 @@ import type {
   ProfileValidationErrors,
 } from "./types";
 
+const KANA_PATTERN = /^[\u3040-\u309f\u30a0-\u30ff\u3000\s・ー]+$/u;
+
 export const validateProfileField = (
   field: keyof ProfileFormData,
   value: string,
   lang: string,
 ): string | undefined => {
   switch (field) {
+    case "name_kana":
+      if (value.trim() && !KANA_PATTERN.test(value.trim())) {
+        return lang === "ja"
+          ? "ふりがなはひらがなまたはカタカナで入力してください"
+          : "Please enter the kana name using Hiragana or Katakana";
+      }
+
+      if (value.length > 150) {
+        return lang === "ja"
+          ? "ふりがなは150文字以内で入力してください"
+          : "Name in Kana cannot exceed 150 characters";
+      }
+      break;
+
     case "phone":
       if (!value.trim()) {
         return lang === "ja"

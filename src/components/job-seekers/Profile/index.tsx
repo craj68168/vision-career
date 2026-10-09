@@ -1070,6 +1070,25 @@ export default function JobSeekerProfilePage() {
               </dl>
 
               <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                <InputField
+                  label={lang === "ja" ? "ふりがな" : "Name in Kana"}
+                  name="name_kana"
+                  value={formData.name_kana}
+                  placeholder={
+                    lang === "ja"
+                      ? "例：ラジ チャウダリ"
+                      : "e.g., ラジ チャウダリ"
+                  }
+                  icon={<User />}
+                  isEditing={isEditing}
+                  error={getFieldError("name_kana")}
+                  onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  maxLength={150}
+                />
+              </div>
+
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                 <div>
                   <InputField
                     label={t("phoneNumber")}

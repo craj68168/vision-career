@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
+
 import { useRouter } from "next/navigation";
+
 import { useTranslations } from "next-intl";
+
 import axios from "axios";
+
 import toast from "react-hot-toast";
+
 import dayjs from "dayjs";
+
 import utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);
@@ -37,19 +43,34 @@ import type {
 import { formatDateForInput } from "@/lib/helpers";
 
 const initialFormData: ProfileFormData = {
+  name_kana: "",
+
   phone: "",
+
   address: "",
+
   current_location: "",
+
   date_of_birth: "",
+
   gender: "",
+
   nationality: "",
+
   visa_type: "",
+
   visa_expiry_date: "",
+
   japanese_level: "",
+
   skills: "",
+
   desired_job: "",
+
   desired_location: "",
+
   available_from: "",
+
   notes: "",
 };
 
@@ -76,7 +97,9 @@ export const useJobSeekerProfile = () => {
 
   const [profileStatus, setProfileStatus] = useState({
     isComplete: false,
+
     completionPercentage: 0,
+
     missingFields: [] as MissingField[],
   });
 
@@ -109,7 +132,9 @@ export const useJobSeekerProfile = () => {
   const populateProfile = useCallback(
     (
       data: Awaited<ReturnType<typeof getJobSeekerProfile>>,
+
       forceReadOnly = false,
+
       options: {
         preserveDraft?: boolean;
       } = {},
@@ -118,7 +143,9 @@ export const useJobSeekerProfile = () => {
 
       setProfileStatus({
         isComplete: data.is_complete,
+
         completionPercentage: data.completion_percentage,
+
         missingFields: data.missing_fields || [],
       });
 
@@ -144,6 +171,8 @@ export const useJobSeekerProfile = () => {
         );
 
         setFormData({
+          name_kana: data.profile.name_kana || "",
+
           phone: data.profile.phone || "",
 
           address: data.profile.address || "",
@@ -264,11 +293,13 @@ export const useJobSeekerProfile = () => {
 
       setFormData((previous) => ({
         ...previous,
+
         [name]: value,
       }));
 
       setErrors((previous) => ({
         ...previous,
+
         [name]: undefined,
       }));
     },
@@ -284,6 +315,7 @@ export const useJobSeekerProfile = () => {
 
       setTouched((previous) => ({
         ...previous,
+
         [field]: true,
       }));
 
@@ -291,6 +323,7 @@ export const useJobSeekerProfile = () => {
 
       setErrors((previous) => ({
         ...previous,
+
         [field]: error,
       }));
     },
@@ -301,11 +334,16 @@ export const useJobSeekerProfile = () => {
   const addEducationRecord = () => {
     setEducation((previous) => [
       ...previous,
+
       {
         enrollment_date: null,
+
         graduation_date: null,
+
         school_type: null,
+
         school: "",
+
         major: null,
       },
     ]);
@@ -319,7 +357,9 @@ export const useJobSeekerProfile = () => {
 
   const updateEducationRecord = (
     index: number,
+
     field: keyof EducationRecord,
+
     value: string,
   ) => {
     setEducation((previous) =>
@@ -327,6 +367,7 @@ export const useJobSeekerProfile = () => {
         itemIndex === index
           ? {
               ...record,
+
               [field]: value,
             }
           : record,
@@ -337,10 +378,14 @@ export const useJobSeekerProfile = () => {
   const addEmploymentRecord = () => {
     setEmploymentHistory((previous) => [
       ...previous,
+
       {
         start_date: null,
+
         end_date: null,
+
         employment_type: null,
+
         company_name: "",
       },
     ]);
@@ -354,7 +399,9 @@ export const useJobSeekerProfile = () => {
 
   const updateEmploymentRecord = (
     index: number,
+
     field: keyof EmploymentRecord,
+
     value: string,
   ) => {
     setEmploymentHistory((previous) =>
@@ -362,6 +409,7 @@ export const useJobSeekerProfile = () => {
         itemIndex === index
           ? {
               ...record,
+
               [field]: value,
             }
           : record,
@@ -372,8 +420,11 @@ export const useJobSeekerProfile = () => {
   const saveProfile = async () => {
     const validation = validateProfileForm(
       formData,
+
       education,
+
       employmentHistory,
+
       lang,
     );
 
@@ -430,7 +481,9 @@ export const useJobSeekerProfile = () => {
 
       const data = await updateJobSeekerProfile({
         formData,
+
         education,
+
         employmentHistory,
       });
 
@@ -543,7 +596,9 @@ export const useJobSeekerProfile = () => {
   const handleResumeUpload = async (file: File) => {
     const allowedTypes = [
       "application/pdf",
+
       "application/msword",
+
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ];
 
@@ -671,7 +726,9 @@ export const useJobSeekerProfile = () => {
 
   const handleDocumentUpload = async ({
     file,
+
     name,
+
     documentType,
   }: {
     file: File | null;
@@ -704,11 +761,17 @@ export const useJobSeekerProfile = () => {
 
     const allowedTypes = [
       "image/jpeg",
+
       "image/png",
+
       "image/gif",
+
       "image/webp",
+
       "application/pdf",
+
       "application/msword",
+
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ];
 

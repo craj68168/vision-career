@@ -60,7 +60,7 @@ export const generateJobSeekerResume = async (): Promise<{
   success: boolean;
   message?: string;
   data?: {
-    generated_resume_file?: string;
+    generated_resume_available?: boolean;
   };
 }> => {
   const response = await axiosInstance.post("/seekers/resume/generate");

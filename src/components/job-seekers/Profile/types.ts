@@ -32,6 +32,8 @@ export type JobSeekerProfile = {
 
   name: string;
 
+  name_kana: string | null;
+
   email: string;
 
   profile_photo: string | null;
@@ -82,6 +84,7 @@ export type JobSeekerProfile = {
 };
 
 export type ProfileFormData = {
+  name_kana: string;
   phone: string;
   address: string;
   current_location: string;
@@ -118,5 +121,6 @@ export type ProfileValidationErrors = Partial<
 
 export type ApiErrorResponse = {
   status?: "success" | "error";
+  success?: boolean;
   message?: string;
 };
