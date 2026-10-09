@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import {
   CheckCircle2,
   Clock3,
@@ -74,11 +76,16 @@ export default function ApprovalHistorySection({ seeker }: Props) {
   };
 
   return (
-    <section>
-      <div className="mb-4 flex items-center gap-2">
-        <History className="h-5 w-5 text-indigo-600" />
+    <section className="min-w-0 rounded-2xl bg-white p-4 ring-1 ring-inset ring-slate-200 sm:p-5">
+      <div className="flex items-center gap-2.5">
+        <span
+          aria-hidden="true"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100"
+        >
+          <History className="h-4 w-4" />
+        </span>
 
-        <h3 className="text-lg font-bold">
+        <h3 className="text-sm font-semibold text-slate-950">
           {t("approvalHistory.sectionTitle")}
         </h3>
       </div>
@@ -87,10 +94,10 @@ export default function ApprovalHistorySection({ seeker }: Props) {
           CURRENT DECISION
       ================================================== */}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="mt-4 rounded-xl bg-slate-50 p-4 ring-1 ring-inset ring-slate-200/70">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               {t("approvalHistory.currentDecision")}
             </p>
 
@@ -100,7 +107,7 @@ export default function ApprovalHistorySection({ seeker }: Props) {
               )}
 
               {seeker.approval_status === "rejected" && (
-                <XCircle className="h-5 w-5 text-red-600" />
+                <XCircle className="h-5 w-5 text-rose-600" />
               )}
 
               {seeker.approval_status === "pending" && (
@@ -108,12 +115,12 @@ export default function ApprovalHistorySection({ seeker }: Props) {
               )}
 
               <span
-                className={`rounded-full border px-3 py-1 text-sm font-semibold ${
+                className={`rounded-full px-3 py-1 text-sm font-semibold ring-1 ring-inset ${
                   seeker.approval_status === "approved"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
                     : seeker.approval_status === "rejected"
-                      ? "border-red-200 bg-red-50 text-red-700"
-                      : "border-amber-200 bg-amber-50 text-amber-700"
+                      ? "bg-rose-50 text-rose-700 ring-rose-200"
+                      : "bg-amber-50 text-amber-700 ring-amber-200"
                 }`}
               >
                 {seeker.approval_status === "pending"
@@ -125,11 +132,11 @@ export default function ApprovalHistorySection({ seeker }: Props) {
 
           {review?.reviewedAt && (
             <div className="text-left sm:text-right">
-              <p className="text-xs text-slate-400">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                 {t("approvalHistory.reviewedAt")}
               </p>
 
-              <p className="mt-1 text-sm font-semibold text-slate-700">
+              <p className="mt-1 text-sm font-semibold text-slate-950">
                 {formatDateTime(review.reviewedAt)}
               </p>
             </div>
@@ -137,7 +144,7 @@ export default function ApprovalHistorySection({ seeker }: Props) {
         </div>
 
         {seeker.approval_status === "pending" ? (
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
+          <div className="mt-4 rounded-xl bg-amber-50 p-4 text-sm leading-6 text-amber-700 ring-1 ring-inset ring-amber-200">
             {t("approvalHistory.pendingMessage")}
           </div>
         ) : (
@@ -169,12 +176,12 @@ export default function ApprovalHistorySection({ seeker }: Props) {
         )}
 
         {seeker.approval_status === "rejected" && seeker.rejection_reason && (
-          <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-4">
-            <p className="text-xs font-semibold uppercase text-red-500">
+          <div className="mt-4 rounded-xl bg-rose-50 p-4 ring-1 ring-inset ring-rose-200">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-rose-600">
               {t("approvalHistory.reason")}
             </p>
 
-            <p className="mt-2 whitespace-pre-wrap text-sm text-red-700">
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-rose-700">
               {seeker.rejection_reason}
             </p>
           </div>
@@ -186,12 +193,12 @@ export default function ApprovalHistorySection({ seeker }: Props) {
       ================================================== */}
 
       <div className="mt-5">
-        <h4 className="font-semibold text-slate-950">
+        <h4 className="text-sm font-semibold text-slate-950">
           {t("approvalHistory.history")}
         </h4>
 
         {history.length === 0 ? (
-          <div className="mt-3 rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-400">
+          <div className="mt-3 rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-400">
             {t("approvalHistory.noHistory")}
           </div>
         ) : (
@@ -202,34 +209,35 @@ export default function ApprovalHistorySection({ seeker }: Props) {
               return (
                 <div
                   key={entry.id || `${entry.reviewedAt}-${index}`}
-                  className="rounded-2xl border border-slate-200 p-4"
+                  className="rounded-xl bg-white p-4 ring-1 ring-inset ring-slate-200"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex gap-3">
-                      <div
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                    <div className="flex min-w-0 gap-3">
+                      <span
+                        aria-hidden="true"
+                        className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ring-1 ring-inset ${
                           approved
-                            ? "bg-emerald-50 text-emerald-600"
-                            : "bg-red-50 text-red-600"
+                            ? "bg-emerald-50 text-emerald-600 ring-emerald-200"
+                            : "bg-rose-50 text-rose-600 ring-rose-200"
                         }`}
                       >
                         {approved ? (
-                          <CheckCircle2 className="h-5 w-5" />
+                          <CheckCircle2 className="h-4 w-4" />
                         ) : (
-                          <XCircle className="h-5 w-5" />
+                          <XCircle className="h-4 w-4" />
                         )}
-                      </div>
+                      </span>
 
-                      <div>
+                      <div className="min-w-0">
                         <p
                           className={`font-semibold ${
-                            approved ? "text-emerald-700" : "text-red-700"
+                            approved ? "text-emerald-700" : "text-rose-700"
                           }`}
                         >
                           {getDecisionLabel(entry.decision)}
                         </p>
 
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="mt-0.5 break-words text-sm text-slate-500">
                           {getActorLabel(entry.actorType)}
                           {" • "}
                           {entry.actorName || "-"}
@@ -238,18 +246,18 @@ export default function ApprovalHistorySection({ seeker }: Props) {
                       </div>
                     </div>
 
-                    <p className="text-xs text-slate-400">
+                    <p className="shrink-0 text-xs text-slate-400">
                       {formatDateTime(entry.reviewedAt)}
                     </p>
                   </div>
 
                   {entry.reason && (
-                    <div className="mt-3 rounded-xl bg-slate-50 p-3">
-                      <p className="text-xs font-semibold uppercase text-slate-400">
+                    <div className="mt-3 rounded-xl bg-slate-50 p-3 ring-1 ring-inset ring-slate-200/70">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                         {t("approvalHistory.reason")}
                       </p>
 
-                      <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">
+                      <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700">
                         {entry.reason}
                       </p>
                     </div>
@@ -269,21 +277,23 @@ function Info({
   label,
   value,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
 
   label: string;
 
   value: string;
 }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-4">
-      <div className="flex gap-2 text-slate-400">
+    <div className="min-w-0 rounded-xl bg-white p-3.5 ring-1 ring-inset ring-slate-200">
+      <div className="flex items-center gap-2 text-slate-400">
         {icon}
 
-        <p className="text-xs font-semibold uppercase">{label}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          {label}
+        </p>
       </div>
 
-      <p className="mt-2 break-words text-sm font-semibold text-slate-800">
+      <p className="mt-2 break-words text-sm font-semibold text-slate-950">
         {value}
       </p>
     </div>

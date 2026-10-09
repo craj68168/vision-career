@@ -109,6 +109,19 @@ const translations = {
 };
 
 // ======================================================
+// SHARED CLASSES
+//
+// Outlines use `ring` (a shadow) instead of `border`, so
+// they are not affected by global border-color rules.
+// ======================================================
+
+const fieldClass =
+  "h-11 w-full rounded-xl bg-white px-4 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 outline-none transition-shadow placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500";
+
+const pagerButton =
+  "inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-slate-700 ring-1 ring-inset ring-slate-200 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-40";
+
+// ======================================================
 // STAFF TRAINING
 // ======================================================
 
@@ -202,10 +215,10 @@ export default function StaffTraining() {
       <div
         role="status"
         aria-live="polite"
-        className="flex min-h-[500px] items-center justify-center"
+        className="flex min-h-[60vh] items-center justify-center"
       >
         <RefreshCw
-          className="h-9 w-9 animate-spin text-indigo-600"
+          className="h-8 w-8 animate-spin text-indigo-600"
           aria-hidden="true"
         />
 
@@ -220,64 +233,54 @@ export default function StaffTraining() {
 
   return (
     <>
-      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 md:px-8">
-        {/* ==================================================
-            HEADER
-        ================================================== */}
+      <main className="mx-auto w-full max-w-[1600px] space-y-5 px-3 py-4 sm:space-y-6 sm:p-5 lg:px-8 lg:py-6">
+        {/* HEADER */}
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50">
-                <GraduationCap className="h-6 w-6 text-indigo-600" />
-              </div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-950 sm:text-3xl">
+              {t.title}
+            </h1>
 
-              <div>
-                <h1 className="text-2xl font-bold text-slate-950">{t.title}</h1>
-
-                <p className="mt-1 text-sm text-slate-500">{t.subtitle}</p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              disabled={isFetching}
-              onClick={() => void refresh()}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
-              />
-
-              {t.refresh}
-            </button>
+            <p className="mt-1 text-sm text-slate-500">{t.subtitle}</p>
           </div>
 
-          {/* ==================================================
-              SEARCH
-          ================================================== */}
+          <button
+            type="button"
+            disabled={isFetching}
+            onClick={() => void refresh()}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
+            />
 
-          <div className="relative mt-6">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            {t.refresh}
+          </button>
+        </div>
+
+        {/* SEARCH */}
+
+        <div className="rounded-2xl bg-white p-3 ring-1 ring-inset ring-slate-200 sm:p-4">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder={t.search}
               aria-label={t.search}
-              className="h-12 w-full rounded-xl border border-slate-200 pl-11 pr-4 outline-none focus:border-indigo-400"
+              className={`${fieldClass} pl-10`}
             />
           </div>
         </div>
 
-        {/* ==================================================
-            ERROR
-        ================================================== */}
+        {/* ERROR */}
 
         {error && (
           <div
             role="alert"
-            className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+            className="rounded-xl bg-rose-50 p-4 text-sm text-rose-700 ring-1 ring-inset ring-rose-200"
           >
             <p className="font-semibold">{t.loadError}</p>
 
@@ -285,20 +288,25 @@ export default function StaffTraining() {
           </div>
         )}
 
-        {/* ==================================================
-            CATEGORIES
-        ================================================== */}
+        {/* ================================================= */}
+        {/* CATEGORIES */}
+        {/* ================================================= */}
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {categories.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-white py-16 text-center">
-              <GraduationCap className="mx-auto h-12 w-12 text-slate-300" />
+            <div className="rounded-2xl bg-white px-4 py-14 text-center ring-1 ring-inset ring-slate-200">
+              <span
+                aria-hidden="true"
+                className="mx-auto grid h-10 w-10 place-items-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-inset ring-indigo-100"
+              >
+                <GraduationCap className="h-5 w-5" />
+              </span>
 
-              <p className="mt-3 font-semibold text-slate-700">
+              <p className="mt-3 text-sm font-semibold text-slate-800">
                 {t.noCategories}
               </p>
 
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-1 text-sm text-slate-500">
                 {t.noCategoriesHelp}
               </p>
             </div>
@@ -311,44 +319,47 @@ export default function StaffTraining() {
               const loading = loadingTopics.has(category.categoryId);
 
               return (
-                <div
+                <article
                   key={category.categoryId}
-                  className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+                  className="overflow-hidden rounded-2xl bg-white ring-1 ring-inset ring-slate-200"
                 >
-                  {/* ==========================================
-                      CATEGORY
-                  ========================================== */}
+                  {/* CATEGORY */}
 
                   <button
                     type="button"
                     aria-expanded={expanded}
                     onClick={() => void toggleCategory(category.categoryId)}
-                    className="flex w-full items-center justify-between gap-5 p-5 text-left transition hover:bg-slate-50"
+                    className="flex w-full items-center justify-between gap-4 p-4 text-left transition-colors hover:bg-slate-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 sm:p-5"
                   >
-                    <div className="flex min-w-0 items-start gap-4">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50">
-                        <FolderOpen className="h-5 w-5 text-amber-600" />
-                      </div>
+                    <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                      <span
+                        aria-hidden="true"
+                        className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-100"
+                      >
+                        <FolderOpen className="h-5 w-5" />
+                      </span>
 
                       <div className="min-w-0">
-                        <h2 className="font-bold text-slate-950">
+                        <h2 className="break-words font-semibold text-slate-950">
                           {category.name}
                         </h2>
 
                         {category.description && (
-                          <p className="mt-1 text-sm text-slate-500">
+                          <p className="mt-1 break-words text-sm leading-6 text-slate-500">
                             {category.description}
                           </p>
                         )}
 
                         <div className="mt-3 flex flex-wrap gap-2">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-100">
                             <BookOpen className="h-3.5 w-3.5" />
+
                             {category.topicsCount} {t.topics}
                           </span>
 
-                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">
                             <FileText className="h-3.5 w-3.5" />
+
                             {category.filesCount} {t.files}
                           </span>
                         </div>
@@ -356,18 +367,22 @@ export default function StaffTraining() {
                     </div>
 
                     {expanded ? (
-                      <ChevronUp className="h-5 w-5 shrink-0 text-slate-400" />
+                      <ChevronUp
+                        aria-hidden="true"
+                        className="h-5 w-5 shrink-0 text-slate-400"
+                      />
                     ) : (
-                      <ChevronDown className="h-5 w-5 shrink-0 text-slate-400" />
+                      <ChevronDown
+                        aria-hidden="true"
+                        className="h-5 w-5 shrink-0 text-slate-400"
+                      />
                     )}
                   </button>
 
-                  {/* ==========================================
-                      TOPICS
-                  ========================================== */}
+                  {/* TOPICS */}
 
                   {expanded && (
-                    <div className="border-t border-slate-200 bg-slate-50/60 p-4">
+                    <div className="bg-slate-50/60 p-3 shadow-[inset_0_1px_0_0_#e2e8f0] sm:p-4">
                       {loading ? (
                         <div role="status" className="py-10 text-center">
                           <RefreshCw
@@ -380,7 +395,7 @@ export default function StaffTraining() {
                       ) : topicErrors[category.categoryId] ? (
                         <div
                           role="alert"
-                          className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+                          className="rounded-xl bg-rose-50 p-4 text-sm text-rose-700 ring-1 ring-inset ring-rose-200"
                         >
                           {t.topicsError}
                         </div>
@@ -393,20 +408,23 @@ export default function StaffTraining() {
                           {topics.map((topic) => (
                             <div
                               key={topic.topicId}
-                              className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center"
+                              className="flex flex-col justify-between gap-4 rounded-xl bg-white p-4 ring-1 ring-inset ring-slate-200 sm:flex-row sm:items-center"
                             >
                               <div className="flex min-w-0 items-start gap-3">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50">
-                                  <FileText className="h-5 w-5 text-indigo-600" />
-                                </div>
+                                <span
+                                  aria-hidden="true"
+                                  className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-inset ring-indigo-100"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                </span>
 
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-slate-900">
+                                  <p className="break-words font-semibold text-slate-950">
                                     {topic.title}
                                   </p>
 
                                   {topic.description && (
-                                    <p className="mt-1 text-sm text-slate-500">
+                                    <p className="mt-1 break-words text-sm leading-6 text-slate-500">
                                       {topic.description}
                                     </p>
                                   )}
@@ -421,7 +439,7 @@ export default function StaffTraining() {
                                 type="button"
                                 disabled={isTopicDetailsLoading}
                                 onClick={() => void openTopic(topic.topicId)}
-                                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                                className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                               >
                                 <Eye className="h-4 w-4" />
 
@@ -433,26 +451,28 @@ export default function StaffTraining() {
                       )}
                     </div>
                   )}
-                </div>
+                </article>
               );
             })
           )}
         </div>
 
-        {/* ==================================================
-            PAGINATION
-        ================================================== */}
+        {/* ================================================= */}
+        {/* PAGINATION */}
+        {/* ================================================= */}
 
         {pagination && (
-          <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-500">{paginationText()}</p>
+          <div className="flex flex-col gap-3 rounded-2xl bg-white p-3 ring-1 ring-inset ring-slate-200 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+            <p className="text-sm tabular-nums text-slate-500">
+              {paginationText()}
+            </p>
 
             <div className="flex items-center gap-2">
               <select
                 value={limit}
                 aria-label={t.pageSize}
                 onChange={(event) => setLimit(Number(event.target.value))}
-                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                className="h-10 rounded-lg bg-white px-3 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 outline-none transition-shadow focus:ring-2 focus:ring-indigo-500"
               >
                 {[10, 20, 50].map((value) => (
                   <option key={value} value={value}>
@@ -467,12 +487,12 @@ export default function StaffTraining() {
                 title={t.previous}
                 disabled={!pagination.hasPrevPage}
                 onClick={() => setPage(Math.max(page - 1, 1))}
-                className="rounded-xl border border-slate-200 p-2 disabled:opacity-40"
+                className={pagerButton}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
 
-              <span className="rounded-xl bg-slate-100 px-3 py-2 text-sm font-semibold">
+              <span className="inline-flex h-10 items-center rounded-lg bg-slate-100 px-3 text-sm font-semibold tabular-nums text-slate-800">
                 {pagination.page}/{Math.max(pagination.totalPages, 1)}
               </span>
 
@@ -482,18 +502,16 @@ export default function StaffTraining() {
                 title={t.next}
                 disabled={!pagination.hasNextPage}
                 onClick={() => setPage(page + 1)}
-                className="rounded-xl border border-slate-200 p-2 disabled:opacity-40"
+                className={pagerButton}
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>
         )}
-      </div>
+      </main>
 
-      {/* ==================================================
-          TOPIC DETAILS
-      ================================================== */}
+      {/* TOPIC DETAILS */}
 
       <TopicDetailsModal
         topic={selectedTopic}

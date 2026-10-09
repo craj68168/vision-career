@@ -1,9 +1,21 @@
 "use client";
 
+import type { ComponentType, ReactNode } from "react";
+
+import { useLocale, useTranslations } from "next-intl";
+
 import {
   AlertTriangle,
+  BriefcaseBusiness,
+  Building2,
+  CalendarDays,
   CheckCircle2,
+  ClipboardCheck,
+  Clock,
+  Gavel,
   History,
+  ListChecks,
+  Pencil,
   ShieldCheck,
   X,
   XCircle,
@@ -24,8 +36,6 @@ import type {
   StaffPlacementRequest,
 } from "./types";
 
-import { useLocale, useTranslations } from "next-intl";
-
 // ======================================================
 // PROPS
 // ======================================================
@@ -43,6 +53,18 @@ type Props = {
 
   onDecision: (request: StaffPlacementRequest) => void;
 };
+
+// ======================================================
+// SHARED CLASSES
+//
+// Outlines use `ring` (a shadow) instead of `border`, so
+// they are not affected by global border-color rules.
+// ======================================================
+
+const badgeClass = "rounded-full px-3 py-1 text-xs font-semibold";
+
+const secondaryButton =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-200 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500";
 
 // ======================================================
 // COMPONENT
@@ -69,6 +91,8 @@ export default function PlacementRequestDetails({
   const canScreen = canReview && request.status === "pending_review";
 
   const canMakeDecision = canApprove && request.status === "pending_review";
+
+  const notScreened = request.staffScreening.status === "NOT_SCREENED";
 
   const review = request.review ?? {
     decision:
@@ -221,16 +245,16 @@ export default function PlacementRequestDetails({
     }
   };
 
-  const historyClass = (action: string) => {
+  const historyTone = (action: string): TimelineTone => {
     if (action === "SCREENED" || action === "APPROVED") {
-      return "border-emerald-200 bg-emerald-50";
+      return "emerald";
     }
 
     if (action === "NEEDS_ATTENTION" || action === "REJECTED") {
-      return "border-red-200 bg-red-50";
+      return "rose";
     }
 
-    return "border-indigo-200 bg-indigo-50";
+    return "indigo";
   };
 
   const history = request.workflowHistory ?? [];
@@ -242,368 +266,382 @@ export default function PlacementRequestDetails({
         ? copy.rejected
         : copy.pending;
 
+  const decisionBadgeClass =
+    review.decision === "approved"
+      ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200"
+      : review.decision === "rejected"
+        ? "bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200"
+        : "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200";
+
   return (
-    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-      <button type="button" className="absolute inset-0" onClick={onClose} />
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={request.jobTitle}
+      className="fixed inset-0 z-[130] flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+    >
+      {/* BACKDROP */}
 
-      <div className="relative z-10 flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default"
+        onClick={onClose}
+        aria-label="Close"
+      />
+
+      {/* MODAL */}
+
+      <div className="relative z-10 flex max-h-[94dvh] w-full max-w-5xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl ring-1 ring-slate-200 sm:max-h-[92dvh] sm:rounded-2xl">
+        {/* ================================================= */}
         {/* HEADER */}
+        {/* ================================================= */}
 
-        <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-500">
-              {request.recruitId}
-            </p>
+        <div className="relative shrink-0 overflow-hidden bg-[linear-gradient(120deg,#eef2ff_0%,#f5f3ff_45%,#ffffff_100%)] px-4 py-4 shadow-[inset_0_-1px_0_0_#e0e7ff] sm:px-6 sm:py-5">
+          {/* decorative grid */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(79,70,229,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(79,70,229,0.07)_1px,transparent_1px)] bg-[length:44px_44px] [mask-image:linear-gradient(90deg,#000,transparent)]"
+          />
 
-            <h2 className="mt-1 text-2xl font-bold">{request.jobTitle}</h2>
-
-            <p className="mt-1 text-sm text-slate-500">{request.companyName}</p>
-          </div>
-
-          <div className="flex items-center gap-3">
+          <div className="relative flex items-start gap-3 sm:gap-4">
             <span
-              className={`rounded-full border px-3 py-1 text-xs font-semibold ${getRequestStatusClass(
-                request.status,
-              )}`}
+              aria-hidden="true"
+              className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[linear-gradient(135deg,#4f46e5,#7c3aed)] text-white shadow-md shadow-indigo-600/30"
             >
-              {getRequestStatusLabel(request.status)}
+              <BriefcaseBusiness className="h-5 w-5" />
             </span>
+
+            <div className="min-w-0 flex-1">
+              <p className="break-all text-[11px] font-semibold uppercase tracking-wider text-indigo-600">
+                {request.recruitId}
+              </p>
+
+              <h2 className="mt-0.5 break-words text-xl font-semibold leading-tight text-slate-950 sm:text-2xl">
+                {request.jobTitle}
+              </h2>
+
+              <p className="mt-1 break-words text-xs text-slate-500">
+                {request.companyName}
+              </p>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span
+                  className={`${badgeClass} ${getRequestStatusClass(
+                    request.status,
+                  )}`}
+                >
+                  {getRequestStatusLabel(request.status)}
+                </span>
+
+                <span
+                  className={`${badgeClass} ${getScreeningClass(
+                    request.staffScreening.status,
+                  )}`}
+                >
+                  {getScreeningLabel(request.staffScreening.status)}
+                </span>
+              </div>
+            </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full p-2 hover:bg-slate-100"
+              aria-label="Close"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/80 text-slate-600 ring-1 ring-inset ring-slate-200 transition-colors hover:bg-indigo-50 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
 
-        {/* CONTENT */}
+        {/* ================================================= */}
+        {/* SCROLLABLE CONTENT */}
+        {/* ================================================= */}
 
-        <div className="overflow-y-auto p-6">
-          <div className="space-y-7">
-            {/* WORKFLOW AUDIT */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-50/60">
+          <div className="space-y-4 p-4 sm:space-y-5 sm:p-6">
+            {/* WORKFLOW AUDIT BANNER */}
 
-            <section className="rounded-2xl border border-indigo-200 bg-indigo-50/30 p-4">
-              <div className="mb-4 flex items-start gap-3">
-                <div className="rounded-xl bg-indigo-100 p-2 text-indigo-700">
-                  <History className="h-5 w-5" />
-                </div>
+            <div className="flex items-start gap-3 rounded-xl bg-indigo-50/70 p-4 ring-1 ring-inset ring-indigo-200">
+              <span
+                aria-hidden="true"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-indigo-600 ring-1 ring-inset ring-indigo-200"
+              >
+                <History className="h-4 w-4" />
+              </span>
 
-                <div>
-                  <h3 className="text-lg font-bold text-slate-950">
-                    {copy.workflowAudit}
-                  </h3>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-slate-950">
+                  {copy.workflowAudit}
+                </h3>
 
-                  <p className="mt-1 text-xs text-indigo-600">
-                    {copy.internalOnly}
+                <p className="mt-0.5 text-xs text-indigo-700">
+                  {copy.internalOnly}
+                </p>
+              </div>
+            </div>
+
+            {/* STAFF SCREENING */}
+
+            <Section
+              icon={ShieldCheck}
+              title={copy.staffScreening}
+              accent="teal"
+              aside={
+                <span
+                  className={`${badgeClass} ${getScreeningClass(
+                    request.staffScreening.status,
+                  )}`}
+                >
+                  {getScreeningLabel(request.staffScreening.status)}
+                </span>
+              }
+            >
+              {notScreened && (
+                <div className="flex gap-3 rounded-xl bg-amber-50 p-4 ring-1 ring-inset ring-amber-200">
+                  <AlertTriangle
+                    aria-hidden="true"
+                    className="mt-0.5 h-5 w-5 shrink-0 text-amber-600"
+                  />
+
+                  <p className="text-sm leading-6 text-amber-700">
+                    This placement request has not been screened by Staff yet.
                   </p>
                 </div>
+              )}
+
+              {!notScreened && (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <Info
+                    label={copy.screenedBy}
+                    value={
+                      request.staffScreening.screenedByStaffName ||
+                      request.staffScreening.screenedByStaffId
+                    }
+                  />
+
+                  <Info
+                    label={copy.staffId}
+                    value={request.staffScreening.screenedByStaffId}
+                  />
+
+                  <Info
+                    label={copy.screenedAt}
+                    value={formatDateTime(request.staffScreening.screenedAt)}
+                  />
+                </div>
+              )}
+
+              {request.staffScreening.note && (
+                <div className="mt-3 rounded-xl bg-slate-50 p-4 ring-1 ring-inset ring-slate-200">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    {copy.screeningNote}
+                  </p>
+
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-800">
+                    {request.staffScreening.note}
+                  </p>
+                </div>
+              )}
+            </Section>
+
+            {/* DECISION */}
+
+            <Section
+              icon={review.decision === "rejected" ? XCircle : CheckCircle2}
+              title={copy.decision}
+              accent={review.decision === "rejected" ? "rose" : "emerald"}
+              aside={
+                <span className={`${badgeClass} ${decisionBadgeClass}`}>
+                  {decisionLabel}
+                </span>
+              }
+            >
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Info
+                  label={copy.reviewedBy}
+                  value={review.reviewedByName || review.reviewedById}
+                />
+
+                <Info
+                  label={copy.role}
+                  value={roleLabel(review.reviewedByRole)}
+                />
+
+                <Info label={copy.actorId} value={review.reviewedById} />
+
+                <Info
+                  label={copy.reviewedAt}
+                  value={formatDateTime(review.reviewedAt)}
+                />
               </div>
 
-              <div className="space-y-4">
-                {/* SCREENING */}
+              {review.rejectionReason && (
+                <div className="mt-3 rounded-xl bg-rose-50 p-4 ring-1 ring-inset ring-rose-200">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-rose-600">
+                    {copy.rejectionReason}
+                  </p>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="h-5 w-5 text-indigo-600" />
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-rose-700">
+                    {review.rejectionReason}
+                  </p>
+                </div>
+              )}
+            </Section>
 
-                      <h4 className="font-bold">{copy.staffScreening}</h4>
-                    </div>
+            {/* HISTORY */}
 
-                    <span
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold ${getScreeningClass(
-                        request.staffScreening.status,
-                      )}`}
-                    >
-                      {getScreeningLabel(request.staffScreening.status)}
-                    </span>
-                  </div>
-
-                  {request.staffScreening.status === "NOT_SCREENED" && (
-                    <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
-                      <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
-
-                      <p className="text-sm text-amber-700">
-                        This placement request has not been screened by Staff
-                        yet.
-                      </p>
-                    </div>
-                  )}
-
-                  {request.staffScreening.status !== "NOT_SCREENED" && (
-                    <div className="grid gap-3 md:grid-cols-3">
-                      <Field
-                        label={copy.screenedBy}
-                        value={
-                          request.staffScreening.screenedByStaffName ||
-                          request.staffScreening.screenedByStaffId
-                        }
+            <Section icon={History} title={copy.history} accent="indigo">
+              {history.length === 0 ? (
+                <p className="text-sm text-slate-500">{copy.noHistory}</p>
+              ) : (
+                <Timeline>
+                  {history.map(
+                    (item: PlacementRequestWorkflowHistoryEntry, index) => (
+                      <TimelineItem
+                        key={`${item.action}-${item.createdAt ?? index}-${index}`}
+                        tone={historyTone(item.action)}
+                        title={actionLabel(item.action)}
+                        subtitle={`${item.actorName || item.actorId || "-"}${
+                          item.actorRole ? ` • ${roleLabel(item.actorRole)}` : ""
+                        }${item.actorId ? ` • ${item.actorId}` : ""}`}
+                        note={item.note}
+                        period={formatDateTime(item.createdAt)}
                       />
-
-                      <Field
-                        label={copy.staffId}
-                        value={request.staffScreening.screenedByStaffId}
-                      />
-
-                      <Field
-                        label={copy.screenedAt}
-                        value={formatDateTime(
-                          request.staffScreening.screenedAt,
-                        )}
-                      />
-                    </div>
+                    ),
                   )}
+                </Timeline>
+              )}
+            </Section>
 
-                  {request.staffScreening.note && (
-                    <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        {copy.screeningNote}
-                      </p>
+            {/* AUDIT NOTICE */}
 
-                      <p className="mt-2 whitespace-pre-wrap text-sm">
-                        {request.staffScreening.note}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* DECISION */}
-
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      {review.decision === "rejected" ? (
-                        <XCircle className="h-5 w-5 text-red-600" />
-                      ) : (
-                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                      )}
-
-                      <h4 className="font-bold">{copy.decision}</h4>
-                    </div>
-
-                    <span
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                        review.decision === "approved"
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                          : review.decision === "rejected"
-                            ? "border-red-200 bg-red-50 text-red-700"
-                            : "border-amber-200 bg-amber-50 text-amber-700"
-                      }`}
-                    >
-                      {decisionLabel}
-                    </span>
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                    <Field
-                      label={copy.reviewedBy}
-                      value={review.reviewedByName || review.reviewedById}
-                    />
-
-                    <Field
-                      label={copy.role}
-                      value={roleLabel(review.reviewedByRole)}
-                    />
-
-                    <Field label={copy.actorId} value={review.reviewedById} />
-
-                    <Field
-                      label={copy.reviewedAt}
-                      value={formatDateTime(review.reviewedAt)}
-                    />
-                  </div>
-
-                  {review.rejectionReason && (
-                    <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-red-600">
-                        {copy.rejectionReason}
-                      </p>
-
-                      <p className="mt-2 whitespace-pre-wrap text-sm text-red-700">
-                        {review.rejectionReason}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* HISTORY */}
-
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <div className="mb-4 flex items-center gap-2">
-                    <History className="h-5 w-5 text-indigo-600" />
-
-                    <h4 className="font-bold">{copy.history}</h4>
-                  </div>
-
-                  {history.length === 0 ? (
-                    <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
-                      {copy.noHistory}
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {history.map(
-                        (item: PlacementRequestWorkflowHistoryEntry, index) => (
-                          <div
-                            key={`${item.action}-${item.createdAt ?? index}-${index}`}
-                            className={`rounded-xl border p-3 ${historyClass(
-                              item.action,
-                            )}`}
-                          >
-                            <div className="flex flex-wrap items-start justify-between gap-2">
-                              <div>
-                                <p className="text-sm font-semibold">
-                                  {actionLabel(item.action)}
-                                </p>
-
-                                <p className="mt-1 text-xs text-slate-600">
-                                  {item.actorName || item.actorId || "-"}
-                                  {item.actorRole
-                                    ? ` • ${roleLabel(item.actorRole)}`
-                                    : ""}
-                                  {item.actorId ? ` • ${item.actorId}` : ""}
-                                </p>
-                              </div>
-
-                              <span className="text-xs text-slate-500">
-                                {formatDateTime(item.createdAt)}
-                              </span>
-                            </div>
-
-                            {item.note && (
-                              <div className="mt-2 rounded-lg bg-white/70 p-2 text-sm">
-                                {item.note}
-                              </div>
-                            )}
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
-                  Staff screening and placement-request approval are separate
-                  actions. Staff must have the appropriate approval permission
-                  to approve or reject the request.
-                </div>
-              </div>
-            </section>
+            <div className="rounded-xl bg-blue-50 p-4 text-sm leading-6 text-blue-700 ring-1 ring-inset ring-blue-200">
+              Staff screening and placement-request approval are separate
+              actions. Staff must have the appropriate approval permission to
+              approve or reject the request.
+            </div>
 
             {/* PROVIDER */}
 
-            <section>
-              <h3 className="mb-4 text-lg font-bold">Provider Information</h3>
+            <Section
+              icon={Building2}
+              title="Provider Information"
+              accent="sky"
+            >
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <Info label="Company" value={request.companyName} />
 
-              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                <Field label="Company" value={request.companyName} />
+                <Info label="Provider" value={request.providerName} />
 
-                <Field label="Provider" value={request.providerName} />
-
-                <Field label="Provider Email" value={request.providerEmail} />
+                <Info label="Provider Email" value={request.providerEmail} />
               </div>
-            </section>
+            </Section>
 
             {/* JOB */}
 
-            <section>
-              <h3 className="mb-4 text-lg font-bold">Job Information</h3>
+            <Section
+              icon={BriefcaseBusiness}
+              title="Job Information"
+              accent="indigo"
+            >
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <Info label="Job Title" value={request.jobTitle} />
 
-              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                <Field label="Job Title" value={request.jobTitle} />
+                <Info label="Category" value={request.jobCategory} />
 
-                <Field label="Category" value={request.jobCategory} />
+                <Info label="Employment Type" value={request.employmentType} />
 
-                <Field label="Employment Type" value={request.employmentType} />
+                <Info label="Positions" value={request.numberOfPositions} />
 
-                <Field label="Positions" value={request.numberOfPositions} />
+                <Info label="Work Location" value={request.workLocation} />
 
-                <Field label="Work Location" value={request.workLocation} />
-
-                <Field label="Start Date" value={request.startDate} />
+                <Info label="Start Date" value={request.startDate} />
               </div>
-            </section>
+            </Section>
 
             {/* REQUIREMENTS */}
 
-            <section>
-              <h3 className="mb-4 text-lg font-bold">Requirements</h3>
-
-              <div className="grid gap-3 md:grid-cols-2">
-                <Field
+            <Section
+              icon={ListChecks}
+              title="Requirements"
+              accent="violet"
+            >
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Info
                   label="Japanese Level"
                   value={request.japaneseLevelRequired}
                 />
 
-                <Field
+                <Info
                   label="Visa Requirement"
                   value={request.visaTypeRequired}
                 />
               </div>
 
               <div className="mt-3 grid gap-3">
-                <Field label="Job Description" value={request.jobDescription} />
+                <Info label="Job Description" value={request.jobDescription} />
 
-                <Field label="Requirements" value={request.requirements} />
+                <Info label="Requirements" value={request.requirements} />
               </div>
-            </section>
+            </Section>
 
             {/* CONDITIONS */}
 
-            <section>
-              <h3 className="mb-4 text-lg font-bold">Work Conditions</h3>
-
-              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                <Field
+            <Section icon={Clock} title="Work Conditions" accent="amber">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <Info
                   label="Salary"
                   value={formatSalary(request.salaryAmount, request.salaryType)}
                 />
 
-                <Field label="Working Hours" value={request.workingHours} />
+                <Info label="Working Hours" value={request.workingHours} />
 
-                <Field label="Days Off" value={request.daysOff} />
+                <Info label="Days Off" value={request.daysOff} />
               </div>
-            </section>
+            </Section>
 
             {/* TIMELINE */}
 
-            <section>
-              <h3 className="mb-4 text-lg font-bold">Request Timeline</h3>
-
-              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                <Field
+            <Section
+              icon={CalendarDays}
+              title="Request Timeline"
+              accent="emerald"
+            >
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Info
                   label="Submitted At"
                   value={formatDateTime(request.submittedAt)}
                 />
 
-                <Field
+                <Info
                   label="Reviewed At"
                   value={formatDateTime(request.reviewedAt)}
                 />
 
-                <Field
+                <Info
                   label="Reviewed By"
                   value={request.reviewedByName || request.reviewedById}
                 />
 
-                <Field
+                <Info
                   label="Created At"
                   value={formatDate(request.createdAt)}
                 />
               </div>
-            </section>
+            </Section>
           </div>
         </div>
 
+        {/* ================================================= */}
         {/* FOOTER */}
+        {/* ================================================= */}
 
-        <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 p-6">
+        <div className="flex shrink-0 flex-col-reverse gap-2 bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-[inset_0_1px_0_0_#e2e8f0] sm:flex-row sm:justify-end sm:px-6 sm:py-4">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-200 px-5 py-2.5"
+            className={secondaryButton}
           >
             Close
           </button>
@@ -612,11 +650,15 @@ export default function PlacementRequestDetails({
             <button
               type="button"
               onClick={() => onScreen(request)}
-              className="rounded-xl bg-slate-950 px-5 py-2.5 font-semibold text-white"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
             >
-              {request.staffScreening.status === "NOT_SCREENED"
-                ? "Screen Request"
-                : "Edit Screening"}
+              {notScreened ? (
+                <ClipboardCheck className="h-4 w-4" />
+              ) : (
+                <Pencil className="h-4 w-4" />
+              )}
+
+              {notScreened ? "Screen Request" : "Edit Screening"}
             </button>
           )}
 
@@ -624,8 +666,10 @@ export default function PlacementRequestDetails({
             <button
               type="button"
               onClick={() => onDecision(request)}
-              className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white hover:bg-emerald-700"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
             >
+              <Gavel className="h-4 w-4" />
+
               {t("reviewDecision")}
             </button>
           )}
@@ -636,10 +680,130 @@ export default function PlacementRequestDetails({
 }
 
 // ======================================================
-// FIELD
+// SECTION
+//
+// Full class names are written out so Tailwind can
+// detect them.
 // ======================================================
 
-function Field({
+const sectionAccents = {
+  indigo: "bg-indigo-50 text-indigo-600 ring-indigo-100",
+  sky: "bg-sky-50 text-sky-600 ring-sky-100",
+  violet: "bg-violet-50 text-violet-600 ring-violet-100",
+  emerald: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+  amber: "bg-amber-50 text-amber-700 ring-amber-100",
+  rose: "bg-rose-50 text-rose-600 ring-rose-100",
+  teal: "bg-teal-50 text-teal-600 ring-teal-100",
+} as const;
+
+function Section({
+  icon: Icon,
+  title,
+  accent,
+  aside,
+  children,
+}: {
+  icon: ComponentType<{ className?: string }>;
+
+  title: string;
+
+  accent: keyof typeof sectionAccents;
+
+  aside?: ReactNode;
+
+  children: ReactNode;
+}) {
+  return (
+    <section className="min-w-0 rounded-2xl bg-white p-4 ring-1 ring-inset ring-slate-200 sm:p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span
+            aria-hidden="true"
+            className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ring-1 ring-inset ${sectionAccents[accent]}`}
+          >
+            <Icon className="h-4 w-4" />
+          </span>
+
+          <h3 className="text-sm font-semibold text-slate-950">{title}</h3>
+        </div>
+
+        {aside}
+      </div>
+
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+// ======================================================
+// TIMELINE
+//
+// Full class names are written out so Tailwind can
+// detect them.
+// ======================================================
+
+type TimelineTone = "indigo" | "emerald" | "rose";
+
+const timelineDots: Record<TimelineTone, string> = {
+  indigo: "bg-indigo-500",
+  emerald: "bg-emerald-500",
+  rose: "bg-rose-500",
+};
+
+function Timeline({ children }: { children: ReactNode }) {
+  return (
+    <ol className="relative ml-1.5 space-y-4 pl-5 before:absolute before:bottom-1 before:left-0 before:top-1 before:w-px before:bg-slate-200 before:content-['']">
+      {children}
+    </ol>
+  );
+}
+
+function TimelineItem({
+  tone,
+  title,
+  subtitle,
+  note,
+  period,
+}: {
+  tone: TimelineTone;
+
+  title: string;
+
+  subtitle: string;
+
+  note?: string | null;
+
+  period: string;
+}) {
+  return (
+    <li className="relative">
+      <span
+        aria-hidden="true"
+        className={`absolute -left-[24px] top-1.5 h-2 w-2 rounded-full ring-4 ring-white ${timelineDots[tone]}`}
+      />
+
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-0.5">
+        <p className="break-words font-semibold text-slate-950">{title}</p>
+
+        <p className="text-xs text-slate-400">{period}</p>
+      </div>
+
+      <p className="mt-0.5 break-all text-sm text-slate-600">{subtitle}</p>
+
+      {note && (
+        <p className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-700 ring-1 ring-inset ring-slate-200">
+          {note}
+        </p>
+      )}
+    </li>
+  );
+}
+
+// ======================================================
+// INFO
+// ======================================================
+
+function Info({
   label,
   value,
 }: {
@@ -648,13 +812,15 @@ function Field({
   value: string | number | null | undefined;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <div className="min-w-0 rounded-xl bg-slate-50 p-3.5 ring-1 ring-inset ring-slate-200/70">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
         {label}
       </p>
 
-      <p className="mt-1 whitespace-pre-wrap break-words text-sm font-medium">
-        {value ?? "-"}
+      <p className="mt-1 whitespace-pre-wrap break-words text-sm font-semibold text-slate-950">
+        {value === null || value === undefined || value === ""
+          ? "-"
+          : String(value)}
       </p>
     </div>
   );

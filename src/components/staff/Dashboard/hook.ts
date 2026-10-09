@@ -7,6 +7,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getCurrentStaff, getStaffDashboard } from "./api";
+import { getStaffPlacementCandidates } from "../PlacementCandidates/api";
+import { getStaffVacancies } from "../Vacancies/api";
 
 export const useStaffDashboard = () => {
   const router = useRouter();
@@ -41,6 +43,36 @@ export const useStaffDashboard = () => {
     queryFn: getStaffDashboard,
 
     enabled: staffQuery.isSuccess,
+
+    retry: false,
+  });
+
+  const canViewPlacementCandidates =
+    staffQuery.data?.data.permissions.includes(
+      "placement_requests:manage_candidates",
+    ) ?? false;
+
+  const canViewVacancies =
+    staffQuery.data?.data.permissions.includes("vacancies:view") ?? false;
+
+  const vacanciesQuery = useQuery({
+    queryKey: ["staff-vacancies"],
+
+    queryFn: getStaffVacancies,
+
+    enabled: staffQuery.isSuccess && canViewVacancies,
+
+    retry: false,
+  });
+
+  const placementCandidatesQuery = useQuery({
+    queryKey: ["staff-placement-candidates"],
+
+    queryFn: getStaffPlacementCandidates,
+
+    enabled: staffQuery.isSuccess && canViewPlacementCandidates,
+
+    staleTime: 30_000,
 
     retry: false,
   });
@@ -122,7 +154,15 @@ export const useStaffDashboard = () => {
 
     summary: dashboardQuery.data?.data.summary,
 
-    isLoading: staffQuery.isLoading || dashboardQuery.isLoading,
+    vacancySummary: vacanciesQuery.data?.summary,
+
+    placementCandidateSummary: placementCandidatesQuery.data?.summary,
+
+    isLoading:
+      staffQuery.isLoading ||
+      dashboardQuery.isLoading ||
+      (canViewVacancies && vacanciesQuery.isLoading) ||
+      (canViewPlacementCandidates && placementCandidatesQuery.isLoading),
 
     logout,
   };
